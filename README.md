@@ -11,7 +11,7 @@ student_id（folder）
   ┗ src (folder)
   ┃  ┃
   ┃  ┗ scripts (folder) for codes.
-  ┃  ┗ dataset (folder) for datasets > 100M, please use pan.baidu.com, and leave url here.
+  ┃  ┗ dataset (folder) for datasets > 50M, please use pan.baidu.com, and leave url here.
   ┃
   ┗ extra (folder) extra files used for the project
   
@@ -24,7 +24,7 @@ student_id（folder）
 [How to](./Submission-Howto.md)
 
 # Submission Deadline
-Project I: 2020/10/23
-Project II: 2020/11/20
-Project III: 2020/12/26
+- Project I: 2020/10/23
+- Project II: 2020/11/20
+- Project III: 2020/12/26
 
