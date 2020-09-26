@@ -65,7 +65,7 @@
 -	Task tips: Simulate human brain's functionalities. Given any concept pairs, generate a sequence of thoughts to connect the concept pairs. The thought path should be reasonable and should form a story that can pass turing-test.
 
 ## Task11(NewsRec):
--	Task: Recommend news for given texts.
+-	Task: Content-based news recommendation.
 -	URL: https://github.com/microsoft/recommenders
 -	Task tips: Reimplement canonical news recommendation algorithms. Build an improved model out of the existing models.
 
