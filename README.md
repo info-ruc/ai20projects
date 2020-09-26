@@ -24,7 +24,7 @@ student_id（folder）
 [How to](./Submission-Howto.md)
 
 # Submission Deadline
-- Project I: 2020/10/23
+- Project I: 2020/10/30
 - Project II: 2020/11/20
-- Project III: 2020/12/26
+- Project III: 2020/12/18
 
