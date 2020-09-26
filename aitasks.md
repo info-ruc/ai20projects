@@ -40,7 +40,7 @@
 ## Task5(AIBooks)：
 -	1: Prolog Programming for Artificial Intelligence (Ivan Bratko)
 -	2: The Art of Prolog, Second Edition (Leon Sterling)
--	URL:http://www.mtome.com/Publications/PNLA/prolog-digital.pdf
+-	URL:https://pan.baidu.com/s/1Qi6DfnXr-cxzKcT-dcRJvA (CODE:bb4j)
 -	Task: Translate one of the books and extract source code files for the book examples.
 	
 ## Task6(miniWatson)：
