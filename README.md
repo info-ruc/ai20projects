@@ -18,7 +18,7 @@ student_id（folder）
 ```
  
 # Pick a task
-[tasks](./aitasks.md)
+[Tasks](./aitasks.md)
 
 # Submit your project
 [How to](./Submission-Howto.md)
