@@ -40,8 +40,16 @@
 ## Task5(AIBooks)：
 -	1: Prolog Programming for Artificial Intelligence (Ivan Bratko)
 -	2: The Art of Prolog, Second Edition (Leon Sterling)
+-   3: Artificial Intelligence Machine Learning and Deep Learning
+-   4: Algorithms for Optimization
+-   5: Analysis and Geometry on Graphs and Manifolds
+-   6: Graphs, Networks and Algorithms
+-   7: Genetic Programming Theory and Practice
+-   8: Industrial Machine Learning Using Artificial Intelligence as a Transformational Disruptor
+-   9: Optimization for Machine Learning
+-   10: Unsupervised Learning in Space and Time
 -	URL:https://pan.baidu.com/s/1Qi6DfnXr-cxzKcT-dcRJvA (CODE:bb4j)
--	Task: Translate one of the books and extract source code files for the book examples.
+-	Task: Translate one of the books and extract source code files for the book examples. Formulas should be in source format and thus be reproducible.
 	
 ## Task6(miniWatson)：
 -	About：Watson is a famous IBM NLP project of Question/Answering for open domains.
