@@ -1,0 +1,10 @@
+百度网盘来不及传了，先提供这几个链接给老师
+
+https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip
+https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
+
+https://academictorrents.com/details/9dea07ba660a722ae1008c4c8afdd303b6f6e53b
+（上面是种子文件）
+
+kaggle:
+https://www.kaggle.com/shweta2407/flickr8k-imageswithcaptions
