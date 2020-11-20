@@ -16,14 +16,14 @@ def _newsample(nnn, ratio):
 
 
 def get_data(behaviors_path, train_file_path, valid_file_path, user_history_path, npratio=4):
-    """Generate train file, validation file and user history file.
-    Args:
-       behavior_path (str): Filename.
-       train_file_path (str): Path to file.
-       valid_file_path (str): Path to file.
-       user_history_path (str): Path to file.
-       npratio (int): Ratio for negative sampling.
-   """
+    """Generate train file, validation file and user history file.
+  Args:
+    behavior_path (str): Filename.
+    train_file_path (str): Path to file.
+    valid_file_path (str): Path to file.
+    user_history_path (str): Path to file.
+    npratio (int): Ratio for negative sampling.
+  """
     userid_history = {}
     with open(behaviors_path) as f:
         lines = f.readlines()
