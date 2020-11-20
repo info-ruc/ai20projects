@@ -1,6 +1,13 @@
 from djitellopy import Tello
 from cv2 import cv2
 import numpy as np
+from aip import AipBodyAnalysis
+
+""" 你的 APPID AK SK """
+APP_ID = '22934281'
+API_KEY = 'H3FeXjMW25aWyhV2OraHn8Cr'
+SECRET_KEY =  'PdAf6BBdCuBfre3blvrHrT3aWKHoPQ5q'
+''' 调用'''
  
  # 初始化Tello
 def initializeTello():
@@ -70,3 +77,12 @@ def trackFace(myDrone,info,w,pid,pError):
                                 myDrone.up_down_velocity,
                                 myDrone.yaw_velocity)
     return error
+
+def gesture_recognition():
+    gesture_client = AipBodyAnalysis(APP_ID, API_KEY, SECRET_KEY)
+    frame = telloGetFrame(Drone)
+    cv2.imshow('frame',frame)
+    cv2.imwrite("{}.png".format(img_count), frame)
+    image = get_file_content("{}.png".format(img_count))
+    gesture =  gesture_client.gesture(image)   #AipBodyAnalysis内部函数
+    print(gesture)

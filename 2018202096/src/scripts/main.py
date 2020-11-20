@@ -1,4 +1,5 @@
 from utils import *
+import time
  
 w,h = 360,240
 pid = [0.4,0.4,0]
@@ -7,7 +8,8 @@ startCounter = 0  # for no Flight 1   - for flight 0
  
  
 myDrone = initializeTello()
- 
+
+''' 
 while True:
  
     ## Flight
@@ -26,3 +28,8 @@ while True:
     if cv2.waitKey(1) and 0xFF == ord('q'):
         myDrone.land()
         break
+'''
+while(True):
+    gesture_recognition()
+    img_count += 1
+    time.sleep(3)
