@@ -1,0 +1,468 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+On the efﬁcient control of series-parallel compliant articulated robots
+Vishnu Dev Amara1, Jo¨rn Malzahn1, Zeyu Ren1, Wesley Roozing2 and Nikos Tsagarakis1
+Abstract—Torque distribution in redundant robots that
+combine the potential of asymmetric series-parallel actuated
+branchesandmulti-articulationposeanon-trivialchallenge.To
+address the problem, this work proposes a novel optimization
+based controller that can accommodate various quadratic
+criteria to perform the torque distribution among dissimilar
+series and parallel actuators in order to maximize the motion
+efﬁciency. Three candidate criteria are composed and their
+performancesarecomparedduringperiodicsquatmotionswith
+a 3 degree of freedom series-parallel compliant articulated leg
+prototype. It is ﬁrst shown that by minimizing a criterion that
+takes into account the actuator hardware speciﬁcations such
+as torque constant and transmission ratio, the gravity-driven
+phases can be lengthened. Thereby, this particular criterion
+results in slightly better performance than when adopting a
+strategy that maximizes the torque allocation to the higher
+efﬁciency actuators. Furthermore, valuable insights such as
+that the efﬁcacy of maximum utilization of the highly-efﬁcient
+Fig.1. Thearticulatedlegprototypeusedinthiswork.
+parallel actuation branches decreases progressively at high
+frequencies were observed.
+I. INTRODUCTION Moreover, in biological systems, muscle units can span
+multiple joints and enable energy efﬁciency and power
+Extending the power autonomy of robotic systems is
+transfer between the spanned joints [9], [10], [11]. Coupling
+fundamental for their successful deployment in applications
+this principle along with the aforementioned idea of an
+where they are expected to be capable of prolonged un-
+asymmetricjointunit,theauthorsof[12],[13]optimizedand
+tethered operation. Such a requirement can be addressed
+developed a three degrees of freedom (DoF) leg prototype,
+onlythroughadvancementsinrobotefﬁciencythroughmore
+the eLeg. Additionally, the PEAs in the eLeg can be swiftly
+efﬁcient,actuationandmotioncontrolstrategies.Researchon
+reconﬁguredtoeitherencompassoneortwojointsdisplaying
+actuation systems towards this objective has already led to a
+distinct articulation topologies. With the PEAs providing for
+radicaldeparturefromstifftocompliantactuators.Compliant
+gravity load cancellation/majority of the torque demand in
+actuatorsareinherentlyrobust,efﬁcient,saferandcanpoten-
+steady-state, the monoarticulated and biarticulated conﬁgu-
+tially satisfy peak velocity/power achievements. Compliant
+rations exhibited substantial energy savings [14], [15].
+actuation technology has spawned two broad classes of
+actuators - series elastic actuators (SEA) and parallel elastic Nevertheless, a research gap exists in understanding how
+actuators (PEA). SEAs utilize soft elements in series with to optimally distribute the desired torques among the pri-
+the motor while PEAs recruit soft elements in parallel with mary and the secondary actuator units. The authors of [16]
+the main actuation drive. While SEAs have matured to compared various approaches to resolve the torques from
+be the preferred drive units in many contemporary high- identical biarticular actuators among the various joints in
+performance robots [1], [2], [3], PEAs have not attracted a redundant manipulator. The question still remains open
+equal attention although they have shown massive energy- whenactuatorsofdifferentefﬁciencyandtorquecapacityare
+efﬁciency beneﬁts [4], [5], [6], [7]. Further, it is not fully employedondistinctarticulationtopologies.Aninvestigation
+understood how to combine the two classes of actuators intothesametakingintoaccountthehardwarespeciﬁcations
+for achieving high performance and energy-efﬁciency. In can lead to valuable considerations for control.
+[8], the authors demonstrated a method to synergistically Therefore,thisarticleinvestigatestheefﬁciencyofvarious
+employthembothtoobtainefﬁcientmotion.Anasymmetric torque-distribution strategies in compliant articulated robots
+joint unit that comprises a high power SEA for primary powered by hybrid series and parallel actuation principles.
+torque supply along with a high efﬁciency PEA for energy Firstly,anoveloptimizationbasedtorquedistributionframe-
+storage/release led to considerable power savings. work that can apportion the instantaneous joint torque de-
+mandtothevarioustorquesourcesbasedondifferentcriteria
+1V. D. Amara, J. Malzahn, Z. Ren and N. Tsagarakis are with the are presented. Secondly, we investigate if demanding max-
+Humanoids and Human-centered Mechatronics Lab, Istituto Italiano di
+imum torques from the higher efﬁciency parallel actuators
+Tecnologia, Genova, Italy (e-mail: vishnu.amara@iit.it). 2W. Roozing is
+withUniversityofTwente,theNetherlands. is the best strategy, especially during periodic motions with
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 385
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. PB
+signiﬁcantgravity-drivenphases,byperformingexperiments ESB
+on the 3-DoF leg setup depicted in Fig.1 using cyclic squat
+motions on two different articulation topologies. Thirdly, we
+extend our energy-based analysis to squat motions across
+various frequencies to obtain some valuable insights for
+energy-efﬁcient joint torque resolution.
+      ESB drives 
+Thepaperisorganizedasfollows.Abriefoverviewofthe high on thigh - 
+lower leg inertia
+actuation branches, the leg prototype and its modelling are
+PB drives high
+provided in Sec. II. The derivation of the control framework on limbs to reduce Biarticulated ESBs 
+leg inertia can be concentrated 
+based on the various cost functions is described in Sec. III. on calf to save space 
+on knee (cables)
+An analysis is conducted with experiments and a discussion
+ispresentedinSec.IV.ThepaperﬁnallyconcludesinSec.V
+providing valuable recommendations for future work. Belt drives or
+4 bar linkages
+II. BACKGROUND
+A. Articulated Compliant Actuation (ACA) Arrangements
+Fig. 2. The noESB and the biarticulated conﬁgurations of the anthropo-
+morphiceLegwithACAarrangements.
+The ACA arrangement that we refer to in this paper com-
+prise compliant actuators of vastly different torque output
+capacity, efﬁciency and stiffness characteristics. The motor [17]1. The hip joint is loaded with a 15 kg trunk. The
+M1 is a SEA that is capable of exerting high power and
+ESBs employ Maxon EC22 motors with Maxon GP22 HP
+forms the power branch (PB). Motor M2 is a low power
+planetary gearboxes. For the tendons, we utilize rubber-type
+motor that utilizes a ball-screw transmission mechanism of
+bungee cords that showcase S-shaped stiffness curves. The
+a high rotary - linear reduction. The transmission unit is
+bungees are unidirectional, i.e. they transmit forces only
+coupled to the driven joints via elastic tendons and forms
+whenstretched.Weallowforelongationsupto80%oftheir
+the energy storage branch (ESB). While the efﬁciency and
+natural lengths. Strain gauges attached on the ballscrew nuts
+energy storage capacity of the ESB is quite high, their
+provide for tendon force measurement. Stiffness coefﬁcients
+stiffness is quite small compared to the PB.
+are computed in the working range of the bungees through
+Additionally, the ACA branches are modular and can
+linear regression. Necessary speciﬁcations for the PB and
+exhibit more than a single articulation topology. When
+ESB units are tabulated in Table I. For more details about
+monoarticulated, the ESB tendon is directly coupled to a
+the mass, length and hardware speciﬁcations, refer to [18],
+single joint while in multiarticulation, the same spans over
+[19].
+two or more joints through free pulleys and is then coupled
+to a distal joint. In the latter case, the elongation of the ESB C. ACA Actuation Modelling
+tendon transmits torque to both the spanned as well as the For an n joint articulated ﬂoating-base planar robot with
+∈
+driven joint. Consequently, the ESB torque proﬁle depends n+3 DoF and m ACA branches the tendon deﬂections ∆
+on the joint conﬁguration, pulley radii and tendon stiffness. Rn, can be written :
+B. eLeg Hardware with ACA Branches ∆=Sp+Tq. (1)
+TheeLegisathreeDoFsemi-anthropomorphicplanarleg whereq∈Rn isthejointconﬁgurationvectorandp∈Rm is
+prototype. The hip joint is driven exclusively by a SEA; thetendonpretensionvector2.S ∈Rnxm isaselectionmatrix
+∈
+the knee and ankle joints are powered by ACA branches. that indicates the joints equipped with ACA branches. T
+The ESB units in the eLeg prototype can actively load Rnxn is a topology matrix and relates the rotary joint conﬁg-
+the tendons to achieve the desired extensions. Further, to urationstothelineardeﬂectionsofthecoupledtendons.The
+demonstrate generality and energy-efﬁciency characteristics
+oftheprototype,theadjustableACAbranchescanbeswiftly 1TREERobotics,treerobotics.eu/
+≤
+2Without loss of generality, we assume m n, i.e. ACA branches can
+reconﬁgured to obtain various conﬁgurations. In this paper,
+eitherbepresentinsomeorallofthejoints.
+we utilize the following articulation topologies, see Fig.2 :
+- noESB : All joints are solely driven by SEAs and the
+robot weighs 24.5 kg. TABLEI
+- Biarticulated : In this conﬁguration, while the ankle ELEGSPECIFICATIONS
+ESBisbiarticulated,thekneeESBismonoarticulated.Here,
+Speciﬁcation PB ESB
+the ESBs serve the function of gastrocnemius and lateralis
+TransmissionRatio 80 6.66e4(Knee),3.64e4(Ankle)
+muscles and the robot weighs 26.1 kg. Stiffness 5.8kNm/rad 7.8kN/m(Knee),
+The SEAs on the eLeg are all Kollmorgen TBMS-6025 29.5kN/m(Anklebi)
+motors that employ CPL-20 Harmonic Drive (HD) gear- Torqueconstant 85mNm/A 14.2mNm/A
+boxes and are in series with deﬂection-based torque sensors Windingresistance 0.318ohm 0.797ohm
+386
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. topology matrix T is a function of the tendon transmission 2) Minimize sum of squared load currents (MSLC): A
+ratios (pulley radii), see(cid:40)[19]. The forces due to the tendon common candidate cost that is frequently used in optimal
+deﬂection can be approximated : control to obtain actuator inputs is the minimization of
+the sum of squared input torques. However, due to the
+Fp= K∆, ∆>≤0, (2) differencesinparametersincludingtransmissionratio,motor
+0, ∆ 0. torqueconstant,tendonstiffness,theactualelectricaleffortin
+whereK∈Rnxnisastiffnessmatrixwhosediagonalelements deliveringthesameoutputtorquetotheloadvariesacrossthe
+non-homogenous actuators. Therefore, we consider a more
+are the linear stiffnesses of the unidirectional bungees. Then
+generalcriterion,thesumofsquaredcurrentsthatcorrespond
+by using the same topology matrix again, the tendon forces
+to the load torques :
+can be mapped to the joint torques :
+− −
+τττp = TTFp = TTK(Sp+Tq). (3) J=iTPB iPB+iTp ip
+− −
+Finally, the total instantaneous joint torque vector can be =(APB(τττp τττ(cid:63)))T(APB(τττp τττ(cid:63)))+
+written as the sum of the torques due to PB and ESB : (ApFp)T(ApFp). (6)
+(cid:0)(cid:2) (cid:3)(cid:1)
+τττ = τττPB +τττp. (4) wher(cid:0)e(cid:2) A and A are diago(cid:3)n(cid:1)al matrices given
+PB p
+− −
+III. OPTIMIZATIONBASEDTORQUERESOLUTION by diag (PB−kτ1PBN1) 2,...,(−PBkτnPBNn) 2 and
+Resolving actuator redundancy to apportion the joint diag (pkτ1pN1) 2,...,(pkτmpNm) 2 . Here (.)N(.) and
+torque demand is of paramount importance in redundant (.)kτ refer to the transmission ratio and the torque constant
+(.)
+robots. Furthermore, with multiarticulation, the ESB torques of the corresponding actuator.
+at the spanned joints depend on the conﬁguration of all the 3) Minimize sum of power losses (MSPL): Further, the
+spanned joints. Therefore, resolving the torques among the dissipated power can vary across unidentical actuators due
+branches is not straightforward. In this work, we use an on- to their distinct electrical dynamics [25]. Speciﬁcally, the
+line optimization based approach to resolve the commanded electrical winding resistances are not the same across dif-
+instantaneous torques from PB and ESB actuators. ferent actuators, therefore the electrical losses associated
+while generating the same torque output are different. In
+A. Choice of optimization method
+this work, according to the manufacturer speciﬁcations, the
+More often, the optimization criteria is a quadratic func- winding resistance of the ESB motors are more than twice
+tion of certain control variables [20] which might be sub- of the PB motors. Taking this into account, the sum of the
+jected to linear and box constraints. Owing, to its efﬁcacy electrical power losses associated with only the load torques
+and computational efﬁciency in solving problems online is considered as a cost function candidate in this work :
+includinginversedynamics[21],trajectoryoptimization[22],
+footstep planing [23], etc. we choose to use a quadratic J=iTPBRPBiPB +iTpRpip
+programming (QP) based method [24] to obtain torque − −
+commandsfortheESBs.Inparticular,QPalgorithmprovides =(APB(τττ(cid:63) τττp))TRPB(APB(τττ(cid:63) τττp))+
+fortheinstantaneouspretensionreferencesp(cid:63).Theremaining (ApFp)TRp(ApFp). (7)
+instantaneous joint torque demand is satisﬁed by the PB
+actuators, see Fig. 3. It is worth mentioning that the torque where R is a diagonal matrix that contains as its elements
+(.)
+distribution scheme is completely privy to the higher level the resistances of the electrical windings in the actuators of
+control strategy. the corresponding branch.
+B. Cost function candidates
+We consider the following cost functions in this work : C. QP Problem formulation
+1) Maximize ESB load share (MELS): In [15], [19], the
+controller minimizes the squared norm of the error between Ineachoftheabovecases,aQPproblemisformulatedto
+the commanded joint torque and the ESB load torque. obtain the desired pretension references p(cid:63) that comply with
+Although the high-efﬁciency ESBs cannot solely satisfy the the following constraints :
+joint torque requirements in the eLeg, they can surpass the • Tendon slack constraints - since the bungees are unidi-
+gravitational load torques which happen to be the most
+rectionallyelastic,slackinthemisunfavourable.Hence,
+signiﬁcant during slow periodic motions. In this work, we
+to avoid slack, soft constraints are enforced with the
+use a similar criterion that aims to allocate the maximum
+help of slack variables.
+possible torque demand to the ESB : • ESB pretension constraints - the bungees can only be
+J=(τττp−τττ(cid:63))T(τττp−τττ(cid:63)). (5) • sEtSreBtcvheeldoctiotyacoﬁnnsittreaeinxttsen-tt.heESBactuatorshavealimit
+where τττ(cid:63) is the joint torque reference vector. on the maximum achievable linear velocity.
+387
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. PB pˆ(fromencoders) IV. RESULTS
+ESB QPbased
+Torque Pretension τττ A. Implementation
+Control p
+Distributionp(cid:63) The control experiments were executed with Simulink
+τττˆp −TT Fˆp (fromstrain RealTime interface on an Intel NUC PC with 2GB DDR-3
+gauges) RAMandaCorei5-3427Uprocessor(3Mcache)runningat
+Higher τττ(cid:63) τττˆPB (fromdeﬂectionencoders) 1.8Ghz.Thecontrolalgorithmisimplementedandallsensor
+Level measurements are obtained at a sampling rate of 1kHz. A
+τττ(cid:63)
+Control PB SEATorqueControl custom MATLAB implementation of the Goldfarb-Idnani
+Strategy q(cid:63) +Friction method[26]isusedtosolvethestrictlyconvexQPproblem.
+Compensation τττPB Owingtohardwarelimits,werestrictedthekneeESBtendon
+extensionrangeandthemaximumlinearvelocityoftheESB
+qˆ(fromjointencoders)
+actuators in the QP problem to 0.072 m and 0.007 m/s. The
+Fig.3. SchematicofthecontrolarchitectureontheeLeg. elements of the weighting matrix W˜ for the slack variables
+p˜ are set such that they are at least two orders of magnitude
+higher than the elements of the quadratic term associated
+Consequently, we have the QP problem in discrete form : with p.
+The electrical power is computed using current mea-
+mp(cid:63)ii+n1i,mp˜ii+z1e Ji+1(qi,τττ(cid:63)i,p(cid:63)i+1,p˜i+1)≥ sthuerembaecnkt-sEfMroFmanthdetsheenseolersctriincatlhedyancatumaitcosr.sTahnedyinacreludthinegn
+subject to S(p(cid:63)i+1+p˜i+1)+Tqi 0, (8) integrated to yield the energy expenditure. Further, since
+≤ ≤ ≥
+p p(cid:63)i+1 p¯, p˜i+1 0, untetheredrobotsareequippedwithpowersourceson-board,
+≤ − ≤ typicallyrechargeableLi-ionbatteriesandarecapableoffour
+p˙∆t p(cid:63)i+1 pi p¯˙∆t. quadrant operation, we consider negative power ﬂows in our
+where p˜ ∈ Rm denotes the slack variable, ∆t is the control energy calculations.
+step size. (.) and (¯.) denote the minimum and maximum B. Experiments
+values of the corresponding quantity. (.)i and (.)i+1 denote
+We ﬁrst performed cyclic squat experiments wherein the
+the quantity at the current and successive time instants.
+cartesianpositionofthetrunkiscommandedtotraceinclined
+WhileformulatingtheQPproblem,itissufﬁcienttoobtain
+elliptical trajectories of 0.3 Hz with horizontal and vertical
+the quadratic and linear terms associated with the states
+amplitudes of 3 and 15 cm respectively. As the energy efﬁ-
+that are solved for. A single template expression in the QP
+ciency of the biarticular conﬁguration has been established
+frameworkcanbeconvertedintothevariousaforementioned
+(cid:18) (cid:19) previously,thedatafromnoESBconﬁgurationisnotvisually
+candidate cost functions :
+presented. For all the three cost functions, the ESB preten-
+(cid:18) (cid:18) sionswereinitializedsuchthattheyaccountedforthegravity
+Ji+1=p(cid:63)i+T1 ST(CPBTTMTM +SCPSTKTK)S p(cid:63)i+1 + torqueattheinitialconﬁgurationofthesquatmotions.Fig.4
+displays the knee torque, actuator current and power and the
+(cid:19)(cid:19)
+p(cid:63)i+T1 2ST CPBTTM(TMTqi+τττ(cid:63)i)+ total energy expenditure for the biarticulated conﬁguration
+after the pretension references from the controller converge.
+SCpSTKTKTqi + p˜Ti+1W˜ p˜i+1. (9) thaFtrothme tjhoeinktnteoerqtourequdeistprliobtustiFoing.a4ma-o4ncg, itthceanPBbeaonbdseErvSeBd
+are different with the three criteria. While MELS criterion
+∈ ∈
+whereTM isTTK.CPB Rnxn andCp Rmxm arediagonal clearly allocates the maximum torque demand to the ESBs,
+matrices of weighting coefﬁcients associated with PB and MSLC and MSPL criteria converge to a similar strategy that
+ESB actuators. W˜ ∈ Rmxm is a diagonal weighting matrix demandslowertorquefromtheESBactuators.FromFig.4d-
+for the slack variables. Table II shows how by using (3) and 4f, the actuator current for the ankle ESB across all the cost
+merely setting the weighting coefﬁcient matrices CPB and functions are negligible. In comparison to MELS, MSLC
+Cp in (9) appropriately, one can formulate the QP problems andMSPLcriteriademandconsiderablepositivepowerfrom
+with the various aforementioned cost functions. the ankle SEA, see Fig. 4g-4i. It is worth clarifying that
+while MSLC and MSPL minimize the current and power
+losses involved with the load torques alone, the plots depict
+TABLEII
+currents and powers that include contributions necessary to
+QPPROBLEMFORMULATION-WEIGHTINGS
+overcome friction in the transmission units and drive the
+Optimizationcriteria C C actuator inertias to the required accelerations. Furthermore,
+PB p
+MELS(5) Inxn 0mxm a slight chattering in the reference pretensions obtained
+MSLC(6) ATPBAPB ATpSTSAp from the QP solver with MSPL propagates in the current
+MSPL(7) ATPBRPBAPB ATpSTRpSAp and power readings. However, MSPL criterion manages to
+388
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. 10 10 10
+0 0 0
+-10 -10 -10
+-20 -20 -20
+-30 -30 -30
+-40 -40 -40
+-50 -50 -50
+0 2 4 6 8 10 0 2 4 6 8 10 0 2 4 6 8 10
+(a) Knee Torques (MELS) (b) Knee Torques (MSLC) (c) Knee Torques (MSPL)
+6
+6 6
+4
+4 4
+2 2 2
+0 0 0
+-2 -2 -2
+-4 -4 -4
+0 2 4 6 8 10 0 2 4 6 8 10 0 2 4 6 8 10
+(d) Measured currents (MELS) (e) Measured currents (MSLC) (f) Measured currents (MSPL)
+30 30 30
+20 20 20
+10 10 10
+0 0 0
+-10 -10 -10
+0 2 4 6 8 10 0 2 4 6 8 10 0 2 4 6 8 10
+(g) Electrical powers (MELS) (h) Electrical powers (MSLC) (i) Electrical powers (MSPL)
+200 200 200
+150 150 150
+100 100 100
+50 50 50
+0 0 0
+0 2 4 6 8 10 0 2 4 6 8 10 0 2 4 6 8 10
+(j) Energy expenditure (MELS) (k) Energy expenditure (MSLC) (l) Energy expenditure (MSPL)
+Fig.4. Datafromsquatexperiments(x-amp:3cm,y-amp:15cm).(.)1,(.)2 and(.)3 correspondtoquantitiesassociatedwiththeankle,kneeandhip
+jointsrespectively.Biarticulatedconﬁguration,leftcolumn:MaximizeESBloadshare(MELS),184.3J,middlecolumn:Minimizesumofsquaredload
+currents(MSLC),193.2J,rightcolumn:Minimizesumofpowerlosses(MSPL),177.1J.ThenoESBconﬁgurationconsumes598.66Jforthesamesquat
+motion.Associatedenergysavingsare69%(MELS),67%(MSLC)and70%(MSPL).ThenoESBresultsareredactedforreasonsofspace.
+100 100 100
+50 50 50
+0 0 0
+0 2 4 6 8 10 0 2 4 6 8 10 0 2 4 6 8
+(a) Energy expenditure (MELS) (b) Energy expenditure (MSLC) (c) Energy expenditure (MSPL)
+Fig.5. Datafromellipticalsquatexperiments(x-amp:3cm,y-amp:6cm,freq:0.5Hz).Leftcolumn:MELS,69.28J,middlecolumn:MSLC,95.46J,
+rightcolumn:MSPL,92.56J.ThenoESBconﬁgurationconsumes686Jtoexecutethesamesquatmotion.
+complete the squat motion with the least energy expenditure Consequently, this phenomenon leads to almost negligible
+as can be seen from Fig. 4j-4l. Besides, it is interesting to energy consumption during the ”squat-down” phase and
+observe the signiﬁcant negative power phases with MSLC maintainson-parenergyefﬁciency.ThenoESBconﬁguration
+and MSPL criteria when the robot squats down. This occurs consumes599J,substantiallyhigherthanwhenbiarticulated.
+because the pretensions of the ESB tendons are smaller than Thereupon,italsobecomesessentialtoverifyiftheenergy
+when using the MELS criterion, so the required counter- saved in a particular phase is higher than the extra energy
+action by the PBs to drive the leg in the ”squat-down” spent in the other phase with the MSLC and the MSPL
+phase is lower, leading to higher backdrivability of the PB criteria. In a second set of experiments, to analyze the
+actuators. Therefore, even if higher reference torques are candidatecriteriaacrossfrequencies,inthebiarticulatedcon-
+demandedwhen drivingagainst gravity,the reference torque ﬁguration, the hip is commanded to track smaller amplitude
+demand drops by about 10 Nm during the other phases. squat trajectories (x-amplitude: 3 cm, y-amplitude: 6 cm)
+389
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. tension references based on the chosen criteria. The analysis
+90
+is conducted on squat motions because legged locomotion
+85 in general involves cyclic motion such as walking, hopping,
+jumping etc. The analysis is made to verify if the MELS is
+80 the optimal criterion owing to the higher ESB efﬁciencies.
+A ﬁrst set of experiments indicated that MSPL can perform
+75 equally well as the MELS by promoting backdrivability.
+In order to extend the analysis, we additionally execute
+0.2 0.3 0.4 0.5 0.6 0.7
+squat experiments across frequencies. While the MELS
+results in higher energy savings at low frequencies, the
+Fig.6. Energysavingswiththethreecriteriafromsquatexperiments(x- higher pretensioned biarticulated ESB also hamper the PBs
+amp:3cm,y-amp:6cm)forthebiarticulatedconﬁgurationwithrespectto from being back-driven at higher frequencies. Especially,
+thenoESBconﬁgurationwhiletheeLegexecutessquatsacrossfrequencies.
+the MSPL criterion brings about negligible energy costs
+at various frequencies. Owing to the limits of the actuator through longer gravity-driven phases. Though not described
+performance, experiments were performed only up to 0.7 explicitly, this behaviour naturally emerges out of the con-
+Hz. Albeit smaller motions, they necessitate considerable troller. The RMS value of the cartesian hip position tracking
+torques especially at the knee joint, where the reference errors for all reported experiments, across various criteria
+torque consistently exceeds the maximum continuous torque and conﬁgurations are all below 5 mm.
+of the SEA. The observations made are two-fold. Firstly, At this juncture, it is also important to realize that the
+at 0.5 Hz squats, similar inferences were made about the efﬁciency of torque generation varies between actuators and
+pretension references and gravity-driven phases. However, depends on the actuator inertia, friction in the transmission
+the MELS criterion seems to perform the same task more units, thermal fatigue of the actuators, etc. This efﬁciency
+efﬁciently, see Fig. 5. Compared to the other two strategies, measure is not a constant and it varies with temperature,
+the excess energy that MELS entails in the ”squat-down” loading, velocity, component wear, etc. For instance, the
+phase is lower than the energy saved during the ”squat-up” efﬁciency of CPL-20 HD varies between 45-88 % [27].
+phase. Intuitively, since the torque reference variations are Nevertheless, we regard uniform efﬁciencies across all ac-
+smallerthaninthepreviouscase,thekneePBhadtooppose tuators in this work. Additionally, the motor torque constant
+the ankle ESB lesser during ”squat-down” phase, leading to decreases with thermal fatigue. A valuable extension would
+higher overall efﬁciency. This result advocates for a case- be to integrate the efﬁciencies and their thermal variations
+by-case analysis for choice of a strategy with amplitude speciﬁcally in (6) and (7).
+variations in trajectories. Further, the same will also depend
+on the relative dynamics of the PB and ESB actuators. V. CONCLUSIONANDOUTLOOK
+Secondly, we discuss about the energy savings across In this paper, an analysis is conducted on the eLeg that
+frequencies whose results are depicted in Fig.6. The energy is powered by modular ACA branches to identify energy-
+savings obtained with the biarticulated conﬁguration with efﬁcient joint torque distribution strategies. An optimization
+respect to the noESB conﬁguration are plotted across fre- based controller is presented which upon using quadratic
+quencies. It can been seen that at higher frequencies, the criteria can provide instantaneous reference pretensions for
+energy savings obtained with the MELS strategy, which theparallelactuators.Theenergy-basedanalysisisconducted
+relies on the maximum ESB utilization, drops below the to check if delegating the maximum torque demand to the
+savings of the other two criteria. Consequently, there is less highly efﬁcient ESBs is always the best strategy.
+opposition to the PB actuators being back-driven by the Observations from one set of cyclic squat experiments in-
+gravity potential. This is in line with the ESB characteristics dicatedthattheMSPLbylengtheningnegativepowerphases
+as they cannot be pretensioned at velocities higher than attainscomparableenergysavingswithMELSstrategy.From
+0.007 m/s and cannot account for the necessary ESB torque anothersetofexperimentswhereeLegexecutessquatsacross
+variations with the MELS at higher frequencies. Although a range of frequencies we ﬁnd that at lower frequencies
+theconclusionisobtainedfortheexecutedtrajectoryandthe although MELS is more effective, MSLC and MSPL can
+samemayvarywithamplitudes,weexpectasimilartrendin result in better efﬁciencies at higher frequencies as MELS
+thevariationoftheseefﬁcienciesforsquatmotions.However, results in longer actuator-driven motion phases.
+the crossover point, the frequency at which MSPL overtakes Future work would be to account for thermal efﬁciencies
+MELS in efﬁciency could vary with different amplitudes. and plan for longer horizons in a model-predictive fashion
+and obtain optimized pretensions speciﬁc to periodic motion
+C. Discussion
+amplitudes and frequencies. During extended operations,
+Multi-articulatedsystemsexhibitcouplingswhereinapar- demanding higher torques from the ESBs once the SEAs
+ticular joint torque is affected by the conﬁguration of the are fatigued may hold the key to enduring autonomy. More-
+other articulated joints. Therefore, it is not straightforward over, suitably simplifying and incorporating non-quadratic
+to resolve the joint torques among the various actuators. For criteria such as joint work minimization into the presented
+thatreason,weuseanoptimizationschemethatprovidespre- framework might provide additional insights.
+390
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. REFERENCES Transactions on Mechatronics, vol. 21, no. 2, pp. 1080–1091, Apr.
+2016.
+[1] P. Hebert, M. Bajracharya, J. Ma, N. Hudson, A. Aydemir, J. Reid, [14] W. Roozing, Z. Ren, and N. G. Tsagarakis, “An efﬁcient leg with
+C. Bergh, J. Borders, M. Frost, M. Hagman et al., “Mobile ma- seriesparallelandbiarticularcompliantactuation:designoptimization,
+nipulation and mobility as manipulationdesign and algorithms of modeling, and control of the eleg,” The International Journal of
+robosimian,” Journal of Field Robotics, vol. 32, no. 2, pp. 255–274, RoboticsResearch,vol.0,no.0,p.0278364919893762,0.[Online].
+2015. Available:https://doi.org/10.1177/0278364919893762
+[2] N.Paine,J.S.Mehling,J.Holley,N.A.Radford,G.Johnson,C.-L. [15] ——, “Design of a Novel 3-DoF Leg with Series and Parallel
+Fok, and L. Sentis, “Actuator Control for the NASA-JSC Valkyrie CompliantActuationforEnergyEfﬁcientArticulatedRobots,”in2018
+Humanoid Robot: A Decoupled Dynamics Approach for Torque IEEEInternationalConferenceonRoboticsandAutomation(ICRA).
+Control of Series Elastic Robots: Actuator Control for the NASA- Brisbane,QLD:IEEE,May2018,pp.1–8.
+JSC Valkyrie Humanoid Robot,” Journal of Field Robotics, vol. 32, [16] V. Salvucci, Y. Kimura, S. Oh, T. Koseki, and Y. Hori, “Comparing
+no.3,pp.378–396,May2015. Approaches for Actuator Redundancy Resolution in Biarticularly-
+[3] M.Hutter,C.Gehring,D.Jud,A.Lauber,C.D.Bellicoso,V.Tsounis, Actuated Robot Arms,” IEEE/ASME Transactions on Mechatronics,
+J. Hwangbo, K. Bodie, P. Fankhauser, M. Bloesch et al., “Anymal-a vol.19,no.2,pp.765–776,Apr.2014.
+highly mobile and dynamic quadrupedal robot,” in 2016 IEEE/RSJ [17] L. Baccelliere, N. Kashiri, L. Muratore, A. Laurenzi, M. Kamedula,
+International Conference on Intelligent Robots and Systems (IROS). A.Margan,S.Cordasco,J.Malzahn,andN.G.Tsagarakis,“Develop-
+IEEE,2016,pp.38–44. mentofahumansizeandstrengthcompliantbi-manualplatformfor
+[4] D.F.B.Haeuﬂe,M.D.Taylor,S.Schmitt,andH.Geyer,“Aclutched realistic heavy manipulation tasks,” in 2017 IEEE/RSJ International
+parallel elastic actuator concept: Towards energy efﬁcient powered ConferenceonIntelligentRobotsandSystems(IROS). IEEE,2017,
+legs in prosthetics and robotics,” in 2012 4th IEEE RAS & EMBS pp.5594–5601.
+InternationalConferenceonBiomedicalRoboticsandBiomechatron- [18] Z.Ren,W.Roozing,andN.Tsagarakis,“TheeLeg:ANovelEfﬁcient
+ics(BioRob). Rome,Italy:IEEE,Jun.2012,pp.1614–1619. Leg Prototype Powered by Adjustable Parallel Compliant Actuation
+[5] G. Mathijssen, D. Lefeber, and B. Vanderborght, “Variable Recruit- Principles,”in2018IEEE-RASInternationalConferenceonHumanoid
+ment of Parallel Elastic Elements: SeriesParallel Elastic Actuators Robots(Humanoids). Beijing,CHN:IEEE,Nov.2018,p.7.
+(SPEA) With Dephased Mutilated Gears,” IEEE/ASME Transactions [19] W.Roozing,“ModelingandControlofAdjustableArticulatedParallel
+onMechatronics,vol.20,no.2,pp.594–602,Apr.2015. CompliantActuationArrangementsinArticulatedRobots,”Frontiers
+[6] Xin Liu, A. Rossi, and I. Poulakakis, “SPEAR: A monopedal robot inRoboticsandAI,vol.5,Feb.2018.
+with Switchable Parallel Elastic actuation,” in 2015 IEEE/RSJ In- [20] C. D. Remy, K. Bufﬁnton, and R. Siegwart, “Comparison of cost
+ternational Conference on Intelligent Robots and Systems (IROS). functions for electrically driven running robots,” in 2012 IEEE In-
+Hamburg,Germany:IEEE,Sep.2015,pp.5142–5147. ternational Conference on Robotics and Automation. St Paul, MN,
+[7] A.Mazumdar,S.J.Spencer,C.Hobart,J.Salton,M.Quigley,T.Wu, USA:IEEE,May2012,pp.2343–2350.
+S. Bertrand, J. Pratt, and S. P. Buerger, “Parallel Elastic Elements [21] S.-H. Lee and A. Goswami, “A momentum-based balance controller
+ImproveEnergyEfﬁciencyontheSTEPPRBipedalWalkingRobot,” for humanoid robots on non-level and non-stationary ground,” Au-
+IEEE/ASME Transactions on Mechatronics, vol. 22, no. 2, pp. 898– tonomousRobots,vol.33,no.4,pp.399–414,Nov.2012.
+908,Apr.2017. [22] M. Posa, S. Kuindersma, and R. Tedrake, “Optimization and stabi-
+[8] N.G.Tsagarakis,H.Dallali,F.Negrello,W.Roozing,G.A.Medrano- lization of trajectories for constrained dynamical systems,” in 2016
+Cerda, and D. G. Caldwell, “Compliant antagonistic joint tuning for IEEEInternationalConferenceonRoboticsandAutomation(ICRA).
+gravitational load cancellation and improved efﬁcient mobility,” in Stockholm,Sweden:IEEE,May2016,pp.1366–1373.
+Humanoid Robots (Humanoids), 2014 14th IEEE-RAS International [23] S.Kuindersma,F.Permenter,andR.Tedrake,“Anefﬁcientlysolvable
+Conferenceon. IEEE,2014,pp.924–929. quadraticprogramforstabilizingdynamiclocomotion,”in2014IEEE
+[9] G. J. van Ingen Schenau, “From rotation to translation : Constraints InternationalConferenceonRoboticsandAutomation(ICRA). Hong
+onmulti-jointmotionsandtheuniqueactionofbiarticulatedmuscles,” Kong,China:IEEE,May2014,pp.2589–2594.
+HumanMovementScience,vol.8,no.1,pp.301–337,1989. [24] S.P.BoydandL.Vandenberghe,Convexoptimization. Cambridge,
+[10] L. Gregoire, H. Veeger, P. Huijing, and G. van Ingen Schenau, UK;NewYork:CambridgeUniversityPress,2004.
+“Role of Mono- and Biarticular Muscles in Explosive Movements,” [25] S.Seok,“Actuatordesignforhighspeedproprioceptivecontrolinfast
+International Journal of Sports Medicine, vol. 05, no. 06, pp. 301– legged locomotion,” in Intelligent Robots and Systems (IROS), 2012
+305,Dec.1984. IEEE/RSJInternationalConferenceon. Vilamoura,Portugal:IEEE,
+[11] F. Iida, J. Rummel, and A. Seyfarth, “Bipedal walking and running 2012,oCLC:777811617.
+withspring-likebiarticularmuscles,”JournalofBiomechanics,vol.41, [26] D. Goldfarb and A. Idnani, “A numerically stable dual method for
+no.3,pp.656–667,2008. solving strictly convex quadratic programs,” Mathematical Program-
+[12] W. Roozing, Z. Li, D. G. Caldwell, and N. G. Tsagarakis, “Design ming,vol.27,no.1,pp.1–33,Sep.1983.
+Optimisation and Control of Compliant Actuation Arrangements in [27] “Harmonic Drive AG, Engineering Data, CPL-2A component
+Articulated Robots for Improved Energy Efﬁciency,” IEEE Robotics sets,” https://harmonicdrive.de/mage/media/catalog/category/
+andAutomationLetters,vol.1,no.2,pp.1110–1117,Jul.2016. 0505CPL2A1.pdf,Accessed:2019-08-30.
+[13] W.Roozing,Z.Li,G.A.Medrano-Cerda,D.G.Caldwell,andN.G.
+Tsagarakis, “Development and Control of a Compliant Asymmetric
+Antagonistic Actuator for Energy Efﬁcient Mobility,” IEEE/ASME
+391
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:40 UTC from IEEE Xplore.  Restrictions apply. 

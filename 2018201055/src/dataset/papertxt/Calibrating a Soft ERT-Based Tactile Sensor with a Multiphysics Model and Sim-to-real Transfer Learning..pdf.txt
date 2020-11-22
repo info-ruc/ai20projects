@@ -1,0 +1,519 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Using Manipulation to Enable Adaptive Ground Mobility
+Raymond Kim1, Alex Debate1, Stephen Balakirsky2, and Anirban Mazumdar1
+Abstract—In order to accomplish various missions, au-
+tonomous ground vehicles must operate on a wide range of
+terrain. While many systems such as wheels and whegs can
+navigate some types of terrain, none are optimal across all.
+Thiscreatesaneedforphysicaladaptation.Thispaperpresents
+a broad new approach to physical adaptation that relies on
+manipulation. Speciﬁcally, we explore how multipurpose ma-
+nipulators can enable ground vehicles to dramatically modify
+their propulsion system in order to optimize performance
+across various terrain. While this approach is general and
+widely applicable, this work focuses on physically switching
+between wheels and legs. We outline the design of “swappable
+propulsors” that combine the powerful adhesion forces of per-
+manent magnets with geometric features for easy detachment.
+Fig.1. Aprototypeimplementationoftheswappablepropulsorrobot.
+We provide analysis on how the swappable propulsors can
+be manipulated, and use these results to create a functional
+prototype robot. This robot can use its manipulator to change
+between wheeled and legged locomotion. Our experimental re- but do not modulate their physical form for different terrain.
+sultsillustratehowthisapproachcanenhanceenergyefﬁciency Biologically inspired cockroach robots are good examples
+and versatility. of such systems, and can operate on varying terrain [4],
+Index Terms—Mechanism design, mobile manipulation,
+[5]. Similarly, the RHex robot uses six semicircular legged
+wheeled robots.
+wheels to walk over a range of surfaces [6]. Because static
+I. INTRODUCTION methods do not adjust their behavior on different surfaces,
+they can be simple and robust. However, ﬁxed structures
+Mobile robots can aid search and rescue, explore remote
+cannot be easily changed and therefore are suboptimal on
+locations, and scout conﬂict zones [1]–[3]. To execute such
+one or more types of terrain.
+missions, terrestrial mobile robotic platforms must traverse
+In contrast, passive-adaptive methods adjust their proper-
+through unpredictable terrain that can have large variations
+ties without centralized sensing or control. Wheels that can
+in height, friction properties, and grade. While autonomous
+passively change their radius have been developed to better
+mobility on paved roads has progressed considerably, off-
+traversetheirgivenenvironment[7],[8].Othersystemsoffer
+road and rugged terrain remain challenging due to their
+theabilitytocompletelychangetheirphysicalconﬁgurations
+highlyvariablephysicalproperties.Off-roadterrainsarepar-
+for new modes of locomotion [9]–[11]. The inability to
+ticularlydifﬁcultforautonomousroboticsystemsbecausean
+control these adaptation behaviors means that they may
+individualmodeoflocomotionmaydegradewhenconditions
+deploy in conditions where such changes are undesirable.
+change.
+Additionally, these approaches add mass and mechanical
+This paper presents a new approach to adaptive terrestrial
+complexity to wheels or legs. This can modify the vehicle
+locomotion. The core contributions of this work are: 1)
+dynamics and risk failure.
+formulating a new manipulation based framework for adap-
+Active-adaptive methods require energy and control to
+tation, 2) designing a magnet-based design for swappable
+modify their mode of locomotion. These approaches offer
+propulsors, 3) experimental results illustrating the energy
+the greatest degree of ﬂexibility and optimality. Recent
+efﬁciency and versatility beneﬁts from using this method
+works have presented vehicles that can actively change their
+of adaptation. To the best of our knowledge, this paper is
+wheel diameter or articulate their suspension on different
+the ﬁrst to use manipulation to enable adaptive mobility of
+terrains [12], [13]. Other designs are capable of actively
+unmanned ground vehicles.
+lengtheningorrepositioningtheirmechanicalcomponentsto
+Existing terrestrial locomotion strategies can be catego-
+bettertraverseagiventerrain[14]–[19].Activemethodsalso
+rized into three different areas: static, passive-adaptive, and
+provide the capacity to transform between wheels and legs
+active-adaptive. Static methods consist of mechanical sys-
+[20]–[23]. Active-adaptive designs hold great promise, but
+temsthataredesignedtoperformwellonarangeofsurfaces,
+in order to maximize performance they must use low power,
+1R. Kim, A. Debate, and A. Mazumdar are with the G. W. Woodruff have minimal complexity, and be physically robust.
+SchoolofMechanicalEngineering,GeorgiaInstituteofTechnology,Atlanta, In this paper, we propose a new approach that uses ma-
+GA30332email: rsk@gatech.edu
+nipulation to combine the simplicity and robustness of static
+2S. Balakirsky is with Georgia Tech Research Institute, Atlanta, GA
+30318email: Stephen.Balakirsky@gtri.gatech.edu methods with the controllable versatility of active-adaptive
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 857
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. approaches.Weexplorehowrobotscanutilizemulti-purpose
+manipulators to modify their legs or wheels for different
+terrain. To ensure generality, we refer to features that propel
+the vehicle as “propulsors.” Propulsors can include wheels,
+legs, propellers, whegs, or tracks. The use of manipulation
+enables discrete switching between propulsors. This con-
+cept of “swappable propulsors” enables a broad range of
+adaptations. We liken this approach to how humans change
+(a) SwappableWheelPropulsor
+shoes for different types of terrain. The ability to change
+shoes enables a broad range of locomotion capability. This
+can enable motion over varying terrain (running shoes and
+cleats), to different modes of locomotion (shoes and roller
+skates), and even locomotion in ﬂuids (shoes and ﬂippers).
+We begin by outlining a set of functional requirements
+for the swappable propulsor framework that can enable a
+range of adaptations. We then describe a speciﬁc design of
+swappable propulsors for legs and wheels which exploits
+directional magnetic forces for strong attachment and easy
+detachment. Finally, a unique prototype robot (shown in
+Fig.1)isdesigned,fabricated,andexperimentallyevaluated.
+The experimental results illustrate the merits of this new (b) SwappableLegPropulsor (c) SwappableFinPropulsor
+approach.
+Fig.2. Thisﬁgureillustratesthe frameworkoftheswappablepropulsor.
+II. SWAPPABLEPROPULSORFRAMEWORK Different types of swappable propulsors (red) can be incorporated into a
+singlehousing(black).
+A. Functional Requirements
+This section describes the functional requirements for
+Since the principle of swappable propulsors is new, our
+the swappable propulsor framework. We envision that these
+search of existing works did not provide an existing system
+requirements are applicable to many types of propulsors.
+that meets all four functional requirements. Therefore, we
+Fig. 2 illustrates the concept of swappable propulsors. A
+developed our own system based on permanent magnets and
+mobile robot can carry around multiple sets of swappable
+geometric features.
+propulsors, each assigned to its own unique terrain. These
+propulsors are all designed to mount into a single housing B. Magnet Embedded Propulsors
+andcanbeeasilyattachedordetached.Theswappablewheel
+Permanent magnets enable large force capacity with zero
+propulsor is an ideal choice for energy-efﬁcient propulsion
+power consumption. However, this high force also makes
+on ﬂat surfaces, whereas the swappable leg propulsor is
+permanent magnets difﬁcult to detach. If the manipulator
+appropriate for rugged, off-road terrain. The swappable ﬁn
+is used to simply pull the propulsor perpendicular to the
+propulsor can enhance versatility by enabling the robot to
+steel surface (y-direction), Fig. 3 demonstrates that the
+move effectively in water.
+detachmentforce F wouldhave tobe greaterthan orequal
+1) High holding force: When swapping propulsors, the B
+to the magnetic force F . This method would require a
+system must have reliable attachment to keep its mag
+powerful manipulator that would add considerable mass and
+propulsors in place. Once swapped, the propulsor
+complexity to the robot.
+should enable the robot to traverse the propulsor-
+Geometrycanbeexploitedtoenhancemanipulation-based
+speciﬁc terrain without the risk of detaching or losing
+detachment[24].Consideraswappablelegpropulsorthathas
+its functionality.
+an extrusion with an angled edge so that it can rotate about
+2) Low-force detachment using manipulator: The
+point A (as shown in Fig. 3). In this case, r is the distance
+propulsors must be easy for the manipulator to detach
+from the center of the magnet to the angled edge, and the
+when the system is switching its mode of locomotion.
+resulting moment created by the magnetic force about point
+The force needed to detach the propulsor should be
+A is F r.
+small enough for the manipulator to execute reliably mag
+If a force F is applied at the tip of the propulsor (point
+and repeatedly. C
+C)inthepositivey-direction,itwillproduceamomentF h
+3) Electro-mechanically simple: Swappable propulsors C
+about point A. If this moment is greater than F r, the
+should not add substantial complexity or mass to the mag
+propulsor will begin to tilt.
+interface between the robot and the terrain.
+4) Easily manipulated:Theswappablepropulsorsshould r
+F > F (1)
+be lightweight and have shapes or geometric features C h mag
+that can be exploited for reliable grasp and manipula- F becomes signiﬁcantly smaller than the magnetic force
+C
+tion. F as the propulsor length h becomes longer than r. As
+mag
+858
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. (a) T-SlotDesign.
+Fig.3. Aschematicillustrationofthepropulsordimensionsandthetilting
+propulsorconcept.Tiltingthepropulsorrequiressigniﬁcantlylessforcethan
+pullingitoffthesteelsurface.Oncethepropulsoristilted,itcanbedetached
+easily.
+a result, tilting should become much easier as the propulsor
+rotates. This methodology can enable a much lighter and
+simpler manipulator.
+(b) Detachingmotionofthepropulsor.
+C. Mechanically Constraining Steel Surface Mounts Fig. 4. A sliding motion is required to release the magnet embedded
+propulsorfromconstraint.Figure4(a)illustratestheT-slotcouplersonthe
+Whenusedforlocomotion,theswappablepropulsorsmust
+swappableleg-wheelpropulsordesign.Figure4(b)illustratesthesequential
+be mechanically constrained to avoid undesired detachment. motionofthepropulsordetachment.Theslidinglinearmotionisfollowed
+Thisconsiderationmustbebalancedwiththeneedtodetach byaliftinglinearmotion.
+theswappablepropulsorswithlowforcesandasimplegrasp
+strategy.
+surface mount. The ﬁrst motion consists of a linear drag in
+To constrain the propulsors on the robot, a steel surface
+the negative z-direction (illustrated in Fig. 4-b). The second
+mount with mechanical frames can be utilized. As shown
+motion consists of a linear pull in the positive y-direction.
+in Figure 4(a), the steel surface mount consists of a t-slot
+Once detached, the propulsors can be stored in the mobile
+opening, framing, and ﬁtting. The t-slot opening provides
+robot.
+roomforattachmentanddetachmentofthepropulsorswhile
+thet-slotframingconstrainsthemagnetembeddedpropulsor
+III. MANIPULATOR:STATICANALYSIS
+in every direction but the z-direction. Different types of
+propulsors can be placed on the steel surface mount, but the To make full use of the swappable propulsor, the manipu-
+t-slot must be oriented to ensure that the propulsor does not lator must be able to achieve the kinematics and kinetics of
+detach during locomotion. For instance, the swappable leg- attaching and detaching the swappable propulsors. For this
+wheel propulsor design shown in Fig. 4, must be mounted study,aﬁvedegreeoffreedom(5DOF)serialroboticmanip-
+such that the semicircular appendage is pointing in the ulator was considered for a swappable leg-wheel propulsor.
+negative z-direction. The t-slot framing would react to any The 5 DOF was chosen to ensure that the manipulator
+forces applied during motion. can reach objects in proximity and in distance. The wrist
+The attachment process of the propulsor must be simple joint was integrated to exploit the geometric features of the
+enough for the manipulator to execute reliably and repeat- propulsors. With Eq. 2, Jacobian static analysis can be used
+edly. The t-slot ﬁtting, which has an embedded magnet, is to predict the manipulator joint torques required to detach a
+easilyattachedtothet-slotopening,thatconsistsofaferrous swappablepropulsor.Thisanalysiscanthenbeusedtoeither
+stainlesssteelsurface(illustratedinFig.4-a).Thisminimizes designthemanipulatorortheswappablepropulsor.Usingthe
+the need for precise positioning of the end-effector when two linear motions discussed in the previous section, Fig. 5
+attachingthemagnetembeddedpropulsor.Ifthemanipulator illustrates these motions as static forces on the end-effector
+approaches the t-slot opening within the magnetic attraction frame.
+forcethreshold,theembeddedmagnetwillattachitself.Once
+attached, the propulsor can be slid across the steel surface τ =JTf (2)
+(cid:2) (cid:3)
+to the end of the t-slot framing to be constrained. With
+ﬁxed positions of the steel surface mount on the robot, the
+−
+end-effector and the mount can be coordinated to attach the f = F 0 F 0 0 T (3)
+propulsors. slide (cid:2) x6 z6 (cid:3)
+The swappable propulsor framework combines two se-
+quential linear motions to detach the propulsor from the f = 0 F 0 0 0 T (4)
+pull y6
+859
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. (cid:2) (cid:3)
+τ = 0.042 0.176 0.132 0.0968 0.0968 T (5)
+max
+D. Modes of Locomotion
+The robot employs six Dynamixel XL-320 position-
+controlled servos during its leg mode and wheel mode. A
+Pololu 7.5V, 2.6A step-down voltage regulator was used to
+power the XL-320 servos.
+WheelMode:Proportional+Derivative(PD)controlwas
+implemented for the robot’s wheel mode. The robot disables
+torqueonthetwomiddlewheelsandthemanipulatorduring
+Fig. 5. An illustration of the manipulator conﬁguration and layout with
+staticforcesforpropulsordetachment. its wheel mode.
+Leg Mode: The MiniRHex open source software is used
+to operate in leg mode [25]. A tripod gait pattern was used
+Since the kinematics of serial manipulators are well for legged locomotion.
+known, we do not repeat them here. Equations (3) and (4)
+represent the static forces for the detachment. The analysis
+outlinedherecanbeusedtodeterminethejointtorqueswhen
+detaching a swappable propulsor and then moving it. These
+results can be used to design the swappable propulsor based
+onaknownmanipulator,ordesignthemanipulatorbasedon
+the known swappable propulsor.
+IV. IMPLEMENTATION
+A. Chassis Design
+(a) Wheelmode. (b) Legmode.
+The swappable propulsor prototype was designed, fab-
+Fig. 6. The swappable propulsor prototype has two different modes of
+ricated, and experimentally evaluated. The motor mounts
+locomotion.Figure6(a)showstherobotinwheelmode.Figure6(b)shows
+and the body cover were 3D printed on a Lulzbot TAZ 6 therobotinlegmode.
+printer with Polylite PLA material. The storing base of the
+swappable legs were 3D printed and embedded with 3.175
+E. Manipulator
+mm neodymium magnets. The prototype is approximately
+Based on the maximum torques calculated (Eq. 5), joints
+363 mm long, 230 mm wide, and weighs approximately 1.6
+4 and 5 were assigned with smaller actuators to reduce the
+kg including the battery and all electronic components.
+size and weight of the manipulator. For consistency, the
+B. Swappable Leg-Wheel Propulsor gripper was also reduced in size. The manipulator consists
+of three Dynamixel AX-12A servos and three Dynamixel
+To ensure simplicity, the leg propulsor was designed to
+XL-320 servos (shown in Fig. 7-a). The sixth XL-320 servo
+be swappable while the common housing was designed as a
+is used as a gripper. A parallel-jaw gripper was custom
+wheel propulsor. This allows the system to revert to wheel
+designed and 3D printed. The manipulator is mounted on
+propulsorsoncetheswappablelegpropulsorisremoved.The
+therearoftherobotformaximumworkspace.Aswithother
+wheel propulsors consist of 3D printed wheel housings and
+mobile manipulators, this system can be used for a range of
+rubbertires.A3Dprintedt-slotframingismountedontopof
+purposes, including sampling the environment, manipulating
+thewheelpropulsor.0.635mmthick430stainlesssteelsheet
+objects, and positioning sensors. The maximum payload of
+wasusedtocreatethesteelsurfacemount.Thelegpropulsors
+the manipulator when fully extended is: 350 g.
+were 3D printed and embedded with 6.4mm nickel plated
+neodymium magnets each rated at a maximum of 5.39 N. F. Control
+The amount of force to slide the propulsor was approxi-
+The OpenCM9.04 microcontroller board was used in tan-
+mately0.88Nforthisprototype.Theamountofforcetopull
+dem with custom written Arduino IDE and OpenCM IDE
+the propulsor by exploiting directional forces was no more
+software for the locomotion and manipulation of the robotic
+than 0.1 N.
+device. An 11.1 V, 1800 mAh lithium-ion battery was used
+to power the robot.
+C. Actuator Selection
+G. Measurement
+Since the swappable propulsors are relatively lightweight,
+the manipulator joint torques are primarily dependent on the An INA219 high side DC current sensor breakout board
+detachment forces. Using Eq. 2 and substituting the forces was used to measure the power consumption of the robot.
+deﬁned above into Eq. 3 and 4, the maximum joint torques SparkFun microSD transﬂash breakout board was used to
+for each joint in N-m were computed to be: record the data collected during experiments.
+860
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. average power consumption of 6.5 W, whereas the wheeled
+locomotiondrewanaveragepowerconsumptionof4.287W.
+The COT of legged locomotion was 3.087, while the COT
+of wheeled locomotion was 1.106. Since ﬂat ground is very
+common, this illustrates the need to swap propulsors.
+(a) (b)
+Fig.7. Figure7(a)representsthe5DOFprototypemanipulator.Themanip-
+ulatorconsistsofﬁverevolutejointsandaparallelgrippertoattach/detach
+the leg propulsor. Figure 7(b) illustrates the internal components of the
+Fig. 8. Power consumption measurements on ﬂat concrete surface over
+robot.
+18meters.Averagepowerconsumptionforleggedlocomotionwas6.5W.
+Averagepowerconsumptionforwheeledlocomotionwas4.287W.
+V. RESULTS
+C. Adding the Manipulator
+A. Overview
+Since wheels provide substantial energetic improvements
+Experiments utilizing the prototype robot were carried
+on ﬂat ground, manipulation can be used to transition to
+out on a range of terrain. Energy consumption, distance
+wheels for long stretches of ﬂat ground. However, if the
+traveled,andtraveltimeweremeasured.Thesewereusedto
+added mass from the manipulator increases power dramati-
+determinecostoftransport,whichisacommonmetricforthe
+cally, then such a strategy is not viable. Therefore, we con-
+energetic performance of mobile systems. The experiments
+ducted additional experiments with the manipulator added.
+are illustrated in the accompanying video. The swappable
+For this comparison, power is a better metric than cost of
+leg-wheel propulsor prototype was tested on four different
+transport because the manipulator does not participate in
+terrains (concrete, grass, forest, and gravel). During the
+active locomotion. The results, shown in Table I, illustrate
+experiment, the robot was allowed to traverse through the
+that the added mass of the arm only increases the wheeled
+given terrains at maximum actuator speed (114 rpm) over
+and legged power consumption slightly. Therefore, the use
+a straight 18 m course. Voltage and current of the battery
+of the arm to switch to wheeled mode is a viable strategy
+were measured throughout the experiment. Using the mea-
+for increasing energetic performance.
+surementsobtained,batterypower,energyconsumption,and
+cost of transport (COT) were calculated using Eq. (6), (7),
+TABLEI
+and (8).
+SWAPPABLELEG-WHEELPROPULSORROBOTPOWERCONSUMPTION
+× VALUES
+Battery Po(cid:90)wer=V I (6)
+battery battery Mode Power(W)Energy(J)Mass(kg)Distance(m)Time(s)COT
+WHLa 4.287 263 1.346 18 50 1.106
+t
+Energy= BatteryPower(t) dt (7) WHL-Ab 4.440 268 1.566 18 50 0.970
+0 LEGc 6.500 762 1.4 18 110 3.087
+LEG-Ad 6.558 930 1.62 18 136 3.253
+Energy
+Cost of Transport= × × (8)
+mass gravity distance aWHL:WheeledLocomotion.
+bWHL-A:WheeledLocomotionManipulatorAttached.
+B. Legged vs. Wheeled Locomotion cLEG:LeggedLocomotion.
+dLEG-A:LeggedLocomotionManipulatorAttached.
+Toprovideabaselineillustrationofthetrade-offsbetween
+wheeled and legged locomotion, we performed a series of
+D. Performance of Fully-Integrated System
+experiments with wheels and legs. These did not include the
+manipulator. The wheels performed well on concrete (ﬂat With the beneﬁts of manipulation clearly demonstrated,
+ground), but eventually failed to advance on grass, forest, we performed a number of experiments to illustrate the
+and gravel. The legs utilized a tripod gait [6], and were able performanceofafullyfunctionalprototype.Themanipulator
+to traverse all terrain. These experiments are shown in the was incorporated into the vehicle and the vehicle used the
+accompanying video. optimal mode of locomotion on four surfaces. Flat concrete
+These results illustrate the widely known versatility of featured wheeled locomotion, and the COT was 0.97. This
+legs [26]. Consequently, there is a tendency to only use represents a roughly three-fold decrease when compared to
+legs to traverse a broad range of terrain. However, as Fig. 8 the legged results on concrete. For grass, gravel, and forest,
+illustrates, wheels were more energy efﬁcient than legs on theoptimalmodewaslegged(COTwasinﬁniteforwheeled
+ﬂatconcretesurface.Therobotinleggedlocomotiondrewan due to getting stuck). The COT was 3.3 for grass, 5.3 for
+861
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. forest, and 6.7 for gravel. The time histories are shown in seconds. Future studies will look to optimize the speed and
+Fig. 9. robustness of swapping propulsors.
+Fig.9showshowtheswappableleg-wheelpropulsorrobot
+VI. CONCLUSION
+inlegmodewassuccessfulonterrainsthewheelmodefailed
+to traverse. The leg mode consumed least amount of energy In this paper, we presented a new approach to adaptive
+on grass with average battery power draw of 5.23 W and terrain locomotion. We formulated a unique manipulation-
+COTof3.312.Thelegmodehadthehighestpowerdrawon based framework for adaptation that exploits a combination
+gravel which had the most uneven surface. of the powerful adhesion forces of permanent magnets with
+geometric features for easy detachment. We analyzed how
+the swappable propulsors can be manipulated in simple
+linear motions and used these results to create a functional
+prototype robot. We speciﬁcally focused on the leg-wheel
+propulsorstodemonstratethatchangingmodesforaspeciﬁc
+terrain can be energy efﬁcient. We also showed how adding
+amulti-purposemanipulatordoesnotsignﬁcantlychangethe
+power consumption of the robot during locomotion.
+Our system was designed to be simple with minimal
+integrationofsensors.Manymethodsincludingmanipulation
+and terrain transition are currently open-loop or human-in-
+the-loop.Therefore,futureworkwillfocusoncreatingrobust
+andrapidmanipulationstrategies.Inaddition,weareexcited
+toexaminehowperceptionandmappingcanbeusedtoplan
+paths for these vehicles that minimize energy consumption.
+Such techniques would identify which terrain would require
+anadaptationandwouldusetheadaptationstoreduceoverall
+energy expenditure. Lastly, there are other propulsors that
+merit further exploration, such as ones that enable transition
+between water and land.
+ACKNOWLEDGMENT
+TheauthorswouldliketothankDavidBooker-Earley,Eric
+Dong, Varun Madabushi, Avi Balakirsky, and all the DART
+Lab members for supporting this project.
+(a) Grasp leg propulsor inside (b) Detachfromstoringbase.
+chassis.
+Fig. 9. Power consumption of the swappable leg-wheel propulsor robot
+onvariousterrainsatmaximumactuatorspeed(114rpm)over18meters.
+E. Using Manipulation to Enable Adaptive Mobility
+To evaluate the adaptive mobility aspect of the swappable
+leg-wheel propulsor design, the manipulator was given for-
+ward kinematic control commands to attach the leg propul-
+sors to its wheel propulsors. Using known coordinates of
+each t-slot openings, the 5 DOF manipulator and the wheels
+were coordinated to place the legs. The robot switching its (c) Attachtowheelpropulsor. (d) Slidepropulsortoconstrain.
+mode from wheel mode to leg mode has been illustrated
+Fig.10. Aphotographicillustrationoftheswappableleg-wheelpropulsor
+in Fig. 10. The process to swap a single propulsor took 13 robotattachingalegpropulsorisshown.
+862
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [21] C. C. Phipps, B. E. Shores, and M. A. Minor, “Design and quasi-
+staticlocomotionanalysisoftherollingdiskbipedhybridrobot,”IEEE
+[1] D.F.Hougen,S.Benjaafar,J.C.Bonney,J.R.Budenske,M.Dvorak, transactionsonrobotics,vol.24,no.6,pp.1302–1314,2008.
+M. Gini, H. French, D. G. Krantz, P. Y. Li, F. Malver, et al., “A
+[22] K.Tadakuma,R.Tadakuma,A.Maruyama,E.Rohmer,K.Nagatani,
+miniature robotic system for reconnaissance and surveillance,” in
+K.Yoshida,A.Ming,M.Shimojo,M.Higashimori,andM.Kaneko,
+Proceedings2000ICRA.MillenniumConference.IEEEInternational
+“Mechanical design of the wheel-leg hybrid mobile robot to realize
+ConferenceonRoboticsandAutomation.SymposiaProceedings(Cat.
+alargewheeldiameter,”in2010IEEE/RSJInternationalConference
+No.00CH37065),vol.1. IEEE,2000,pp.501–507. onIntelligentRobotsandSystems. IEEE,2010,pp.3358–3365.
+[2] F. Matsuno and S. Tadokoro, “Rescue robots and systems in japan,”
+[23] S.-C. Chen, K.-J. Huang, W.-H. Chen, S.-Y. Shen, C.-H. Li, and P.-
+in2004IEEEInternationalConferenceonRoboticsandBiomimetics. C. Lin, “Quattroped: a leg–wheel transformable robot,” IEEE/ASME
+IEEE,2004,pp.12–20. TransactionsOnMechatronics,vol.19,no.2,pp.730–742,2013.
+[3] B.M.Yamauchi,“Packbot:aversatileplatformformilitaryrobotics,”
+[24] A.MazumdarandH.H.Asada,“Mag-foot:Asteelbridgeinspection
+inUnmannedgroundvehicletechnologyVI,vol.5422. International robot,” in 2009 IEEE/RSJ International Conference on Intelligent
+SocietyforOpticsandPhotonics,2004,pp.228–237. RobotsandSystems. IEEE,2009,pp.1691–1696.
+[4] R.D.Quinn,J.T.Ofﬁ,D.A.Kingsley,andR.E.Ritzmann,“Improved
+[25] M.Barragan,N.Flowers,andA.M.Johnson,“MiniRHex:Asmall,
+mobilitythroughabstractedbiologicalprinciples,”inIEEE/RSJInter- open-source, fully programmable walking hexapod,” in Robotics:
+nationalConferenceonIntelligentRobotsandSystems,vol.3. IEEE, Science and Systems Workshop on “Design and Control of Small
+2002,pp.2652–2657. LeggedRobots”,Pittsburgh,PA,June2018,workshopabstract.
+[5] J. M. Morrey, B. Lambrecht, A. D. Horchler, R. E. Ritzmann, and
+[26] C. Ordonez, J. Shill, A. Johnson, J. Clark, and E. Collins, “Terrain
+R.D.Quinn,“Highlymobileandrobustsmallquadrupedrobots,”in identiﬁcationforrhex-typerobots,”inUnmannedSystemsTechnology
+Proceedings 2003 IEEE/RSJ International Conference on Intelligent
+XV,vol.8741. InternationalSocietyforOpticsandPhotonics,2013,
+RobotsandSystems(IROS2003)(Cat.No.03CH37453),vol.1. IEEE,
+p.87410Q.
+2003,pp.82–87.
+[6] U. Saranli, M. Buehler, and D. E. Koditschek, “Rhex: A simple and
+highlymobilehexapodrobot,”TheInternationalJournalofRobotics
+Research,vol.20,no.7,pp.616–631,2001.
+[7] D.-Y. Lee, G.-P. Jung, M.-K. Sin, S.-H. Ahn, and K.-J. Cho, “De-
+formable wheel robot based on origami structure,” in 2013 IEEE
+InternationalConferenceonRoboticsandAutomation. IEEE,2013,
+pp.5612–5617.
+[8] T.Aoki,H.Yamato,M.Shimaoka,andS.Mitsumori,“Studyofomni-
+directionalallterrainmobilerobotwithglobularmetalspringwheel,”
+in2013IEEEInternationalConferenceonRoboticsandAutomation.
+IEEE,2013,pp.5606–5611.
+[9] Y.-S. Kim, G.-P. Jung, H. Kim, K.-J. Cho, and C.-N. Chu, “Wheel
+transformer:Aminiaturizedterrainadaptiverobotwithpassivelytrans-
+formedwheels,”in2013IEEEInternationalConferenceonRobotics
+andAutomation. IEEE,2013,pp.5625–5630.
+[10] Y.She,C.J.Hurd,andH.-J.Su,“Atransformablewheelrobotwitha
+passiveleg,”in2015IEEE/RSJInternationalConferenceonIntelligent
+RobotsandSystems(IROS). IEEE,2015,pp.4165–4170.
+[11] J. Park, D. H. Kong, and H.-W. Park, “Design of anti-skid foot
+with passive slip detection mechanism for conditional utilization of
+heterogeneous foot pads,” IEEE Robotics and Automation Letters,
+vol.4,no.2,pp.1170–1177,2019.
+[12] K. Nagatani, M. Kuze, and K. Yoshida, “Development of trans-
+formable mobile robot with mechanism of variable wheel diameter,”
+J.Robot.Mechatron,vol.19,pp.252–253,2007.
+[13] K.Iagnemma,A.Rzepniewski,S.Dubowsky,andP.Schenker,“Con-
+trolofroboticvehicleswithactivelyarticulatedsuspensionsinrough
+terrain,”AutonomousRobots,vol.14,no.1,pp.5–16,2003.
+[14] Y.-J.Dai,E.Nakano,T.Takahashi,andH.Ookubo,“Motioncontrol
+of leg-wheel robot for an unexplored outdoor environment,” in Pro-
+ceedingsofIEEE/RSJInternationalConferenceonIntelligentRobots
+andSystems.IROS’96,vol.2. IEEE,1996,pp.402–409.
+[15] F. Michaud, D. Letourneau, M. Arsenault, Y. Bergeron, R. Cadrin,
+F. Gagnon, M.-A. Legault, M. Millette, J.-F. Pare´, M.-C. Tremblay,
+etal.,“Multi-modallocomotionroboticplatformusingleg-track-wheel
+articulations,”AutonomousRobots,vol.18,no.2,pp.137–156,2005.
+[16] J.B.JeansandD.Hong,“Impass:Intelligentmobilityplatformwith
+active spoke system,” in 2009 IEEE International Conference on
+RoboticsandAutomation. IEEE,2009,pp.1605–1606.
+[17] J. A. Smith, I. Sharf, and M. Trentini, “Paw: a hybrid wheeled-
+leg robot,” in Proceedings 2006 IEEE International Conference on
+RoboticsandAutomation,2006.ICRA2006. IEEE,2006,pp.4043–
+4048.
+[18] D. Zarrouk, A. Pullin, N. Kohut, and R. S. Fearing, “Star, a sprawl
+tunedautonomousrobot,”in2013IEEEInternationalConferenceon
+RoboticsandAutomation. IEEE,2013,pp.20–25.
+[19] G. Endo and S. Hirose, “Study on roller-walker-energy efﬁciency of
+roller-walk,”in2011IEEEInternationalConferenceonRoboticsand
+Automation. IEEE,2011,pp.5050–5055.
+[20] T. Okada, W. T. Botelho, and T. Shimizu, “Motion analysis with
+experimentalveriﬁcationofthehybridrobotpeopler-iiforreversible
+switchbetweenwalkandrollondemand,”TheInternationalJournal
+ofRoboticsResearch,vol.29,no.9,pp.1199–1221,2010.
+863
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:50:05 UTC from IEEE Xplore.  Restrictions apply. 

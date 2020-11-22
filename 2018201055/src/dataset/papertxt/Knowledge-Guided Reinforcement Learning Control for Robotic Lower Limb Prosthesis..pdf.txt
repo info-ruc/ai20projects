@@ -1,0 +1,574 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+BayesOD: A Bayesian Approach for Uncertainty Estimation in Deep
+Object Detectors
+Ali Harakeh1, Michael Smart2, and Steven L. Waslander1
+Abstract—When incorporating deep neural networks into
+robotic systems, a major challenge is the lack of uncertainty
+measuresassociatedwiththeiroutputpredictions.Methodsfor
+uncertainty estimation in the output of deep object detectors
+(DNNs) have been proposed in recent works, but have had
+limited success due to 1) information loss at the detectors non-
+maximum suppression (NMS) stage, and 2) failure to take
+into account the multitask, many-to-one nature of anchor-
+basedobjectdetection.Tothatend,weintroduceBayesOD,an
+uncertaintyestimationapproachthatreformulatesthestandard Fig.1. TheoutputfromBayesOD,demonstratedonatestimageframefrom
+objectdetectorinferenceandNon-Maximumsuppressioncom- theKITTIDataset[8].Threelevelsoftrust(teal:highlyreliable,orange:
+ponents from a Bayesian perspective. Experiments performed slightlyreliableandred:unreliable)aredeterminedbasedonthresholdsof
+on four common object detection datasets show that BayesOD theGaussianentropyprovidedbyBayesOD.Allboundingboxesareshown
+provides uncertainty estimates that are better correlated with withthe95%conﬁdenceellipseoftheirtop-leftandbottom-rightcorners.
+theaccuracyofdetections,manifestingasasigniﬁcantreduction
+of 9.77%-13.13% on the minimum Gaussian uncertainty error of the confusion about which model generated the training
+metric and a reduction of 1.63%-5.23% on the minimum
+data,andcanbeexplainedawaygivenenoughrepresentative
+Categorical uncertainty error metric. Code will be released at
+https://github.com/asharakeh/bayes-od-rc. training data points [6]. Aleatoric or observation uncertainty
+results from the stochastic nature of the observed input,
+I. INTRODUCTION and persists in network output despite expanded training on
+Duetotheirhighlevelofperformance,deepobjectdetec- additional data [7].
+tors have become standard components of perception stacks MethodstoestimatebothuncertaintytypesinDNNshave
+for safety critical tasks such as autonomous driving [1], [2], beenrecentlyproposedbyKendaletal.[7],withapplications
+[3] and automated surveillance [4]. Therefore, the quantiﬁ- to pixel-wise perception tasks. Recent methods [9], [10],
+cation of how trustworthy these detectors are for subsequent [11], [12], [13], [14], [15] extended Kendal’s work [7] to
+modules, especially in safety critical systems, is of utmost object detection, but fail to consider the multi-task, many-
+importance.Toencodethelevelofconﬁdenceinanestimate, to-one nature of the object detection task. To that end, we
+a meaningful and consistent measure of uncertainty should introduce BayesOD, a framework designed to estimate the
+be provided for every detection instance (see Fig. 1). uncertainty in both bounding box and category of detected
+Two important goals must be met to create a meaningful object instances. This paper offers the following contribu-
+uncertainty measure. First, the robotic system should be tions:
+capable of using the uncertainty measure to fuse an ob-
+ject detector’s output with prior information from different • We provide a Bayesian treatment for every step of
+sources [5] to connect sequences of detections over time the neural network inference procedure, allowing the
+and increase detection and tracking performance as a result. incorporation of anchor-level and object-level priors in
+Second and most importantly, the robotic system should be closed form.
+able to use its own estimates of detection uncertainty to re- • We replace standard non-maximum suppression (NMS)
+liably identify incorrect detections, including those resulting with Bayesian inference, allowing the detector to retain
+from out of distribution instances, where object categories, all predicted information for both the bounding box
+scenarios, textures, or environmental conditions have not and the category of a detected object instance.
+been seen during the training phase [5]. • We perform comprehensive experiments to quantify the
+Two sources of uncertainty can be identiﬁed in any ma- quality of the estimated uncertainty on four commonly
+chine learning model. Epistemic or model uncertainty is the used2Dobjectdetectiondatasets,COCO,PascalVOC,
+uncertainty in the model’s parameters, usually as a result BerkeleyDeepDriveandKitti.WeshowthatBayesOD
+−
+provides a signiﬁcant reduction of 9.77% 13.13%
+1Ali Harakeh and Steven L. Waslander are with The on the minimum Gaussian uncertainty error metric, a
+−
+Institute For Aerospace Studies (UTIAS), University of reduction of 1.63% 5.23% on the minimum Cat-
+Toronto, Toronto, Canada, ali.harakeh@utoronto.ca,
+egorical uncertainty error metric, and an increase of
+steven.w@utias.utoronto.ca
+−
+2 Michael Smart is with the Department of Mechanical and 0.07% 3.00% on the probabilistic detection quality
+Mechatronics Engineering, University of Waterloo, Waterloo, Canada, over the next best method from current state of the art.
+michael.smart@uwaterloo.ca
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 87
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. Anchor Level  Object Level 
+Priors Prior
+Object Detector
+Bayesian 
+Clustering
+Inference
+MMCC--
+DDrrooppoouutt
+BBooxx  CCoovvaarriiaannccee  
+RReeggrreessssiioonn
+Fig. 2. The different stages of estimation employed in BayesOD, demonstrated on a test image frame from the BDD Dataset [16]. The additions by
+BayesODtoastandardobjectdetector(grey)areshowninpurple.Priorinformationisshowninred.Left:Priorboundingboxes.Middle:Objectdetector
+resultsafterprocessingthepriorboxesandincorporatinganchor-levelnon-informativepriors.Right:FinaldetectionresultsafterclusteringandBayesian
+Inference.BoxcornercovarianceisvisualizedasinFig.1
+II. RELATEDWORK from the black box method in [9]. The black box method
+is shown to provide weakly correlated estimates for bound-
+A. Deep Neural Networks For Object Detection
+ing box uncertainty, mainly because it observes the output
+The object detection problem requires the estimation of
+bounding box after NMS, where most of the information
+both the category to which an object belongs, and its
+from redundant predictions has already been removed.
+spatial location and extent, often expressed as the tightest
+Kendalletal.[7]providesoneoftheﬁrstworkstoaddress
+ﬁtting bounding box. The majority of state of the art object
+the estimation of aleatoric uncertainty for computer vision
+detectors in 2D [17] or in 3D [1], [2], [3] follow a standard
+tasks. For regression tasks, a log likelihood loss is used
+algorithm, which maps a scene representation to object
+to estimate heteroscedastic aleatoric uncertainty, written for
+instances. Since the number of object instances in the scene
+every regression target as:
+is usually unknown a priori, the procedure begins with a
+denselysampledgridofpriorobjectboundingboxes,referred 1 || − || 1
+L (x,θ)= y f(x,θ) 2+ logσ(x,θ)2, (2)
+to as anchors [18], [19], where the object detector provides reg 2σ(x,θ)2 2 2
+a category and a bounding box estimate for each anchor
+where x is the input to, and f(x,θ) is the output from the
+element. Since multiple anchors can be mapped to a single
+neuralnetwork.Furthermoreyisthegroundtruthregression
+bounding box in space, redundant outputs are eliminated ||||
+target, . is the L norm, θ are the neural network
+throughNon-MaximumSuppression.BayesODbuildsonthe 2 2
+parameters, and σ(x,θ) is the estimated output variance.
+RetinaNet 2D object detector [19].
+Le et al. [15] directly apply the formulation in Eq. (2) to
+B. Uncertainty Estimation In Deep Object Detectors estimate the diagonal elements of the covariance matrix of
+theboundingboxoutputfromobjectdetectors.Suchmethods
+To account for epistemic uncertainty, Bayesian Neural
+are referred to as sampling free and require only a single
+Networks [20] usually apply a prior distribution over their
+|D run of the deep object detector to estimate uncertainty. The
+parametersθtocomputeaposteriordistributionp(θ )over
+estimated variance in Eq. (2) has also been used in [11],
+the set of all possible parameters given the training dataset
+D [12], [14] to increase average precision, by incorporating it
+. A marginal distribu(cid:90)tion can then be computed for any
+in the non-maximum suppression stage, while disregarding
+prediction as:
+thequalityoftheoutputuncertainty.Theproposedsampling
+| D | D |D free methods assume a diagonal covariance matrix and still
+p(yˆ x , )= p(yˆ x , ,θ)p(θ )dθ, (1)
+i i i i use NMS to eliminate low scoring predictions, reducing
+θ the quality of their estimated uncertainty for both objects’
+where x is the input, and yˆ is the output of the neural net- bounding box and category.
+i i
+work.Unfortunately,thecalculationoftheintegralinEq.(1) Le et al. [15] estimate aleatoric uncertainty in deep
+isusuallyintractableduetothenon-linearactivationfunction object detectors by exploiting anchor redundancy, where
+between consecutive layers [21]. Tractable approximations multiple per-anchors predictions map to the same object.
+can be derived through Monte-Carlo integration by using These predictions are clustered using spatial afﬁnity before
+ensemble methods [22] or Monte Carlo (MC) Dropout [6]. NMS, and uncertainty measures are estimated using the
+To estimate the epistemic uncertainty in the output of cluster associated with every output prediction. Finally, a
+deep object detectors, Miller et al. [9] directly applies straightforward extension of [7] is typically used to perform
+MC Dropout, treating the deep object detector as a black joint estimation of epistemic and aleatoric uncertainty in
+box. Uncertainty is then estimated as sample statistics from deep object detectors [13], [23], while still employing NMS
+spatially correlated detector outputs. Subsequent work [10] to eliminate rather than fuse information from redundant
+studied the effect of various correlation and merging algo- anchors.
+rithms on the quality of the estimated uncertainty measures Unlike each of the existing methods, BayesOD replaces
+88
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. NMS with Bayesian inference signiﬁcantly improving the the loss in Eq. (6) is found to be numerically unstable. Fur-
+quality of its uncertainty estimates. In addition, BayesOD thermore,therearenoguaranteesonthepositivedeﬁniteness
+is the ﬁrst method to tackle fusion of the category from ofthepredictedcovariancematrixΣ (x ,θ).UsingtheLDL
+a i (cid:124)
+redundantoutputanchors,aswellastoprovideamultivariate decomposition of Σ (x ,θ) = L(x ,θ)D(x ,θ)L(x ,θ) , in
+a i i i i
+extension of Eq. (2) to estimate the aleatoric uncertainty of conjunction with the Cauchy-Schwarz inequality, a numeri-
+objects’ bounding boxes. cally stable surrogate loss function is derived as:
+III. ABAYESIANFORMULATIONFOROBJECT L (x ,θ)=
+mv i
+DETECTION: 1|| − || || − − ||
+Throughout this section, the bounding box of an object, 2 L(xi,θ) 1 2F D(xi,θ) 12(f(xi,θ) yi) 22
+represented by its top left and bottom right corners, is 1
+B + tr(logD(x ,θ)), (7)
+denoted as , whereas its category, represented by a one- 2 i
+S
+hot vector, is denoted as . The index i is used to signify a where L(x ,θ) is a lower triangular matrix with ones for its
+i
+variablerelatedtotheith anchorintheanchorgrid.Variables diagonal entries, and D(x ,θ) is a diagonal matrix. The loss
+i
+not indexed with i represent inference output clustered over function in Eq. (7) is a numerically stable upper bound of
+several anchors. Finally, predictions provided by the neural theoneinEq.(6)andcanguaranteethepositivedeﬁniteness
+network are denoted with aˆ. operator. of Σ (x ,θ) by predicting positive values for the diagonal
+a i
+elements of D(x ,θ) through standard activation functions.
+A. Computing The Per-Anchor Gaussian Posterior: i
+The ﬁnal output distributions after incorporating both
+Computing the uncertainty in the estimated per-anchor
+epistemic and aleatoric covariance estimates are plotted as
+bounding box: Following [7] and using MC-Dropout as bounding boxes in the middle image of Fig. 2.
+a tractable approximation of the integral in Eq. (1), the
+sufﬁcient statistics of the Gaussian marginal probability Incorporating per-anchor bounding box priors: The per-
+distribution describing the estimated per-anchor bounding anchor bounding box prior is usually deﬁned based on the
+box Bˆi ∼N(µ(cid:88)(xi),Σ(xi)) can be derived as: training dataset D as p(B|xi)∼N(µ0,Σ0). The pBer-anchor
+posteriordistributiondescribingtheboundingbox canthen
+T
+1 (cid:32) (cid:33)
+µ(xi)= T (cid:88)f(xi,θt) (3) be written as:
+B| D B ∝ B | D B B| D
+t=1 p( x , , ˆ) p(ˆ x , , )p( x , ). (8)
+Σe(xi)= T1 T f(xi,θt)f(xi,θt)(cid:124) −µ(xi)µ(xi)(cid:124), p(Bˆi|xi,D,B)iis a Giaussianilikielihood functiion described
+t=1 by the sufﬁcient statistics [µ(x ),Σ(x )] in equations Eq. (3)
+(4) i i
+andEq.(5).Thesufﬁcientstatisticscanbecomputedthrough
+where T is the number of times MC-Dropout sampling is the multivariate Gaussian conjugate update, as:
+performed, and f(x ,θ ) is the bounding box regression (cid:48) − − −
+i t Σ(x )=(Σ 1+Σ(x ) 1) 1 (9)
+outputoftheneuralnetworkforthetthMC-Dropoutrun.The (cid:48) i (cid:48)0 − i
+covariance matrix, Σe, capturBes the epistemic uncertainty in µ(xi)=Σ(xi)(Σ01µ0+Σ(xi)µ(xi)). (10)
+the estimated bounding box ˆ.
+i The choice of anchor priors depends on the application,
+Eq. (3) is sufﬁcient to compute the output mean of the
+B and whether object information is actually available a priori.
+per-anchor bounding box ˆ. However, Eq. (4) still needs
+i Since no useful bounding box information is available from
+to account for the aleatoric component of uncertainty, where
+our 2D training datasets, a non-informative prior, visually
+the ﬁnal per-anchor output covari(cid:88)ance Σ(xi) can be approx- shown in the left image of Fig. 2, is chosen for B following
+imated as:
+[24].
+T
+Σ(x )=Σ (x )+ 1 Σ (x ,θ ). (5) B. Computing The Per-Anchor Categorical Posterior:
+i e i T a i t Computing the uncertainty in the estimated per-anchor
+t=1
+To estimate the full covariance matrix Σ (x ), a novel category: Since the neural network outputs the parameters
+a i of a Categorical distribution rather than one-hot categorical
+multivariate log likelihood regression loss is derived as:
+samples, the parameters for the Categorical marginal condi-
+S ∼
+Lmv(xi,θ)= tional probability distr(cid:88)ibution ˆi Cat([pˆ1...pˆK]) can be
+computed as:
+1 − (cid:124) − −
+(f(x ,θ) y ) Σ (x ,θ) 1(f(x ,θ) y )
+2 i i a i i i T
+1
++ 12logdetΣa(xi,θ), (6) pˆk = T t=1SoftMax(g(xi,θt))k, (11)
+where Σ (x ,θ) is the predicted per-anchor aleatoric co- where SoftMax(.) is the soft max function, and g(x ,θ )
+a i i t k
+varaince matrix, f(x ,θ) is the predicted per-anchor bound- is the output logit of the kth category, estimated at the
+i
+ing box, and y is the associated regression target. However, tth MC-Dropout run of the neural network. No explicit
+i
+89
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. treatment of the aleatoric classiﬁcation uncertainty is The anchor with the highest categorical score is considered
+performed, since it is already contained within the estimated the cluster’s center, is indexed by 1, and is described with
+parameters [pˆ ...pˆ ] [14]. theposteriordistributionsinEq.(8)andEq.(12).Therestof
+1 K
+theclustermembersareassumedtobemeasurementoutputs
+S B
+Incorporating per-anchor category priors: For the object from the neural network described by the states ˆ and ˆ,
+i i
+category, a Dirichlet distribution is set as a prior over and are used to update the bounding box and category of
+P P
+the parameters of the categorical distribution Cat( ) theclustercenter.Speciﬁcally,theﬁnalposteriordistribution
+generating S, instead of incorporating a prior distribution describing an object’s bounding box is: (cid:89)
+S
+directly over the category . The posterior distribution of
+the categorical parameters can be written as: B|X D B B ∝ B| D B M B | D B
+p( , ,[ˆ ,..., ˆ ]) p( x , , ˆ ) p(ˆ x , , )
+1 M 1 1 i i
+P| D ∝ | D P P| D
+p( xi, ,Zˆi) p(Zˆi xi, , )p( xi, ), (12) N (cid:48)(cid:48) X (cid:48)(cid:48) iX=2
+P (cid:48) (cid:48) = (µ ( ),Σ ( )), (15)
+where is the set of updated parameters [p ,...,p ],
+and Zˆi = [zˆ1,...,zˆH] are H i.i.d. sam1ples frKom where X is the set of inputs [xi | i B=| 1.D..MB ] corre-
+Cat(|[pˆ1,D...P,pˆK]). Since the likelihood function sponding to the(cid:81)M cluster members, p( x1, , ˆ1) is the
+p(Zˆ x , , ) is a categorical distribution, the prior per-anchor posterior distribution of the cluster center, and
+i i P| D
+distribution p( xi, ) is chosen to be a Dirichlet p(B|x ,D,Bˆ ) M p(Bˆ|x ,D,B) is the likelihood derived
+distribution allowing a Dirichlet posterior to be computed 1 1 i i
+(cid:89) (cid:89) (cid:89) i=2 B
+in closed form as: through a conditional independence assumption of the ˆ
+B i
+of the cluster members given . The sufﬁcient statistics of
+p(P|x ,D,Zˆ )∝ K pαk−1 H K pzˆhk=1 Eq. (15) can be esti(cid:32)m(cid:88)ated in close(cid:33)d form as:
+i i k k
+−
+k=1 h=1k=1 1
+=Dir((cid:80)α1(cid:48),...,αK(cid:48) ), (13) Σ(cid:48)(cid:48)(X)= M Σ(cid:32)(cid:48)(x(cid:88)i)−1 (cid:33) (16)
+where zˆ is the element in instance zˆ corresponding to i=1
+hk h
+(cid:48) H ∀ (cid:48)(cid:48) X (cid:48)(cid:48) X M (cid:48) − (cid:48)
+category k, and [αk = αk + zˆhk k = 1,...,K] are µ ( )=Σ ( ) Σ(xi) 1µ(xi) , (17)
+h=1
+the inferred parameters of the Dirichlet posterior distribu- i=1
+(cid:48) (cid:48)
+tion.Theper-anchorcategoricalposteriordistributioncanbe where µ(x ),Σ(x ) are the sufﬁcient statistics of the per
+i i
+written as: anchor posterior distribution derived in Eq. (8).
+S| D (cid:48) (cid:48) To arrive at the ﬁnal posterior distribution describing
+p( x , ,Z )=Cat([p ,...,p ]), (14) S
+i i 1 K the category , a similar analysis can be performed to
+(cid:48) P
+where p is the mean of the Dirichlet posterior distribu- update the sufﬁcient statistics of the cluster center with
+k
+tion [24] in Eq. (13) written as: categorical measurements [Zˆ ,...,Zˆ ] of the rest of the
+2 m P
+(cid:80)(cid:48) cluster members. Speciﬁcally, the posterior probability of
+(cid:48) α (cid:89)
+p = k . can be derived as:
+k K (cid:48)
+αj P| D ∝ P| D M | D P
+j=1 p( x , ,[Zˆ ,...,Zˆ ]) p( x , ,Zˆ ) p(Zˆ x , , )
+i 1 M 1 1 i i
+Similartothepriorusedfortheper-anchorboundingbox, i=2
+we choose a non-informative Dirichlet prior for the per- (cid:80) (cid:80)=Dir(α(cid:48)(cid:48),...,α(cid:48)(cid:48) ) (18)
+1 K
+anchor category following [24]. Although non-informative,
+the prior still serves an essential purpose by allowing the where α(cid:48)(cid:48) = α(cid:48) + M H zˆ ∀ k = 1...K, and the
+k k ihk
+derivation of a Dirichlet posterior in Eq. (13), which will i=2h=1
+allow the fusion of information from multiple clustered categorical measurem(cid:48)(cid:48)ents [Zˆ2,...,Zˆm] are assumed to be
+categorical variables in the next section. i.i.d. In summary, α is derived by updating the per-anchor
+k
+Dirichlet posterior distribution in (12) of the cluster center
+C. Bayesian Inference as a Replacement to NMS: withindexi=1withcategoricalmeasurementsZ ,...,Z
+2 M
+Similar to NMS, BayesOD clusters per-anchor outputs from all cluster members. The ﬁnal categorical distribution
+S
+from the neural network using spatial afﬁnity. However, describing the state is then:
+all elements in the cluster are then combined regardless of S|X D (cid:48)(cid:48) (cid:48)(cid:48)
+p( , ,[Zˆ ,...,Zˆ ])=Cat(p ,...,p ), (19)
+their classiﬁcation score during inference. Greedy clustering 1 M 1 K
+is chosen as it provides adequate performance when com- where[p(cid:48)(cid:48),...,p(cid:48)(cid:48) ]iscomputedasthemeanoftheposterior
+pared to standard NMS, while maintaining computational distributi1on in EqK. (18):
+efﬁciency. For better performing but slower clustering al- (cid:80)
+(cid:48)(cid:48)
+gorithms, see [10]. p(cid:48)(cid:48) = αk , (20)
+For the remainder of this section, we will continue the k K (cid:48)(cid:48)
+α
+derivation for a single anchor cluster containing M anchors. j
+j=1
+90
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. Note that every member of the cluster contributes to the where the PDQ increases as the distributions assigned to a
+estimation of the ﬁnal bounding box and category states of detection better match those of the ground truth instance.
+the object. Furthermore, the output distributions for both the For detailed information on the three evaluation metrics, we
+category and bounding box can be updated with object-level refer the reader to the [26], [10], [27].
+priors using the same equations presented in sections III-A
+and III-B. The ﬁnal output from BayesOD is shown as the B. Comparison With State of The Art Methods:
+rightmost image in Fig. 2.
+BayesOD is compared against four approaches represent-
+IV. EXPERIMENTSANDRESULTS ing the state of the art methods for uncertainty estimation
+methods used for object detection. The four approaches are
+To show the effectiveness of BayesOD in comparison to
+referredtoas:BlackBox[9],[10],SamplingFree[15],[14],
+the state of the art, it is applied to the problem of 2D object
+AnchorRedundancy[15],andJointAleatoricEpistemic[13].
+detection in image space. The evaluation is based on four
+BayesOD, Black Box, and Joint Aleatoric Epistemic use 10
+commonly used datasets:
+stochastic runs of MC-Dropout, while Sampling Free and
+• Berkeley Deep Drive 100K Dataset (BDD) [16] road
+Anchor Redundancy use only one non-stochastic run. As
+scene dataset, with 80K frames used according to
+such, BayesOD, Black Box, and Joint Aleatoric Epistemic
+the ofﬁcial 70K/10K training/validation split. Models ×
+run at a similar frame rate, approximately 4 slower than
+trained on BDD are also tested on 7,481 frames of
+Sampling Free and Anchor Redundancy. The afﬁnity thresh-
+KITTI[8].Bothdatasetscontain7commonroadscene
+oldusedforclusteringinallmethodswassettothe0.5IOU,
+object categories.
+similar to that used for NMS in RetinaNet. The number of
+• MSCOCO[25]dataset,with223K framesthatcontain
+categorical samples H in Eq. (12) is empirically set to 30.
+instances from 81 different object categories, and an
+Table I shows the results of evaluating the four methods
+ofﬁcial 118K/5K training/testing split. Models trained
+in comparison to BayesOD, on the four testing datasets.
+on COCO are also tested on 5,823 frames from Pascal
+BayesOD is seen to outperform all four methods on mAP
+VOC [26], which shares 20 object categories with the
+whentestedontheBDD,COCOandPASCALVOCdatasets
+COCO dataset. −
+by a margin of 0.57% 1.7% over the second best method,
+Models used for testing are not allowed to observe instances ∼
+but is outperformed on the KITTI dataset by 1.5% when
+from the KITTI or Pascal VOC datasets.
+using the Sampling Free and Anchor Redundancy methods.
+All baseline uncertainty estimation methods used in com-
+Such reduction in performance on KITTI is noted with
+parisonareintegratedintotheinferenceprocessofRetinaNet
+all methods using MC-Dropout, implying that MC-Dropout
+[19], trained using the regression loss function in Eq. (2) to
+might hurt mAP performance in cases where the testing
+estimate a diagonal bounding box covariance matrix. Full
+dataset is semantically different than the training dataset.
+aleatoric covariance matrix results are provided through a
+Similarly, BayesOD also outperforms all four methods on
+second RetinaNet model, trained using the proposed re-
+PDQ when tested on the BDD, KITTI and COCO datasets
+gression loss in Eq. (7). For additional information on −
+byamarginof0.07% 3.00%overthesecondbestmethod.
+RetinaNet’strainingprocedureandhyperparamters,see[19].
+BayesOD is outperformed on the PASCAL VOC dataset by
+A. Evaluation Metrics 0.95% when using the sampling free method. Considering
+the performance only on PDQ, it cannot be determined
+Three evaluation metrics are used to quantify the perfor-
+if a method is assigning lower probability values to false
+mance of uncertainty estimation methods in comparison to
+positives.
+BayesOD.Forperformanceonthedetectiontask,weusethe
+On the other hand, the mGMUE/mCMUE are capable of
+Mean Average Precision (mAP) [25], [26], [16], [8] at 0.5
+providing a quantitative measure of how well the estimated
+IOU. The maximum mean average precision achievable by
+uncertainty can be used to separate correct and incorrect
+a detector is 100%.
+detections[10].BayesODprovidesasigniﬁcantreductionof
+The Minimum Uncertainty Error (MUE) [10] at 0.5 −
+9.77% 13.13% in mGMUE over the next best method on
+IOU is used to determine the ability of the detector’s
+all four testing datasets. Combined with BayesOD’s perfor-
+estimated uncertainty to discriminate true positives from
+mance on the PDQ metric, it can be inferred that BayesOD
+false positives. The lowest MUE achievable by a detector
+not only assigns adequate probability to true positives, but
+is 0%. We deﬁne the Gaussian MUE (GMUE) when the
+alsoassignsalowerprobabilitytofalsepositiveswhencom-
+Gaussian entropy is used, Categorical MUE (CMUE) when
+pared to true positives. Finally, when comparing mCMUE,
+the Categorical entropy is used. Finally, we average the −
+BayesODprovidesareductionbetween1.63% 5.23%over
+GMUE and CMUE over all categories in a testing dataset to
+the next best method on all four datasets.
+arrive to a single value, the Mean (Gaussian or Categorical)
+MUE (mGMUE or mCMUE).
+C. Ablation Studies:
+Finally,weusethenewlyproposedProbabilityBasedDe-
+tectionQuality(PDQ)[27]tojointlyquantifythebounding TableIIshowstheresultsofthemAP,PDQ,mGMUE,and
+boxandcategoryprobabilityassignedtotruepositivesbythe mCMUE for the ablation studies performed on the COCO
+detector.ThehighestPDQachievablebyadetectoris100%, dataset. The results of the full BayesOD framework can
+91
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. ↑ ↑ ↓ ↓
+Training Dataset Testing Dataset Method mAP(%) PDQ Score(%) mGMUE(%) mCMUE(%)
+Sampling Free 36.59 33.97 44.19 28.46
+Black Box 36.43 32.46 47.63 30.45
+BDD BDD Anchor Redundancy 32.92 29.57 48.56 35.58
+Joint Aleatoric-Epistemic 36.84 29.57 46.35 28.28
+BayesOD 38.14 36.79 34.42 24.85
+Sampling Free 64.78 29.24 46.70 20.67
+Black Box 62.96 32.26 49.23 22.27
+BDD Kitti Anchor Redundancy 64.83 29.57 48.56 35.58
+Joint Aleatoric-Epistemic 62.96 29.57 46.35 28.28
+BayesOD 63.34 35.26 30.06 15.58
+Sampling Free 31.89 22.43 40.39 25.76
+Black Box 33.71 21.87 45.26 28.68
+COCO COCO Anchor Redundancy 29.94 17.63 43.74 31.13
+Joint Aleatoric-Epistemic 32.68 23.08 42.90 26.51
+BayesOD 35.41 23.15 30.23 24.13
+Sampling Free 54.94 14.18 49.49 29.63
+Black Box 54.67 12.77 48.90 29.42
+COCO Pascal VOC Anchor Redundancy 51.56 13.06 48.67 39.64
+Joint Aleatoric-Epistemic 55.43 11.62 49.99 30.14
+BayesOD 56.00 13.23 36.36 24.19
+TABLEI
+THERESULTSOFTHEEVALUATIONOFSamplingFree[14],[15],BlackBox[9],[10],AnchorRedundancy[15],ANDJOINT
+ALEATORIC-EPISTEMIC[13],[23]STATEOFTHEARTMETHODSCOMPAREDTOBAYESOD.
+be seen in experiment #1. By analyzing the results of the alternative epistemic uncertainty estimation mechanisms.
+ablation studies, the following claims are put forth: To provide better insight on the effect of epistemic un-
+Learning the off-diagonal elements of the covariance certainty from MC-Dropout on the full system, experiment
+matrix provides slightly better uncertainty estimates for #4 is performed by using BayesOD with a single inference
+theobjects’boundingbox.Tosupportthisclaim,RetinaNet run,andwithoutanyepistemicuncertaintyestimationmech-
+is trained using the original log likelihood loss in Eq. (2) anism. The results show a decrease in mGMUE of 6.93%
+instead of the proposed multivariate loss in Eq. (7). The overexperiment#3,and1.28%overthefullsystem,further
+results of BayesOD using this original loss formulation are cementing the conclusion that MC-Dropout might not be a
+showninexperiment#2.Whencomparedtothefullsystem, goodmethodtoestimateepistemicuncertaintyindeepobject
+an increase of 0.48% is observed in mGMUE. Although the detectors.
+improvementisnotsubstantial,thenewproposedlossavoids Greedy Non-Maximum Suppression is detrimental to
+an explicit independence assumption and allows the neural the discriminative power of the uncertainty in the ob-
+network to learn to drive the off-diagonal elements of the jects’ bounding box. To support this claim, the elimination
+covariance matrix towards 0 if needed. scheme of NMS is selected to retain only cluster centers,
+Aleatoric uncertainty provides a more discriminative while discarding the remaining cluster members. The results
+uncertainty estimate for the objects’ bounding box over presentedinexperiment#5showalargeincreaseof12.96%
+epistemic uncertainty estimated from MC-Dropout. To mGMUE when compared to the full system. We conclude
+support this claim BayesOD is implemented without the that merging information from all cluster members into the
+update step in Eq. (5), to use only the per-anchor sample ﬁnal object estimate is essential for proper quantiﬁcation of
+variance computed from multiple stochastic runs of MC- bounding box uncertainty by a neural network.
+Dropout. The results, presented in experiment #3, show an V. CONCLUSION
+increase of 5.65% and 2.34% is observed in the mGMUE
+ThispaperpresentsBayesOD,aBayesianapproachfores-
+andmCMUErespectively.Notehoweverthatthisconclusion
+timatingtheuncertaintyintheoutputofdeepobjectdetector.
+is speciﬁc to MC-Dropout, and might not be valid for
+Experiments using BayesOD show that replacing NMS with
+Bayesianinferenceandexplicitlyincorporatingfullaleatoric
+# Experiment mAP(%)↑ PDQScore(%)↑ mGMUE(%)↓ mCMUE(%)↓ covariance matrix estimation allows for a much more mean-
+1 FullSystem 35.41 23.15 30.23 24.13 ingful estimated category and bounding box uncertainty in
+2 DiagonalCovariance 34.77 22.64 30.69 25.25
+3 EpistemicOnly 34.15 22.62 35.88 26.47 deep object detectors. This work aims to pave the path
+4 AleatoricOnly 34.12 22.67 28.95 25.60
+5 StandardNMS 34.70 22.65 43.19 25.10 for future research directions that would use BayesOD for
+TABLEII activelearning,exploration,aswellasobjecttracking.Future
+THERESULTSOFABLATIONSTUDIESPERFORMEDONBAYESODUSING work will study the effect of informative priors originating
+THECOCODATASETFORTRAININGANDTESTING. from multiple detectors, temporal information, and different
+sensors on the perception capabilities of a robotic system.
+92
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [20] David JC MacKay. Probable networks and plausible predictions-a
+reviewofpracticalbayesianmethodsforsupervisedneuralnetworks.
+[1] JasonKu,MelissaMoziﬁan,JungwookLee,AliHarakeh,andSteven InNetwork:ComputationInNeuralSystems,pages469–505,1995.
+Waslander. Joint 3d proposal generation and object detection from
+[21] Murat Sensoy, Lance Kaplan, and Melih Kandemir. Evidential deep
+view aggregation. In 2018 IEEE/RSJ International Conference on learningtoquantifyclassiﬁcationuncertainty. InAdvancesinNeural
+IntelligentRobotsandSystems(IROS),2018. InformationProcessingSystems,pages3179–3189,2018.
+[2] Yin Zhou and Oncel Tuzel. Voxelnet: End-to-end learning for point
+[22] Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell.
+cloudbased3dobjectdetection.InTheIEEEConferenceonComputer
+Simple and scalable predictive uncertainty estimation using deep
+VisionandPatternRecognition(CVPR),June2018.
+ensembles. In I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach,
+[3] XiaozhiChen,HuiminMa,JiWan,BoLi,andTianXia. Multi-view R. Fergus, S. Vishwanathan, and R. Garnett, editors, Advances in
+3d object detection network for autonomous driving. In The IEEE NeuralInformationProcessingSystems(NuerIPS),pages6402–6413.
+ConferenceonComputerVisionandPatternRecognition(CVPR),July
+2017.
+2017.
+[23] Florian Kraus and Klaus Dietmayer. Uncertainty estimation in one-
+[4] Trupti M Pandit, PM Jadhav, and AC Phadke. Suspicious object stageobjectdetection. arXivpreprintarXiv:1905.10296,2019.
+detection in surveillance videos for security applications. In Inven-
+[24] Andrew Gelman, Hal S Stern, John B Carlin, David B Dunson, Aki
+tiveComputationTechnologies(ICICT),InternationalConferenceon, Vehtari,andDonaldBRubin. Bayesiandataanalysis. Chapmanand
+2016.
+Hall/CRC,2013.
+[5] NikoSünderhauf,OliverBrock,WalterScheirer,RaiaHadsell,Dieter
+[25] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro
+Fox, Jürgen Leitner, Ben Upcroft, Pieter Abbeel, Wolfram Burgard,
+Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. Mi-
+Michael Milford, et al. The limits and potentials of deep learning crosoftcoco:Commonobjectsincontext. InEuropeanconferenceon
+for robotics. The International Journal of Robotics Research, 37(4- computervision,pages740–755.Springer,2014.
+5):405–420,2018.
+[26] Mark Everingham, Luc Van Gool, Christopher KI Williams, John
+[6] YarinGalandZoubinGhahramani.Dropoutasabayesianapproxima-
+Winn,andAndrewZisserman. Thepascalvisualobjectclasses(voc)
+tion:Representingmodeluncertaintyindeeplearning.InInternational challenge. International journal of computer vision, 88(2):303–338,
+ConferenceonMachineLearning(ICML),2016.
+2010.
+[7] Alex Kendall and Yarin Gal. What uncertainties do we need in
+[27] David Hall, Feras Dayoub, John Skinner, Haoyang Zhang, Dimity
+bayesian deep learning for computer vision? In I. Guyon, U. V.
+Miller, Peter Corke, Gustavo Carneiro, Anelia Angelova, and Niko
+Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and
+Sünderhauf.ProbabilisticObjectDetection:DeﬁnitionandEvaluation.
+R. Garnett, editors, Advances in Neural Information Processing Sys- arXive-prints,pagearXiv:1811.10800,Nov2018.
+tems30,2017.
+[8] AndreasGeiger,PhilipLenz,andRaquelUrtasun. Arewereadyfor
+autonomousdriving?thekittivisionbenchmarksuite. InConference
+onComputerVisionandPatternRecognition(CVPR),2012.
+[9] Dimity Miller, Lachlan Nicholson, Feras Dayoub, and Niko Sün-
+derhauf. Dropout sampling for robust object detection in open-set
+conditions. In2018IEEEInternationalConferenceonRoboticsand
+Automation(ICRA),pages1–7.IEEE,2018.
+[10] Dimity Miller, Feras Dayoub, Michael Milford, and Niko Sünder-
+hauf. Evaluating merging strategies for sampling-based uncertainty
+techniquesinobjectdetection.arXivpreprintarXiv:1809.06006,2018.
+[11] GregoryPMeyer,AnkitLaddha,EricKee,CarlosVallespi-Gonzalez,
+andCarlKWellington. Lasernet:Anefﬁcientprobabilistic3dobject
+detector for autonomous driving. In Proceedings of the IEEE Con-
+ference on Computer Vision and Pattern Recognition, pages 12677–
+12686,2019.
+[12] Yihui He, Chenchen Zhu, Jianren Wang, Marios Savvides, and Xi-
+angyuZhang. Boundingboxregressionwithuncertaintyforaccurate
+objectdetection.InProceedingsoftheIEEEConferenceonComputer
+VisionandPatternRecognition,pages2888–2897,2019.
+[13] Di Feng, Lars Rosenbaum, and Klaus Dietmayer. Towards safe
+autonomous driving: Capture uncertainty in the deep neural network
+forlidar3dvehicledetection. In201821stInternationalConference
+onIntelligentTransportationSystems(ITSC),2018.
+[14] Di Feng, Lars Rosenbaum, and Klaus Dietmayer. Leveraging het-
+eroscedasticaleatoricuncertaintiesforrobustreal-timelidar3dobject
+detection. In 2018 21st International Conference on Intelligent
+TransportationSystems(ITSC),2018.
+[15] Michael Truong Le, Frederik Diehl, Thomas Brunner, and Alois
+Knol. Uncertainty estimation for deep neural object detectors in
+safety-criticalapplications. In201821stInternationalConferenceon
+IntelligentTransportationSystems(ITSC).IEEE,2018.
+[16] Fisher Yu, Wenqi Xian, Yingying Chen, Fangchen Liu, Mike Liao,
+VashishtMadhavan,andTrevorDarrell. Bdd100k:Adiversedriving
+video database with scalable annotation tooling. arXiv preprint
+arXiv:1805.04687,2018.
+[17] Jonathan Huang, Vivek Rathod, Chen Sun, Menglong Zhu, Anoop
+Korattikara,AlirezaFathi,IanFischer,ZbigniewWojna,YangSong,
+SergioGuadarrama,andKevinMurphy.Speed/accuracytrade-offsfor
+modern convolutional object detectors. In The IEEE Conference on
+ComputerVisionandPatternRecognition(CVPR),July2017.
+[18] ShaoqingRen,KaimingHe,RossGirshick,andJianSun.Fasterr-cnn:
+Towardsreal-timeobjectdetectionwithregionproposalnetworks. In
+AdvancesinNeuralInformationProcessingSystems28,2015.
+[19] Tsung-YiLin,PriyaGoyal,RossGirshick,KaimingHe,andPiotrDol-
+lar. Focallossfordenseobjectdetection. InTheIEEEInternational
+ConferenceonComputerVision(ICCV),Oct2017.
+93
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:19:35 UTC from IEEE Xplore.  Restrictions apply. 

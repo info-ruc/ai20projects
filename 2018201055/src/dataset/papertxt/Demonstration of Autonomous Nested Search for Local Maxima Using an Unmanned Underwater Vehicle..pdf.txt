@@ -1,0 +1,523 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Distance and Steering Heuristics for
+Streamline-Based Flow Field Planning
+K. Y. Cadmus To , Chanyeol Yoo , Stuart Anstee , and Robert Fitch
+1 1 2 1
+Abstract—Motion planning for vehicles under the inﬂuence
+of ﬂow ﬁelds can beneﬁt from the idea of streamline-based
+planning, which exploits ideas from ﬂuid dynamics to achieve
+computational eﬃciency. Important to such planners is an
+eﬃcient means of computing the travel distance and direction
+between two points in free space, but this is diﬃcult to achieve
+in strong incompressible ﬂows such as ocean currents. We
+propose two useful distance functions in analytical form that
+combine Euclidean distance with values of the stream function
+associated with a ﬂow ﬁeld, and with an estimation of the
+strength of the opposing ﬂow between two points. Further, we
+proposesteeringheuristicsthatareusefulforsteeringtowardsa
+sampledpoint.Weevaluatetheseideasbyintegratingthemwith
+Fig.1. Thelimitedreachablespaceofavehicle(blackcross)inastrong
+RRT∗and comparing the algorithm’s performance with state- ﬂow ﬁeld (blue arrows) attempting to reach a goal (black circle). Four
+of-the-artmethodsinanartiﬁcialﬂowﬁeldandinactualocean trajectories (pink lines) are shown: three with maximum velocity in the
+prediction data in the region of the dominant East Australian directionoftheredarrows,andonewithnocontrolapplied(noarrows).
+Current between Sydney and Brisbane. Results demonstrate
+the method’s computational eﬃciency and ability to ﬁnd high-
+trees (RRTs) [10]. For example, ∞ distance is useful in
+qualitypathsoutperformingstate-of-the-artmethods,andshow L
+promise for practical use with autonomous marine robots. planning the motion of manipulator arms [11]. L2 dis-
+tance(Euclideandistance)hasbeenusedforplanninginﬂow
+I. Introduction
+ﬁelds [12,13], but in strong ﬂows, where the ﬂow speeds
+Streamline-based planning [1,2] uses the concepts of are comparable to or exceed the vehicle speed, this metric
+stream functions and streamlines from ﬂuid dynamics to can be wildly misaligned with true traversal time and the
+eﬃcientlyplanpathsthroughﬂowﬁeldsforvehicles,suchas reachabilityofsomelocations.Figure1illustrateshowagoal
+underwatergliders[3–5]andautonomoussurfacevessels[6]. position that is a short L2 distance away from its position
+In this approach, the motion of water in the upper levels of nevertheless falls outside the reachable space.
+the ocean is modelled as a 2-dimensional, incompressible Finding useful distance heuristics is challenging in a ﬂow
+ﬂow. Eﬃciency arises from an elegant dimensionality re- ﬁeldbecausetheeﬀectivedistancedependsontheinteraction
+duction of the control space made possible by the additive of vehicle dynamics with the direction and magnitude of the
+propertyofstreamfunctions[7].Manyplanningframeworks ﬂow. Flow ﬁelds induced by ocean currents can be highly
+relyontheabilitytoquicklyestimatetraveldistancebetween non-uniform;locationsthataregeographicallyclosetogether
+two locations, however, this is not straightforward for the may eﬀectively be far apart or unconnected. Conversely,
+nonlinear spaces that arise from incompressible ﬂows. We large geographical distances can be traversed quickly given
+examine distance heuristics that are useful for streamline- high-magnitude ﬂow in an advantageous direction. Forward
+basedplanningandthatcomplementexistingwork,enabling integration is possible [14] but computation can be pro-
+the development of exciting new planning algorithms that hibitivelyexpensive,especiallyinsampling-basedalgorithms
+aim to improve the autonomy of marine robots. that require frequent connection of samples within a given
+The notion of distance is fundamental for graph-based distance threshold [12,13].
+planning algorithms, which has been applied in both static In this paper, we consider distance heuristics derived
+and time-varying ﬂow ﬁelds [8]. Sampling-based motion from stream function equations and derive eﬀective steer-
+planners in particular uses this notion for nearest neighbour ing functions for eﬃciently connecting new samples in the
+search and other algorithmic components seen in proba- RRT∗familyofalgorithms.Weconstructheuristicsthatcom-
+bilistic roadmaps (PRMs) [9] and rapidly-exploring random bine distance with stream function values and a measure
+L2
+of the opposing ﬂow between two points. These are used to
+ThisresearchissupportedbyanAustralianGovernmentResearchTrain- associateageneratedsamplewithanodeintheexistingtree.
+ingProgram(RTP)Scholarship,Australia’sDefenceScienceandTechnol-
+We then propose heuristics for choosing control actions that
+ogyGroup,andtheUniversityofTechnologySydney.
+Authors are with the University of Technology Sydney, Ul- can steer the system towards long-distance sample points.
+1
+timo, NSW 2006, Australia and For the rewiring step in RRT∗, edge connection costs can
+Cadmus.To@student.uts.edu.au
+{Chanyeol.Yoo,Robert.Fitch}@uts.edu.au already be computed eﬃciently; our previous work showed
+AuthoriswiththeDefenceScienceandTechnologyGroup,Department
+2
+ofDefence,Australia thatin2Dincompressibleﬂowﬁelds,suitablecontrolactions
+stuart.anstee@dst.defence.gov.au
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1867
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. lie surprisingly on a line that is convenient to search [1].
+We integrate these ideas within the RRT∗framework and
+show that it generates longer edge connections than existing
+methods, resulting in earlier feasible solutions and higher-
+quality ﬁnal solutions. This approach is also applicable to
+planners that address time-varying ﬂows [8] and to many
+RRTvariants,suchasgoal-biasingRRT[15]andbirectional
+RRT [16], and will complement informed RRT [17] by
+ﬁnding feasible solutions quickly in a bounded search space.
+Wepresentadetailedexperimentalevaluationofourmeth-
+odsincomparisontoexistingvariantsofRRT∗intwoexam-
+plescenarios.Theﬁrstscenarioisaquad-vortexexamplethat Fig. 2. Diagram in velocity space showing limited total velocity angles
+hasbeenusedpreviouslyintheliterature[6,18].Thesecond whenavehicleisinstrongﬂows.Theﬂowvelocityisrepresentedbyablue
+arrow.Thecriticalvehiclevelocities(redarrows)areshownthatcorresponds
+scenario is a traversal from Sydney to Brisbane, a direction
+to total velocities (purple arrows) at their limits. The speed of the vehicle
+that opposes the mean ﬂow of the East Australian Current, islimitedbyitsmaximumspeed,whichisshownasagreycircle.
+using a numerical estimate of the actual ﬂow. Results show
+that our methods outperform existing RRT∗variants in all in ﬂow ﬁelds [31]. Non-Euclidean distance functions for
+evaluation criteria, and ﬁnd paths from Sydney to Brisbane strong incompressible ﬂows have not appeared previously.
+withtraversaltimesthataretwotimes(5days)faster.Thisis An approach that is close to ours is the vector ﬁeld
+notable because it is also faster than the great circle (direct) RRT(VF-RRT)[13],whichintroducesanupstreamcriterion
+path in still water, even though the dominant current ﬂows to steer depending on a global measurement of exploration
+in the opposite direction. Further, our method’s ﬁrst feasible ineﬃciency and a user-speciﬁed reference exploration inef-
+traversal time, found after 31 of computation, is faster than ﬁciency factor . This global quantity can overgeneralise
+s E
+the comparison method’s ﬁnal solution. thebehaviouroftsheﬂowﬁeld,whichleadstopoorcoverage
+The main contribution of this paper is a novel set of oftheconﬁgurationspace.Weprovideperformancecompar-
+distanceandsteeringheuristicstoaidstreamline-basedplan- isons with VF-RRT in this paper.
+ning, and their evaluation in a sampling-based planning
+III. Problemformulationandapproach
+framework. The signiﬁcance of this contribution is an im-
+proved capability of autonomous marine robots by enabling We assume a vehicle in a ﬂow ﬁeld has dynamics repre-
+on-board planning with embedded computation, by allowing sented by the continuous-time transition model
+for fast replanning to respond to unexpected situations, and
+(1)
+by ﬁnding high-quality paths over large distances. x˙ =v(x)+u,
+where (cid:62) is vehicle position, (cid:62)
+x=[x,y] v(x)=[u ,v ](x)
+II. Relatedwork is the time-independent ﬂow ﬁeld, and c (cid:62)cis the
+u = [u ,v ]
+relative velocity of the vehicle with respect to thse lsocal ﬂow.
+Theproblemsettingweconsiderrequiresaﬂowﬁeldpre-
+Thevehicle’scontroleﬀortsareconstrainedonlybyitsspeed:
+diction.Oceaniccurrentpredictionsarefreelyavailable[19–
+21], but may have uncertainties that are signiﬁcant when (cid:107) (cid:107) ≤ (2)
+u Vmax,
+planning for slow-moving vehicles. In previous work we 2
+successfully used drift errors to estimate a local stream where (cid:107)u(cid:107) is the L2-norm of vehicle velocity and Vmax ∈
+function online [22]. R+ is its m2aximum speed.
+The general problem of ﬁnding an optimal path in a ﬂow Thedynamicsofthevehiclein(1)canbediscretisedwith
+ﬁeldisknownasZermelo’sproblem[23].Level-setmethods a small time step ∆t. Thus, we have
+havebeenproposedforﬁndingtime-optimal[24]andenergy-
+(3)
+optimal [25] paths. Numerical solutions to the underlying x =x +(v(x )+u )∆t,
+k+1 k k k
+partial diﬀerential equation have also been proposed [26]. for time step . The vehicle can apply a persistent (that is,
+k
+Both assume a discretised workspace, as do graph-based piecewise-constant) control , where is the time
+a = (u,τ) τ
+methodswithuniform[27]oradaptive[28]sampling.These durationforwhichthecontrolisapplied.Thepositionofthe
+methods can be computationally impractical for large prob- vehicle after applying control is expressed as
+a
+lems or applications that require onboard planning. k
+(4)
+Our previouswork introducedthe idea ofusing sampling- x =F(x ,a ),
+k+1 k k
+based methods for asymptotically optimal planning in ﬂow
+where is the prior position of the vehicle.
+ﬁelds with underwater gliders that have complex dynam- Wecxoknsiderapathplanningproblemina2Dincompress-
+ics [18], and introduced eﬃcient methods with analytical
+ible ﬂow ﬁeld where the vehicle is to reach a given goal
+guarantees in the time-varying case [8]. Algorithms such as
+position.Thevehicleisguidedbyasequenceof controls,
+RRT∗ [29,30] can use pseudo-metrics such as cost-to-go, K
+whichunfortunatelyiscomputationallyexpensivetoevaluate (5)
+ω =(a ,...,a − ),
+0 K 1
+1868
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. thatareappliedinsequencestartingfromthevehicle’sinitial
+location. An optimal sequence of controls ∗ minimises a
+ω
+costfunction summedoverthecorrespondingpathto
+J(x,a)
+the destination. This problem is formally deﬁned as follows:
+Problem 1 (Path planning in 2D incompressible ﬂow
+ﬁelds). Given vehicle dynamics (1), a start and destination
+pair( , ),anincompressibleﬂowﬁeld ,andthecost
+xinit xgoal v
+function , ﬁnd th(cid:88)e optimal sequence of controls
+J(x,a)
+(a)Conﬁgurationspace
+−
+ω∗ =argminK 1J(x ,a ) for K ∈N, (6)
+k k
+ω
+k=0
+where , , and .
+x =x x =x x =F(x ,a )
+0 init K goal k+1 k k
+Sampling-based motion planners is a class of algorithms
+that addresses this problem by building a graph by prob-
+abilistically sampling from the free conﬁguration space and
+establishingedgeconnectionstoexistingnodeswithaweight
+computedbyagivencostfunction.RRT∗inparticular,builds
+atreefromwhichapathcanbequeried.Suchalgorithmsrely
+(b)Velocityspace
+on coverage of the conﬁguration space (through successful
+node placement) in order to increase the probability of Fig.3. Exampleofanoptimisticcontrolactionthatsteersthevehicleto
+including conﬁgurations that lie on an optimal path. a goal position. (a) In conﬁguration space, the trajectory (red line) of the
+vehicle (starting at position marked by a cross) is heavily inﬂuenced by
+Acoreissueisthatthestrengthoftheﬂowﬁeldaﬀectsthe
+the underlying ﬂow ﬁeld (blue arrows) that guides it to the goal (circle).
+reachable space from any point, as illustrated in Fig. 2. Un- Thestreamlinesoftheﬂowﬁeldareshownasorangelines.(b)Invelocity
+likephysicalobstacles,reachabilitydependsonthereference space, the optimistic control (red arrow) is selected from the streamline-
+based control line (dashed line) constrained by the vehicle’s maximum
+position. These circumstances impede successful coverage,
+speed (grey circle) in the direction of the goal. The lower speed bound
+whichcanpreventthealgorithmfromﬁndinglow-costpaths. ofthiscasecorrespondstothelengthofthedottedline.
+Coverage can be quantiﬁed in terms of its dispersion [30,
+32,33], which measures the radius of the largest empty ball where∇·isthediverge(cid:90)nceoperator.Thevalueofthestream
+intheconﬁgurationspace.GivenasetofverticesV thatrep- function or stream value from to is [7]
+x x
+P Q
+resent points in a 2D conﬁguration space, the dispersion
+is the radius of the largest empty circle in boLu2nded search xQ − (9)
+space ⊂ δ, i.e. (cid:18) (cid:19) ψ(xP,xQ)= (uc(x)dy vc(x)dx).
+X R2 xP
+Continuous level sets of the stream function are referred to
+V (cid:107) − (cid:107) (7) as streamlines (orange lines in Fig. 3a). The stream value
+δ( )= max min x x .
+∈ ∈V Q P 2 measures the degree to which a path crosses streamlines;
+xP X xQ
+an implicit consequence is that if is downstream (or
+To increase the chances of connecting to samples from x
+upstream) of , then the stream valuQe between them must
+low-dispersion sampling sequences (highlighted by [30]), x
+be zero. Like tPhe ﬂow ﬁelds themselves, stream functions
+we focus in particular on: a) formulating new heuristics
+alsopossesstheadditiveproperty.Giventwoincompressible
+that better align with the eﬀective travel distance between
+ﬂowﬁelds and ,thesuperimposedﬂowﬁeldis
+points, and b) steering towards the sample point to reduce v (x) v (x)
+A B
+the number of intermediate samples generated. (10)
+v =v +v .
+A+B A B
+IV. Distanceheuristicsforincompressibleflowfields The corresponding stream function is
+In this section we present two streamline-based distance (11)
+ψ =ψ +ψ .
+heuristics that increase the chances of successful edge con- A+B A B
+Inﬂowsthatareirrotational,streamlinesareperpendicular
+nection in an RRT∗ framework. We begin with a brief
+to the velocity potential contours [7]. Distance could be
+overview of stream functions and streamline-based control.
+accuratelycapturedbythepairoffunctionssince,intuitively,
+Further details can be found in our previous work [1].
+the shape of the functions conforms to the shape of the ﬂow
+ﬁeld.Weexpectthatstreamfunctionsmaintainsomeofthese
+A. Stream functions
+properties in mixed ﬂows with rotational components.
+Astreamfunctionisdeﬁnedfora2Dvectorﬁeld that
+v(x)
+is incompressible (the net ﬂow through any closed boundary B. Streamline-based 2D control search
+is zero), i.e., To steer the vehicle towards a goal, we need to search the
+∇· (8) spaceofpossiblecontrolvelocitiestoﬁndonethatisfeasible.
+v(x)=0,
+1869
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. (a) -streamdistance (b) -LSBdistance (c)Timecost-to-go(onepersistentcontrol)
+L2 L2
+Fig.4. Contoursofdistancefunction.Themaximumﬂowstrengthis ×thevehicle’sspeed.
+4
+Our previous work [1] showed that properties of the stream deﬁnition, but it behaves in a similar fashion. Contours of
+function can be used to limit the size of this search space. -LSB distance are illustrated in Fig. 4b.
+L2
+Travelling from to , the vehicle velocity must lie These streamline-based distance functions penalise paths
+x x u
+on the streamline-Pbased cQontrol line described by thatcrossstreamlines,whichwehaveobservedfromprevious
+work are unlikely to be part of optimal connections. The
+− (12)
+ψ(x ,x )+u ∆y v ∆x=0, penalty in the -LSB distance is explicitly local, since
+P Q s s L2
+where − and − .Thisisillustrated it approaches Euclidean distance for points with increasing
+∆x=x x ∆y =y y
+as a dashed linQe in FPig. 3b. Q P separation.
+The distance between the origin and the control line is a In strong ﬂow ﬁelds, the ideal distance function is asym-
+lowerspeedbound(LSB)forthevehicle’sspeed,i.e.,itmust metrical and should favour paths that follow the direction of
+have a speed of at least local ﬂow. This is conﬁrmed by Fig. 4c, which illustrates
+the numerically-computed cost-to-gofunction resulting from
+| |
+VLSB(x ,x )= (cid:107)ψ(x−P,xQ(cid:107)) (13) a given persistent control. Despite its symmetry, we see that
+P Q xQ xP 2 the L2-LSB distance has a similar shape to cost-to-go in the
+to be able to travel from to . The length of the dotted region local to the vehicle position.
+x x
+line in Fig. 3b correspondsPto thiQs value. The LSB therefore We can impose a natural ordering on the space
+(x,y,ψ)
+acts as a measure of the diﬃculty of reaching . A larger with an external reference point, since
+x
+LSBmeansastrongeropposingﬂow,whichweinQterpretasa − (16)
+relative increase in the still-water distance (or time) required ψ(xP,xQ)=ψ(xQ,x0) ψ(xP,x0),
+for traversal. where x ∈ R2 is an arbitrary reference point. There is no
+equivalen0t equation for .
+VLSB
+C. Streamline-based distance functions Lacking a global reference, the space cannot
+(x,y,VLSB)
+The shortcoming of Euclidean distance in strong ﬂow be used with tree data structures such as -d trees [34],
+k
+ﬁelds is that it ignores their potentially powerful eﬀect R∗ trees [35], and balanced-box decomposition (BBD)
+on vehicle motion (see Fig. 2). We propose to augment trees [36] for fast neighbourhood query methods. These
+Euclidean distance with stream function-dependent terms to methods have O |V| time complexity, which is neces-
+(log )
+construct distance heuristics in three dimensions rather than sary to match the performance demonstrated in [29].
+two. Toovercomethislimitationandachievefastnearestneigh-
+The ﬁrst heuri(cid:113)stic we term the L2-stream distance is bourqueries,knearestneighbourscanbeﬁrstobtainedusing
+deﬁned as the -stream distance in O |V| time. The -LSB
+L2 (log ) L2
+nearest neighbour can then be approximated by ﬁnding the
+d(x ,x )= (cid:107)x −x (cid:107)2+[ψ(x ,x )/α]2, (14) minimum distance from among the candidates. The value
+P Q P Q 2 P Q of is chosen from [29] as k |V| .
+where is a scaling term that may be thought of as a k kRRGlog( )
+α
+characteristic velocity. The space (x,y,ψ) can be veriﬁed to V. Adaptivearc-length
+beametricspacewiththisdistancedeﬁnitionbyconsidering
+To improve coverage performance, we leverage the low
+thefournecessaryconditions[33](nonnegativity,reﬂexivity,
+dispersion properties of Halton sequences [37] to select
+symmetry, and triangle inequality). The -stream distance
+L2 sample positions in 2D. We connect to widely separated
+penalises paths that cross streamlines; its level sets are
+samples with forward integration with adaptive arc-lengths
+thereforeelongatedalongtheﬂowdirection.Contoursof -
+L2 in an eﬀort to maintain the properties discussed in [30].
+stream distance are illustrated in Fig. 4a.
+Approachesthatuseforwardintegrationintimewithﬁxed
+We also propose a second distance heuristic, which we
+(cid:113) horizons, such as [1], prioritise search depth and are useful
+term L2-LSB distance, formulated using (13) as: for establishing long connections and ﬁnding initial feasible
+d(xP,xQ)= (cid:107)xP −xQ(cid:107)22+[VLSB(xP,xQ)β]2, (15) sraotleudtiopnosin.tHsofowrevwehr,icohththereacpopnrnoeaccthioenscthoastt cuasne bcleosceallycusleaptead-
+where isascalingterm equivalenttoacharacteristictime. analytically by approximating the ﬂow between them as
+β
+The -LSBdistancedoesnotsatisfythetriangleinequality, uniform (short horizons) prioritise breadth and can lead to
+L2
+so is not a metric space with this distance higher path quality.
+(x,y,VLSB)
+1870
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. (a)Numberofconnectionsoveriterations (b) dispersionoveriterations (c)Percentagesuccessovertime
+L2
+Fig. 5. Comparison of results between diﬀerent methods using RRT∗ after one hour of computation. The ﬂow moves up to four times faster than the
+vehicle’smaximumspeed.Sevenvelocitysampleswereusedfortheadaptivearc-lengthapproaches.Meanvaluesareshownfromusing100randomlyrotated
+andoﬀsetHaltonsequences.Euclideandistanceisshowninlightblue, -streamdistanceindarkgreen, -LSBdistanceindarkblue,andapproximated
+L2 L2
+-LSBdistanceinlightgreen.Thesolidlinescorrespondtodynamicarc-lengthimplementations,whilstdashedlinescorrespondtoanalyticsteps.Bars
+L2
+showing99.7%conﬁdenceintervalsarerestrictedtoVF-RRT∗(red)[13]andRRT∗(pink)asimplementedin[29],forclarity.
+since the gradient of (12) in velocity space corresponds to
+the displacement of from . If the maximum vehicle
+x x
+speed were much fastQer than thPe current ( (cid:29) (cid:107) (cid:107) ),
+Vmax u
+this control would asymptotically steer the vehicle direc2tly
+towards the goal. In the case that the trajectory does not
+pass through , the closest point on the trajectory (using
+x
+’s distaQnce metric) is returned instead.
+Nearest
+Finally,welinearlysamplevelocitiesfromtheintersection
+of (12) and (2) to implement and , as
+CollisionFree Cost
+in [1]. In practice, only a few samples are needed due to the
+(a)Ourapproach(4.42s) (b)VF-RRT∗(17.08s)
+robustness of the approach.
+Fig.6. Examplesoftreesgrownusing -LSBdistanceapproximationwith
+L2
+adaptivearc-length(left)andVF-RRT∗ [13](right)inastrongvortexﬁeld VI. Experiments
+afteronehourofcomputation.Ineachcase,thepathfromthestart(cross)
+to the goal (circle) is shown as a black line. The underlying ﬂow ﬁeld is We compare our approach with the VF-
+showninblueandtheﬁnalgraphconnectionsareshowninorange. RRT∗algorithm [13] in strong ﬂow ﬁelds to evaluate
+its performance. First, the quad-vortex ﬂow example
+We consider a diﬀerent mode of forward integration to from [6,18] is used to establish relative performance.
+enable adaptive horizon length. The discrete dynamics (1) Then, we consider an example with an actual oceanic ﬂow
+canbeexpressedwiththetimestepreformulatedintermsof prediction to demonstrate the implications of performance
+an equivalent Euclidean distance step (cid:107)∆x(cid:107)2, as diﬀerences for a marine robotics application. The Nearest
+(cid:107) (cid:107) and functions of RRT∗ [29] are implemented without
+Near
+x =x +(v(x )+u )(cid:107) ∆x 2 (cid:107) . (17) fast neighbourhood querying, which is left for future work.
+k+1 k k k v(xk)+uk 2 Furthermore we use a value of 1 for α and β. Selection
+This formulation allows us to heuristically upper bound the of these values are left for future work. Each algorithm is
+path length by the arc length of a semicircle with diameter allocated one hour of computation time on a single core of
+equal to the Euclidean distance between the sample points. a 2.1 Intel Xeon Platinum 8160 processor.
+GHz
+Given the current position and next position , the
+(cid:18) x (cid:19) x
+dynamic number of integrationPsteps is thus Q A. Quad-vortex
+(cid:107) − (cid:107) The environment consists of four vortices that rotate in
+nstep =ceil π xQ(cid:107) x(cid:107)P 2 . (18) opposite directions with a maximum speed that is four times
+2 ∆x thevehicle’smaximumspeed.Theﬂowﬁeldisillustratedby
+2
+This variable stepping approach allows RRT∗to inherit ac- the blue arrows in Fig. 6. The vehicle starts at the centre of
+curate integrated early weights for long connections that one vortex and its goal lies at the centre of the diagonally
+evolvetowardsfastanalyticcalculationsforcloselyseparated oppositevortex.Themaximumtolerableintegrationdistance
+samples, to maintain path quality. (cid:107) (cid:107) is , relative to a workspace size of .
+∆x 0.01m 2m
+We use this adaptive arc-length approach to implement We2considereightdiﬀerentvariationsofourmethodcom-
+the primitive functions , , and pared with RRT∗(as implemented in [29]) and VF-RRT∗.
+Steer CollisionFree Cost
+intheRRT∗ framework[29].In ,avelocityisselected The variations of our method are pairwise combinations
+Steer
+optimistically from the intersection of (12) and (2) such of diﬀerent implementations of the function and
+Nearest
+that the vehicle moves towards the target. This selection edge connections. The four implementations are:
+Nearest
+corresponds to the red arrow in Fig. 3b. This is reasonable Euclidean, -stream, -LSB, and its approximation. The
+L2 L2
+1871
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. two edge connection implementations are: the adaptive arc-
+length forward integration, and analytical forward propaga-
+tion [12,13] bounded by (cid:107) (cid:107) . The parameter for VF-
+∆x E
+RRT∗is tuned to for this e2xperimenst.
+0.05
+Figure 5a shows the number of connections made dur-
+ingRRT∗iterations.VF-RRT∗(red)makesmoreconnections
+than standard RRT∗(pink), as expected, but all variations of
+our approach ﬁnd connections at a higher rate. Euclidean
+distance(lightblue)performsworsethanthedistanceheuris-
+tics that account for the ﬂow ﬁeld; in particular, -LSB
+L2
+distance (dark blue) has the highest connection rate with
+its approximated version (dark green) closely following. It
+should be noted that we expect the analytical steps ap-
+proach (dashed) to have higher connection rates since it
+analytically determines locally reachable regions.
+Weseetheadvantagesoftheadaptivearc-lengthapproach
+in Fig. 5b, where we compare how each approach covers the
+conﬁgurationspacewith(7).VF-RRT∗againperformsbetter
+than standard RRT∗, and adaptive-arc length performs better
+thananalyticalsteps. -LSBhasthebestcoverage,followed
+L2
+by its approximated version.
+On average, our methods ﬁnds solutions orders of magni-
+tudefaster,asshowninFig.5c.Thisisaresultofmaintaining
+a tree that evenly covers the work space (Fig. a) in contrast
+to VF-RRT∗(Fig. b) which becomes sparse in strong ﬂows.
+B. East Australian Current
+We now demonstrate the performance of using the ap-
+proximated -LSB distance with adaptive arc-length and
+L2
+VF-RRT∗tuned to in an application example.
+E = 0.5
+The Gaussian processs(GP) method proposed in [22] is used
+to compute stream values from an ocean current prediction
+dataset provided by the Australian Bureau of Meteorology.
+The vehicle’s maximum velocity is , and the max- Fig.7. PlanningfromSydneytoBrisbaneagainstthemeannorthtosouth
+1.1m/s trendoftheEastAustralianCurrent.Thebestpathfoundbyapproximated
+imum ﬂow velocity is . The maximum tolerable
+integration distance (cid:107) 4(cid:107).45ism/s . Our approach was able Lpa2th-LfSoBunddisbtyanVcFe-wRRithT∗ad[a1p3t]ivisesahrocw-lennignthoriasnsgheo.wThneinﬁrdstarfkeagsirbeleen,soalnudtiothnes
+∆x 1km
+to ﬁnd a solution using 2a maximum vehicle velocity of foundareshownasdashedlines.
+, but VF-RRT∗failed in this case; we increased the
+0.3m/s
+value of this parameter to allow for comparison. solution within the given computation time, whereas VF-
+The ﬁrst (dashed) and ﬁnal (solid) paths from Sydney to RRT∗made only minor adjustments.
+Brisbane are illustrated in Fig. 7. Our approach found the
+ﬁrst solution after seconds of computation time with a VII. ConclusionandFutureWork
+31
+path duration of days and hours. The best path found
+6 2
+had a duration of days and hours. VF-RRT∗found its We have presented new distance functions and steering
+5 4
+ﬁrst solution in seconds with a path duration of days heuristicsforplanninginincompressibleﬂowsandevaluated
+44 11
+and hours. Its best path had a duration of days and them in the RRT∗ framework. Results in an artiﬁcial ﬂow
+5 10 22
+hours. The great circle path with this vehicle in still water ﬁeldshowedthatourmethodproduceshigh-qualitysolutions
+would take days and hours, implying that our approach and is computationally eﬃcient. In a real-world example
+7 9
+utilises the ﬂow ﬁeld eﬀectively. with actual ocean current prediction data, our method was
+The solution quality of VF-RRT∗is poor due to its inabil- able to exploit favourable ﬂows to ﬁnd a path that was not
+ity to connect new samples to an appropriate node in the overwhelmed by the mean strong opposing current.
+existing tree. This hinders its ability to explore, leading to These results are promising and show potential for prac-
+sparse trees similar to the one shown in 6b. Our approach tical use in marine robotics. Important future work is to
+covers the space more evenly and ﬁnds better solutions. The explore scaling terms and , incorporate recent work in
+α β
+adaptive arc-length method also allowed it to ﬁnd a feasible eﬃcient planning for time-varying ﬂows [8,38], extend to
+solution quickly for a problem of this spatial scale. Another 3D spaces for plume localisation [22], and validate in real
+consequenceisthatourmethodwasabletoimproveitsinitial world scenarios where these complex ﬂow exist.
+1872
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. References [20] P.R.Oke,D.A.Griﬃn,A.Schiller,R.J.Matear,R.Fiedler,J.Mans-
+bridge, A. Lenton, M. Cahill, M. A. Chamberlain, and K. Ridgway,
+[1] K. Y. C. To, K. M. B. Lee, C. Yoo, S. Anstee, and R. Fitch,
+“Evaluationofanear-globaleddy-resolvingoceanmodel,”Geoscien-
+“Streamlines for motion planning in underwater currents,” in Proc. tiﬁcModelDevelopment,vol.6,no.3,pp.591–615,2013.
+ofIEEEICRA,2019,pp.4619–4625. [21] A. F. Shchepetkin and J. C. McWilliams, “The regional oceanic
+[2] K.Y.C.To,J.J.H.Lee,C.Yoo,S.Anstee,andR.Fitch,“Streamline-
+modeling system (ROMS): A split-explicit, free-surface, topography-
+basedcontrolofunderwaterglidersin3Denvironments,”inProc.of following-coordinateoceanicmodel,”OceanModelling,vol.9,no.4,
+CDC,2019,pp.1–8,accepted. pp.347–404,2005.
+[3] D. C. Webb, P. J. Simonetti, and C. P. Jones, “SLOCUM: An
+[22] K.M.B.Lee,C.Yoo,B.Hollings,S.Anstee,andR.Fitch,“Online
+underwatergliderpropelledbyenvironmentalenergy,”IEEEJournal estimation of ocean current from sparse GPS data for underwater
+ofOceanicEngineering,vol.26,no.4,pp.447–452,2001. vehicles,”inProc.ofIEEEICRA,2019,pp.3443–3449.
+[4] R. Bachmayer, N. E. Leonard, J. Graver, E. Fiorelli, P. Bhatta,
+[23] E.Zermelo,ÜberdasNavigationsproblembeiruhenderoderVerän-
+and D. Paley, “Underwater gliders: Recent developments and future
+derlicherwindverteilung. WILEY-VCHVerlag,1931,vol.11,no.2.
+applications,”inProc.ofIEEEUT,2004,pp.195–200. [24] T. Lolla, P. F. J. Lermusiaux, M. P. Ueckermann, and P. J. Haley,
+[5] C. Yoo, S. Anstee, and R. Fitch, “Stochastic path planning for
+“Time-optimal path planning in dynamic ﬂows using level set equa-
+autonomous underwater gliders with safety constraints,” in Proc. of tions: theory and schemes,” Ocean Dynamics, vol. 64, no. 10, pp.
+IEEE/RSJIROS,2019. 1373–1397,2014.
+[6] D.Kularatne,S.Bhattacharya,andM.A.Hsieh,“Goingwiththeﬂow: [25] D. N. Subramani and P. F. J. Lermusiaux, “Energy-optimal path
+a graph based approach to optimal path planning in general ﬂows,” planningbystochasticdynamicallyorthogonallevel-setoptimization,”
+AutonomousRobots,vol.42,no.7,pp.1369–1387,2018. OceanModelling,vol.100,pp.57–77,2016.
+[7] G. K. Batchelor, An Introduction to Fluid Dynamics. Cambridge: [26] B. Rhoads, I. Mezić, and A. Poje, “Minimum time feedback control
+CambridgeUniversityPress,2000. of autonomous underwater vehicles,” in Proc. of IEEE CDC, 2010,
+[8] J.J.H.Lee,C.Yoo,S.Anstee,andR.Fitch,“Hierarchicalplanningin pp.5828–5834.
+time-dependentﬂowﬁeldsformarinerobots,”inProc.ofIEEEICRA, [27] D. Kularatne, S. Bhattacharya, and M. A. Hsieh, “Time and energy
+2020. optimal path planning in general ﬂows,” in Proc. of RSS, 2016, pp.
+[9] L. E. Kavraki, M. N. Kolountzakis, and J.-C. Latombe, “Analysis 1–10.
+of probabilistic roadmaps for path planning,” IEEE Transactions on [28] ——, “Optimal path planning in time-varying ﬂows using adaptive
+RoboticsandAutomation,vol.14,no.1,pp.166–171,1998. discretization,”IEEERoboticsandAutomationLetters,vol.3,no.1,
+[10] S.M.LaValleandJ.J.Kuﬀner,“Randomizedkinodynamicplanning,” pp.458–465,2018.
+International Journal of Robotics Research, vol. 20, no. 5, pp. 378– [29] S.KaramanandE.Frazzoli,“Sampling-basedalgorithmsforoptimal
+400,2001. motionplanning,”InternationalJournalofRoboticsResearch,vol.30,
+[11] F. Sukkar, “Fast, reliable and eﬃcient database search motion plan- no.7,pp.846–894,2011.
+ner (FREDS-MP) for repetitive manipulator tasks,” Master’s thesis, [30] L. Janson, B. Ichter, and M. Pavone, “Deterministic sampling-based
+UniversityofTechnologySydney,2018. motionplanning:Optimality,complexity,andperformance,”Interna-
+[12] D.RaoandS.B.Williams,“Large-scalepathplanningforunderwater tionalJournalofRoboticsResearch,vol.37,no.1,pp.46–61,2018.
+glidersinoceancurrents,”inProc.ofARAAACRA,2009,pp.1–8. [31] J.D.Hernández,E.Vidal,M.Moll,N.Palomeras,M.Carreras,and
+[13] I.Ko,B.Kim,andF.C.Park,“Randomizedpathplanningonvector L. E. Kavraki, “Online motion planning for unexplored underwater
+ﬁelds,” International Journal of Robotics Research, vol. 33, no. 13, environments using autonomous underwater vehicles,” Journal of
+pp.1664–1682,2014. FieldRobotics,vol.36,no.2,pp.370–396,2019.
+[14] J. H. Jeon, S. Karaman, and E. Frazzoli, “Anytime computation of [32] H.Niederreiter,RandomNumberGenerationandQuasi-MonteCarlo
+time-optimaloﬀ-roadvehiclemaneuversusingtheRRT*,”inProc.of Methods. SocietyforIndustrialandAppliedMathematics,1992.
+IEEECDC-ECC,2011,pp.3276–3282. [33] S.M.LaValle,PlanningAlgorithms. Cambridge:CambridgeUniver-
+[15] B. Akgun and M. Stilman, “Sampling heuristics for optimal motion sityPress,2006.
+planninginhighdimensions,”inProc.ofIEEE/RSJIROS,2011,pp. [34] J. L. Bentley, “Multidimensional binary search trees used for asso-
+2640–2645. ciative searching,” Communications of the ACM, vol. 18, no. 9, pp.
+[16] J. Barry, L. P. Kaelbling, and T. Lozano-Pérez, “A hierarchical 509–517,1975.
+approach to manipulation with diverse actions,” in Proc. of IEEE [35] N. Beckmann, H.-P. Kriegel, R. Schneider, and B. Seeger, “The R*-
+ICRA,2013,pp.1799–1806. tree:Aneﬃcientandrobustaccessmethodforpointsandrectangles,”
+[17] J.D.Gammell,S.S.Srinivasa,andT.D.Barfoot,“InformedRRT*: inProc.ofACMSIGMOD,1990,pp.322–331.
+Optimalsampling-basedpathplanningfocusedviadirectsamplingof [36] S.Arya,D.M.Mount,N.S.Netanyahu,R.Silverman,andA.Y.Wu,
+anadmissibleellipsoidalheuristic,”inProc.ofIEEE/RSJIROS,2014, “Anoptimalalgorithmforapproximatenearestneighborsearchingin
+pp.2997–3004. ﬁxeddimensions,”JournaloftheACM,vol.45,no.6,pp.891–923,
+[18] J.J.H.Lee,C.Yoo,R.Hall,S.Anstee,andR.Fitch,“Energy-optimal 1998.
+kinodynamicplanningforunderwaterglidersinﬂowﬁelds,”inProc. [37] J.H.Halton,“Ontheeﬃciencyofcertainquasi-randomsequencesof
+ofARAAACRA,2017,pp.42–51. pointsinevaluatingmulti-dimensionalintegrals,”NumerischeMathe-
+[19] P.R.Oke,A.Schiller,D.A.Griﬃn,andG.B.Brassington,“Ensemble matik,vol.2,pp.84–90,1960.
+dataassimilationforaneddy-resolvingoceanmodeloftheAustralian [38] J.J.H.Lee,C.Yoo,S.Anstee,andR.Fitch,“Eﬃcientoptimalplan-
+region,” Quarterly Journal of the Royal Meteorological Society, vol. ning in non-FIFO time-dependent ﬂow ﬁelds,” in arXiv:1909.02198
+131,no.613,pp.3301–3311,2006. [cs.RO],2019,pp.1–10.
+1873
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:12 UTC from IEEE Xplore.  Restrictions apply. 

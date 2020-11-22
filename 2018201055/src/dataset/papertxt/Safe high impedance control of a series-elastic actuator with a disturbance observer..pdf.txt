@@ -1,0 +1,526 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Sample-Ef(cid:2)cient Robot Motion Learning using Gaussian Process Latent
+Variable Models
+Juan Antonio Delgado-Guerrero1, Adri(cid:224) ColomØ1, and Carme Torras1
+Abstract(cid:151)Robotic manipulators are reaching a state where
+we could see them in household environments in the following
+decade.Nevertheless,suchrobotsneedtobeeasytoinstructby
+lay people. This is why kinesthetic teaching has become very
+popular in recent years, in which the robot is taught a motion
+thatisencodedasaparametricfunction-usuallyaMovement
+Primitive (MP)-. This approach produces trajectories that are
+usually suboptimal, and the robot needs to be able to improve
+them through trial-and-error. Such optimization is often done
+with Policy Search (PS) reinforcement learning, using a given
+rewardfunction.PSalgorithmscanbeclassi(cid:2)edasmodel-free,
+where neither the environment nor the reward function are
+modelled, or model-based, which can use a surrogate model of
+the reward function and/or a model for the dynamics of the
+task.
+However, MPs can become very high-dimensional in terms
+of parameters, which constitute the search space, so their
+optimizationoftenrequirestoomanysamples.Inthispaper,we
+assumewehavearobotmotiontaskcharacterizedwithanMP
+of which we cannot model the dynamics. We build a surrogate
+model for the reward function, that maps an MP parameter
+Fig. 1: Kinestheticteachingofafeedingtask.
+latent space (obtained through a Mutual-information-weighted
+GaussianProcessLatentVariableModel)intoareward.While
+we do not model the task dynamics, using mutual information
+to shrink the task space makes it more consistent with the rewardvaluesoradynamicsmodeloftheenvironment/robot
+reward and so the policy improvement is faster in terms of behaviour are built. Examples of model-based PS that use
+sample ef(cid:2)ciency.
+both models for the dynamics and the reward functions are
+PILCO [3] and Black-DROPS [4].
+I. INTRODUCTION
+In this paper, we assume that we are provided with
+Learningthroughdemonstrationusingkinestheticteaching
+an MP of a task which can be executed and evaluated,
+(see Fig. 1) and then improving over executions through
+but whose dynamics can’t be modelled. In such situations,
+reinforcement learning has proved to be a successful ap-
+building a surrogate model with Gaussian Processes for the
+proach in several situations [1]. In Policy Search (PS), the
+reward function and using Upper Con(cid:2)dence Bound (UCB)
+initialdemonstrationis(cid:2)ttedintoaparametricpolicy,which
+optimization can help to converge faster to an improved
+is a generative model. This model - a Movement Primitive
+solution. However, Bayesian Optimization (BO) techniques
+(MP) - is used to generate samples that are evaluated with
+such as UCB do not scale easily to a high dimension, thus
+a given reward function capable of telling how good a
+we need to perform dimensionality reduction in the MP
+robotic execution was. These samples and rewards are then
+parameterspacesoastobeabletocarryouttheoptimization.
+used to obtain a new policy, which will usually maximize
+DimensionalityReduction(DR)techniqueshavebeenused
+the expected value of the reward function given the policy.
+for learning robot motion [5], [6], [7], [8] and human
+However, these approaches often require a high number of
+movements [9], [10], [11], [12]. These techniques led to
+samples in order to learn suf(cid:2)ciently good motions in high-
+signi(cid:2)cant improvements by learning tasks in latent spaces.
+dimensionalparameterspaces.Therefore,model-basedPSis
+However, the smallest dimensionality that can be used is
+often used [2], where either a surrogate function estimating
+strongly limited by the DR technique used, often a linear
+one.Thisiswhy,inthiswork,weresorttoGaussianProcess
+This work was partially developed in the context of the project Latent Variable Models (GPLVM) [13] to perform such DR.
+CLOTHILDE ("CLOTH manIpulation Learning from DEmonstrations"), GPLVMhastheadvantagethatitcan(cid:2)ne-adjustthelatent
+whichhasreceivedfundingfromtheEuropeanResearchCouncil(ERC)un-
+space dimension much more than other methods, without
+dertheEuropeanUnion’sHorizon2020researchandinnovationprogramme
+(Advanced Grant agreement No 741930). This work is also supported by losing too much information. This is because of the way
+the Spanish State Research Agency through the Mar(cid:237)a de Maeztu Seal of GPLVM is built: instead of looking for a projection from
+ExcellencetoIRIMDM-2016-0656.
+the original space to the latent space, it generalizes Dual
+1Institut de Rob(cid:242)tica i Inform(cid:224)tica Industrial (IRI), CSIC-UPC,
+Barcelona,Spain.[jdelgado,acolome,torras]@iri.upc.edu. Probabilistic Principal Component Analysis (DPPCA) and
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 314
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. II. PRELIMINARIES
+Program Input
+A. Probabilistic Movement Primitives
+0 Rewards
+Trajectories ProMPs [15] are an overall approach to model, encode
+and learn a set of similar motion trajectories that present
+1 High dim. Space 6 time-dependentvariancesovertime.Givenanumberofbasis
+functions per Degrees of Freedom (DoF), N , ProMPs use
+f
+Ydata Ynew time-dependent Gaussian kernels (cid:8) to encode the state of
+t
+a trajectory, (cid:8) being the vector of normalized kernel basis
+2 t
+functions(e.g.,uniformlydistributedGaussianbasisfunction
+5 over time). Thus, the position and/or velocity state vector z
+YMI t
+can be represented as
+(cid:16) (cid:0)
+3 Latent Space zt (cid:9)Tt ! (cid:15)z; (1)
+(cid:16) b
+Xdata Xnew where (cid:9)Tt Ir (cid:8)Tt , Ir being the r-dimensional identity
+matrix, with r the number of DoFs of the robot, and (cid:8) an
+t
+N -dimensionalcolumnvectorwiththeGaussiankernelsas-
+f
+Optimization sociatedtooneDoFattimet.Furthermore,(cid:15) isazero-mean
+4 z
+Gaussiannoiseandtheweights! arealsotreatedasrandom
+p q (cid:16) Np | q
+X-R Model variables with a distribution p ! ! (cid:22) ;(cid:6) : Given
+(cid:16) t !u ! (cid:16)
+a set of demonstration trajectories (cid:28) zn (cid:16) , n
+n t t 1::Nt
+1::N, this distribution can be (cid:2)tted by obtaining the weights
+Fig. 2: Global scheme of the proposed approach. Trajectories are !n ofeachdemonstrationthroughleas(cid:16)tsqtuares.Afterwuards,
+evaluated(0)and(cid:2)t(1)intodatavectorsYdataasProMPparameters,these the parameters of the distribution (cid:18) (cid:22)!;(cid:6)!;(cid:6)z , (cid:6)z
+data are weighted (2) dimension-wise with their mutual information with being the state noise covariance, are (cid:2)tted by means of
+rewards.GPLVM(3)(cid:2)ndsalatentdatamodelwithvariablesXdata.These a maximum likelihood estimate, i.e., computing the mean
+data,togetherwiththeirrewards,areusedtobuildasurrogatemodelofthe (cid:1) t u (cid:9)
+rewardfunctioninthelatentspace,whichcanestimatetherewarddirectly and covariance of the samples !1;:::;!N . Therefore, the
+fromthelatentspace.UCBexplorationisused(4)togeneratenewsamples probability of observing a z is:
+t
+inthelatentspace,whicharethenusedtopredict(5)theirrespectivehigh-
+p q(cid:16)N | (cid:0)
+dimensionalstatevalueandthenexecuted(6)astrajectoriesandevaluated. p z ;(cid:18) z (cid:8)T(cid:22) ;(cid:6) (cid:8)T(cid:6) (cid:8) (2)
+Theoutputsoftheseevaluationsandtheirgeneratorsinthelatentspaceare t t t ! z t ! t
+sentbacktothesurrogatemodelofthereward,whichwillbeupdated.
+Due to the probabilistic representation, ProMPs can rep-
+resent motion variability while keeping other MP properties
+such as rescalation and linear representation with respect to
+(cid:2)nds the values of the latent space variables that maximize parameters.
+thelikelihoodwithrespecttothedata.This,togetherwiththe
+B. Gaussian Processes
+sampling ef(cid:2)ciency of Gaussian Processes (GP), allows us
+to reduce the dimensionality of the search space by at least A Gaussian Process (GP) [16] f is an in(cid:2)nite-dimension
+one order of magnitude, signi(cid:2)cantly speeding up the con- stochastic process such that, for any (cid:2)nite set of indices
+p q p q
+vergence to a better motion policy. Additionally, we use the x ;:::;x , the random variables f x ;:::;f x have joint
+1 n 1 n
+Mutual Information (MI) [14] between the data dimensions Gaussian distributions. A GP is completely de(cid:2)ned by its
+andtherewardinordertoweighdataandprioritizethe(cid:2)tting mean function m and covariance function k, which is sym-
+oftherewardfunctioninsteadoftheMPparameters.Finally, metric and positive semi-de(cid:2)nite:
+we can use UCB to decide which samples to evaluate from p q(cid:18)GPp p q p 1qq
+f x m x ;k x;x (3)
+the latent space, project them upwards, execute, evaluate
+and then update a surrogate model of the reward function This is the generalization of the multivariate Gaussian
+that maps the latent space parameters to the original reward distribution, over vectors, to an in(cid:2)nite-dimension stochastic
+function,consideredasablackbox.Fig.2showsaschematic process, over functions.
+view of the proposed method. For convenience, the mean function is usually assumed to
+p q (cid:16)
+This paper is organized as follows: Section II brie(cid:3)y be the zero function, m x 0. On the other hand, many
+introduces the concepts used in the paper, such as Proba- possibilities can be found in the literature for de(cid:2)ning the
+bilistic Movement Primitives (ProMPs) [15], Gaussian Pro- covariance function k. In this work, the squared exponen-
+cesses (GP) [16], Gaussian Process Latent Variable Models tial kernel, combine(cid:2)d with a vector of automatic releva(cid:10)nce
+(GPLVM) [13], Mutual Information (MI) [14] and Upper determination, has been used for this purpose:
+Con(cid:2)dence Bound (UCB) [17], [18]. Section III de(cid:2)nes
+the proposed approach and Section IV presents the results p q(cid:16) (cid:1)1p (cid:1) q p q(cid:1) p (cid:1) q
+obtained with this method. Section V concludes the paper k xi;xj (cid:27)2exp 2 xi xj Tdiag ‘ 2 xi xj ;
+and proposes future directions. (4)
+315
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. where(cid:27) isthekernelvarianceparameterand‘isthelength- D. Mutual Information
+scale vector parameter. Mutual Information (MI) [14] is a widespread non-
+Furthermore, Gaussian processes are useful for regression negative symmetric statistic for quantifying the degree of
+(cid:16) p q (cid:0)
+models, y f x (cid:15). Thus, considering a set of N dependencebetweentworandomvariables,beingzeroifand
+t u P (cid:2) P
+observationsinmatrixform: X;Y ,withX RN Q,Y only if such variables are independent. In other words, it
+(cid:2)
+RN D, f can be used to predict the value of y (cid:0) , given measurestheamountofinformationsharedbythevariables,
+N 1
+x (cid:0) ,andanoiseGaussiandistribution(cid:15).Byleveragingthe re(cid:3)ecting how much information about one of them may
+N 1
+propertiesoff andtheGaussianidentities,onecanarriveto arise, from the knowledge of the other one.
+the expression: Formally, this concept, which is grounded in information
+p | q(cid:16) theory, is de(cid:2)ned as the relative entropy between the joint
+P y (cid:0) X;Y;x (cid:0)
+(cid:16)NNp 1p q Np1 q(cid:0) q (5) probability,andtheproductdistributions.Therefore,themu-
+(cid:22) x (cid:0) ;(cid:27)2 x (cid:0) (cid:27)2 ; p ‡‡q
+t N 1 t N 1 noise tual information I X;Y between two continuous random
+p q
+where variables with joint density p X;Y is:
+p q(cid:16) p q p p q q
+(cid:22)tppxN(cid:0)1qq(cid:16)(cid:16)kpTrK(cid:0)(cid:27)n2oiseqIN(cid:1)s(cid:1)1Yr (cid:0) s(cid:1) (6) pIqX;Y p q p x;y log pppxxqp;ypyq dxdy (11)
+(cid:27)2 x (cid:0) k x (cid:0) ;x (cid:0) kT K (cid:27)2 I 1k where p x and p y are the marginal probabilities with
+t N 1 N 1 N 1 noise N
+(7) respect to X and Y, respectively.
+(cid:16) p q (cid:16) Normally, and so it happens in our case, the joint prob-
+K k x ;x i;j 1::N (8)
+i;j (cid:16) p i j q (cid:16) ability distribution is not known, being only available some
+ki k xN(cid:0)1;xi i 1::N (9) sampled data of the form tx ;y uPr s. In such cases, MI
+i i i N
+must be estimated from this data set. One straightforward
+C. Gaussian Process Latent Variable Models
+approach for this purpose consists in partitioning the vari-
+GPLVMs can be thought as the combination of GPs, ables domain into bins of (cid:2)nite size, and approximate Eq.
+explained in section II-B, and latent variable models. These (11), as in [19].
+models, as a type of feature extraction approach, relate
+P (cid:2) E. Bayesian Optimization and Upper Con(cid:2)dence Bound
+through a set of parameters the observed data, Y RN D,
+P (cid:2)
+withasetofso-calledlatentorhiddenvariables,X RN Q, Bayesian Optimization [18] addresses the issue of (cid:2)nding
+!
+being Q D for the purpose of dimensionality reduction. the extrema of objective functions, which have no closed-
+In this way, GPLVMs de(cid:2)ne a generative mapping from form expression, unknown derivatives and convexity, or are
+the latent space to the observation space, whose variable costly to evaluate, as in our case. In such cases, these
+responses are said to be governed by the latent ones. approachesresultef(cid:2)cientintermsofthenumberoffunction
+Besides, GPLVMs are formulated as a non-linear gen- evaluations required to reach convergence [20].
+eralization of Probabilistic Principal Component Analysis These methods mainly consist of two components: a
+(PPCA) [13]. Speci(cid:2)cally, GPLVMs arise directly from the stochastic surrogate model (cid:2)tting the target function f, and
+formulation of Dual PPCA models, by replacing the inner an acquisition function. On the one hand, the surrogate
+product kernel with a non-linear covariance function. These model takes advantage of the information of accumulated
+approaches marginalize the parameters and optimize the observations to generate a posterior distribution from a
+latent variables. Therefore, the marginal likelihood function prior distribution, by means e.g. of Gaussian process, as in
+ppY|X;(cid:18)q can be expressed a„s: section II-B. The surrogate function will usually have more
+uncertainty (variance) on those unexplored areas or where
+its value is much non-deterministic.
+p | q(cid:16) D p | q
+p Y X;(cid:18) p y X ; (10) On the other hand, the acquisition function, de(cid:2)ned in a
+d(cid:16)1 :;d search space (cid:10)X (cid:128) RN(cid:2)Q, uses the surrogate model to
+(cid:1)
+where y is the d th column of the data matrix Y, de(cid:2)ne the utility of evaluating each point of (cid:10)X, giving
+:;d (cid:1) | (cid:18) more importance to points which are likely to have high
+corresponding to the d th dimension, and y X
+Np | (cid:0) q :;d objective function values, considering both the surrogate
+y 0;K (cid:27)2 I
+:;d noise model prediction and its uncertainty.
+Finally, the methodology for training the GPLVM is to
+Thus, the result of the maximization of the acquisition
+(cid:2)nd the maximum a posteriori estimate of X, maximizing
+functionisselectedasthenextpointoftheobjectivefunction
+Eq. (10) with respect to the latent variable values and noise
+to be evaluated, being the surrogate model updated accord-
+parameters.
+ingly right afterwards. In this way, the acquisition function
+GPLVM results in a projection from the higher dimen-
+is responsible to lead the search for the optimum of the
+sional space to the latent space, without providing a pro-
+objective function, in a trade-off frame between exploration
+jection mapping by itself. Not restricting the mapping to a
+and exploitation.
+certain expression allows GPLVM to (cid:2)ne-tune the values of
+Upper Con(cid:2)dence Bound is a very intuitive [2] and
+thelatentspacefurther.Besides,GPLVMdoesprovideatool
+ef(cid:2)cient [21] acquisition function method, de(cid:2)ned by:
+forestimatingthehigher-dimensionalvariableywithrespect
+p q(cid:16) p q(cid:0) p q
+to the lower dimensional x, by also using Eq. (5). UCB x (cid:22) x (cid:20)(cid:27) x ; (12)
+316
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. where (cid:20) is a parameter (left to the user) which controls
+the importance of exploitation. The new samples are then
+generated as:
+(cid:16) p q
+xsample argmaxxP(cid:10)XUCB x (13)
+Thismethodresultsinchoosingtosamplethepointwhich
+presents the highest mean plus (cid:20) standard deviations value
+on the surrogate function model.
+Fig.3: MeanEuclideannormoftheerroronthereprojectionofeachdata
+III. LEARNINGINLATENTSPACESTHROUGHGPLVM trajectory within a training dataset, comparing GPLVM with MI-weighted
+GPLVM.
+In this section, using the concepts de(cid:2)ned in Sec. II
+„
+we present an approach that is capable of learning high-
+which can be developed into:
+dimensional robot motion policies with very few samples.
+(cid:16) t u (cid:18) (cid:26)
+Given a set of trajectories (cid:28) zn , for trajectories ‚ D p | q (cid:16)
+n (cid:16) 1::N and timesteps j (cid:16)n1::N ,jwe will (cid:2)rstly (cid:2)t log p y:;d X Md
+t (cid:16)
+those trajectories to MPs parameters by obtaining, for each d 1
+t(rbayjecutsoinryg, l!eanst-tshqautaraedsj)u.stThtheseetwraejeigchtotryvecatcocrosr,dcinagpabtole(1o)f D(cid:16) Md (cid:1)N2 log2(cid:25)(cid:1)log‚|K|(cid:1) 12y:T;dK(cid:1)1y:T;d (cid:16)
+d 1
+(cid:2)tting each individual trajectory given the previously (cid:2)xed (cid:16)p ‚ (cid:1)(cid:1) a | (cid:9)|q D (cid:1) a (cid:9)
+ProMPkernels,arethengatheredtogetherastherowsofour N2log 2(cid:25) log K (cid:16) Md (16)
+datamatrixY.Therefore,weareperformingDimensionality d 1
+Reduction (DR) in the parameter space of the MP, rather ‚(cid:1) D y ‚M (cid:1)T K(cid:1)1 y M(cid:9) (cid:16)
+:;d d :;d d
+than directly in the space of degrees of freedom of the (cid:16)
+d 1
+robot, as other approaches do [6], [8]. While performing (cid:16) D (cid:4) (cid:1) D (cid:1)
+DR in the space of degrees of freedom is advantageous Md C tr YMITK 1YMIT
+(cid:16) (cid:16)
+in that it provides qualitative information that is directly d 1 d 1
+(cid:16) (cid:1) | | (cid:16) (cid:4)
+interpretable, performing DR in the MP’s parameter space where C Nlog 2(cid:25) log K is a constant, YMI Y
+permitstoreducefurtherand (cid:2)ne-tunethedimensionalityof diagpM q,2and diagpM q is a diagonal matrix with the
+1::D 1::D
+the latent space [22], which is one of the goals of this work. valuesofthemutualinformationbetweencolumndofYand
+(cid:16)
+We will then use GPLVM on the data stored in matrix the rewards at each d-th diagonal position, for d 1::D.
+Y. However, while GPLVM was initially conceived for data Therefore, using such weighting on the input data for the
+visualization [23], we are aiming at further improving the GPLVMallowsustohaveasigni(cid:2)cantlysmallererrorwhen
+model given the evaluations of each trajectory through a calculatingtherewardofthemeanpredictedreprojectionfor
+reward function: each training motion y , while not losing much precision
+n
+on such reprojection. In Fig. 3, we see the reprojection
+(cid:221)(cid:209)
+R:RD R error from a dataset using GPLVM with and without MI
+(cid:222)(cid:221)(cid:209) p q (14)
+y R y : weightingforthetrainingdataset,while30%ofdatawasleft
+for validation purposes as shown in Fig. 4. There, we can
+Therefore, when deriving the GPLVM, we will weigh the observe that, while the reprojected training points present a
+(cid:16) (cid:4) {
+data by using YMI Y MI1 2 instead of data Y. Here, slightly better (cid:2)tting with MI, this result is worse for the
+MI is the mutual information between the reward function validation datapoints. However, if we pay attention to the
+and each column of the data - i.e., each parameter of the reward evaluation of the latent space datapoints, reprojected
+parameter vector ! of the MP. The MI will then be higher again to the higher-dimensional space, this gives an idea
+when there is a relation between such parameter (column) of how the rewards are affected by the coding/decoding
+and the reward, and smaller when such parameter does not operation. We see in Fig. 5 - in log10 scale - that there
+have much in(cid:3)uence on the reward. Indeed, if we use this is a slight improvement on the training dataset by using MI,
+(cid:16) p q
+weighting M MI y ;R on the log-likelihood, we can and at least one order of magnitude of improvement on the
+d :;d
+see that optimizing the weighted log-likelihood is equivalent reward evaluations for the validation dataset, as observed in
+to using such weighted data as i„nput: Fig. 6. This means that using such MI to weigh the GPLVM
+input results in a model that more reliably represents the
+reward function, for which we will build a surrogate model.
+p | q(cid:16) D p | q OncehavingbuiltaGPLVMtoobtainaproperlatentspace
+log p Y X;(cid:18) log (cid:16) p y:;d X Md; (15) representation of data, we will build a surrogate model that
+d 1
+317
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. Algorithm 1
+Input:
+(cid:16) (cid:16) (cid:16)
+Trajectory data (cid:28)jnl , n 1::N, j 1::Nt(cid:16), l 1::NDOF
+Demonstrated trajectories rewards R , n 1::N
+n
+GPLVM latent space dimension Q
+ProMPs’ kernel matrix (cid:9)
+1: Compute weights ! with Eq.(1)
+—(cid:221) n
+2: Assign Y !
+n n(cid:16) p q (cid:16)
+3: Compute MI: M MI y ;R , d 1::D
+d :;d —(cid:221) (cid:4) p q
+4: Reassign GPLVM input data YMI Y diag M
+1::D
+Fig.4: MeanEuclideannormoftheerroronthereprojectionofeachdata 5: Perform GPLVM(YnMI) and obtai(cid:18)n XGPnp p(cid:4)q p(cid:4) (cid:4)qq
+trajectorywithinavalidationdataset,comparingGPLVMwithMI-weighted 6: Train X-R Regression Model R^ m ;k ;
+GPLVM. 7: De(cid:2)ne Search region (cid:10) (cid:128)RN(cid:2)Q
+(cid:16) X
+8: for k 1::N do
+newp q(cid:16) p q(cid:0) p q
+9: De(cid:2)ne UCB x (cid:22) (cid:1) x (cid:20)(cid:27) (cid:1) x
+k 1 (cid:16) k 1 p q
+10: Generate new sample xk arg mPax UCB x
+11: Project x to y~ with Eq. (5) x (cid:10)X
+k k p p qq
+12: Execute y~ and evaluate R y~ x
+k k k p q
+13: Update f, (cid:22) , and (cid:27) with x and R x
+k k k k
+14: end for
+surrogate model. As already mentioned in Sec. II-E, UCB
+suggests to evaluate points, according to the maximization
+Fig. 5: Mean Euclidean norm of the error (in log10 scale) on the of Eq. (12), in a certain search space (cid:10) .
+evaluation of the reward function of the reprojected value of each data X
+trajectory within a training dataset, comparing GPLVM with MI-weighted Each sample xsample in the latent space will be used to
+GPLVM. estimate the corresponding value in the higher-dimensional
+p q
+space y^ x with Eq. (5), which will be executed and eval-
+uated, giving us the real value of the reward function R
+associated with xsample. This new sample, and the associated
+reward, will then be added to the surrogate model, that will
+be updated, before generating new samples. The process is
+repeated until convergence or a certain number of samples
+have been executed. Algorithm 1 displays the procedure of
+the proposed method, while Fig. 2 shows a more schematic
+view.
+In this work, the search space (cid:10) has been de(cid:2)ned as
+X
+the minimum axis-aligned hyperrectangle that contains all
+latentdata,assuggestedin[18].Inordertoselectcandidates,
+Fig. 6: Mean Euclidean norm of the error (in log10 scale) on the
+evaluation of the reward function of the reprojected value of each data the exploration parameter (cid:20) in(cid:16)Eqq. (12) has been (cid:2)xed
+trajectorywithinavalidationdataset,comparingGPLVMwithMI-weighted for simpli(cid:2)cation purposes ((cid:20) 1 . However, less naive
+GPLVM. methods for selecting this parameter can be found, as in
+[17], [24].
+estimates the reward function to be evaluated for the latent-
+IV. EXPERIMENTATION
+spacevariablesratherthanintheoriginalhigher-dimensional
+space: Inordertoshowtheperformanceoftheproposedmethod,
+R^ :RQ (cid:221)(cid:209)R we taught a Barret WAM robot 50 trajectories of feeding a
+(cid:222)(cid:221)(cid:209) p q (17) mannequin(seeFig.1)withtherobotgoingfromoneinitial
+x R^ x :
+area (start position) to a (cid:2)nal position area (mannequin head
+In order to build the surrogate model for the latent space position), getting food from random positions on the table.
+reward function, we will rely on a Gaussian Process (see Thetrajectoriesoftherobot’send-effectorcanbeseeninFig.
+t u
+Sec. II-B) that uses the latent space variables and their 7.Asinputdata,weusedtheposition x;y;z oftherobot’s
+evaluations. end-effectortorepresentthetrajectory,and11Gaussiansper
+For learning and improving the trajectories, we will then Cartesiandimension,resultingina33-dimensionalparameter
+use UCB (see Sec. II-E) to generate new samples. The UCB space. Then, we placed a bowl at a particular position and
+will be using the mean and variance provided by the GP we de(cid:2)ned a reward function by calculating the Euclidean
+318
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. Fig.7: Robottrajectoriesobtainedthroughkinestheticteachinginthe3D Fig. 8: Samples and their real rewards (in log10 scale) with GPLVM
+space.Trajectoriesstartfromtheleftside. andUCBlearning,byusingMIweightingandnot.Theinitial50samples
+shown in green correspond to the training dataset. Note that the (cid:2)rst 10
+samples are re-sampled demonstrations in order to better (cid:2)t the surrogate
+function.
+distance between the lowest-height point of each trajectory,
+the contact point c , and the bowl center, which is the
+p
+objective point o :
+p
+(cid:16)(cid:1) p q
+R dist c ;o 2 (18)
+p p
+In order to use our proposed method in Algorithm 1, we
+initially found the problem that the X-R regression model
+was identifying the latent data with both originally demon-
+strated motions’ rewards and reprojected samples’ rewards,
+with poor results. Therefore, as reprojected trajectories were
+similar, we then performed and evaluated the reprojection of
+10outofthe50originaldemonstrations,byreprojectingtheir
+associatedlatentspacepointtothehigher-dimensionalspace
+andevaluatingit.Then,webuiltthereward’ssurrogatemodel
+with those 10 resampled motions, and iteratively updated it, Fig. 9: Samplesandtheirrealrewards(in(cid:16)log10scale)with(cid:16)REPSwith
+withnewsamplesandevaluationsthroughUCB.Theresults, two different KL divergence bounds, (cid:15)KL 0:25 and (cid:15)KL 1:0. The
+initial50samplesshowningreencorrespondtothetrainingdataset.
+both with the MI weighting on the data for GPLVM and
+without it, are shown in Fig. 8, where we see there is an
+improvement when using MI to correct data.
+Moreover,wecomparedthesetwomethodsagainstastate- suchlatentspace,optimizingtherobot’spolicyismuchmore
+of-the-art policy search algorithm: Relative Entropy Policy sample ef(cid:2)cient, resulting in a much faster convergence to
+Search (REPS) [25]. REPS’s optimization maximizes the an optimal solution, also thanks to weighting the GPLVM
+expected reward of a stochastic policy, subject to obtain- with the mutual information of each dimension with respect
+ing a stochastic policy and keeping the Kullback-Leibler to the rewards observed. The experimental results provided
+divergence between the old and new policy bounded by show that this optimization method converges much faster
+a certain parameter (cid:15) . Same scaled Fig. 9, shows that, than other state-of-the-art methods, such as REPS.
+KL
+while REPS optimizes the trajectory and reaches a similar While the initial latent space may restrict the search
+long-term reward, we see that it requires more samples than space for the policy learning, the prediction used to obtain
+(cid:16)
+our proposed method for (cid:15) 0:25;1:0. We could check the higher-dimensional variables from the latent space sam-
+KL
+that trajectories with a high reward were desirable. In fact, ples can be perturbed, so that exploration would also take
+p(cid:1) q¡
+log R 4 implied millimetric precision. place outside the initial Q-dimensional latent space, and the
+10
+GPLVMcouldbeupdatedafteracertainnumberofsamples.
+V. CONCLUSION This is left for future work, as well as other approaches to
+In this paper, we have proposed an approach to use adapt UCB to higher-dimensional spaces without sampling
+Bayesian optimization-based policy search to optimize robot too much on the extremes of the sampling regions. More-
+motion trajectories with a surrogate model of the reward over, we plan to expand this work to make it adaptable to
+function. To this end, we have used GPLVM to reduce environmental changes that the robot might perceive, using
+the parameter space of robot movement primitives to a GPLVMextensionssuchasBayesianGPLVM[26],[27],and
+much lower-dimensional space, e.g., going down from a 33- to improve the discussion regarding the advantages of our
+dimensional parameter space to a 4-dimensional space. In approach with respect to other state-of-the-art methods.
+319
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [24] S. Gr(cid:252)new(cid:228)lder, J.-Y. Audibert, M. Opper and J. Shawe-Taylor,
+"Regret Bounds for Gaussian Process Bandit Problems". Journal of
+[1] M.P.Deisenroth,G.NeumannandJ.Peters,(cid:147)AsurveyonPolicySearch MachineLearningResearch,no9.pp273-280,2010.
+for Robotics". Foundations and Trends in Robotics, vol 2, pp 1-142, [25] J.Peters,K.M(cid:252)llingandY.Alt(cid:252)n,"RelativeEntropyPolicySearch".
+2013. NationalConf.onArti(cid:2)cialIntelligence,track15,pp.182-189,2011.
+[2] K. Chatzilygeroudis, V. Vassiliades, F. Stulp, S. Calinon, and J. B. [26] P. Li, S. Chen, "A review on Gaussian Process Latent Variable
+Mouret, "A survey on policy search algorithms for learning robot Models". CAAI Transactions on Intelligence Technology, vol. 1, no.
+controllers in a handful of trials". arXiv preprint arXiv:1807.02303, 4,pp.366-376,2016.
+2018. [27] M. K. Titsias, N. D. Lawrence, "Bayesian Gaussian Process Latent
+[3] M. Deisenroth and C. E. Rasmussen. "PILCO: A model-based and VariableModel".InternationalConferenceonArti(cid:2)cialIntelligenceand
+data-ef(cid:2)cient approach to policy search". Proceedings of the 28th Statistics,vol.9ofJMLR:W&CP9,2010.
+InternationalConferenceonmachinelearning(ICML-11),pp.465-472,
+2011.
+[4] K. Chatzilygeroudis, R. Rama, R. Kaushik, D. Goepp, V. Vassiliades
+andJ.B.Mouret,"Black-boxdata-ef(cid:2)cientpolicysearchforrobotics".
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),pp.51-58,2017.
+[5] S. Bitzer and S. Vijayakumar, (cid:148)Latent spaces for dynamic movement
+primitives."IEEE-RASInt.Conf.onHumanoidRobots,pp.574-581,
+2009.
+[6] A. ColomØ and C. Torras. "Dimensionality reduction for dynamic
+movement primitives and application to bimanual manipulation of
+clothes". IEEE Transactions on Robotics, vol. 34, no .3, pp. 602-615,
+2018.
+[7] A. ColomØ, G. Neumann, J. Peters and C. Torras. "Dimensionality
+reductionforprobabilisticmovementprimitives",IEEE-RASHumanoid
+Robots,pp.794-800,2014.
+[8] K.S.Luck,G.Neumann,E.Berger,J.Peters,andH.BenAmor,(cid:148)Latent
+space policy search for robotics.(cid:148) IEEE/RSJ Int. Conf. on Intelligent
+Robots(IROS),pp.1434-1440,2014.
+[9] A.Sadamani,A.Ghodsi,D.Kulic,"Discriminativefuncitonalanalysis
+ofhumanmovements."PatternRecognitionLetters,vol.34,pp.1829-
+1839,2013.
+[10] G. Averta, C. Della Santina, E. Battaglia, F. Felici, M, Bianchi,
+and A. Bicchi, "Unvealing the principal modes of human upper limb
+movementsthroughfunctionalanalysis".FrontiersinRoboticsandAI,
+4:37,2017.
+[11] N. Coffey, A. Harrison, O. Donoghue and K. Hayes, "Common
+functionalprincipalcomponentsanalysis:Anewapproachtoanalyzing
+humanmovementdata".Humanmovementscience,vol.30,pp.1144-
+1166,2011.
+[12] W.Dai,"FPCABasedHuman-likeTrajectoryGenerating".2013
+[13] N. Lawrence, "Probabilistic non-linear principal component analysis
+with Gaussian process latent variable models", Journal of machine
+learningresearch,vol.6,no.Nov,pp.1783(cid:150)1816,2005.
+[14] L.F.Kozachenko,N.N.Leonenko,(cid:147)SampleEstimateoftheEntropy
+of a Random Vector(cid:148), Probl. Peredachi Inf., vol. 23, no. 2 pp. 9-16,
+1987.
+[15] A. Paraschos, G Neumann, C. Daniel, and J. Peters, (cid:147)Probabilistic
+movementprimitives".InAdvancesinNIPS,pp.2616-2624,2013.
+[16] C. E. Rasmussen and C. K. I. Williams, "Gaussian Processes for
+MachineLearning",theMITPress,2006.ISBN026218253X.
+[17] N.Srinivas,A.Krause,S.Kakade,andM.Seeger,"Gaussianprocess
+optimization in the bandit setting: no regret and experimental design"
+InternationalConferenceonMachineLearning(ICML),pp1015-1022,
+2010.
+[18] E.Brochu,V.M.Cora,N.deFreitas,"ATutorialonBayesianOpti-
+mizationofExpensiveCostFunctions,withApplicationtoActiveUser
+Modeling and Hierarchical Reinforcement Learning", arXiv preprint
+arXiv:1012.2599,2010.
+[19] A. Kraskov, H. St(cid:246)gbauer, and P. Grassberger. "Estimating Mutual
+Information",PhysicalReviewE,no.69,066138,2004.
+[20] J.Mockus."ApplicationofBayesianapproachtonumericalmethods
+ofglobalandstochasticoptimization",JournalofGlobalOptimization,
+vol.4,no.4,pp.347-365,1994.
+[21] P.HennigandC.J.Schuler."Entropysearchforinformation-ef(cid:2)cient
+global optimization", Journal of Machine Learning Research, vol. 13,
+no.Jun,pp.1809-1837,2012.
+[22] A.ColomØandC.Torras."DimensionalityreductioninlearningGaus-
+sianmixturemodelsofmovementprimitivesforcontextualizedaction
+selectionandadaptation",IEEERoboticsandAutomationLetters,vol.
+3,no.4,pp.3922-3929,2018.
+[23] N. Lawrence, "Gaussian Process Latent Variable Models for Visu-
+alisation of High Dimensional" International Conference on Neural
+InformationProcessingSystems,2004.
+320
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:11 UTC from IEEE Xplore.  Restrictions apply. 

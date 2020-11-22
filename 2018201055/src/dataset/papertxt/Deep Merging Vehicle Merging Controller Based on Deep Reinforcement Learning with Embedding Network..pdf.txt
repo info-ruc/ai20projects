@@ -1,0 +1,570 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+SnapNav: Learning Mapless Visual Navigation
+with Sparse Directional Guidance and Visual Reference
+Linhai Xie1,2, Andrew Markham1 and Niki Trigoni1
+Abstract—Learning-based visual navigation still remains a Guidance Observation Desired Path
+challenging problem in robotics, with two overarching issues:
+how to transfer the learnt policy to unseen scenarios, and
+how to deploy the system on real robots. In this paper, we
+proposeadeepneuralnetworkbasedvisualnavigationsystem,
+SnapNav. Unlike map-based navigation or Visual-Teach-and-
+Repeat (VT&R), SnapNav only receives a few snapshots of the
+environment combined with directional guidance to allow it
+to execute the navigation task. Additionally, SnapNav can be
+easily deployed on real robots due to a two-level hierarchy:
+Fig. 1: An example of the visual navigation task with sparse
+a high level commander that provides directional commands
+directional guidance. The robot automatically selects from the
+and a low level controller that provides real-time control
+provided guidance based on current observation.
+and obstacle avoidance. This also allows us to effectively use
+simulated and real data to train the different layers of the
+hierarchy, facilitating robust control. Extensive experimental
+results show that SnapNav achieves a highly autonomous navigation in unknown environments. Firstly, it can navigate
+navigationabilitycomparedtobaselinemodels,enablingsparse,
+in an unknown environment with only a few pieces of
+map-less navigation in previously unseen environments.
+guidance. As shown in Fig. 1 the guidance consists of a
+I. INTRODUCTION snapshot image and the desired action (turn left, turn right,
+“Where is the reception?” stop)beforeeachturningorterminationpointalongthepath.
+“Go straight and turn left when you see the exit.” Secondly,thenavigationsystemisdesignedwithatwo-level
+The above conversation is a very common and efﬁcient hierarchy for fully beneﬁting from the training data from
+human interaction when querying the route to an unknown different domains, i.e. appearance or depth observations,
+destination.Thiskindofinstructionsthatconsistofasequen- simulation or reality, and straightforwardly deploying the
+tialactionpairedwithavisualreferencearewidelyusednot learnt policy on real robots.
+onlyinnavigationbutalsoinvariouskindsofactivitiessuch Our contributions are summarised as follows:
+as reading the user guide for a new product. This type of • We propose a novel visual navigation system which
+navigational instructions have two prominent characteristics. enables the robot to navigate in unknown environments
+Theﬁrstisthedirectconjunctionbetweentheactionandthe with very sparse guidance.
+visual observation spaces which provides speciﬁc guidance • A two-level architecture of the network is proposed
+about what to do and where to do it. The second notable andtrainedwithdifferentlearningmechanismstoeasily
+feature is the inherent sparsity as complex instructions can transfer the learnt policy from simulation to real world.
+bedistilledintoafewkeyactionsatvisuallyimportantway- • We introduce a novel self-supervised training approach
+points or cues, relying on the innate capacity of humans to withmultiplelearningsignalstoobtainrobustguidance
+navigate between these points. Together, this yields accurate from the high-level commander.
+instructions that can be efﬁciently communicated. • We show that the trained network can be used to
+This observation triggers an interesting question: can navigate in real-world experiments.
+robots mimic those human behaviours to navigate in a
+completely unknown environment when supplied with very II. RELATEDWORK
+sparseguidance?Sucharobotsystemwillbehighlyefﬁcient
+Deep learning has recently been broadly applied in robot
+atcommunicationandpossessastronggeneralisationability
+navigation[1]–[3]andlearning-basedmaplessvisualnaviga-
+towards unfamiliar scenarios, which will help contribute
+tion has demonstrated remarkable performance in complex
+towards establishing an intelligent multi-agent society.
+environments. Many works propose to learn a shortest path
+In this paper, we present a deep neural network based
+strategy by encoding the environmental information into the
+system, SnapNav, as a practical solution to mapless visual
+parameters of deep neural network [4]–[6]. Although these
+techniquesexhibitrobustnavigationcapabilities,theseagents
+1Authors are with Department of Computer Science,University of
+Oxford, Oxford OX1 3QD, United Kingdom, first name.last are actually overﬁtting the training environment and cannot
+name@cs.ox.ac.uk apply the learnt experience to previously unseen scenarios.
+2Linhai Xie is also with Department of Mechatronic Engineering and
+Another branch of mapless navigation approaches is local
+Automation,NationalUniversityofDefenseTechnology,Changsha410073,
+China navigation[7]–[9]wheretheprerequisiteofaknownrelative
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1682
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. goal position largely restricts its real world applications to appearance of the observed objects, the command strategy
+ones where accurate location exists. demandsdatawithhighvisualﬁdelitybutcanlargelyignore
+the robot dynamics. Conversely, the control policy only
+A. Visual teach and repeat
+focuses on the geometry of the surroundings for obstacle
+Recently, researchers have introduced learning agents that avoidance, robot dynamics and occasional commands/high-
+can follow a demonstrated path [10]–[13] which is similar levelactions.Thereforethispolicycanbemoreeasilytrained
+to the traditional Visual teach and repeat (VT&R) [14] in in a robot simulator where the robot dynamics as well as
+robotics. This group of solutions require simple descriptions depthobservationsareﬁnelymodelled.Therobotcanalsobe
+oftheenvironmentwhennavigatinginanunknownenviron- exposed to a wide range of arbitrary world setups, allowing
+ment, e.g. raw camera image sequences, or additionally, the for more robust local navigation. Each sub-task will be
+labelled actions, instead of a pre-deﬁned map. Among them formulated more speciﬁcally in the following parts.
+only [11], [13] can be deployed on real robots. However
+B. Command Sub-Task
+the former is trained with a large amount of manually
+labelled real-world data from an omni-camera while the The commander C is supplied with n pairs of guidance
+{ | }
+latter requires an explicit localisation of the demonstrated Gi = (Si,mi)i = [1,2,...,n] where Si and mi repre-
+sent snapshots and guidance commands respectively. Each
+image in the sequence, largely discounting the practicality.
+snapshotS intheguidancerecordsaﬁrst-person-viewRGB
+Furthermore,relianceonalongvideostreamhindersefﬁcient i
+imageoftheareawheretherobotshouldeitheralterdirection
+communication between agents.
+or stop at a particular point. Since the robot is only given
+B. Language based visual navigation the order to vary direction or whilst terminating, there are
+∈ {
+Natural language instructions, as a form of extremely only three types of commands i}n guidance, mi “Turn
+sparse guidance, is also introduced in visual navigation right”, “Turn left”, “Stop” , with the implicit action
+being to carry on in a straight path.
+[15], [16]. Although it imitates human behaviour and can
+Then with all pieces of guidance and the current image
+produce a more autonomous agent, the difﬁculty of visual
+languagegrounding,i.e.associatingtheperceptionfromtwo observation Ot from an on-board ca∈me{ra, the commander C
+completely different modalities, together with the ambiguity predicts a high level command ct } “Turn right”, “Go
+of the natural language itself, limits the performance of forward”, “Turn left”, “Stop” at each time step t as
+language guided navigation. The agent mentioned in [16] ct =C(Ot,G,hc) where hc is the hidden state of the GRU
+cell in commander.
+which takes a list of thumbnail images of the street view in
+guidanceissimilartoourSnapNavbutonlylearnshighlevel C. Control Sub-Task
+navigationstrategiesinasimulatedtoolkitnamedStreetNav.
+The control sub-task is formalised as a Markov Desision
+∈
+III. TASKDESCRIPTION Process (M∈DP). At time t [1,T] the robot takes an
+action a A according to the observation X . After
+The task we are investigating in this paper is similar t t
+executing the action, the robot receives a reward r given
+to StreetNav in [16] which can be termed as visual path t
+by the environment according to the reward function and
+following with sparse guidance. Although there are some (cid:80)
+then transits to the next observation X . The goal of this
+similaritiesbetweentheseworks,wefocusonamorerobotic t+1
+MDPistoreachamaximumdiscountedaccumulativefuture
+orientedperspective.Inparticular,weconsiderthechallenges −
+reward R = T γτ tr , where γ is the discount factor.
+of real-time perception and control of an autonomous robot, t τ=t τ
+More speciﬁcally, the action is the control signal of the
+and take the robot out of pure simulation into reality. ∈
+robot, a = (av,aω) A, where av and aω respectively
+t t t t t
+A. Task Decomposition denotes the expected linear and rotational velocity at time t.
+TheobservationX isaﬁrst-person-viewdepthimagewhich
+Althoughitisstraightforwardtosolvetheentiretaskwith t
+canbedirectlyaccessedinasimulator,e.g.ROSGazebo1,or
+a single policy network as in [10], [16], it is non-trivial to
+estimatedfromanRGBimagewithanoff-the-shelfestimator
+deploy those systems to a real robot. On the one hand, due [17] in the real world. The reward function r at time t is
+to the absence of a simulator that can simultaneously render deﬁned as:  t
+realistic camera data and precisely capture the dynamics of
+robots,commandandcontrolstrategiesthataredeployablein Rcrash, if robot crashes
+reality cannot be learnt with a single simulator. On the other r = R , if robot reaches the goal (1)
+t reach
+−
+hand, manually labelling real world data is labour expensive d − d , otherwise
+t 1 t
+[11] and limitations on training samples rarely leads to a
+where R is a penalty for collision, R is a posi-
+robustcontrolpolicyduetothelackofexploration.However, crash reach
+by decomposing problem into a high level commander and tive reward for reaching the goal, dt−1 and dt denote the
+distances between the robot and the goal (the next turning
+alowlevelautonomouscontroller,wecanlearnsub-policies
+point or the ﬁnal destination) at two consecutive time steps
+withseparatekindsandsourcesofdatatooptimizeeachsub- −
+t 1 and t.
+task. More concretely, since the visual matching of current
+observations and snapshots in guidance heavily relies on the 1http://wiki.ros.org/gazeborospkgs
+1683
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. Snapshot  Observation Depth Estimator
+Snapshot 
+Snapshot  Depth
+𝛳 𝛳
+𝛳
+CMD 
+CMD 
+CMD  Attention Dense  GRU Dense CMD EMB GRU Dense  Action
+Layer Layer Layer
+EMB EMB
+Guidance Commander Controller
+Fig. 2: The network architecture of SnapNav which consists of two modules. The commander ﬁrstly attends to a particular guidance
+(cid:76)
+instructionbyﬁndingthecorrectmatchwiththecurrentobservation.Itthenpublishesahighlevelcommand.Thecontrollerthenpredicts
+a low level robot action given the command, the estimated depth image and the previous predicted action. Note that commands are
+represented with the abbreviation “CMD”, “EMB” denotes a linear embedding layer and is the concatenation operation.
+IV. NETWORKARCHITECTURE network is used to predict the attended command when the
+A. Attention-Based Commander selected snapshot and the current observation are similar
+enough.Ifthereislowsimilarity,thedefault“Go forward”
+To accomplish the command sub-task, the commander is
+command is issued.
+designed with convolutional neural network (CNN) layers
+and linear embedding (EMB) layers to process raw inputs, B. Controller
+followed by a hard attention component and a recurrent
+Given the command from the commander c =
+policy network. t
+C(O ,G,h ), the last action a − and the depth image
+As illustrated in Fig. 2, image inputs to commander are t c t 1
+providedbythesimulatororadepthpredictionnetworkX =
+ﬁrstlyencodedby5convolutionallayers,whereascommands t
+D(O ), the controller outputs the best action to navigate
+are input to a linear embedding layer where the guiding t
+throughtheenvironment,basedonitstrainedpolicy.Similar
+snapshot S , command m and the current observation O
+i i t to the commander, the raw depth image is encoded with a
+are transformed to vectors respectively as vS =CNN (S ),
+vmi = EMB(mi), vOt = CNNθ1(St). Sincei both theθ1snaip- CvcNN=vEXtM=B(CcN)Nwθ2h(icXht)a,rtehethceonmumsaenddtoisparlesodicetmtbheeddaecdtioans
+shots and current observation are the same type of data, the t t
+by the controller a = π(vX,vc,h ,a − ) where h is the
+CNNs for encoding them have the same parameters θ . t t t π t 1 π
+Given vectorised inputs vS, vm and vO, the go1al is recurrent hidden state in the controller and θ2 represents the
+i i t parameters of the depth encoding CNN.
+to choose the guidance which contains the most relevant
+The recurrent network is of importance in the controller
+snapshotw.r.t.thecurrentobservation.Intuitively,duetothe
+as it is required to decide precisely when to carry out the
+sparsityoftheguidance,onlyhighlyrelatedsnapshotsshould
+command for turning left or right. This is because the high
+bematchedforthecommandstrategyateachtimestep.Thus,
+level commands are aligned to maximal visual matches,
+hard attention is preferable to soft attention which simply
+which may not be precisely aligned to the desired turning
+sums over all guidance instructions with different weights.
+point. This decoupling yields higher levels of autonomy, as
+The hard attention is usually modelled with a discrete
+the low level controller decides when it is best to turn.
+stochastic layer which is non-differentiable and thus has to
+be optimised with gradient estimation methods other than
+V. TRAINING
+conventional backpropagation [18]. Fortunately, as shown
+In this section we introduce our training mechanisms
+in [16], [19], an alternative is to adopt a generalisation of
+respectively for the controller and commander.
+the max-pooling operator to choose the optimal guidance
+instruction. This bypasses the non-differentiable problem:
+A. Self-Supervised Commander Training Labels
+−|| − ||
+(vS∗,vm∗)=argmax[softmax( vS vO )]. (2) Rather than relying on manually annotated video, in this
+i i i t 2
+(vS,vm) section we present a novel, self-supervised technique to
+i i
+It results in a sub-differentiable model and can be combined create pseudo-labels. Given a raw video, the optical ﬂow
+with other gradient-based models. Our experiments later betweensubsequentframesisﬁrstlyestimatedwithFlowNet
+prove that the attention performance can be improved by [21] and then segmented where optical ﬂow is high i.e.
+a large margin either by combining other gradient estima- likely turning points. This assumes that images collected
+tors such as the REINFORCE algorithm [20] with back- along a straight, continuous trajectory are highly similar,
+propagation or training with auxiliary tasksi.e. metric learn- whereasimagesaroundacornershowhighdisparity.Next,a
+ing. Then the attended snapshot vector together with the snapshot is randomly sampled near the end of each segment
+embedded command is processed by a dense layer and con- and, together with k (k = 20 in this paper) nearest frames,
+{
+catenated with the encoded observation. Finally, a recurrent is labelled with a random command drawn from “Turn
+1684
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. Pseudo label Go Forward completely relies on the CNN encoder that is parameterised
+Turn Right
+TSutornp Left by θ . Given the guidance G and the sequential observa-
+1
+tions O , the attention policy induces a distribution over
+t
+possible interaction sequences s = O ,u ,...,O ,u
+1:T 1 1 T T
+where u and O are the attended location of snapshots and
+t t (cid:80)
+Video Optic flow Guidance the observation at time step t. The target is to maximise
+Fig. 3: The videos are ﬁrstly segmented based on the estimated the reward accumulated along an interaction sequence s
+optic ﬂow. Then the pseudo labels of direction varying commands as J(θ ) = E [ T γT−tr ]. Note that p(s 1:T)
+(yellow and green sections) are assigned before the agent actually 1 p(s1:T;θ1) t=1 t 1:T
+makes the turn and is important to be labelled randomly instead depends on the attention policy and the reward rt at each
+of according to the ground-truth. The “Stop” command is only time is proportional to the command prediction accuracy.
+labelledattheendpartofthevideo(thepurplepart)andtheother The gradients are approximated using Monte-Carlo with N
+framesaresetto“go forward”asthedefaultcommand(theblue learning sam(cid:88)ples:
+areas).
+right”, “Turn left”, “Stop”}. It is worth noting that the ∇θ1J = T (cid:88)Ep((cid:88)s1:T;θ1)[∇θ1logπ(ut|G,Ot;θ1)Rt]
+t=1 (4)
+commandofturningleftorrightbeforeeachturningpointis ≈ 1 N T ∇ |
+not labelled according to the real actions taken by the agent logπ(un Gn,On;θ )Rn.
+N θ1 t t 1 t
+during data collection but assigned randomly. This is the n=1t=1
+key to preventing the commander network from overﬁtting c) Metric Learning: As a further alternative to the
+to small real-world datasets. Finally, the remaining frames
+REINFORCE learning signal, metric learning [22] can also
+in the sequence are all labelled with the command “Go be applied to explicitly improve the image encoding, by
+Forward” as the default prediction of the commander. forcing the output embeddings to lie within a metric space.
+Note that only a small dataset with 5k real sequential
+This can be considered as an auxiliary task alongside com-
+imagesarecollectedforﬁne-tuningthecommandernetwork.
+mand prediction. Similar to [22], the triplet loss is adopted
+Before that, we initialise the network with 100k sequential
+for metric learning. As each video is segmented whilst
+images collected from ROS Gazebo with a standard naviga-
+generatingthepseudocommandlabels,ananchorimagecan
+tion package ROS Navigation2 automatically.
+be sampled from one of the segments. Then neighbouring
+B. Training the commander images can be deﬁned as positive (similar) images whilst
+all the images in other segments are labelled as negative
+Given the labelled data, the commander can be optimised
+(dissimilar) ones. Hence, after being encoded by the CNN,
+with several different learning signals, which can be used
+a triplet, which contains an anchor image vector va, k+
+separately or jointly. We discuss the relative merits of each − −
+positiveimagevectorsv+andk negativeimagevectorsv ,
+approach below.
+can be randomly generated from each raw image sequence
+a) Command Loss: The basic approach is tominimise
+and its loss functio(cid:88)n is formulated as follow(cid:88)s:
+thecross-entropylossbetweentheprobabilitydistributionof
+∈
+plarbeedlisctyed∈c{o0m,m1}aMndsasp: (0,(cid:88)1)M(cid:88)and the pseudo command Lossmetric =[k1+ k+ l2(v+i −va)+σ−k1− k− l2(v−j −va)]+,
+−1 T M i=1 j=1 (5)
+Loss = ymlog(pm) (3) · ·
+cmd T t t where [] is the hinge function, l () denotes the Euclidean
++ 2
+t=0m=0 distance, σ is a margin which is set to 1 and k+ and
+where T and M represent the length of the sequence and −
+k are set beneath 20 to ensure the the high similarity in
+the number of categories of the command given a sequence
+positive images and a balanced proportion between positive
+of data. This relies on the sub-differentiable property of
+· and negative samples. This loss can be jointly minimised
+argmax() as mentioned in [16] and can be optimised using
+with the command loss through gradient back-propagation,
+standard back-propagation algorithms.
+therefore, it is more convenient and simple compared with
+b) LearningAttentionPolicywithREINFORCE: Our
+utilising REINFORCE algorithm.
+novel insight in this paper is to use the REINFORCE [20]
+algorithmtoestimategradientsforlearningabetterattention C. Reinforcement Learning for Control Policy
+policy which, due to the sub-differentiable argmax func-
+The control policy is purely learnt with DRL in virtual
+tion, does not train well. The framework of REINFORCE
+environments. To enhance the generalisation ability of the
+algorithm usually models the policy learning process as an
+controller and decrease the possibility for the agent to
+MDPwheretheagentistheattentionlayerincommander(it
+memorise the environment, the geometry of the training
+is independent from the MDP for control policy learning).
+environment is randomised every 40 episodes and in each
+Note that the attention layer does not contain any train-
+| episode the desired path for the robot to follow is also
+ableparameter,thereforetheattentionpolicyπ(u G,O ;θ )
+t t 1 randomly generated as shown in Fig. 4. Then, for a robust
+2http://wiki.ros.org/navigation transfer from a simulated robot to the real one, we use a
+1685
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. Traversable DRQN Finetuned DRQN
+Area 
+Desired Path 
+AllSum 50.2% 54.4%
+HardAtt 60% 61.6%
+REINFORCE 72.7% 74.2%
+Metric 70.2% 73.6%
+Combined 71.2% 74.9%
+Fig. 4: An example of randomised environments in ROS Gazebo
+Oracle 85% -%
+and its map. An oracle commander is designed accordingly to
+give the robot correct commands before it reaches the turning and
+termination point. The red circle highlights a challenging situation TABLEI:SuccessRate(SR%)withdifferentcommandersaswell
+wheretheintersectionisnotfullyconstrainedwithobstacleswhich as using the DRQN puerly initialised with the Oracle commander
+can easily confuse the robot. or further ﬁne-tuned with each commander.
+ﬁnely modelled Turtlebot2 robot 3 in both the virtual and
+real world which is equipped with a Microsoft Kinect 4 to
+capture both depth and RGB images. Note that SnapNav
+can use either the groundtruth depth provided by the kinect
+(a) HardAtt (b) REINF (c) Metric (d) Combined
+or the estimated one, compatible to the system only with a
+Fig. 5: The Euclidean distance matrix of the encoded images in
+monocular camera.
+a sampled video with two direction changing actions. Note that
+Wetestthelearningofcontrolpolicywithseveraldifferent
+REINF indicates the REINFORCE algorithm.
+algorithms,e.g.DDPG[23],RDPG[24]andDRQN[25]and
+ﬁnally choose DRQN which exhibits the best performance
+in our task. The low-level controller is ﬁrstly trained with learning (Metric) learning signal. We also combine three
+the oracle commander which always gives the agent correct learning signals together (Combined).
+commandsaccordingtotherobotpositioninthedesiredpath
+From the results shown in Table I, we can clearly see
+for 1M training steps and later ﬁne-tuned with the noisy
+that commanders that employ the attention mechanism sig-
+predicted commands from the learnt command policy for niﬁcantlyoutperformAllSumwhichprovesthatattendingto
+0.5M training steps. It shows a constantly improved overall
+a speciﬁc snapshot is essential for the command prediction
+performance with different commanders in Table. I. The
+task. Compared with prior art, our introduction of either
+training is carried out on a single GTX970 GPU and each
+the REINFORCE algorithm or metric learning yield further,
+run takes about 20 hours where the control frequency is 5
+substantial gains.
+Hz and the simulator is 4x times faster than the real world.
+To better understand the reasons for this difference, Fig.
+5 illustrates the Euclidean distance matrix of a sampled
+VI. EXPERIMENTS
+video after being encoded by the commander. It is shown
+Wecarryoutamodelablationstudyandrealworldteststo that compared with HardAtt and REINFORCE, Metric
+evaluate the optimality of the proposed model for SnapNav, and Combined learn an encoder that clearly distinguishes
+and its generalisation ability to real-world scenarios. images from different segments more clearly. Thus, this
+shouldmakeiteasiertoattendtothecorrectsnapshotduring
+A. Model Ablation Study in Virtual World navigation.However,accordingtoTableI,theREINFORCE
+learning signal is more signiﬁcant at improving the overall
+Each model in the ablation study is tested in random
+performance of the commander compared with the metric
+environments similar to Fig. 4 with 1000 independent runs
+learning. This may be because that REINFORCE algorithm
+and the success rate (SR) of reaching the ﬁnal destination is
+reﬁnestheattentionpolicydirectlyaccordingtotheaccuracy
+used as the metric.
+of the command prediction, whilst metric learning is a
+a) Attention policy learning: We compare several dif-
+manually introduced bias in the encoding space which is
+ferent models and learning signals for training the comman-
+not entirely related to the task of navigation.
+der. The most basic model does not utilise the attention
+b) Controlpolicylearning: SelectingthesuitableDRL
+mechanism and simply sums over all the encoded guidance
+approach to train the controller is of key importance for the
+for command prediction. We term this AllSum. Then, since
+entire system performance. From the learning curves shown
+soft attention is reported to have similar performance as
+in Fig. 6, we ﬁrstly prove the necessity of introducing the
+AllSum in [16], we consider the hard attention model as
+recurrent network into the controller model by comparing
+described in Sec IV-A which is purely optimised with the
+DDPG and RDPG where the latter is the recurrent version
+command loss learning signal and is termed as HardAtt.
+of the former. Because the command is assigned to the
+Next, we add the REINFORCE (REINFORCE) or metric
+controller before the robot reaches the turning point, the
+recurrent network becomes important for memorising recent
+3https://www.turtlebot.com/turtlebot2/
+4https://en.wikipedia.org/wiki/Kinect commands. Then we investigate the improvements brought
+1686
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. 8 DRQN start
+d 6 RDDDPPGG gpuaitdhe
+war 4 obst
+e obse
+al r 2 traj
+Tot 0
+-2
+100 200 300 400 500 600 700 800 900 1000
+Training steps 103
+Fig.6:ThesmoothedlearningcurvesofDRQN,RDPGandDDPG
+respectively.Eachalgorithmistrainedwith1millionstepsinROS
+Gazebo with the oracle commander.
+Success TimeOut Crash
+DDPG 3.4% 31.8% 64.8% Fig. 7: An example real world test. The legends from top to
+RDPG 60.9% 36.6% 2.5% bottom are: start position, guidance recording position, path in
+demonstrating phase, random obstacles in testing phase, robot
+DRQN 85% 10.3% 4.7%
+observations and robot trajectory in testing. The attention location
+TABLE II: Distribution of rewards over 1000 testing episodes is illustrated by different colours in the robot trajectory which
+corresponds to the colour of actions in the guidance. The red
+for different controllers. Note that Success means the successful
+and green circles emphasises the changing visual appearance and
+arrival of the ﬁnal destination while TimeOut and Crash denote
+geometry of the environment between demonstrating and testing.
+the situations where the robot cannot reach the destination within
+More details are provided in the submitted video.
+300 steps or collides with an obstacle respectively.
+SR Dist(m) ImgNum
+by restricting the action and search space by exploiting a SnapNav 80% 24.29 6
+value-based approach DRQN. The continuous action space SimOnly 40% 20.19 6
+([0,0.3] m/s for linear speed and [−π,π] rad/s for VT&R 20% 18.32 326
+6 6
+angular speed) is discretised into three options, i.e. going TABLE III: Evaluations in real world environments. The metrics
+straight forward with the maximum linear velocity and used are: success rate (SR), the average travelled distance before
+turningleftorrightwiththemaximumangularvelocityanda collisions or reaching the destination (Dist) and the number of
+slower linear velocity. Correspondingly, the Q-network only images used as guidance (ImgNum). Each model is tested with
+5 independent runs.
+requires to estimate the Q-values of these options given the
+current observation and the hidden state of the recurrent
+network which substantially narrows down the search space
+Furthermore, two baseline models are proposed for quan-
+and boosts the learning efﬁciency.
+titative comparison as shown in Table III. SimOnly imple-
+TableIIlooksdeeperintothelearntpolicies.DDPGtermi-
+mentsasimilarmodelas[16]withadditionaldepthobserva-
+natesmostepisodeswithcollisionsasitattemptstomaintain
+tionandispurelytrainedinthesimulatorthroughDRL.The
+the expected total reward by minimising the probability of
+otheroneisthesupervisedvariantofthedeepVT&Rmodel
+moving in an opposite directions to the destination, as this
+in [26] based on the limited real-world data. The former
+incursanimmediatenegativereward.Incontrast,itsrecurrent
+proves that SnapNav has an enhanced generalisation ability
+version (RDPG) achieves a much higher success rate due
+between virtual and real worlds, realised by the two-level
+to the possibility of memorising the historic commands and
+hierarchy. The latter is a densely guided counterpart which
+headingtothecorrectdirectionsaccordinglyatintersections.
+veriﬁes the effectiveness of navigating with sparse guidance
+However the large exploration space for continuous action
+andtherestrictedgeneralisationabilityofsupervisedlearning
+hindersthenetworkfromlearningastableandrobustturning
+with limited samples.
+behaviour in highly randomised junctions, especially in the
+intersections with uncommon geometries as highlighted in
+Fig.4.DifferentfromDDPGandDRPG,DRQNexploresin VII. CONCLUSION
+adiscretisedactionspaceandshowssigniﬁcantperformance Apracticalsolutionisintroducedinthispaperformapless
+gains.Therefore,weadoptDRQNastheﬁnalmodelforthe navigation which can navigate in completely unknown envi-
+low-level controller in real-world experiments. ronments with very sparse guidance. The experiments show
+its highly autonomous navigation performance with a strong
+B. Real-World Test and Comparison with Baselines generalisation ability from simulation to real world.
+we evaluate the learnt policy in real-world scenarios
+ACKNOWLEDGMENT
+to demonstrate its utility in real robotic scenarios. Fig. 7
+demonstrates a example real-world test which qualitatively This work was supported by EPSRC Mobile Robotics:
+examines the obstacle avoidance ability and the robustness Enabling a Pervasive Technology of the Future (grant No.
+against the changing environments of SnapNav. EP/M019918/1).
+1687
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [22] F. Schroff, D. Kalenichenko, and J. Philbin, “Facenet: A uniﬁed
+embeddingforfacerecognitionandclustering,”inProceedingsofthe
+[1] G. Kahn, A. Villaﬂor, B. Ding, P. Abbeel, and S. Levine, “Self- IEEE conference on computer vision and pattern recognition, 2015,
+superviseddeepreinforcementlearningwithgeneralizedcomputation pp.815–823.
+graphsforrobotnavigation,”in2018IEEEInternationalConference [23] T. P. Lillicrap, J. J. Hunt, A. Pritzel, N. Heess, T. Erez, Y. Tassa,
+onRoboticsandAutomation(ICRA),May2018,pp.5129–5136. D.Silver,andD.Wierstra,“Continuouscontrolwithdeepreinforce-
+[2] C. Richter, W. Vega-Brown, and N. Roy, “Bayesian learning for mentlearning,”arXivpreprintarXiv:1509.02971,2015.
+safe high-speed navigation in unknown environments,” in Robotics [24] N.Heess,J.J.Hunt,T.P.Lillicrap,andD.Silver,“Memory-basedcon-
+Research. Springer,2018,pp.325–341. trolwithrecurrentneuralnetworks,”arXivpreprintarXiv:1512.04455,
+[3] H.-T. L. Chiang, A. Faust, M. Fiser, and A. Francis, “Learning 2015.
+navigation behaviors end-to-end with autorl,” IEEE Robotics and [25] M.HausknechtandP.Stone,“Deeprecurrentq-learningforpartially
+AutomationLetters,vol.4,no.2,pp.2007–2014,2019. observablemdps,”in2015AAAIFallSymposiumSeries,2015.
+[4] P.Mirowski,R.Pascanu,F.Viola,H.Soyer,A.J.Ballard,A.Banino, [26] A. Kumar, S. Gupta, and J. Malik, “Learning navigation subroutines
+M.Denil,R.Goroshin,L.Sifre,K.Kavukcuogluetal.,“Learningto bywatchingvideos,”arXivpreprintarXiv:1905.12612,2019.
+navigateincomplexenvironments,”arXivpreprintarXiv:1611.03673,
+2016.
+[5] Y. Zhu, R. Mottaghi, E. Kolve, J. J. Lim, A. Gupta, L. Fei-Fei, and
+A. Farhadi, “Target-driven visual navigation in indoor scenes using
+deepreinforcementlearning,”in2017IEEEinternationalconference
+onroboticsandautomation(ICRA). IEEE,2017,pp.3357–3364.
+[6] P. Mirowski, M. Grimes, M. Malinowski, K. M. Hermann, K. An-
+derson,D.Teplyashin,K.Simonyan,A.Zisserman,R.Hadselletal.,
+“Learningtonavigateincitieswithoutamap,”inAdvancesinNeural
+InformationProcessingSystems,2018,pp.2419–2430.
+[7] L. Tai, G. Paolo, and M. Liu, “Virtual-to-real deep reinforcement
+learning:Continuouscontrolofmobilerobotsformaplessnavigation,”
+in2017IEEE/RSJInternationalConferenceonIntelligentRobotsand
+Systems(IROS). IEEE,2017,pp.31–36.
+[8] L. Xie, S. Wang, S. Rosa, A. Markham, and N. Trigoni, “Learning
+withtrainingwheels:speedinguptrainingwithasimplecontrollerfor
+deepreinforcementlearning,”in2018IEEEInternationalConference
+onRoboticsandAutomation(ICRA). IEEE,2018,pp.6276–6283.
+[9] O.Zhelo,J.Zhang,L.Tai,M.Liu,andW.Burgard,“Curiosity-driven
+explorationformaplessnavigationwithdeepreinforcementlearning,”
+arXivpreprintarXiv:1804.00456,2018.
+[10] A. Kumar, S. Gupta, D. Fouhey, S. Levine, and J. Malik, “Visual
+memoryforrobustpathfollowing,”inAdvancesinNeuralInformation
+ProcessingSystems,2018,pp.765–774.
+[11] N. Hirose, F. Xia, R. Mart´ın-Mart´ın, A. Sadeghian, and S. Savarese,
+“Deep visual mpc-policy learning for navigation,” arXiv preprint
+arXiv:1903.02749,2019.
+[12] T. Swedish and R. Raskar, “Deep visual teach and repeat on path
+networks,”inProceedingsoftheIEEEConferenceonComputerVision
+andPatternRecognitionWorkshops,2018,pp.1533–1542.
+[13] D.Pathak,P.Mahmoudieh,G.Luo,P.Agrawal,D.Chen,Y.Shentu,
+E.Shelhamer,J.Malik,A.A.Efros,andT.Darrell,“Zero-shotvisual
+imitation,”inProceedingsoftheIEEEConferenceonComputerVision
+andPatternRecognitionWorkshops,2018,pp.2050–2053.
+[14] P.FurgaleandT.D.Barfoot,“Visualteachandrepeatforlong-range
+roverautonomy,”JournalofFieldRobotics,vol.27,no.5,pp.534–
+560,2010.
+[15] X. Wang, Q. Huang, A. Celikyilmaz, J. Gao, D. Shen, Y.-F. Wang,
+W. Y. Wang, and L. Zhang, “Reinforced cross-modal matching and
+self-supervised imitation learning for vision-language navigation,” in
+ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+Recognition,2019,pp.6629–6638.
+[16] K. M. Hermann, M. Malinowski, P. Mirowski, A. Banki-Horvath,
+K.Anderson,andR.Hadsell,“Learningtofollowdirectionsinstreet
+view,”arXivpreprintarXiv:1903.00401,2019.
+[17] I.AlhashimandP.Wonka,“Highqualitymonoculardepthestimation
+viatransferlearning,”arXivpreprintarXiv:1812.11941,2018.
+[18] V. Mnih, N. Heess, A. Graves et al., “Recurrent models of visual
+attention,” in Advances in neural information processing systems,
+2014,pp.2204–2212.
+[19] M. Malinowski, C. Doersch, A. Santoro, and P. Battaglia, “Learning
+visual question answering by bootstrapping hard attention,” in Pro-
+ceedings of the European Conference on Computer Vision (ECCV),
+2018,pp.3–20.
+[20] R. J. Williams, “Simple statistical gradient-following algorithms for
+connectionist reinforcement learning,” Machine learning, vol. 8, no.
+3-4,pp.229–256,1992.
+[21] A.Dosovitskiy,P.Fischer,E.Ilg,P.Hausser,C.Hazirbas,V.Golkov,
+P. Van Der Smagt, D. Cremers, and T. Brox, “Flownet: Learning
+opticalﬂowwithconvolutionalnetworks,”inProceedingsoftheIEEE
+internationalconferenceoncomputervision,2015,pp.2758–2766.
+1688
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. 

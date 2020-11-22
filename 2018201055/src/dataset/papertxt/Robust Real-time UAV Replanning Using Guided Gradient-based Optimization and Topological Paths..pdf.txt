@@ -1,0 +1,446 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+BatVision: Learning to See 3D Spatial Layout with Two Ears
+Jesper Haahr Christensen Sascha Hornauer Stella X. Yu
+Technical University of Denmark UC Berkeley / ICSI UC Berkeley / ICSI
+jehchr@elektro.dtu.dk saschaho@icsi.berkeley.edu stellayu@berkeley.edu
+Abstract—Many species have evolved advanced non-visual bats have advanced ears that give them a form of vision
+perceptionwhileartiﬁcialsystemsfallbehind.Radarandultra- in the dark known as echolocation: They sense the world by
+sound complement camera-based vision but they are often too
+continuouslyemittingultrasonicpulsesandprocessingechos
+costlyandcomplextosetupforverylimitedinformationgain.
+returned from the environment.
+In nature, sound is used effectively by bats, dolphins, whales,
+It is indeed possible to locate highly reﬂecting ultrasonic
+and humans for navigation and communication. However, it is
+unclear how to best harness sound for machine perception. targets in the 3D space by using an artiﬁcial pinnae pair
+Inspired by bats’ echolocation mechanism, we design a low- of bats, which acts as complex direction dependent spectral
+cost BatVision system that is capable of seeing the 3D spatial ﬁlters and using head related transfer functions [1], [2].
+layout of space ahead by just listening with two ears. Our
+Likewise,humanswhosufferfromvisionlosshaveshown
+systememitsshortchirpsfromaspeakerandrecordsreturning
+to develop capabilities of echolocation using palatal clicks
+echoesthroughmicrophonesinanartiﬁcialhumanpinnaepair.
+Duringtraining,weadditionallyuseastereocameratocapture similar to dolphins, learning to sense obstacles in the 3D
+color images for calculating scene depths. We train a model space by listening to the returning echoes [3], [4].
+to predict depth maps and even grayscale images from the Inspired by bats’ echolocation, we design BatVision that
+sound alone. During testing, our trained BatVision provides
+can form a visual image of the 3D world by just listening to
+surprisingly good predictions of 2D visual scenes from two 1D
+the environmental echo sound with two ears (Fig. 1).
+audio signals. Such a sound to vision system would beneﬁt
+robot navigation and machine vision, especially in low-light or Contrary to existing works [1], [2], our system uses only
+no-light conditions. Our code and data are publicly available. two simple low-cost consumer-grade microphones to keep it
+small,mobile,andeasilyreproducible.Ourmicrophonesare
+I. INTRODUCTION
+embedded into a human pinnae pair to utilize the spectral
+Our task is to train a machine learning system that can ﬁlters of an emulated human auditory system, which has an
+turn binaural sound signals to visual scenes. Solving this additional beneﬁt of easy debugging by human engineers.
+challengewouldbeneﬁtrobotnavigationandmachinevision, Mountedonamodelcar,ourBatVisionalsohasaspeaker
+especially in low-light or no-light conditions. and a camera which is only used during training for provid-
+While many animals sense the spatial layout of the world ing visual image ground-truth. Like bats, our speaker emits
+through vision, some species such as bats, dolphins, and frequencymodulatedchirpsintheaudiblespectrum,andour
+whales rely heavily on acoustic information. For example, microphones receive echos returned from the environment.
+11 Data Collection in Oﬃce Space 2 Scene Prediction from
+Left Ear1.00 Audio Data Only
+0.75
+0.50
+Amplitude−000...202505 EnEvcirhoonsm oef nt Predicted
+−0.50 Grayscale
+−0.75
+−1.000 10 20 30Time [m4s0] 50 60 70
+Sound Chirps
+CSapmeearkae Drata Amplitude−−−−Amplitude100000001.........075202570−−−−050505050100000001.........00752025700505050500 1010202030Ti3m0Tei m[me4s 0[]m4s0]505060607070 SoSMVuciosneudndaee llt o 
+Right Ear
+1.00
+ZED Camera MAicrrtoiﬁpchiaoln Eeasr isn Amplitude−00000.....2025750505 DPerpedthic-Mteadp
+−0.50
+−0.75
+−1.000 10 20 30Time [m4s0] 50 60 70
+Fig. 1. Our Batvision system learns to generate visual scenes by just listening to echos with two ears. Mounted on a model car, our system has two
+microphonesembeddedintoartiﬁcialhumanears,aspeaker,andastereocamerawhichisonlyusedduringtrainingforprovidingvisualimageground-
+truth.1)Thespeakeremitssoundchirpsinanofﬁcespaceandthemicrophonesreceiveechosreturnedfromtheenvironment.Thecameracapturesstereo
+imagepairs,basedonwhichdepthmapscanbecalculated.2)Wetrainamodeltoturnbinauralsignalsintovisualscenessuchasdepth-mapsorgrayscale
+images.Ourresultsshowsurprisinglyaccuratereconstructionofthe3Dspatiallayoutofindoorscenesfromtheinputsoundalone.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1581
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. Our camera captures stereo image pairs of the scene ahead, results are obtained in a self-supervised learning framework,
+from which depth disparity maps can be calculated. demonstrating the potential of learning associations between
+During training, we ﬁrst collect a dataset of time- paired audio-visual data.
+synchronizedbinauralaudiosignalsandstereoimagepairsin In[11],soundislocalizedusinganacousticcamera[14],a
+anindoorofﬁceenvironment,andthentrainaneuralnetwork hybridaudio-visualsensorthatprovidesRGBvideooverlaid
+model to predict images such as depth maps and grayscale withacousticsound,alignedintimeandspace.Alltheworks
+images from audio data alone. on sound localization receive sound signals passively.
+During testing, we just need the sound signals to recon- In [15], sound is localized using emulated binaural hear-
+structdepthmapsorgrayscaleimages.Byjustlisteningwith ing, with a model of human ears and head related transfer
+two ears, which receive sound echos at only two points in functions.Theytestazimuthfrom0◦ to360◦ at5◦ resolution
+the 3D space, our BatVision is able to generate a depth map and test elevation from −40◦ to 90◦ at 10◦ resolution.
+of the 3D space ahead that resolves features such as walls, In [16], an audio monologue of a speaker is turned
+hallways, door openings, and roughly outlined furniture into visual gestures of the speaker’s arms and hands,
+correctly in azimuth, elevation, and distance, whereas our by translating audio clips into 2D trajectories of joint
+reconstructed grayscale images show surprisingly plausible coordinates. Our sound to vision decoder model is inspired
+ﬂoor layouts even though obstacles lack ﬁner details. by their cross-domain translation success.
+For a navigation system, such an intelligent sound system
+could provide information complementary to vision sensors, Acoustic Imaging. In non-Line-of-Sight imaging [17], a
+independentoflightandatverylowadditionalcosts.Ourap- microphone and a speaker array are used to emit and record
+proachisconceptuallysimple,practicallyeasytoimplement, FM sound waves. The sound waves are chirps in the audible
+and readily deployable on embedded mobile platforms. spectrumfrom2Hz−20kHz,emittedtopropagatetoawall,
+To the best of our knowledge, our BatVision is the ﬁrst a hidden object, and back to the microphone array. They
+work that generates scene depth maps from binaural sound demonstrate successful object reconstruction at a resolution
+only. Our code, model, and data are available at https: limited by the receiving microphone array. In contrast, we
+//github.com/SaschaHornauer/Batvision. capture the complete scene of the 3D space ahead with a
+small system mounted on a mobile device.
+II. RELATEDWORKS
+Biosonar Imaging and Echolocation. Inspired by echolo- III. COLLECTIONOFOURAUDIO-VISUALDATASET
+cation in animals, several papers [4], [2], [5], [6], [7] study We collect a new dataset of time-synchronized binaural
+target echolocation in the 2D or 3D space using ultrasonic audio, RGB images, and depth maps, which can be used for
+frequency modulated (FM) chirps between 20−200kHz. learning the associations between sound and vision.
+Bats emit pulse trains of very short durations (typically <
+5ms)andusereceivedechoestoperceivetheirsurroundings. A. Our Data Collection Sites and Splits
+In [6], [4], microphones are placed in an artiﬁcial bat Wetraverseanofﬁcebuildinginthehallways,openareas,
+pinnae to receive the sound signal. The natural form of the conference rooms, and ofﬁce spaces. We ﬁx our BatVision
+bat pinnae acts as a frequency ﬁlter, useful for separating on a trolley and slowly push it around, so that there is no
+spatial information in both azimuth and elevation [8], [2]. active motor noise corrupting our sound.
+These works motivate our use of short FM chirps and We collect data at various spatial locations to minimize
+artiﬁcial human pinnaes with integrated microphones. correlation and maximize scene diversity (Fig 2). A total of
+In [6], the task is to recognize scenes from echo- 39,500and7,500instancesattwodifferentpartsofthesame
+cochleogram ﬁngerprints and to create a topological map of
+the surrounding. In [5], the goal is to autonomously drive
+a mobile robot while mapping and avoiding obstacles using
+azimuthandrangeinformationfromultrasonicsensors.They
+classify echo spectrograms into obstacles or not, biological
+Train Train Train Train Validation
+objects or not, along a single scan line and without visual
+reconstruction of the scene. Floor	2
+Train Validation
+In [4], ultrasonic echoes are recorded, dilated, and played
+backtoahumansubjectintheaudiblespectrum.Afterinitial Floor	1 Test
+training, human subjects were able to pick up echolocation
+Text
+abilities to estimate azimuth, distance, and to some extent,
+elevationoftargets.In[7],[2],3Dtargetsarelocalizedbased
+onanarrayofmicrophonesinsteadofbinauralmicrophones. Test Test Test Test TTeesstt
+Fig.2.Datacollectedatdifferentpartsofthebuildingareusedfortraining,
+Sound Source Localization. In [9], [10], [11], [12], [13],
+validation,andtesting.Trainingandvalidationdataarecollectedinseparate
+deepneuralnetworkmodelsaretrainedtolocalizethesource areasofthesameﬂoor,whereasthetestdatacomefromanotherﬂoorand
+of the sound (e.g. a piano) in images or videos. Remarkable havedifferentobstaclesanddecorations.
+1582
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. ﬂoor are collected for training and validation respectively, echosfrommultiplereﬂectionpaths.Eachofouraudioclips
+with additional 5,040 instances on a different ﬂoor for has 3200 frames, containing one chirp and returned echoes.
+testing. While hallways appear similar, their spatial layout, We synchronize all the audio instances by the time of the
+furniture, occupancy, and decorations are different. recorded chirp. However, during training, we augment the
+audio data by jittering the position of the window by 30%.
+B. Our Hardware: Speaker, Ears, and Camera
+We consider two audio representations: 1D raw wave-
+We use a consumer-grade JBL Flip4 Bluetooth speaker to
+forms and 2D amplitude spectrograms. The LibROSA li-
+send out linear FM waveform chirps every half second (Fig.
+brary for Python is used to compute spectrograms with 512
+1).Eachchirpsweepsfrom20Hz−20kHzwithinaduration
+points for FFT and Hanning window size 64. Fig. 3 shows
+of3ms.Thewaveformcharacteristicsaredesignedusingthe
+theprobingchirpat3msandthereturnedechoesafterwards.
+freely available software tool Audacity.
+WecomputethescenedepthusingtheAPIofourcamera,
+We adopt two low-cost consumer-grade omni-directional
+range clipped within 12m. We normalize the depth value to
+USB Lavalier MAONO AU-410 microphones, separated at
+be between 0 and 1. Pixels where the camera is unable to
+approximately 23.5cm apart. Each microphone is mounted
+produce a valid measurements are set to 0.
+inaSoundlinksiliconeeartoeffectivelyemulateanartiﬁcial
+human auditory system. We record sound using PyAudio
+IV. OURSOUNDTOVISIONPREDICTIONMODELS
+for Python at 44.1kHz and 24 bits per sample.
+We use a ZED camera to capture stereo image pairs and We use an encoder-decoder network architecture to turn
+extract depth maps from them. Our camera, speaker, and the audio clip into the visual image, and further improve the
+artiﬁcial ears are mounted on a small model car (Fig. 1). quality of generated images using an adversarial discrimina-
+tor to contrast them against the ground-truth (Fig. 4).
+C. Our Audio clips and Visual Images
+Wechoosethelengthofeachaudioinstancetobe72.5ms,
+so that it includes echoes traveling up to 12m. This time
+windowselectionreﬂectsatrade-offbetweenreceivingechos
+withinthedistancerelevantfornavigationandreducinglater
+1.00
+0.75
+0.50
+0.25
+e
+d
+plitu 0.00
+m Fig.4.Oursoundtovisionnetworkarchitecture.Thetemporalconvolutional
+A−0.25 audioencoderAturnsthebinauralinputintoalatentaudiofeaturevector,
+basedonwhichthevisualgeneratorGpredictsthescenedepthmap.The
+−0.50 discriminatorDcomparesthepredictionwiththeground-truthandenforces
+high-frequencystructurereconstructionatthepatchlevel.
+−0.75
+−1.00 We train our model with two possible audio represen-
+0 10 20 30 40 50 60 70
+Time [ms] tations. Our experiments indicate that spectrograms yield
+slightly better sound-to-vision predictions over raw wave-
+20000 forms.However,asweaimforareal-timeBatVisionsystem
+on embedded platforms, we focus on raw waveforms which
+17500
+are more computationally efﬁcient.
+15000
+12500 A. Our Audio Encoder A
+z
+H10000 Encoder for Waveforms. Following SoundNet [18], we
+7500 represent the binaural input as two channels of 1D signals
+and transform it into a 1024-dimensional feature vector with
+5000
+8 temporal convolutions. See Fig. 5 and Table I for details.
+2500 Encoder for Spectrograms. Likewise, with successive tem-
+0 poral convolutions and downsampling, we gradually reduce
+0 10 20 30 40 50 60 70
+thetime-dimensionofthespectrogramsdownto1,producing
+Time [ms]
+a1×f×1024featurevector,wheref isthenumberofﬁnal
+Fig.3.Sampleaudiowaveformanditsamplitudespectrogramfromasingle frequencies. f depends on the downsampling factors along
+microphone.Theechoappearsafterthechirp(ﬁrstpeak)atabout3ms. the y-axis of the spectrogram.
+1583
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. Input
+TABLEII
+Conv1
+LAYERCONFIGURATIONOFTHEDIRECTUPSAMPLINGGENERATORFOR
+Conv2 Feature vector THE128×128IMAGE
+Conv3
+Layer #ofFilters Filtersize Stride Padding Res.
+Conv4
+Conv5
+Conv6 Conv7 Conv8 4 Up1 512 4 1 0 4
+256 512 512 512 1024 102 UUpp23 521526 44 22 11 186
+Up4 128 4 2 1 32
+128 Up5 128 4 2 1 64
+64 Up6 64 4 2 1 128
+1 Final 1 1 1 0 128
+32
+2 TABLEIII
+Fig. 5. Our audio encoder for the raw waveform. We use 8 convolutional PATCHGANDISCRIMINATORCONFIGURATIONFOR128×128IMAGES.
+layers to turn the two-channel representations of the audio waveform into
+a1024-dimensionalfeaturevector. Layer #ofFilters Filtersize Stride Padding
+Conv1 64 4 2 1
+TABLEI Conv2 128 4 2 1
+LAYERCONFIGURATIONOFOURWAVEFORMAUDIOENCODER Conv3 256 4 2 1
+Conv4 1 4 2 1
+Layer #ofFilters Filtersize Stride Padding
+Conv1 32 228 2 114
+Conv2 64 128 3 64
+inatorasaPatchGAN[20]toensurethatthepredictedvisual
+Conv3 128 64 3 32
+Conv4 256 32 3 16 image has similar looking patches as the set of ground-truth
+Conv5 256 16 3 8 images; D tries to classify whether each N×N patch looks
+Conv6 512 8 3 4
+realorfakeasagroundtruthsample,whereN isroughly1/3
+Conv7 512 4 3 2
+Conv8 1024 3 3 1 of the image size. D consists of a few convolutional layers
+with depth, kernel size and stride parameters dependent on
+the ﬁnal output image size. See the layer conﬁguration in
+B. Our Visual Image Generator G Table III for size 128×128.
+The generator decodes the latent audio feature vector and
+V. EXPERIMENTALRESULTS
+expands it into visual scene image. For raw waveforms,
+A. Generator Only Without Discriminator
+successive deconvolutions yield the best results, whereas for
+spectrograms, a UNet-type encoder-decoder network [19] In a preliminary study that compares input modes and
+yields best results. We investigate several resolutions for fusion design choices, we predict small images at size
+reconstructed images, from 16×16 to 128×128. 16×16. We have the following observations.
+Forrawwaveforms,earlyfusion(left-right-channelcon-
+•
+Decode by A UNet. To transform the output of our audio catenation of the input audio) outperforms late fusion
+encodertoa2DimagerepresentationsuitableforaUNet,we (concatenation at Conv8, see Fig. 5).
+reshapethe1024-dimensionalfeaturevectorintoa32×32×1 Spectrograms yield slightly better results than raw
+•
+tensor. For spectrograms, where the audio encoder outputs a waveforms.
+1×f ×1024 vector and f 6= 1, we ﬁrst apply two fully
+However,asweaimforreal-timeperformanceonembedded
+connectedlinearlayersbeforereshapingitintoa32×32×1
+platforms, we focus on the least computationally expensive
+tensor. The output of this generator depends on the target
+method using waveforms.
+resolution, e.g. 128×128×1.
+WecomputethepredictionerrorviaanL regressionloss:
+1
+TheencoderoftheUNetdownsamplesthe32×32×1input
+through several layers of double convolutions followed by LL1(G)=Ex,y[||y−G(A(x))||1] (1)
+batch normalization and ReLU, whereas the decoder of the
+where x is the audio waveforms or spectrograms, y is the
+UNet upsamples the input through double de-convolutions
+ground truth visual image (depth map or grayscale scene
+followed by batch normalization and ReLU. Skip connec-
+image), A is the audio encoder, and G is the generator.
+tions are utilized wherever possible.
+We use leaky ReLU with slope 0.2, batch size 16, and
+Decode from Direct Upsampling. Given the 1×1×1024
+Adam solver [21] with an initial learning rate of 1×10−4
+latent audio vector, we apply a series of upsampling layers
+with parameters β and β set to 0.9 and 0.999 respectively.
+(as in the UNet decoder) to reach the target resolution. See 1 2
+Table IV compares various model choices along with two
+thelayerconﬁgurationforthe128×128×1outputinTableII.
+trivialreconstructionbaselineswhichdonotlearnanysound
+C. Our Adversarial Discriminator and vision associations at all:
+WeaddanadversarialdiscriminatorDforgeneratingmore 1) The mean depth map of the training set.
+detailedandrealisticpredictions.Weimplementthediscrim- 2) Random uniform noise in the [0,1) range.
+1584
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. Fig.6.Samplesound-to-visionpredictionsbyGeneratorG onlywithouttheadversarialdiscriminatorD.Columns1-2showthegrayscalesceneimage
+andtheground-truthdepthmap.Therestcolumnsshowpredictionsfromwaveformsandspectrogramsatsize16×16,32×32,64×64,and128×128.
+TABLEIV
+“GENERATORONLY”RESULTSFOR16×16IMGS.ONTHETESTSET.
+AudioEncoder Fusion Shape Generator Loss
+UNet 0.0883
+Early 1024
+Waveform Direct 0.0838
+UNet 0.0894
+Late 1024
+Direct 0.0845
+UNet 0.0834
+1024
+Spectrogram Early Direct 0.0790
+UNet 0.0773
+1×10×1024
+Direct 0.0778
+MeanDepth 0.1058
+RandomNoise 0.3654
+For raw waveforms, direct upsampling and early fusion per-
+formthebest.Forspectrograms,earlyfusion,downsampling
+to1×10×1024andtheUNetgeneratorperformbest.These
+two best conﬁgurations are retrained for output dimensions
+of 32×32, 64×64 and 128×128, and the loss is higher
+for a larger depth map (Table V).
+Fig. 6 compares reconstructions at different resolutions.
+Fig. 7 shows more samples of diverse scenes at reconstruc-
+tion size 128×128. The sound-to-vision predictions provide
+a rough outline of the spatial layout of the 3D scene.
+B. Generator with Adversarial Discriminator
+We use an Generative Adversarial network (GAN) model
+atthepatchleveltoimprovethevisualreconstructionquality.
+We use the following least-squares loss instead of a sigmoid
+cross-entropylossinordertoavoidvanishinggradients[22]:
+L (D)=E (cid:2)k1−D(y)k2(cid:3)+E (cid:2)kD(G(A(x)))k2(cid:3) (2)
+GAN y 2 x 2 Fig.7.Goodtestsamplereconstructionsatthe128×128outputresolution.
+L (G)=E (cid:2)k1−D(G(A(x)))k2(cid:3) (3) Columns 1 and 4 show the ground truth depth map and grayscale scene
+GAN x 2 image. The remaining columns show predictions from raw waveforms.
+Overall,ourgenerateddepthmapsshowcorrectmappingofcloseanddistant
+Our full objective is thus:
+areasevenforrow3,whereerrorsarepresentintheground-truthitself.
+1
+minmax L (D)+L (G)+λL (G) (4)
+G D 2 GAN GAN L1
+where λ is a weight factor. We use leaky ReLU with slope rate set to 2×10−4 with parameters β and β set to 0.5
+1 2
+0.2, λ=100, batch size 16, and Adam solver with learning and 0.999 respectively.
+1585
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. with many ofﬁce chairs, our sound-to-vision model
+often fails to predict any meaningful content (Fig. 8).
+VI. CONCLUSIONS
+Our BatVision system with a trained sound-to-vision
+model can reconstruct depth maps from binaural sound
+recordedbyonlytwomicrophonestoaremarkableaccuracy.
+It can predict detailed indoor scene depth and obstacles
+such as walls and furniture. Sometimes, it even outperforms
+our ground-truth depth map obtained from a stereo vision
+algorithm which struggles to estimate disparity reliably.
+Generatingthegrayscalesceneimageismoredifﬁcult;the
+amount of detail and information required is not expected
+to be present in sound echos. However, our trained model
+is able to generate plausible wall placements and free ﬂoor
+areas.Whenobjectsarenotrecognizablefromthesound,the
+network ﬁlls in with an approximation of obstacles.
+Such seemingly incredible sound-to-vision results reﬂect
+natural statistical correlations between the sound and the
+image of indoor scenes, captured by our model trained on
+diverse scenes and likely utilized in a similar fashion by
+humans and animals.
+Fig.8.Poortestsamplereconstructions.SameconventionsasFig.7.Up-
+closeandcomplexobjectsarenotwellrepresented.
+REFERENCES
+[1] F. Schillebeeckx, F. De Mey, D. Vanderelst, and H. Peremans,
+TABLEV “Biomimetic sonar: Binaural 3d localization using artiﬁcial bat pin-
+L1TESTLOSSFORWAVEFORMSANDSPECTROGRAMSATRESOLUTION nae,”I.J.RoboticRes.,vol.30,pp.975–987,072011.
+32×32,64×64,AND128×128 [2] I. Matsuo, J. Tani, and M. Yano, “A model of echolocation of
+multiple targets in 3d space from a single emission,” The Journal
+Waveform(D.Upsampling) Spectrogram(UNetStyle) of the Acoustical Society of America, vol. 110, no. 1, pp. 607–624,
+Model
+32 64 128 32 64 128 2001.[Online].Available:https://doi.org/10.1121/1.1377294
+[3] R. Kuc and V. Kuc, “Modeling human echolocation of near-range
+Gen.Only
+targetswithanaudiblesonar,”TheJournaloftheAcousticalSociety
+Depthmap 0.0852 0.0862 0.0880 0.0722 0.0726 0.0742
+ofAmerica,vol.139,pp.581–587,022016.
+GAN [4] J.Sohl-Dickstein,S.Teng,B.Gaub,C.C.Rodgers,C.Li,M.R.De-
+Depthmap 0.0867 0.0955 0.0930 0.0799 0.0808 0.0878 Weese, and N. S. Harper, “A device for human ultrasonic echoloca-
+Grayscale 0.2238 0.1967 0.2018 0.1721 0.1845 0.1841 tion,”IEEEtransactionsonbio-medicalengineering,vol.62,012015.
+[5] I. Eliakim, Z. Cohen, G. Ksa, and Y. Yovel, “A fully autonomous
+terrestrial bat-like acoustic robot,” PLOS Computational Biology,
+vol.14,p.e1006406,092018.
+Table V compares the test set loss over a few design [6] J.SteckelandH.Peremans,“Batslam:Simultaneouslocalizationand
+mapping using biomimetic sonar,” PloS one, vol. 8, p. e54076, 01
+choices. As in the ”Generator Only” case, the loss is moder-
+2013.
+ately higher for a larger depth map. However, Fig. 7 shows [7] B. Fontaine, H. Peremans, and J. Steckel, “3d sparse imaging in
+our sample reconstructions by GAN have much ﬁner details biosonarsceneanalysis,”042009.
+[8] J. M. Wotton and J. A. Simmons, “Spectral cues and perception
+and clearer borders, and our grayscale reconstructions in
+of the vertical position of targets by the big brown bat, eptesicus
+the rightmost column have well placed ﬂoors even though fuscus,” The Journal of the Acoustical Society of America,
+objects are roughly outlined and abstracted. vol. 107, no. 2, pp. 1034–1041, 2000. [Online]. Available:
+https://doi.org/10.1121/1.428283
+[9] Y. Tian, J. Shi, B. Li, Z. Duan, and C. Xu, “Audio-visual event
+C. Limitations of Our Approach
+localization in the wild,” Proc. CVPR Workshop: Sight and Sound,
+How sound resonates, propagates and reﬂects in a room 062019.
+[10] A.Senocak,T.Oh,J.Kim,M.Yang,andI.S.Kweon,“Learningto
+has a huge impact on sound-to-vision predictions.
+localize sound source in visual scenes,” CoRR, vol. abs/1803.03849,
+Some materials have dampening properties, leading to 2018.[Online].Available:http://arxiv.org/abs/1803.03849
+•
+[11] A. F. Prez, V. Sanguineti, P. Morerio, and V. Murino, “Audio-visual
+faint or absorbed echos.
+modeldistillationusingacousticimages,”042019.
+• Facing corners, where hallways fork in different di- [12] A. Ephrat, I. Mosseri, O. Lang, T. Dekel, K. Wilson, A. Hassidim,
+rections, poses a big challenge, because sound waves W. T. Freeman, and M. Rubinstein, “Looking to listen at the
+cocktailparty:Aspeaker-independentaudio-visualmodelforspeech
+scatter off in different directions.
+separation,” ACM Trans. Graph., vol. 37, no. 4, pp. 112:1–112:11,
+• At short ranges (e.g. <1m), multi-path echoes could July 2018. [Online]. Available: http://doi.acm.org/10.1145/3197517.
+be received at the same time with similar amplitudes, 3201357
+[13] A. Owens and A. A. Efros, “Audio-visual scene analysis with self-
+creating a superposition that is difﬁcult to resolve.
+supervised multisensory features,” arXiv preprint arXiv:1804.03641,
+• Inareaswithdenseobstaclessuchasconferencerooms 2018.
+1586
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. [14] A. Zunino, M. Crocco, S. Martelli, A. Trucco, A. Del Bue, and
+V.Murino,“Seeingthesound:Anewmultimodalimagingdevicefor
+computervision,”2015IEEEInternationalConferenceonComputer
+VisionWorkshop(ICCVW),122015.
+[15] F. Keyrouz and K. Diepold, “An enhanced binaural 3d sound local-
+izationalgorithm,”in2006IEEEInternationalSymposiumonSignal
+ProcessingandInformationTechnology,Aug2006,pp.662–665.
+[16] S. Ginosar, A. Bar, G. Kohavi, C. Chan, A. Owens, and J. Malik,
+“Learning individual styles of conversational gesture,” in Computer
+VisionandPatternRecognition(CVPR). IEEE,June2019.
+[17] D.B.Lindell,G.Wetzstein,andV.Koltun,“Acousticnon-line-of-sight
+imaging,”Proc.CVPR,2019.
+[18] Y. Aytar, C. Vondrick, and A. Torralba, “Soundnet: Learning sound
+representations from unlabeled video,” in Advances in Neural
+Information Processing Systems 29, D. D. Lee, M. Sugiyama, U. V.
+Luxburg, I. Guyon, and R. Garnett, Eds. Curran Associates, Inc.,
+2016, pp. 892–900. [Online]. Available: http://papers.nips.cc/paper/
+6146-soundnet-learning-sound-representations-from-unlabeled-video.
+pdf
+[19] O. Ronneberger, P. Fischer, and T. Brox, “U-net: Convolutional
+networksforbiomedicalimagesegmentation,”inMedicalImageCom-
+putingandComputer-AssistedIntervention–MICCAI2015,N.Navab,
+J.Hornegger,W.M.Wells,andA.F.Frangi,Eds. Cham:Springer
+InternationalPublishing,2015,pp.234–241.
+[20] P.Isola,J.-Y.Zhu,T.Zhou,andA.Efros,“Image-to-imagetranslation
+withconditionaladversarialnetworks,”072017,pp.5967–5976.
+[21] D.KingmaandJ.Ba,“Adam:Amethodforstochasticoptimization,”
+InternationalConferenceonLearningRepresentations,122014.
+[22] X. Mao, Q. Li, H. Xie, R. Y. K. Lau, Z. Wang, and S. P. Smol-
+ley, “Least squares generative adversarial networks,” in 2017 IEEE
+InternationalConferenceonComputerVision(ICCV),Oct2017,pp.
+2813–2821.
+1587
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:29 UTC from IEEE Xplore.  Restrictions apply. 

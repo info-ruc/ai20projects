@@ -1,0 +1,532 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Distributed Rotor-Based Vibration Suppression for Flexible Object
+Transport and Manipulation
+Hyunsoo Yang1, Min-Seong Kim1, and Dongjun Lee1
+Abstract—The RVM (Robot-based Vibration Suppression
+Modules) is proposed for the manipulation and transport
+of a large ﬂexible object. Since the RVM is easily attach-
+able/detachable to the object, this RVM allows distributing
+over the manipulated object so that it is scalable to the object
+size. The composition of the system is partly motivated by the
+MAGMaS (Multiple Aerial-Ground Manipulator System) [1]–
+[3], however, since the quadrotor usage is mechanically too
+complicated and its design is not optimized for manipulation,
+thus we overcome these limitations using distributed RVMs
+and newly developed theory. For this, we ﬁrst provide a
+Fig. 1. Optimized design and rotor allocation of RVM.
+constrained optimization problem of RVM design with the
+minimum number of rotors, so that the feasible thrust force
+is maximized while it minimizes undesirable wrench and its Manipulator System) [2], which utilizes a single quadrotor
+own weight. Then, we derive the full dynamics and elucidate at the ﬂexible load-tip. However, the quadrotor requires
+acontrollabilityconditionwithmultipledistributedRVMsand
+mechanically complicated and large payload structure, e.g.,
+show that even if multiple, their structures turn out similar to
+passive rotational joint, to connect the object while allowing
+[2] composed with a single quadrotor. We also elucidate the
+optimal placement of the RVM via the usage of controllability free rotation. Besides, the quadrotor is optimized for ﬂying
+gramian which is not even alluded in [2] and established for capability in terms of the number of the rotors and its
+the ﬁrst time here. Experiments are performed to demonstrate allocation [9]. The design and distributed actuation principles
+the effectiveness of the proposed theory.
+arepartlyinspiredbyODAR(Omni-DirectionalAerialRobot)
+[10] and LASDRA (Large-size Aerial Skeleton System with
+I. INTRODUCTION
+Distributed Rotor Actuation) [11], [12]. In these two results,
+Large-size object transport and manipulation are one of the aerial robots are composed of distributed unit modules
+the important tasks in industries, thus, these tasks also have designed to maximize control wrench for omni-directional
+been tried to be partially or fully handled by robotic systems ﬂying on each rigid link while the RVM is designed for
+typically in the assembly line in manufacturing. Regarding vibrationsuppressionofﬂexibleobjectwithamoresimpliﬁed
+large-size object manipulation, there are several attempts and compact design.
+to bring the robotic system to the outside of the factory We aim the role of the RVM as follows: 1) vibration
+using multiple robots [4]–[6]. Recently, ETHZ demonstrates suppression of the ﬂexible load; and 2) object weight sharing
+astructureconstructionbyassemblingsteelrebar,timber,and to support limited ground manipulator torque. Therefore,
+blocks using robotic manipulator [7]. ATOUN is proposed to we ﬁrst provide a novel RVM design by optimizing the
+assist human workers to transport a heavy object [8]. thrust generation along the sagittal plane while minimizing
+However, the above-mentioned results are limited in rigid undesirablewrenchalongotherdirectionsbasedoncontraiend
+object manipulation. On the other hand, these large-size optimization. Here, we utilize two rotors which is the
+objects often include long/slender object, such as bar, beam, minimum number that can generate control actuation along
+and pipe. For this long/slender object handling, an induced E(2). Since an arbitrary number of the RVM can be utilized,
+torque by center-of-mass far from the grasping location is we derive the system dynamics for arbitrary number of RVM
+crucial as well as its high payload. As the length of the and show that the ﬂexible load dynamics is composed of
+object gets longer, the deﬂection and the vibration become linear diagonal matrices even with multi-modules. In the
+signiﬁcant, thus it is hard to be handled by the conventional control problem, since the number of vibration modes and
+robotic system and possibly hazardous due to undesirable RVM can be arbitrary and this might induce controllability
+vibration. issue, thus we come up with controllability condition and
+In this paper, we propose a robot-based vibration sup- elucidate its physical meaning for the distributed RVMs
+pression modules (RVM) which is optimally designed to thanks to dynamic structure similar to [2]. Furthermore, we
+manipulate the large ﬂexible object while suppressing its provide not only the place not to allocate the RVM based
+vibration. Since the RVM is easily attachable/detachable to on controllability but also the place the RVM needs to be
+the object, an arbitrary number of the distributed RVMs allocated to maximize vibration suppression capability based
+can be adapted to various length/shape/weight of object. on controllability gramian. Experiments are performed to
+The system composition of the RVM is partly motivated demonstrate the effectiveness of the proposed theory and
+by our previous result of MAGMaS (Multiple Aerial-Ground RVM.
+The rest of the paper is organized as follows, Sec. II
+Research supported in part by the Basic Science Research Program explains how the RVM is optimally designed. In Sec. III,
+(2015R1A2A1A15055616,2020R1A2C3010039)andtheEngineeringRe-
+the dynamical model of the system including the vibrations
+search Center Program (2016R1A5A1938472) of the National Research
+Foundation,MSIP,Korea;theIndustrialStrategicTechnologyDevelopment in the load is derived and Sec. IV makes use of it to
+Program(10060070)ofMOTIE,Korea; derive controllability and optimal placement. Sec. V presents
+1 DepartmentofMechanical&AerospaceEngineeringandIAMD,Seoul
+{ experimental results which validate our approach, and Sec.
+National University, Seoul, Republic of Korea. yangssoo, mskim1143,
+djlee}@snu.ac.kr,Correspondingauthor:DongjunLee. VI highlights our conclusion and path for future works.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1230
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. II. ROBOT-BASEDVIBRATIONSUPPRESSIONMODULES λλmm,,22
+DESIGN τ3 λm,1 θ¯ θ¯m,2
+A. System Description m,1
+We recall the composition of distributed RVMs and a τ2 θ¯2 θ¯3
+gmraonuinpdulmataionnipusylasttoermfocrotnhseisﬂtsexoibfleaonb-jdeecgtrmeeasniopfulfarteioend.omA + τ1 θ¯1 {L} θl l1 l2
+(dof) ground manipulator, a load/object to be manipulated {W}
+and distributed RVMs connected to the load, see Fig. 5.
+This system is proposed to overcome the limitation of
+Fig. 2. Sketch of the conﬁguration of the system.
+approaches with quadrotor [1]–[3] by taking advantages
+of distributed modules with rotor actuation: 1) optimized
+thrust generated by two rotors renders a plane whose normal
+designandsimpliﬁedstructureformanipulationandvibration × | × |
+vector is u u while its area is u u . The bigger area
+suppression; and 2) dealing with large and ﬂexible objects 1 2 1 2
+means the bigger thrust generation capability along the plane.
+with distributed RVMs.
+Therefore, to maximize thrust generation capability along xz-
+Weassumeamanipulatedobjectasalongbarwithskewed
+plane,weprojectthisareaintoxz-planeforthecostfunction.
+rectangularshapecross-sectionsothatthetransversevibration
+Each constraints stand for following conditions: (2) constrain
+is substantial only, while that along the others are negligible. ∈
+unit direction vector u S2 and limit the maximum volume
+We also conﬁne ourselves to the case of planar manipulation i
+of the rotor location; (3) balance torsional torque around x-
+for simplicity and the results are extendable to more general
+axis induced by rotor thrust and moment to prevent torsional
+cases of course. We do not limit the location and the number
+deﬂection of the ﬂexible load and balance torsional torque
+of RVMs connected to the ﬂexible load (c.f., one-quadrotor
+around x-axis induced by weight of the acutator; and (4)
+at the bar-end [2]). The RVM is rigidly connected to the
+constrain the airﬂow interference among rotors by ensuring
+ﬂexible load through screw tightening mechanisms. This
+the distance among their airﬂow larger than a certain value
+simpleconnectionstructureprovideslighterandsmallerRVM
+d . (4) represent the shortest distance between the center
+compared to a passive rotational joint in [2]. aero
+axis of the cylinder produced by airﬂow. As shown in [10],
+Theactuationpropertyoftherotorthatgeneratesboththrust
+if the distance between two rotors is longer than a certain
+force and moment along the rotor rotation axis makes the
+value d , the airﬂow interference can be negligible. We
+designproblemnon-trivial.Here,weconsidertousethethrust aero
+solve this constrained optimization and the resultant RVM
+force for vibration suppression control, then an undesirable
+design is illustrated in Fig. 1.
+torque can affect to other direction, e.g., a torsional torque.
+Therefore, we should consider both maximizations of thrust III. DYNAMICSMODELINGWITHMULTIPLE
+force in the sagittal plane and minimization of the torsional DISTRIBUTEDRVMS
+torque. Different from the conventional multirotor drone, the From the sketch in Fig. 2, we detail the notations used
+RVMdoesnotnecessarytohaveatleastfourrotorsforﬂying throughout the paper. On the ground, n-DoF robot arm is
+∈ (cid:60)
+capability, thus we utilize only two rotors for RVM which is mounted whose joint conﬁguration is deﬁned as θ n.
+sufﬁcient to provide control input in E(2) to minimize the The position of each joint, the center-of-mass of each links
+W
+number of rotors while realizing the compact and lightweight and end-effector of robot arm w.r.t. the inertial frame
+design. are deﬁned as pW ∈ (cid:60)2 and pW ∈ (cid:60)2 and pW ∈ (cid:60)2
+i c,i W e
+respectively. For brevity, we will omit the when the
+B. Design Optimization
+position is represented in the inertial frame. Deﬁne the
+orepsTtpimheceatilgvoeaatttlharocuhfsitmnggoednluoelcrBeaattdiiooensnidgoinrfeoceptaitocimhniurzoiatt∈oior(cid:60)nr3iisa∈ltloe(cid:60)sxp3peraecsnifsdyedtthhinee pﬂanoegxsilitebi,(cid:80)oleen.glao.naθdd,ttwhhee.r.not.ortiWaetnitoaantsiθo¯pnmreo,pifr∈etshe(cid:60)en2tRsVatnhMdeaθabmtstao,icluh∈teed(cid:60)aa.nlgFolonerg,eat.nhgye.,
+theRVMbodyframe .Thesearchspaceoftheoptimization
+U { ∈ (cid:60) | } θ¯ = i θ ,whileθ representingrelativeanglethroughout
+is then given by := u 3 uTu = 1,i = 1,2 and i j=1 j
+R { ∈ (cid:60) || | ≤ i i}i U R this paper.
+:= r 3 r r ,i = 1,2 where and are
+i i max The ﬂexible load is rigidly attached to end-effector of
+the set of the thrust direction vectors and the location vectors,
+∈ the robot arm, thus relative angle between the end-effector
+respectively, the condition uTu =1 is used to let u S2,
+i i i and the ﬂexible load is constant θ . As shown in Fig. 3, the
+and r is the maximum allowable length for all the rotor l
+max position and orientation of the ﬂexible load along the x-axis
+locations.Here,wesetr =0.15m.Ourdesignprocedure L
+max w.r.t. the ﬂexible load frame at time t can be written as
+presented here can also be extended for other numbers of L
+p (x,t) = (x;w(x,t)) and θ (x) = ∂w(x,t) where w(x,t)
+rotors as well. f f ∂x L
+We can then formulate the design optimization problem as is the deﬂection along z-direction at x in . Recall that
+the RVMs are rigidly attached to the ﬂexible load at the
+a constrained optimization problem s.t.
+user determined location. At the given location, the RVM
+∗ ∗ ∗ ∗ ×
+(u ,u ,r ,r ):= arg max (u u )Te (1) can be considered as a thrust generator along the sagittal
+1 2 1 2 u,r 1 2(cid:88)y plane. Thanks to the RVM design in II-B, the resultant thrust
+∈R
+subj. to uTi ui =1, ri (2) direction θt,i can be arbitrarily determined.
+× · ×
+(r u +γu ) e =0, r e =0 (3) A. Flexibility Modeling of the Load
+i i i x i z
+| − · × | To model vibration of the ﬂexible load, here, we adopt
+(r r ) (u u ) ≥
+1 | 2 × 1| 2 d (4) Euler-Bernoullibeamstheory[13],whosegoverningequation
+where (·)∗ is optimal value,uγ1 isuth2rust to momeanertoratio and YisouρnAg∂’s2w∂mt(2xo,dt)ul+us,∂∂xt2h2eEIse∂c2ow∂nx(dx2,tm) o=me0ntwohfearereaE,,tIh,eρd,Aensairtye
+∈ (cid:60)
+e ,e ,e 3 are unit vector of corresponding axis. The and the intersection area of the ﬂexible load respectively.
+x y z
+1231
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. W
+the ﬂexible load is necessary w.r.t. :
+W
+p (x)=p +RL (x w(x,t))T , p˙ (x)=J (x)q˙ (6)
+f e f f
+∈(cid:60) ×
+where Jf (cid:82) 2 (n+∈m(cid:60)) is the ﬂexible load Jacobian a∈tta(cid:60)ched
+on robot arm, 1 m is one vector, e = [0;1] 2 is
+m 2
+the unit vector. Its corresponding kinetic energy is given as
+TbaRr(cid:82)e=ga(cid:16)rρd2Aing0l(cid:17)fthp˙ef(xp)oTtep˙nft(i(cid:80)axl)dexn.e(cid:80)rgy, the elastic energy is
+Fig. 3. Euler-Bernoulli beam deﬂection model.
+a(cid:82)lso different with standard robot dynamics Ubar,el =
+2
+We assume the constant parameters along the ﬂexible load EI lb ∂2w dx = EI m m d δ δ where d :=
+to simplify the beam(cid:80)model and to meet the practical 2 0(cid:48)(cid:48) (cid:48)(cid:48)∂x2 2 i=1 j=1 ij i j ij
+objects. Using the separation of variables, a solution of lbφ φ dx satisﬁes the orthogonality in (5).
+0(cid:20)Thien,jwe ca(cid:21)n der(cid:20)ive follow(cid:21)ing Euler-(cid:20)Lagra(cid:21)nge dynamics
+given partial differential Euler-Bernoulli equation can be
+written s.t. w(x,t) = m φ (x)δ (t) =: Φ(x)δ(t) where of the cooperative manipulation system with the RVM:
+i=1 i i
+m is the number of assumed vibration modes, φ (x) is
+i M M C C 0 0
+the time invariant mode shape function, δ (t) describes the θ θδ q¨+ θ θδ q˙+g+ q =Bτ (7)
+i M M C 0 0 K
+time varying part of the deﬂection associated with given δθ δ δθ
+vm[δe1oc;dt·oe·r.·s;hInδamppe]ra∈φcit(cid:60)(icxme),,ahΦriegh:t=hefre[cφqo1ur,ree·ns·cp·yo,nφmdmion]dge∈sroaw(cid:60)remasnuadnpdcporelδussm:e=nd wa(cid:60)rhnee×rtmheeMairnθeer∈tthiae(cid:60)mCn×oantrri,ilxoM,isCδmθ∈a∈t(cid:60)rix(cid:60)m,n×g×mn,∈,MC(cid:60)θδnδθ+=∈m(cid:60)MismδTtθ×hne∈,gC(cid:60)raθnvδ×imt∈y
+qthueicvkilbyradtiuoentmoothdeeisradraemcopninsgid.etrheuds., ﬁnite dimension m of fmoarctreixv,ecτtor=, B[τ(q;)τ∈(cid:60)] (∈n+(cid:60)mn)×+(mn+i2snmc)onistrothleininppuuttwmiathppitnhge
+TheattachedlocationoftheRVMcanbearbitrarilychosen joint torque of maanmipulator τ ∈(cid:60)n and the module thrust
+bdyeritvheedutsoera,dtohpetreafrobriet,ratrhyenﬂuemxbibelreolfoatdhemRoVdMel sshyosutelmd baet iRnput ∈τmS=O([2λ)1Rismt,h1ee2r;o·t·a·ti;oλannmmRatmrix,nmofe2i]-t∈h (cid:60)m2ondmulew,haenrde
+arbitrary location. Since each RVM is rigidly attached to λm,i∈(cid:60) is the thrust magnitude. It is important to note that
+ﬂexible beam, RVM provides substantial mass and moment thme,iinertia matrix for ﬂexibility M and the stiffness matrix
+of inertia at attached location. Th(cid:12)erefore, to solve Euler- K are constant diagonal matrix, eδven if multiple RVM in
+Bernoulliequation,themassandthem(cid:12)omentofinertiaofeach contrast to a single quadrotor in [2], where the off-diagonal
+RVM should also be incorpIorated in the boundary condition: terms are eliminated because δ˙ δ˙ terms in the kinetic energy
+M−si−1(lsi−1)=Msi(0)+ m,i ∂∂w¨xs x=0 and Vsi−1(lsi−1)= and δiδj terms in the elastic einejrgy meets the orthogonality
+m w¨ (0)+V (0) where M(x)=E∂2w is the moment properties (5). Note that the RVM is rigidly attached to the
+arenpdremVs,e(inxt)si=-th−sEegIms∂i∂e3xnw3tsidsivthideesdhebayr(fio−rce1)a-∂nthxd2atnhde is-utbhsmcroipdtuslei ﬂtheexiabbleovleoaddy,ntahmu(cid:20)sicist.sTeqhueaitn(cid:21)iopnutomf mapoptiinognmisaitnricxorBpo(rqa)tehdavine
+the following structure
+with l = 0 and l = l as illustrated in Fig. 2 and
+Fseiggm. 3en.0tTs.hSeirnecfeorteh,etnlhemen+gﬂ1thexoifbtlhfeelRoaVdMismdoidvuidleed(li≈nto0.0n5mm+)i1s B = I0n BBθm ∈(cid:60)(n+m)×(n+2nm)
+typicallysmallerthanthelengthofmanipulatedﬂexiblebeam δm
+∈ (cid:60) ×
+(l >1m), the RVM location is approximately expressed as where I n n is the identity matrix, B =
+f ·n·· ∈ (cid:60) × θm
+abyposiimntualtlaonnegouxs-layxisso.lvTihnegn,thteheEusolelur-tBioenrncoaunllibeeqcuoamtiopnuteodf [mJafTtθr(ilx1)from,tJhfeTθm(lnomdu)l]e thrusnt tonmrobisottahreminjopiuntts,mBappin=g
+··· ∈ (cid:60) × δm
+athllesseeggmmeennttss.aNreottehetheaigtetnhfeunrcetsiuolntasnotfmthoedeEuslhearp-Besernoofualllli [ﬂBexδmib,i1lity dByδnmam,nmic]s withm 2nm is the input matrix for the
+(cid:80)
+ehqo(cid:90)uldatoiortnh,otghounsaltihtye ibnettewgeraetnioenacahlomngodteheshoavpeeraflolrlein(cid:54)=gtjhss.tti.l:l Bδm,i =Φ(li)T[−sinθ¯l, cosθ¯l] (8)
+l(cid:90)f φ(cid:48)(cid:48)(x)dx=0(cid:88)(cid:0) (cid:1) (5) wlohaedreatθ¯tlh=e end-θeif+feθcltoisr tohfethabesaorlmut.eNooriteentthaatitotnheofmthaeniﬂpeuxlaibtoler
+0 ij controlinputτa cannotdirectlyapplyitstorquetotheﬂexible
+lf nm I (cid:48) load dynamics while the RVM input τm directly control the
+ρA φij(x)dx+ mm,kφij(lk)+ m,kφij(lk) =0 ﬂexible load along Bδm. Since the matrix Bδm,i has rank
+0 k=1 one although each RVM can generate thrust in E(2), the
+I m-dof ﬂexible load dynamics can be under-actuated when
+where φij :=φiφj and mm,i, m,i are mass and moment of the number of the RVM is less than the number of the mode
+inertia of i-th RVM. shape (i.e., n <m).
+As a result, we deﬁne the system conﬁguration as q = m
+∈ (cid:60) ∈ (cid:60)
+[θT,δT]T n+m where δ m is the time-dependant IV. CONTROLLABILITY,OPTIMALPLACEMENTAND
+deﬂection variable for the ﬂexible load. CONTROLDESIGN
+Thecontrollerdesignismotivatedbydiagonalandconstant
+B. Euler-Lagrange Dynamics
+dynamic structure of the ﬂexible load in (7). Then, we divide
+Using the kinetic energy T and the potential energy U, the control framework into the following two sub-problems:
+−
+the Lagrangian is deﬁned as L=T U. This Lagrangian is 1) fully-actuated robot arm nominal trajectory tracking; 2)
+identical with standard robot except for the ﬂexible load. To ﬂexible load vibration suppression and gravity compensation
+compute its kinetic energy, the position and velocity along via the distributed RVMs.
+1232
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. However, as shown in the structure of B in (8), direction θ . Therefore, we need to verify whether the input
+δm t,i
+dependingontherelationbetweenthenumberofthemodules λ can suppress the vibration/deﬂection in the linearized
+m C
+n and mode shapes m, given robotic system can be under- system. For this, we utilize the controllability matrix :=
+acmtuated to the vibration dynamics. Thus, we analyse the [B AB ··· A(cid:2)2m−1B] ∈ (cid:60)2m×2mnm of the(cid:3)linearized
+controllability condition, which is only handled for single dynamics (10) which is computed as follows
+(cid:124) (cid:123)(cid:122) (cid:125)
+quadrotor attached on the ﬂexible load in [2], therefore, the C ⊗ − ··· − −
+theory should be extended to distributed RVMs. In addition, =I2 ¯bδm K¯ ( K¯)m 1¯bδm (11)
+tthheustewrmescainneBxδpmectisthdaettetrhmeidniesdtribbyutlioocnaotifonRVofMtsheafRfeVctMtso, =:Cs∈(cid:60)m×mnm
+⊗
+not only controllability but also the control performance. where is Kronecker product. The linearized ﬂexible load
+dynamics (10) is controllable, if the controllability matrix
+A. Flexible Load Dynamics Linearization has full row rank. Since the left term of Kronecker product
+→
+The fully actuate∈d(cid:60)robot arm control guarantees ξ ξd is identity matrix, to ﬁgure out the controllabiliCty condition,
+wvihbera(cid:20)retio(cid:21)ξn=d(cid:20)y(npaem,θiec)s ca(cid:21)n(cid:20)3thi(cid:21)esnenbd(cid:20)e-ereffwerc(cid:21)ittoternpowsi(cid:20)et.hTξhderaesf(cid:21)oforell,otwhes wtheenceoendtrtoollacbhielcitkytmheatfruilxl risownortanaksqcounardeitimonatroifx fso.rHmouwlteivpeler,
+RVM case, thus we cannot directly apply previous result
+− − C ∈(cid:60) ×
+δδ¨˙ = 0Imm 0mK¯ δδ˙ + B¯0δm τm− Mδ01E (9) b[2y].cSChienCcckeintghedfeutellrmroiwnarnatn,kc.fc.onsqduitaiorenmfoartrCixs issequivmalemnt itno
+det( T)>0, we ﬁrst evaluate it.
+− − s s
+where K¯ :=M 1K, B¯ :=M 1B and E is deﬁned as
+Econ:=troMl iδnξpξ¨udt+exδCp(cid:2)δrξeξs˙sdio+nδmguδs(iθ¯nedg).thδWeedceδaﬁmnniftuiortnheorfsBimδpmlifi(cid:3)ynt(h8e) LmCeamtrimxaC1s(cid:88)oCfotnhseidelirnetahreizesdubsmysattermix (o1f0)t.hTehecnontthroellmabaitlritiyx
+and τm as f(cid:124)ollowing (cid:123)(cid:122) (cid:125) s satisﬁes following properties:
+B¯ τ =M−1 Φ(l )T cosθL ···Φ(l )T cosθL λ C C nm ··· K K ···
+δ,m m δ 1 t,1 nm t,nm m s sT = diag(¯bi,1, ,¯bi,m) m mTdiag(¯bi,1, ,¯bi,m)
+∈(cid:60) ×
+=:bδm m nm i=1
+wofhei-rtehθRtL,Vi =Mθwt,.ir−.t.θ¯tlhiesﬂtheexirbellaetilvoeadthrfurasmtgeenLe.raRtieocnaldlirthecattioθnt wcohmerpeonKenmt o:=f ¯bδ(cid:89)[m1m;,(cid:88)aKn¯d1m,··· ,(cid:89)K¯m−11m] and ¯bi,j is (i,j)
+can be independently controlled thanks to arbitrary thrust
+generation capability of RVM in E(2) as stated in Sec. II. det(C CT)= m(nm ¯b2 )· m w2 − +f(b ,K )
+Depending on relation between n , m and placement of s s i,j n,k l δm m
+the RVM, the system can loose its cmontrollability. Therefore, i=1 j=1 ≤k=2
+1 l<k
+we design the ﬂexible load vibration/deﬂection suppression (12)
+controller based on controllability analysis. To analyse con- − K
+trollability, we linearize the dynamics (9) at the equilibrium where wn,k−l := wn,k(cid:89)w(cid:88)n,l and f(b(cid:89)δm, m) is residual
+∈(cid:60) function satisfying following inequality:
+deﬂection δ m along the end-effector trajectory ξd.
+e
+We aim that the ﬂexible load behaves similar to the rigid ≥− m nm · m
+body,thusthecontrolobjectiveoftheRVMincludesboththe f(l,θ ) ( ¯b2 ) w2 −
+m i,j (cid:81) n,k(cid:80)l
+vibration suppression (i.e., δ˙ =0) and the deﬂection compen- (cid:81) i=1 j=1 ≤k=2
+sation w(l )=0. For this, we design a feedforward control 1 l<k
+f ≥ ·
+wiδnehpetuortets(oa·t)ci†sofimyspMwen(olsofar)tee-=Pthe0nergiosrsaeλvpmitsye=uadt(otΦhiKenve−eqr1subeiδl.imbHr)ei†urΦem,Kwd−ee1ﬂcgehδco(toiθ¯osedne) whm1e≤kr=le<2kwin2s,kr−elp(cid:54)=lac0e.d by > only when mi=1( nj=m1¯b2i,j)
+the λm solution that minimize overall energy consumption Proof: The ﬁrst item is the result of straightforward
+by minimizing in terms of thrust two-norm. Then, the
+calculationofthematrixmultiplication.Regardingthesecond
+corresponding equilibrium deﬂection shape mode vector C C ∈(cid:60) ×
+− − − − − item,thegivenmatrix T m mispositivesemi-deﬁnite
+satisﬁes δ = ( I +K 1b (ΦK 1b ) 1Φ)K 1g (θ¯d). s s
+e δm δm δ e symmetric matrix and it always satisfy following inequality
+Note that the equilibrium deﬂection δ enforced by λ C C ≥ ∀ ∈(cid:60) | |
+e m from x Tx 0, x m : x =1 which is equivalent to
+satisﬁeszerodeﬂectionattheload-tip,i.e.,w(l )=Φδ =0. C Cs s≥
+Finally,w(cid:34)ec(cid:35)anli(cid:20)nearizethe(cid:21)dy(cid:34)na(cid:35)mics(cid:20)(9)a(cid:21)ttfheequiliberium det( s sT) 0.
+deﬂection δ From the LeiCbnCiz formula ofthe matrix determinant, the
+e determinant of (cid:88)T can be(cid:89)written(cid:88)as
+δδ¨˜˜˙ =(cid:124)0Imm (cid:123)(cid:122)−0mK¯(cid:125) δδ˜˜˙ +(cid:124)¯b(cid:123)δ0(cid:122)m(cid:125)λ¯m (10) det(CsCsT(cid:89))=(cid:88)s∈s sgn(cid:88)(σ) n (n(cid:89)m ¯b(cid:0)i,j¯bσi,j)Km,1(cid:1)KmT,σi
+=:A =:B σ Sn i j=1
+− − − † −
+where δ˜=δ δ and λ¯ =λ (ΦK 1b ) ΦK 1g . ± m nm n K K
+e m m δm δ ( ¯b2 ) sgn(σ) T (13)
+B. Controllability i,j ∈ m,1 m,σi
+i=1 j=1 σ Sn i
+The linearized ﬂexible load dynamics (10) is represented ·
+where sgn() is the sign function of permutations in the
+by 2m-dof conﬁgurations (δ˜˙,δ˜) ∈ (cid:60)2m with n -dof RVM permutationgroupS whichreturns1or−1forevenandodd
+m n
+inputs via Bλ . And the input mapping matrix B is a permutationsrespectively.WeemploytheresultofTheorem1
+m K
+function of the module placement φ (l ) and the thrust in[2]fordet( )insecondlineequationwhichissimilarto
+i j n
+1233
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. well-knownVandermondematrixstructurewhosedeterminant for controllability can elucidate when the system become
+(cid:0) (cid:1) (cid:88) (cid:89)(cid:0) (cid:1)
+is given by uncontrollable,however,thoseexactconditionsdoesnotmeet
+the practicality. For example, even though two vibration
+K K n K K modes have same natural frequency against the physical
+det T = sgn(σ) (cid:89) T
+m m ∈ m,1 m,σi condition, the system can be controllable with certain con-
+σ Sn i dition. However, the physical condition cannot be violated
+K m theoretically. Therefore, in practice, the sufﬁcient conditions
+=det( m)2 = wn2,k−l (14) are enough to ensure controllability.
+(cid:80) ≤k=2
+1 l<k C. Optimal placement
+Since this determinant is larger than zero and the term In the previous section, the controllability is affected
+≥
+( nm ¯b2 ) 0, the resultant product term in (12) and (13) by how the RVMs are distributed along the ﬂexible load.
+shoju=ld1 bie,jlarger than zero. This (14) explain the ﬁrst term However, the controllability analysis does not explain how
+i(cid:80)n (12) and the second line is equivalent with (13). well th(cid:82)e RVMs can suppress the vibration and what is
+Other terms stand for the residual function the optimal RVM placement. For this, we adapt control-
+K
+f(bδm, m).(cid:54) Reg∀arding t·h·e· residual function, if lability ∞gramian approach whose deﬁnition is given by
+nm ¯b2 = 0, i = 1, ,m, then there exists i W = eAτBBTeATτdτ.Anasymptoticallystablesystem
+tOhnajt=ths1aetiios,jtﬁhee(cid:80)srdhiaangd(,¯biif,1w··· ,(cid:54)=¯bi,wm)x,(cid:54)=∀i,0j,∀=x1∈,·(cid:60)··m,m: |x:|i=(cid:54)=1j. sinhﬁocnuiltdeht0iamvee huonriqizuoen.bSouinncdeedthesolliunteiaornizwedithvibinrtaetgiornatidoynnaamloincgs
+, K KT is positive deﬁnni,tie fromn,jits determinant expression isspring-masssystem,weaddthedampingtermto(10).This
+in (n14)n. If nm ¯b2 = 0 or w = w for some i,j,l, assumption is valid, because the real system always suppress
+j=1 i,j n,k n,l the vibration with its own small damping as time goes by.
+then the inequality automatically hold due to semi-positive ≈
+deﬁnite matrix C CT. The coefﬁcient is veriﬁed to have small value D 0, thus
+s s we add the diagonal damping term D similar to diagonal K,
+however, note that it can be neglected by assuming it to zero
+From Lemma 1, the three sufﬁcient conditions to ensure
+as we utilize in previous section.
+controllability of the linearized system can be extracted in
+Here, we transform the linearized dynamics (10) into
+the following theorem:
+equivalent state space representation to simplify control-
+Theorem 1 Consider the linearized ﬂexible load dynamics lability ana·l·y·sis as x˙ = ∈Aˆx(cid:60)+ Bˆλm where x =
+(10) and controllability m(cid:80)atrix C. Then, if the following three [δ˙1;wn,1δ1; ,δ˙m;wn,mδm] 2m is transformed state
+conditions are met, the linearized ﬂexible load dynamics is and the matrix Aˆand Bˆ satisfy corresponding transformation.
+controllable: Then, the controllability gramian solution is given in the
+(cid:54) ∀ ··· following theorem
+1) Placing condition nm φ (l )2 =0, i=1, ,m;
+j=L1 (cid:54)i j L (cid:54) ∈Z
+(cid:80)23)) TMilotdinegincodnepdeitniodnenccoys(cθotn,id)i=tio0nowrnθ,ti,i(cid:54)==wπ2n,+j.kπ,k Tx˙h=eoArˆexm+B2ˆλCo.nSsuidpeprostheethleindeaamripziendgﬂreaxtiioblseatliosafydζdy(cid:28)namwics
+Proof: According to Lemma 1, det(C CT) > 0 if and ζi ≈0,∀im=1,··· ,m. Then, the controllabilityigramina,ni
+(cid:54) ∀ ··· s s ∀ is derived s.t.,
+( nm ¯b2 ) = 0, i = 1, ,m and w2 − , k,l = (cid:16) (cid:17)
+·j·=·1 i,j (cid:54) n,k l ≈ ···
+1, ,m and k = l. Therefore, the ﬂexible load dynamics W diag(W , ,W ) (15)
+(10) is controllable when the placing, tilting and mode (cid:80) c 11 mm
+independency conditions meet. where W = diag βii , βii and β =
+To satisfy the placin(cid:80)g condition, at least one of the mode nk=m1¯bi,k¯biji,k. 4ζiwn,i 4ζiwn,i ij
+shape at the RVM location should (cid:54)not b∀e zero fo·r··each Proof: Using transformed linearized dynamics, the control-
+vibration mode, i.e., nj=m1φi(lj)2 = 0, i = 1, ,m. lability gramia(cid:20)n can be solved by Sylvester equation simila(cid:21)r
+This controllability condition enforces a design criteria for to [14] and its block matrix is
+attachingtheRVMtoavoidthenodeposition,i.e.,φ (x)=0.
+i
+Utih-tnohluimkgehodaoens,eitnhogeflewthqheuoalRedVrsoMytsotreismcalosisecacitonendptrraoetlvltaihobeulesnaorsedseluolpntog[s2ai]tsi,otenhveeornef Wij = βdiijj aij(ζiw−nw,jn,+icjζijwn,i) aij(ζiwwnn,i,j+cjζijwn,j)
+exists a RVM that are not located in node position of i-th with d−ij = 4wn,iwn,j(ζiwn,i +ζjwn,j)(ζiwn,j +−ζjwn,i)+
+mode. (w2 w2 )2, a =2w w and c =(w2 w2 ).
+n,i n,j ij n,i n,j(cid:28) ji n,j ≈n,i
+If the RVM cannot meet the tilting condition, i.e., From the assumption ζ w and ζ 0,
+L ≈ − i (cid:54) n,i i
+cos(θt,i)=0,thentLhethrustoftheRVMisalignedtox-axis dij (wn,i wn,j)2 for i = j and dii = 16wn3,iζi2
+of the load frame and subsequently cannot exert force for i = j. Then, the off-diagonal block matrices are not
+along the deﬂection direction. This controllabilLity(cid:54)condition depend on 1/ζ, however, the diagonal block matrices depend
+impose to control the thrust direction to cos(θ )=0. This on 1/ζ. Therefore, the components in the off-diagonal
+t,i
+conditioncanalwaysbepreservedsincetheRVMisdesigned matrices are approximated to zero since those are relatively
+to instantly generate arbitrary direction thrust in the plane. smaller than the diagonal matrices in (15).
+On the other hand, If we use a quadrotor as shown in [2], the
+quadrotor attitude should be controlled to generate desired Controllability gramian W characterizes the minimal
+c
+thrust direction. energy required to steer the state from zero to certain state
+−
+Theorem 1 suggests sufﬁcient conditions for the control- (i.e.,xTW 1x)[15].Fromthisproperty,differentquantitative
+c
+lable system. The exact necessary and sufﬁcient condition measures of controllability considered in literature [16]. The
+1234
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. Fig. 4. Optimal placement of two RVMs on aluminum bar.
+det(W ) provides (l ,l ) = (1.15m,1.95m) (left). tr(W ) pro-
+c 1 2 c
+vides (l ,l )=(1.25m,1.95m) (right).
+1 2
+Fig. 5. Snapshots and load-tip deﬂection plot for stationary robot
+traceofW relatedtotheaveragecontrolenergyoverrandom armunderexternaldisturbances.Redarrowsrepresenttimesexternal
+c
+targetstates,howeverthismetriccannotshowhoweffectively forces exerted.
+it can suppress all the vibration, because only slow vibration
+modes are dominant. On the other hand, the determinant of
+W representsthevolumeoftheellipsoidcontainingthestates
+c
+that can be reached with an unit-energy, thus maxtr(W )
+c
+represents the effectiveness of vibration suppression to every
+vibration modes. Here, we choose the controllability metric
+as the det(W ) to effectively suppress the vibrations which
+c
+is given in Fig. 4 for experimental setup in Sec. V. These
+metrics are represented by the singular values of W and
+c
+directly computed by βii according to Theorem 2.
+Theorem 2 gives an4ζiinwtnu,iition that the location where it
+maximize mode deﬂection or its summation is the optimal
+placement which is compatible with Theorem 1 that shows
+the node positions can makes system uncontrollable. And Fig. 6. Snapshots and load-tip deﬂection plot for one-end position
+the controllability conditions are also compatible with the manipulated by robot arm. Yellow shaded columns represent times
+the robot arm moves.
+structureofW inTheorem2.InTheorem2,thedeterminant
+c
+of W is represented by the multiplication of the diagonal
+c
+terms. The diagonal terms become zero when β =0 which shows that RVMs effectively suppress the vibration before it
+ii
+is also shown in Lemma 1, thus W cannot be singular as reaches next peak of sinusoidal deﬂection.
+c
+long as placing and tilting condition hold. In the second experiment, the external disturbances is
+replaced by the motion of robotic arm. To see the vibration
+D. Control Design suppression performance, the RVM input does not have
+feedforwardinputoftherobotarm.Therobotmotionincludes
+Here,weutilizeLQRtooptimallysuppressvibrationalong
+both upward and downward motion and this motion induces
+with the gravity compensation for the RVM. And we utilize
+vibration.InFig.6,theplotshowsthattheRVMcansuppress
+computed torque control for the robot arm. This control is
+the vibration right after the motion stops. In contrast, without
+same with the approach introduced in previous result. For
+RVM, the plot shows that even though its amplitude is
+more detail, please refer [2].
+ampliﬁed or reduced depending on direction of robot arm
+motion and vibration, the vibration is not suppressed during
+V. EXPERIMENT
+the bar is manipulated.
+We implement two RVMs attached on 2m long aluminium Both two experiments also show that the gravity induced
+×
+baratoptimalplaceinFig.4withcrosssection40mm 3mm deﬂection ofthe aluminiumbar iscompensated bythe RVMs
+asshowninFig.5.EachRVMisconstructedbasedonoptimal so that the vibration shifted from -0.8m to 0m.
+design in Sec. II and equipped with Pixhawk for computing,
+wirelesscommunicationbetweengroundPCandESCscontrol.
+VI. CONCLUSION
+MoCap is used to measure the position and orientation of
+each RVM and load-tip deﬂection. Power supply unit is used We propose a novel RVM to manipulate and transport
+to supply power to the RVMs, however, each module can a large ﬂexible object. The number of modules can be
+also be operated using onboard battery. varied to adapt the various object since the RVM can be
+Two experimental veriﬁcations are performed for this easily attachable/detachable. The RVM is optimally designed
+two RVM system: 1) stationary robot arm with external to maximize the feasible thrust generation area along the
+disturbances and 2) one end position manipulated by robot plane that vibration occurs with the minimum number of
+arm. These two experiments are compared to the same rotors while it minimizes undesirable torque. We derive the
+scenarios without RVMs. In the ﬁrst experiment, an operator full dynamics of the distributed RVMs and elucidate the
+exerts external disturbances every 3 to 5 seconds at various controllability condition. Furthermore, we also propose the
+location on the aluminium bar. On the other hand, the optimal placement of the RVMs on the ﬂexible load based
+disturbances are exerted every 9 to 10 seconds for the on the controllability gramian. Experimental validation of
+experiment without RVMs because the vibration persists the distributed RVMs is also presented. Some possible future
+for a long time. It takes about 1 min to totally suppress researchtopicsinclude:1)sensorfusionwithonboardsensor;
+the vibration with its structural damping. The plot in Fig. 5 2) MoCap-less operation of distributed RVMs.
+1235
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[1] N.Staub,M.Mohammadi,D.Bicego,D.Prattichizzo,andA.Franchi.
+TowardsroboticMAGMaS:Multipleaerial-groundmanipulatorsystems.
+InProc.IEEEInt’lConferenceonRoboticsandAutomation,pages
+1307–1312,2017.
+[2] H.Yang,N.Staub,A.Franchi,andD.J.Lee. Modelingandcontrol
+of multiple aerial-ground manipulator system (magmas) with load
+ﬂexibility. InProc.IEEE/RSJInt’lConferenceonIntelligentRobots
+andSystems,pages4840–4847,2018.
+[3] N. Staub, M. Mohammadi, D. Bicego, Q. Delamare, H. Yang,
+D. Prattichizzo, P. R. Giordano, D. J. Lee, and A. Franchi. The
+tele-magmas:Anaerial-groundcomanipulatorsystem. IEEERobotics
+&AutomationMagazine,25(4):66–75,2018.
+[4] A. Yamashita, T. Arai, J. Ota, and H. Asama. Motion planning of
+multiplemobilerobotsforcooperativemanipulationandtransportation.
+IEEETransactionsonRobotics,19(2):223–237,2003.
+[5] Y.Hirata,Y.Kume,andT.Sawada. Handlingofanobjectbymultiple
+mobile manipulators in coordination based on caster-like dynamics.
+InProc.IEEEInt’lConferenceonRoboticsandAutomation,pages
+807–812,2004.
+[6] D. Mellinger, M. Shomin, N. Michael, and V. Kumar. Cooperative
+grasping and transport using multiple quadrotors. In Distributed
+AutonomousRoboticSystems,pages545–558,2013.
+[7] Gramazio Kohler Research. http://www.gramaziokohler.
+arch.ethz.ch/web/e/forschung/index.html/,Accessed:
+2019-09-15.
+[8] ATOUN. http://atoun.co.jp/products/
+atoun-model-k/,Accessed:2019-09-15.
+[9] R. Mahony, V. Kumar, and P. Corke. Multirotor Aerial Vehicles:
+Modeling,Estimation,andControlofQuadrotor. IEEERobotics&
+AutomationMagazine,19(3):20–32,2012.
+[10] S.Park,J.Lee,J.Ahn,M.Kim,J.Her,G-H.Yang,andD.J.Lee.
+Odar:Aerialmanipulationplatformenablingomni-directionalwrench
+generation. IEEE/ASME Transactions on Mechatronic, 23(4):1907–
+1918,2018.
+[11] H.Yang,S.Park,J.Lee,J.Ahn,D.Son,andD.J.Lee. Lasdra:Large-
+sizeaerialskeletonsystemwithdistributedrotoractuation. InProc.
+IEEEInt’lConferenceonRoboticsandAutomation,pages7017–7023,
+2018.
+[12] S.Park,Y.Lee,J.Heo,andD.J.Lee. Poseandpostureestimation
+of aerial skeleton systems for outdoor ﬂying. In Proc. IEEE Int’l
+ConferenceonRoboticsandAutomation,pages704–710,2019.
+[13] D.J.Inman. EngineeringVibration. Pearson,2008.
+[14] A.Hac´ andL.Liu. Sensorandactuatorlocationinmotioncontrolof
+ﬂexiblestructures. JournalofSoundandVibration,167(2):239–261,
+1993.
+[15] C. T. Chen. Linear System Theory and Design. Oxford University
+Press,Inc.,1998.
+[16] F. Pasqualetti, S. Zampieri, and F. Bullo. Controllability metrics,
+limitationsandalgorithmsforcomplexnetworks. IEEETransactions
+onNetworkSystems,1(1):40–52,2014.
+1236
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 11:46:32 UTC from IEEE Xplore.  Restrictions apply. 

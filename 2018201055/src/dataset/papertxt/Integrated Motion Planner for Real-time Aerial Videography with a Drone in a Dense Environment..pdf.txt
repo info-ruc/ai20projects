@@ -1,0 +1,519 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+TextSLAM: Visual SLAM with Planar Text Features
+∗
+Boying Li, Danping Zou , Daniele Sartori, Ling Pei, and Wenxian Yu
+Abstract—Weproposetointegratetextobjectsinman-made
+scenestightlyintothevisualSLAMpipeline.Thekeyideaofour
+noveltext-basedvisualSLAMistotreateachdetectedtextasa
+planarfeaturewhichisrichoftexturesandsemanticmeanings.
+The text feature is compactly represented by three parameters
+andintegratedintovisualSLAMbyadoptingtheillumination-
+invariantphotometricerror.Wealsodescribeimportantdetails
+involved in implementing a full pipeline of text-based visual
+SLAM. To our best knowledge, this is the ﬁrst visual SLAM
+method tightly coupled with the text features. We tested our
+method in both indoor and outdoor environments. The results
+show that with text features, the visual SLAM system becomes
+more robust and produces much more accurate 3D text maps Fig.1. TextSLAMinashoppingmall.Left:Detectedtextsintheimages
+that could be useful for navigation and scene understanding in (inyellowrectangles)andthezoomed-inviewof3Dtextmap.Right:3D
+robotic or augmented reality applications. text maps and camera trajectory in top-down view. The text objects are
+illustratedinpinkboxesandtheirnormaldirectionsareshowninblue.
+I. INTRODUCTION
+Visual SLAM is an important technique of ego-motion
+integratingtextfeatureswithexistingSLAMsystems,though
+estimationandsceneperception,whichhasbeenwidelyused
+inalooselycoupledmanner.Itisworthfurtherinvestigation
+in navigation for drones [1], ground vehicles or self-driving
+into a tightly coupled approach by putting texts into the
+cars [2], and augmented reality applications [3]. A typical
+SLAMpipelineinsteadoftreatingtheexistingSLAMsystem
+visual SLAM algorithm extracts point features [4], [5] from
+as a black box.
+images for pose estimation and mapping. Recent methods
+We propose a novel visual SLAM method tightly coupled
+[6] [7] even directly operate on pixels. However, it is well
+with text features. Our basic motivation is that texts are
+known that incorporating high-level features like lines [8],
+usually planar and texture-rich patch features: Texts we
+or even surfaces [9] in the visual SLAM system will lead to
+spotted in our daily life are mostly planar-like regions, at
+better performance with fewer parameters.
+leastforasinglewordorcharacterifnotthewholesentence.
+One type of object surrounding us that can be used as
+The rich pattern of a text entity makes the text object a
+high-level features is text. Text labels in daily scenes offer
+naturally good feature for tracking and localization. It is
+rich information for navigation. They can help us recognize
+demonstrated in our work that through fully exploring those
+landmarks, navigate in complex environments, and guide
+characteristics of text features, we can improve the overall
+us to the destination. Text extraction and recognition have
+performance of the SLAM system, including the quality of
+been developing fast in these days [10] [11] because of
+both localization and semantic map generation. The main
+the boom of the deep neural networks and the emergence
+technical contributions of this paper includes:
+of huge text datasets such as COCO-Text[12], DOST[13],
+and ICDAR[14]. One question raises whether texts can be 1)Anovelthree-variableparameterizationfortextfeatures
+integratedintoavisualSLAMsystemtonotonlyyieldbetter is proposed. The parameterization is compact and allows
+performancebutalsogeneratehigh-quality3Dtextmapsthat instantaneousinitializationoftextfeatureswithsmallmotion
+could be useful for navigation and scene understanding. parallaxes.
+There are several attempts towards text-aided navigation 2)ThetextfeatureisintegratedinthevisualSLAMsystem
+and location in recent years. A navigation system [15], [16] by adopting the photometric error measured by normalized
+for blind people, assisted with text entities, is built upon sumofsquareddifferences.Suchphotometricerrorisrobust
+the visual-inertial SLAM system shipped on the Google to illumination changes and blurry images caused by quick
+Tango tablet. Similarly, Wang et al. proposed a method to camera motions. Tracking and mapping of text features are
+extract text features [17], which are then used for fusion donebyminimizingthephotometricerrorswithoutextradata
+with Tango’s SLAM outputs to facilitate closing loops. The association processes.
+aforementioned works have shown the great potential of 3) We present details for implementing such a text-
+based SLAM system, including initialization and update of
+ThisworkwassupportedbytheGrant61405180104fromChinesegov- text features, text-based camera pose tracking and back-end
+ernment.AlltheauthorsarewithShanghaiKeyLaboratoryofNavigation
+optimization. To our best knowledge, this is the ﬁrst visual
+andLocation-basedService,ShanghaiJiaoTongUniversity.
+∗Correspondingauthor:DanpingZou(dpzou@sjtu.edu.cn) SLAM method with text features tightly integrated.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 2102
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. We conduct experiments in both indoor and outdoor en-
+vironments. The results show our novel text-based SLAM
+method achieves better accuracy and robustness, and pro-
+duces much better 3D text maps than does the baseline
+approach. Such semantically meaningful maps will beneﬁt
+navigation in man made environments.
+II. RELATEDWORK
+a) Planar features: Planar features have been studied
+in visual SLAM community since the early stage. In early
+works [3][18][19], the planes in the scene were detected by
+RANSAC [20] among estimated 3D points and employed Fig.2. Atextobjectiscompactlyparameterizedbyθ.Theinversedepthρ
+ofatextpointpcanbecomputedbyρ=1/h=θTm˜ anditsprojection
+as novel features to replace points in the state. Much fewer
+onto the target view Ct is a homography transform with respect to the
+parameters are required to represent the world using planes relativeposeTbetweenthetwoviews.
+instead of points, hence reducing the computational cost
+signiﬁcantly.Thoseworksshowthatplanarfeaturesimprove
+both accuracy and robustness of a visual SLAM system. [17],thespatial-levelfeaturenamed’junction’wasextracted
+However, existing methods require 3D information to dis- from text objects, and then combined with the location and
+cover the planar features, usually using a RGB-D camera mapping output of Google Tango’s SLAM system at the
+[21][22]. This becomes difﬁcult using only image sensors. stage of loop closing. The authors present a text spotting
+An interesting idea [23] is to assume each image patch method [15] for the assistant navigation system relying the
+surroundedthedetectedfeaturepointasoneobservationofa Tango’sSLAMsystem.Similarly,withtheSLAMsystemof
+locallyplanarsurface.Theassumptionhoweverseldomholds Tango, a mobile solution [16] of assistant navigation system
+in realistic scenes, as feature points might be extracted from combines various sources, such as text recognition results
+anywhere in the scene. Nevertheless, texts in realistic scenes andspeech-audiointeraction,forblindandvisuallyimpaired
+aremostlylocatedonplanarsurfaces,thoughsometimeonly people to travel indoor independently.
+locally.Thereforetextsarenaturallygoodplanarfeaturesthat Existingtext-aidedmethodsregardSLAMsystems(either
+can be easily detected by text detectors. vision-based or laser-based) as a black box and take less
+b) Object features: Integrating object-level features in- attention on the accuracy of 3D text maps. By contrast, the
+tovisualSLAMsystemshasbeenreceivingincreasinginter- proposed method integrates the text objects tightly into the
+est in recent years [24][25][26]. Existing methods however SLAM system to facilitate both camera tracking and map-
+require pre-scanned 3D models to precisely ﬁt the obser- ping, and focuses on generating high accurate text map that
+vation on the image. Though recent work [27] attempted can be used for future pose estimation and loop detection.
+to reconstruct the 3D model of objects online with a depth
+III. TEXTFEATURES
+camera,itisstilldifﬁculttobegeneralizedtounseenobjects
+A. Parameterization
+with only image sensors. Another solution is adopting 3D
+bounding boxes [28][29] or quadrics [30] to approximate Asdiscussedpreviously,mosttextobjectscanberegarded
+generic objects. This however suffers from loss of accuracy. as planar and bounded patches. Each text patch (usually
+Unlike generic objects, the geometry of text objects is enclosed by a bounding box) is anchored to the camera
+simple. As aforementioned, text objects can be treated as frame,namedasthehostframe,whenitisﬁrstlydetectedon
+locally planar features and also contain a rich amount of the image as shown in Fig. 2. Expressed in the coordinate
+semantic information about the environment. It is hence system of the host frame, the plane where the text patch
+worth investigating how to design a SLAM system based lies is described by the equation nTp + d = 0, where
+∈ R
+on the text objects. n = (n ,n ,n )T 3 is the normal of the plane and
+∈R 1 2 3
+c) Text-aided navigation: Text is a naturally good vi- d is related to the distance from the plane to the origin
+∈ R
+sual ﬁducial marker or optical positioning to assistant navi- of the host frame; p 3 represents the 3D point on the
+gation [31][32] yet the technique is still under development plane.
+[31]. Several loosely coupled text-aided navigation methods A straightforward parameterization of a text plane could
+have shown a great potential for perception, navigation, and be directly using the four parameters (n ,n ,n ,d) of the
+1 2 3
+human-computer interaction. The early work [33] used the planeequation.Butthisisaoverparameterizationthatleads
+roomnumberasaguidanceforrobottoautonomouslymove to rank deﬁcient in the nonlinear least-squares optimization.
+in the ofﬁce-like scenes. The authors [34] annotated the text We propose to use a compact parameterization that contains
+labelsontheexistingmapgeneratedbyalaserSLAMsystem only three parameters.
+to help robots understand each named location. With the −
+θ =(θ ,θ ,θ )T = n/d. (1)
+prior knowledge of a comprehensive map and the compass 1 2 3
+information, the authors [35] extracted 2D text information We’llshowthatthisparameterizationiscloselyrelatedtothe
+from the observations to assist localization. In the work inverse depth of the 3D point on the text plane.
+2103
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. ∈R
+Withinthehostframe,each3Dpointp 3 observedon C. Photometric error for text objects
+the image is able to be represented by its normalized image
+Photometric error is used to compare the projected text
+coordinates m = (u,v)T and its inverse depth ρ = 1/h , object and the observed one on the image. This is done by
+where the depth h is the distance between this 3D point and pixel-wise comparison and similar to the direct approaches
+the camera center. The 3D coordinates of this 3D point are
+[7]whichhavebeenshowntobeaccurateandrobustwithout
+computedas p=(uh,vh,h)T =hm˜,where m˜ denotesthe ﬁnding corresponding feature points explicitly. The biggest
+homogeneous coordinates of m. If the 3D point locates on issue of using photometric error is to handle the intensity
+·
+the text plane, we have h nTm˜ +d=0. The inverse depth changes.Existingwork[7]adoptsanafﬁnemodeltoaddress
+ρ of this 3D point is then computed as intensity changes, but it requires extra parameters involved
+− in optimization and sophisticated photometric calibration to
+ρ=1/h= nT/d m˜ =θTm˜. (2)
+guarantee performance.
+Thatis,wecanuseasimpledotproducttoquicklyinferthe We choose to use zero mean normalized cross-correlation
+inverse depth of a text point from its 2D coordinates, given (ZNCC)asthematchingcosttohandleilluminationchanges.
+∈
+the text parameters θ. LetΩbethesetofpixelswithinthetextregion,andm Ω
+On the other hand, if we have at least three points on the beatextpixel.Thenormali√zedintensitiesfortextpixelsare:
+−
+text patch (for example, three corners of the bounding box), I˜(m)=(I(m) I¯ )/(σ N),whereI¯ andσ standfor
+Ω Ω Ω Ω
+withtheirinversedepths,wecanimmediatelyobtainthetext theaverageintensityandthestandarddeviationofthepixels
+parameters by solving   in Ω, and N is the number of pixels. The text patch in the
+    host frame and the predicted o(cid:88)ne in the target frame (6) are
+m˜T ρ
+.1 .1 ≥ then compared by :
+.. θ = .. ,n 3. (3)
+(cid:48)
+m˜Tn ρn ZNCC(Ih,It)= ∈ I˜h(m)I˜t(m). (7)
+m Ω
+This allows us to quickly initialize the text parameters from −
+The ZNCC cost is between 1 and 1. The larger ZNCC
+the depth value of three corners of the text bounding box.
+cost indicates the two patches are more similar. However, it
+To fully describe a text object, properties such as the
+is difﬁcult to directly use the ZNCC cost in visual SLAM,
+boundary of the text object and pixel values are also kept
+since it can not be formulated as a nonlinear least squares
+in our system. Those information can be acquired from a
+problem. We therefore ad(cid:88)opt a variant form of ZNCC as the
+text detector as we’ll described later.
+cost function
+B. Projection of the 3D text object onto a target image − (cid:48)
+E(I ,I )= (I˜ (m) I˜(m))2. (8)
+Herewedescribehowtoprojecta3Dtextobjectanchored h t ∈ h t
+m Ω
+atahostframeontotheimagerelatedtothetargetframe.Let
+∈ Though the cost function is similar to the SSD (Sum of
+T ,T SE(3)representthetransformationsfromthehost
+h t SquaredDifference)cost,itcontainsadditionalnormalization
+frame and the target frame to the world frame respectively.
+proc(cid:88)ess to ensure the robustness to(cid:88)illumination changes. If
+The transformation from the host frame to the target frame
+− we expand this cost function as :
+is T = T 1T . We let R,t be the rotation and translation
+of T. Givten thhe text parameters θ and the observed image (I˜ (m)2+I˜(m(cid:48))2)−2 I˜ (m)I˜(m(cid:48)), (9)
+h t h t
+point m (with the homogeneous coordinates m˜) in the host ∈ ∈ (cid:80)
+m Ω m Ω
+frame, the 3D coordinates of point p are : (cid:80)
+we discover that minimizing this cost function is equivalent
+p=m˜/ρ=m˜/(θTm˜). (4) to maxim(cid:48)izing the ZNCC cost, because I˜h(m)2 =1 and
+I˜(m)2 =(cid:88)1. The photometric error of a text object π
+The point is then transformed into the target frame. Let the t
+(cid:48) (cid:48) ∼ with respect to the target frame t is deﬁned as :
+transformed point be p. We have p Rm˜ + tm˜Tθ.
+∼ −
+Here notation means equivalence up to a scale. Using Eπ,t = φ((I˜ (m) I˜(h(m,T ,T ,θπ)))2),
+photo h t h t
+the pinhole camera model, the coordinates of image point ∈
+m Ωπ
+(cid:48) (cid:48) (cid:48) (cid:48) (10)
+m =(u,v )T of p in the target frame are computed as ·
+where φ() is the Huber loss function to handle possible
+(cid:48)
+u(cid:48) =(r1Tm˜ +t1m˜Tθ)/(r3Tm˜ +t3m˜Tθ) , (5) outliers. Here, we use Ωπ to represent the text region on the
+v =(rTm˜ +t m˜Tθ)/(rTm˜ +t m˜Tθ) image plane in the host frame. As we’ll describe later, to
+2 2 3 3
+make the computation faster, we do not use all the pixels
+where r ,r ,r are the row vectors of R and t =
+1 2 3 within the text region, instead select only some of them as
+(t ,t ,t )T. Note that (5) is in fact the homography trans-
+1 2 3 (cid:48) the reference pixels to compute the photometric error.
+formation from m to m, where the homograpny matrix is
+∼
+deﬁned as H R + tθT. Hence, the whole process of IV. TEXTSLAMSYSTEM
+projecting a 3D text object on the image plane of a target
+Our TextSLAM system is built upon the basic system us-
+frame can be described as a homography mapping
+ingpointfeaturesandadoptsthekeyframe-basedframework
+(cid:48)
+m =h(m,T ,T ,θ). (6) to integrate the text features tightly. The mixture of point
+h t
+2104
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. B. Camera pose estimation with text objects
+Both points and text objects in the map are involved in
+camera pose estimation. The camera pose estimation is to
+minimize the following cost function
+E(T )=E (T )+λ E (T ), (12)
+t point t w text t
+∈
+where T SE(3) represents the current camera pose.
+t
+E and E come from the feature points and the text
+point text
+objects respectively. Note that E consists of geometric
+(cid:88) point
+errors, or reprojection errors, but E contains only photo-
+text
+metric errors
+E = Eπ,t . (13)
+text photo
+π
+The trade-off between them needs to be regulated by the
+weight λ since they are in different units (position differ-
+Fig.3. AnoverviewofTextSLAMsystem. w
+ence vs intensity difference).
+The weight λ is computed as λ = σ /σ . σ
+w w rep photo rep
+representsthestandarddeviationofthereprojectionerrorofa
+features and text features allow our system to work properly
+even in the scenes without text labels. Fig. 3 illustrates the pairofcorrespondingpoints(inbothxandy directions)and
+ﬂowchart of TextSLAM. we’ll detail the key components in σphoto represents the standard deviation of the photometric
+error of a text object as deﬁned in (8). Those standard
+the following sections.
+deviations can be acquired through a small set of training
+A. Initialization of text objects data (given corresponding points and text patches).
+Text objects are extracted on the image whenever a new Optimization of the cost function (12) is a nonlinear
+image has been acquired. The deep learning technique has least squares problem. As the photometric cost E is
+text
+largely accelerated the text extraction development in recent highly nonlinear, it requires a good initial guess of T to
+t
+years [36], [37], [38], [39]. The text detector named EAST avoid being trapped in a local minimum. We ﬁrstly use a
+[40] is used to extract objects in our implementation, but constant velocity model to predict the camera pose. Based
+other text detectors may also be used, because our system on this prediction, we then apply a coarse-to-ﬁne method
+does not rely on particular text detectors. Some examples of for the optimization, and the camera pose is estimated by
+text extraction are demonstrated in Fig. 1. The outputs are minimizing (12) iteratively.
+arbitrary-orientationquadrilateralsenclosingthetextregions.
+C. Bundle Adjustment with text objects
+Once a text object has been extracted, we detect FAST [41]
+features within the text region and track them via Kanade- We apply bundle adjustment from time to time in a local
+Lucas-Tomasi (KLT) [42] until the next key frame. Then window of key frames similar to [4]. The cost function of
+the parameters of the text object are initialized from the bundle adjustment consists the point part and the text part :
+↔ (cid:48)
+tracked points. Let mi mi be the corresponding points E(x)=E (x)+λ E (x). (14)
+in both views, and R,t be the transformation between the point w text
+two frames. From (5), we have The cost function resembles that of camera pose estima-
+(cid:48) − (cid:48) tion while involves more parameters to be optimized. The
+[m˜i]×tm˜Ti θ = [m˜i]×Rm˜i, (11) variable x include the camera poses of key frames in the
+where m˜ and m˜(cid:48) are the homogeneous coordinates of m local window, the 3D coordinates of point features, and the
+and m(cid:48). iNote thait the rank of the matrix on the left handi text parameters. We also adopt a coarse-to-ﬁne method to
+side isione. It requires at least three pair of corresponding optimize (14) as in camera pose estimation.
+points to solve θ. The text parameter is futher reﬁned by Thoughwemayuseallthepixelswithinthetextregionto
+minimizing the photometric error as deﬁned in (10). evaluatethephotometricerrors,amoreefﬁcientwayistouse
+After initialization, we keep the text quadrilateral with a small part of them. The representative pixels are selected
+the text object. The four corners can be projected onto with the minimum number of 15 by FAST [41], and further
+other views (6) to predict the appearance. Note that a text applied to evaluate photometric errors.
+object can only be initialized when its quadrilateral in the
+V. EXPERIMENT
+current view is not intersected with existing text objects or
+A. Data collection
+partially out of the image. Otherwise they are rejected as
+’badinitialization’.Thenewlyinitializedtextobjectsarekept We collected a set of image sequences for evaluation in
+beingupdatedinthefollowingframes.Theyareinsertedinto both indoor and outdoor scenes. Fig. 4 shows our device
+the map only if the text object has been observed in at least for the data collection. It consists of the hand-held camera
+n (5 in our implementation) frames. and optical markers for the acquisition of ground truth
+min
+2105
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. Fig. 5. TextSLAM is robust to blurry images caused by rapid camera
+motions. The estimated 3D text map and camera trajectory of TextSLAM
+areshownontheleft.Bycontrast,point-onlymethodfailedtotrackfeature
+pointsonseverelyblurryimagesasshownontheright.
+Fig. 4. The indoor test scene is shown on the left. The data collection
+deviceequippedwiththeGoProcamera,ispresentedontheright. TABLEII
+TABLEII:INDOORRAPIDPERFORMANCE.RPE(0.1M)ANDAPE(M)
+TABLEI
+TABLEI:LOCALIZATIONPERFORMANCE.RPE(0.1M)ANDAPE(M) ORB-SLAM Point-only TextSLAM
+Seq.
+RPE APE RPE APE RPE APE
+ORB-SLAM Point-only TextSLAM Rapid01 – – – – 0.271 0.029
+Seq.
+RPE APE RPE APE RPE APE Rapid02 0.367 0.063 – – 0.322 0.031
+Indoor01 0.342 0.161 0.192 0.223 0.188 0.196 Rapid03 0.338 0.061 – – 0.212 0.022
+Indoor02 0.300 0.150 0.189 0.164 0.187 0.150
+Thebar’–’indicatesthealgorithmfailstoﬁnishthewholetrajectory.
+Indoor03 0.228 0.144 0.207 0.166 0.209 0.155
+Indoor04 0.188 0.145 – – 0.173 0.171
+Indoor05 0.277 0.120 0.172 0.160 0.174 0.161
+b) 3Dtextmaps: Weusetheangularerrorofeachesti-
+Thebar’–’indicatesthealgorithmfailstoﬁnishthewholetrajectory.
+matedtextplaneandvisuallyinspectiontoevaluatethemap-
+pingperformance.Theangularerrormeasuresthedifference
+×
+trajectories. All image sequences were resized to 640 480 between the estimated normal nt of t|he text|p(cid:107)lane(cid:107)(cid:107)and t(cid:107)he
+for tests. groundtruthn ,namelyα=arccos(nTn / n n ).
+gt t gt t gt
+n was acquired by a few optical markers on the text
+gt
+plane as shown in Fig. 4. Since no visual SLAM system
+B. Indoor scene with ground truth
+generates text maps directly available for the evaluation,
+Theindoorenvironment,withtextlabelsrandomlyplaced, we implemented a loosely-coupled system based on ORB-
+is shown in Fig. 4, which is equipped with a motion capture SLAM for comparison by ﬁtting the text plane from the 3D
+system to obtain the ground truth trajectories of millimeter text points using three-point RANSAC.
+×
+accuracy within an area of 4m 4m. Three methods were The statistic of angular errors are presented in Fig. 8 and
+evaluated : our text-based method, our point-only method, one of the mapping results is visually presented in Fig.
+and ORB-SLAM [4] where loop closing was disabled for 7. The results demonstrate that the 3D text map produced
+fair comparison. by TextSLAM is substantially better than that of the plane
+a) Trajectory estimation: We present both the relative ﬁtting approach based on ORB-SLAM. The reason is that
+pose error (RPE) and the absolute pose error (APE) in the point clouds generated by ORB-SLAM are in fact noisy
+Tab. I. Note that the errors of those methods are very as shown in Fig. 7. We carefully checked what causes those
+close to each other. The reason must be the test scene is noisypointsandspeculatethatitmaybecausedbyincorrect
+very small and highly textured, in which using only feature feature location or correspondences in the images.
+points should work well. ORB-SLAM slightly outperforms
+C. Real-world tests
+both of our methods, which is not surprising because ORB-
+SLAM adopts a sophisticated map reuse mechanism based The outdoor experiment is in a commercial center as
+on the covisibility pose graph. Our methods currently are shownintheﬁrstcolumninFig.6.Thisdailyenvironmentis
+odometry systems virtually. Nevertheless, we still observe a fullofvariouschallenges,includingtextobjectswithvarious
+performance gain in using text features compared with our sizes, fonts, backgrounds and languages, the complex occlu-
+point-only implementation. sion, the reﬂection of glass and the dynamic pedestrians.
+We also evaluate the robustness of the proposed method Sinceitisdifﬁculttoacquirethegroundtruthforeitherthe
+under fast camera motion. The rapid motion causes severe cameratrajectoryorthe3Dtextmap,wepresentonlyvisual
+image blur as shown in Fig. 5, inducing the failure of our results to show the efﬁcacy of our method. The second and
+point-only method in all cases. ORB-SLAM failed only at threecolumnsinFig.6illustratereconstructed3Dtextlabels
+one test. This is also because its well implemented relo- andtheestimatetrajectories.Aside-by-sidecomparisonwith
+calization mechanism. By contrast, our text-based method ORB-SLAMfromthetop-downviewisalsopresentedonthe
+works well in those tests and performs much more accurate last column.
+asshowninTab.II.Thisislargelyduetoourdirectapproach The deep learning text detector sometimes produces
+towards text objects using photometric errors. false detections, the text object initialization (introduced in
+2106
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. Fig.6. Realworldtestsinashoppingcenter.Thetextdetectionresultsareshownintheﬁrstcolumn.Threetypicallocationsareshownandenlargedin
+eachrow.Thesecondandthirdcolumnsshowtheclose-upandtop-downviews.Forcomparison,theORB-SLAMperformanceofthesamelocationsare
+alsopresentedinthefourthcolumn.Wecanobservethenoisypointcloudsvisually,asenclosedinredrectangles.
+Though no ground truth is available, we can still observe
+A TextSLAM
+A B C the noisy point clouds in the ORB-SLAM results. As high-
+lighted by rectangles in Fig. 6, the text maps better reveal
+B theplanarstructuresofthescenethanthenoisypointclouds
+C from ORB-SLAM. As aforementioned, the noisy points are
+ORB-SLAM caused by either incorrect feature matching or detection,
+A
+preventing ORB-SLAM from acquiring accurate 3D text
+maps.
+B
+VI. CONCLUSION&FUTUREWORK
+C
+We present a novel visual SLAM method tightly coupled
+Fig.7. ThoughRANSACwasadopted,planeﬁttingonthepointclouds withtheplanartextfeatures.Experimentshavebeenconduct-
+fromORB-SLAMstillproducednoisyresults(asshowninthebottomrow). ed in both artiﬁcial indoor cases with ground truth and real
+TextSLAMavoidssuchproblembymatchingortrackingatextobjectasa
+world scenes. The results show that our text-based SLAM
+wholebyusingphotometricerrors.
+methodperformsbetterthanpoint-onlySLAMmethoddoes,
+especiallyin blurryvideo sequencescaused byrapid camera
+0.5
+0.4 TextSLAM motions. However, the localization performance gain is not
+ORB-SLAM
+aslargeasweexpectedintheindoortests,evenwhenpoint-
+0.3
+based methods generate very noisy point clouds. This could
+0.2
+be that camera pose estimation is less sensitive to noisy
+0.1
+points because robust approaches are usually involved. Nev-
+0
+9 18 27 36 45 54 63 72 81 90 ertheless, the results demonstrate that our method generates
+degree (°)
+much more accurate 3D text maps than the loosely-coupled
+Fig. 8. The statistic distribution of the angular errors. The results of method based on the state-of-the-art visual SLAM system.
+TextSLAMandORB-SLAMareillustratedinredandblue,respectively.
+Future work includes incorporating text semantics into our
+systemandacquiringrealworlddatasetswithhighlyaccurate
+ground truth for quantitative evaluation.
+SectionIV-A)ﬁltersoutbadtextobjectsautomaticallybefore
+insertion to the map. Our TextSLAM also works properly REFERENCES
+when no text labels found, such as the parking lot of the
+[1] L.Heng,D.Honegger,G.H.Lee,L.Meier,P.Tanskanen,F.Fraundor-
+commercial center. fer, and M. Pollefeys, “Autonomous visual mapping and exploration
+2107
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. withamicroaerialvehicle,”JournalofFieldRobotics,vol.31,no.4, [24] R. F. Salas-Moreno, R. A. Newcombe, H. Strasdat, P. H. Kelly, and
+pp.654–675,2014. A.J.Davison,“Slam++:Simultaneouslocalisationandmappingatthe
+[2] H. Lategahn, A. Geiger, and B. Kitt, “Visual slam for autonomous levelofobjects,”inProceedingsoftheIEEEconferenceoncomputer
+groundvehicles,”in2011IEEEInternationalConferenceonRobotics visionandpatternrecognition,2013,pp.1352–1359.
+andAutomation. IEEE,2011,pp.1732–1737. [25] D.Ga´lvez-Lo´pez,M.Salas,J.D.Tardo´s,andJ.Montiel,“Real-time
+[3] D.Chekhlov,A.P.Gee,A.Calway,andW.Mayol-Cuevas,“Ninjaon monocular object slam,” Robotics and Autonomous Systems, vol. 75,
+aplane:Automaticdiscoveryofphysicalplanesforaugmentedreality pp.435–449,2016.
+using visual slam,” in Proceedings of the 2007 6th IEEE and ACM [26] J. Civera, D. Ga´lvez-Lo´pez, L. Riazuelo, J. D. Tardo´s, and J. Mon-
+International Symposium on Mixed and Augmented Reality. IEEE tiel, “Towards semantic slam using a monocular camera,” in 2011
+ComputerSociety,2007,pp.1–4. IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems.
+[4] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardos, “Orb-slam: a IEEE,2011,pp.1277–1284.
+versatile and accurate monocular slam system,” IEEE Transactions [27] J. McCormac, R. Clark, M. Bloesch, A. Davison, and S. Leuteneg-
+onRobotics,vol.31,no.5,pp.1147–1163,2015. ger, “Fusion++: Volumetric object-level slam,” in 2018 International
+[5] A.J.Davison,“Real-timesimultaneouslocalisationandmappingwith Conferenceon3DVision(3DV). IEEE,2018,pp.32–41.
+asinglecamera,”innull. IEEE,2003,p.1403. [28] S.YangandS.Scherer,“Cubeslam:Monocular3-dobjectslam,”IEEE
+TransactionsonRobotics,2019.
+[6] C. Forster, M. Pizzoli, and D. Scaramuzza, “Svo: Fast semi-direct
+[29] ——,“Monocularobjectandplaneslaminstructuredenvironments,”
+monocular visual odometry,” in Robotics and Automation (ICRA),
+IEEERoboticsandAutomationLetters,vol.4,no.4,pp.3145–3152,
+2014IEEEInternationalConferenceon. IEEE,2014,pp.15–22.
+2019.
+[7] J.Engel,V.Koltun,andD.Cremers,“Directsparseodometry,”IEEE
+[30] L. Nicholson, M. Milford, and N. Su¨nderhauf, “Quadricslam: Dual
+transactions on pattern analysis and machine intelligence, vol. 40,
+quadricsfromobjectdetectionsaslandmarksinobject-orientedslam,”
+no.3,pp.611–625,2018.
+IEEERoboticsandAutomationLetters,vol.4,no.1,pp.1–8,2018.
+[8] H. Zhou, D. Zou, L. Pei, R. Ying, P. Liu, and W. Yu, “Structslam:
+[31] S. Houben, D. Droeschel, and S. Behnke, “Joint 3d laser and visual
+Visual slam with building structure lines,” IEEE Transactions on
+ﬁducialmarkerbasedslamforamicroaerialvehicle,”inMultisensor
+VehicularTechnology,vol.64,no.4,pp.1364–1375,2015.
+Fusion and Integration for Intelligent Systems (MFI), 2016 IEEE
+[9] A.J.Trevor,J.G.Rogers,andH.I.Christensen,“Planarsurfaceslam
+InternationalConferenceon. IEEE,2016,pp.609–614.
+with 3d and 2d sensors,” in Robotics and Automation (ICRA), 2012
+[32] R.Tapu,B.Mocanu,andT.Zaharia,“Acomputervision-basedpercep-
+IEEEInternationalConferenceon. IEEE,2012,pp.3041–3048.
+tionsystemforvisuallyimpaired,”MultimediaToolsandApplications,
+[10] Y. Zhu, C. Yao, and X. Bai, “Scene text detection and recognition: vol.76,no.9,pp.11771–11807,2017.
+Recent advances and future trends,” Frontiers of Computer Science, [33] M. Tomono and S. Yuta, “Mobile robot navigation in indoor envi-
+vol.10,no.1,pp.19–36,2016. ronments using object and character recognition,” in Robotics and
+[11] X.-C.Yin,Z.-Y.Zuo,S.Tian,andC.-L.Liu,“Textdetection,tracking Automation, 2000. Proceedings. ICRA’00. IEEE International Con-
+andrecognitioninvideo:acomprehensivesurvey,”IEEETransactions ferenceon,vol.1. IEEE,2000,pp.313–320.
+onImageProcessing,vol.25,no.6,pp.2752–2773,2016. [34] C. Case, B. Suresh, A. Coates, and A. Y. Ng, “Autonomous sign
+[12] A.Veit,T.Matera,L.Neumann,J.Matas,andS.Belongie,“Coco-text: reading for semantic mapping,” in Robotics and Automation (ICRA),
+Dataset and benchmark for text detection and recognition in natural 2011IEEEInternationalConferenceon. IEEE,2011,pp.3297–3303.
+images,”arXivpreprintarXiv:1601.07140,2016. [35] N.Radwan,G.D.Tipaldi,L.Spinello,andW.Burgard,“Doyousee
+[13] M.Iwamura,T.Matsuda,N.Morimoto,H.Sato,Y.Ikeda,andK.Kise, thebakery?leveraginggeo-referencedtextsforgloballocalizationin
+“Downtown osaka scene text dataset,” in European Conference on publicmaps,”in2016IEEEInternationalConferenceonRoboticsand
+ComputerVision. Springer,2016,pp.440–455. Automation(ICRA). IEEE,2016,pp.4837–4842.
+[14] D.Karatzas,L.Gomez-Bigorda,A.Nicolaou,S.Ghosh,A.Bagdanov, [36] X. Liu, D. Liang, S. Yan, D. Chen, Y. Qiao, and J. Yan, “Fots: Fast
+M.Iwamura,J.Matas,L.Neumann,V.R.Chandrasekhar,S.Lu,etal., oriented text spotting with a uniﬁed network,” in Proceedings of the
+“Icdar2015competitiononrobustreading,”inDocumentAnalysisand IEEE conference on computer vision and pattern recognition, 2018,
+Recognition(ICDAR),201513thInternationalConferenceon. IEEE, pp.5676–5685.
+2015,pp.1156–1160. [37] P. He, W. Huang, T. He, Q. Zhu, Y. Qiao, and X. Li, “Single shot
+[15] X. Rong, B. Li, J. P. Mun˜oz, J. Xiao, A. Arditi, and Y. Tian, text detector with regional attention,” in Proceedings of the IEEE
+“Guided text spotting for assistive blind navigation in unfamiliar in- InternationalConferenceonComputerVision,2017,pp.3047–3055.
+doorenvironments,”inInternationalSymposiumonVisualComputing. [38] M. Busta, L. Neumann, and J. Matas, “Deep textspotter: An end-
+Springer,2016,pp.11–22. to-end trainable scene text localization and recognition framework,”
+[16] B. Li, J. P. Munoz, X. Rong, Q. Chen, J. Xiao, Y. Tian, A. Arditi, in Proceedings of the IEEE International Conference on Computer
+andM.Yousuf,“Vision-basedmobileindoorassistivenavigationaid Vision,2017,pp.2204–2212.
+forblindpeople,”IEEETransactionsonMobileComputing,vol.18, [39] W. He, X.-Y. Zhang, F. Yin, and C.-L. Liu, “Deep direct regression
+no.3,pp.702–714,2019. for multi-oriented scene text detection,” in Proceedings of the IEEE
+[17] H.-C.Wang,C.Finn,L.Paull,M.Kaess,R.Rosenholtz,S.Teller,and InternationalConferenceonComputerVision,2017,pp.745–753.
+J.Leonard,“Bridgingtextspottingandslamwithjunctionfeatures,” [40] X. Zhou, C. Yao, H. Wen, Y. Wang, S. Zhou, W. He, and J. Liang,
+2015. “East: an efﬁcient and accurate scene text detector,” in 2017 IEEE
+[18] A. P. Gee, D. Chekhlov, W. W. Mayol-Cuevas, and A. Calway, Conference on Computer Vision and Pattern Recognition (CVPR).
+“Discovering planes and collapsing the state space in visual slam.” IEEE,2017,pp.2642–2651.
+inBMVC,2007,pp.1–10. [41] E.RostenandT.Drummond,“Machinelearningforhigh-speedcorner
+detection,” in European conference on computer vision. Springer,
+[19] A. P. Gee, D. Chekhlov, A. Calway, and W. Mayol-Cuevas, “Dis-
+2006,pp.430–443.
+coveringhigherlevelstructureinvisualslam,”IEEETransactionson
+[42] J. Shi and C. Tomasi, “Good features to track,” Cornell University,
+Robotics,vol.24,no.5,pp.980–990,2008.
+Tech.Rep.,1993.
+[20] M.Y.YangandW.Fo¨rstner,“Planedetectioninpointclouddata,”in
+Proceedingsofthe2ndintconfonmachinecontrolguidance,Bonn,
+vol.1,2010,pp.95–104.
+[21] J. Sturm, N. Engelhard, F. Endres, W. Burgard, and D. Cremers,
+“A benchmark for the evaluation of rgb-d slam systems,” in 2012
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems.
+IEEE,2012,pp.573–580.
+[22] P.Kim,B.Coltin,andH.JinKim,“Linearrgb-dslamforplanarenvi-
+ronments,”inProceedingsoftheEuropeanConferenceonComputer
+Vision(ECCV),2018,pp.333–348.
+[23] N. Molton, A. J. Davison, and I. D. Reid, “Locally planar patch
+features for real-time structure from motion.” in Bmvc. Citeseer,
+2004,pp.1–10.
+2108
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:59 UTC from IEEE Xplore.  Restrictions apply. 

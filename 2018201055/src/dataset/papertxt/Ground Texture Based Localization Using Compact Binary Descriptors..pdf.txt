@@ -1,0 +1,483 @@
+ 2020 IEEE International Conference on Robotics and Automation (ICRA)  
+31 May - 31 August, 2020. Paris, France
+Deep Merging: Vehicle Merging Controller Based on Deep 
+Reinforcement Learning with Embedding Network 
+ Ippei Nishitani1, Hao Yang2, Rui Guo2, Shalini Keshavamurthy2, and Kentaro Oguchi2 
+  Abstract— Vehicles at highway merging sections must make  roadside camera and / or onboard sensors. Furthermore, the 
+lane changes to join the highway. This lane change can generate  merging behavior considering the impact on traffic flow is 
+congestion. To reduce congestion, vehicles should merge so as  realized by setting the average speed of all vehicles after 
+not to affect traffic flow as much as possible. In our study, we  merging as a reward for deep RL. However, it is difficult to 
+propose a vehicle controller called Deep Merging that uses deep  make a machine learning network perform appropriate feature 
+reinforcement learning to improve the merging efficiency of  extraction for output speed selection from image information. 
+vehicles while considering the impact on traffic flow. The system  This may cause inadequate and slow network convergence. In 
+uses the images of a merging section as input to output the target  order to perform appropriate feature extraction, several studies 
+vehicle speed. Moreover, an embedding network for estimating  have been proposed to introduce an embedding network for an 
+the  controlled  vehicle  speed  is  introduced  to  the  deep 
+auxiliary task as prior knowledge, and their effectiveness has 
+reinforcement learning network architecture to improve the 
+been confirmed [8][9]. Therefore, to improve the learning 
+learning efficiency. In order to show the effectiveness of the 
+efficiency of deep RL, an embedding network for estimating 
+proposed method, the merging behavior and traffic conditions 
+the controlled vehicle speed is introduced to the deep RL 
+in several situations are verified by experiments using a traffic 
+network architecture. This embedding network enables the 
+simulator. Through these experiments, it is confirmed that the 
+machine learning network to explicitly estimate the speed of 
+proposed  method  enables  controlled  vehicles  to  effectively 
+the vehicle and to efficiently understand the state of the 
+merge without adversely affecting to the traffic flow. 
+controlled vehicle. As a result, it is expected that it will be 
+I.  INTRODUCTION  easier to make machine learning for vehicle control select 
+appropriate  behaviors,  and  reduce  the  number  of  trials 
+Automation  of  vehicle  control  on  highway  has  been 
+required for training to achieve a good performance. The 
+rapidly  advancing over  the years. Intelligent  vehicles are 
+contributions of our study are listed as follows: 
+expected  to  reduce  traffic  accidents  and  improve  traffic 
+efficiency. Traffic congestion on highway affects millions of    This is the first paper to introduce an embedding 
+people. Especially, vehicles at highway merging sections,  network for estimating dynamic traffic conditions, 
+such as on-ramp and lane-drop bottlenecks, have to make lane  such as a controlled vehicle speed, to vehicle merging 
+changes, which generate traffic oscillations and additional  controller. Appropriate feature for vehicle control can 
+congestion [1]. Both the main-lane and on-ramp traffic are  be extracted by introducing the embedding network. 
+potentially  congested  due  to  the  irregular  lane  change  This boosts the learning efficiency of deep RL. 
+behaviors  and  unexpected  brake  maneuvers.  To  reduce 
+congestion, controlled vehicles should effectively merge onto    We can achieve the merging behavior considering the 
+the main-lane at an appropriate timing and speed so as not to  impact on traffic flow by setting the average speed of 
+affect traffic flow as much as possible. Therefore, the purpose  all vehicles after merging as a reward for deep RL. 
+of our study is to develop the system that enables controlled  This system enables controlled vehicles to effectively 
+vehicles  to  effectively  merge  onto  the  main-lane  while  merge onto the main-lane while minimizing the traffic 
+minimizing the traffic impact on the main-lane and on-ramp.  impact on the main-lane and on-ramp. 
+Several rule-based algorithms for merging [2]-[4] have  The remainder of this paper is organized as follows: First, 
+been proposed and their effectiveness are verified. However,  the related works is described in Section II, followed by the 
+they may not be able to adapt to the unexpected and complex  algorithm for the proposed method in Section III. Various 
+situations where interactions with surrounding vehicles work  experiments of the proposed method are given in Section IV. 
+in the real world. Vehicle control by machine learning is  Finally, our conclusions are presented in Section V. 
+effective in such a complicated traffic environment [5]-[7]. 
+II.  RELATED WORKS 
+In our study, we propose a vehicle controller called Deep 
+By incorporating deep learning and achieving high quality 
+Merging that uses deep reinforcement learning (RL) [14]-[16] 
+feature  representation,  deep  RL  has  achieved  significant 
+to  improve  the  merging  efficiency  of  vehicles  while 
+triumph. From playing Atari games using Deep Q-Network 
+considering the impact on traffic flow. The system uses the 
+(DQN) [14] to the overwhelming superiority in the game of 
+current and past images of a merging section as input to output 
+Go [13], deep RL is shaping the way to understand the world 
+the target speed of the controlled vehicle. It is assumed that 
+in an unprecedented speed and help solve many real-world 
+these images are created from information collected by the 
+problems. Also, Deep RL has been applied to systems that 
+control or navigate vehicles in several previous works. 
+ 
+1 Toyota Motor Corporation, Japan; ippei_nishitani@mail.toyota.co.jp  Schutera et al. [7] applied deep RL to train a car agent with 
+2 Toyota Motor North America, USA; {hao.yang, rui.guo,   the goal of achieving the highest average speed over a period 
+shalini.keshavamurthy, kentaro.oguchi}@toyota.com 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 216
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 17:54:44 UTC from IEEE Xplore.  Restrictions apply.    
+of time in MIT DeepTraffic simulation. The system enables  Environment Agent
+(Speed controller)
+control of acceleration and lane change behavior of multiple 
+State  
+car agents in the main-lane. However, this paper does not 
+Images
+cover scenes where the car agents merge from the ramp to the 
+main-lane. As merging situation are more severe in adjusting 
+Deep
+relative speed and timing compared to lane changing situation,  update Merging
+this system may not be able to achieve efficient merging 
+behavior. Wang et al. [6] proposed to apply RL algorithm on 
+Q-values
+the vehicle agent to find an optimal driving policy to assist  Action  
+vehicles merging onto the main-lane. The system needs to  Target speed Q1 Q2 Q3
+have the speed and position of the merging vehicle, the gap lag  Slow Remain Speed
+down speed up
+vehicle, and the gap front vehicle, as the input for the RL. Due 
+to the dynamics of individual vehicles, it is not easy to identify 
+Figure 1.   Overview of the speed controller for the controlled vehicle  
+them accurately, especially when the traffic volume on the 
+ 
+main-lane is very high. And, the reward function is set to 
+action a according to its policy . Then, the environment 
+measure the safety, smoothness, and the promptness of the 
+responds to the action and presents new state s´ and the agent 
+merging maneuver, and it is not intended to consider traffic 
+observes the reward r. In this research, traffic conditions are 
+flow. Mirowski et al. [9] proposed the method using deep RL 
+approximated as MDP by using a traffic simulator [6][17]. 
+allows  agents  to  learn  to  navigate  multiple cities  and  to 
+traverse to target destinations that may be kilometers away in  RL agent aims to maximize expected discounted return, 
+Google Street View. The auxiliary heading prediction task is  which is defined as:  
+applied to speed up learning by providing extra gradients as 
+ 
+well as relevant information. However, this paper focuses on           
+ 
+navigation in the city and does not take into account vehicle        
+dynamics or other vehicle behavior. Therefore, this system is 
+where r is a discount factor that trades off the importance of 
+not focused on applying in complicated traffic environment 
+immediate  and  future  rewards.  Furthermore,  consider  a 
+where complex interactions between vehicles work. 
+stochastic policy , according to which the agent behaves, the 
+The  focus  of  our  study  is  to  improve  the  merging  value of the state-action pair Q and the value of the state V 
+efficiency without adversely affecting to the traffic flow by  are defined as follows:  
+instructing the target speed to the ego vehicle in a merging 
+scenario using deep RL. The description of the proposed                               
+method is given in the next section.                           
+III.  DEEP MERGING 
+Using  dynamic  programming,  the  state-action  value 
+In this section, the methodologies of the vehicle control  function, i.e., Q-function can be recursively computed and the 
+that include a speed controller using deep RL is described. We  optimal Q-function Q*(s,a) satisfies the Bellman equation:  
+define the controlled vehicle whose speed is instructed by 
+       
+Deep Merging as the ego vehicle. We first describe vehicle                                          
+control, then deep RL for speed control, followed by the 
+embedding network.                                         
+A.  Vehicle Control 
+where s´ is the new state and a´ is the new action at new state. 
+The traffic simulator used in this study [11][12] controls 
+all vehicles in its simulation with safety regulations. That is, it  Usually the value function is high dimensional, and it is 
+ensures that vehicles do not collide during simulation and not  difficult  to  manually  formulate.  Consequently,  the  value 
+violate any traffic rules, e.g. driving beyond speed limit and  function is represented using a function approximator, such as 
+reverse driving. The ego vehicle behavior is also basically  a neural network. Deep Merging uses DQN [14] as a deep RL 
+controlled by the vehicle controller of the traffic simulator, but  algorithm. In addition, we apply double DQN [16] and dueling 
+only the target speed is instructed by Deep Merging as shown  DQN [15] architecture to Deep Merging from the viewpoint of 
+in Fig. 1. Therefore, the ego vehicle basically follows the  learning stability and convergence speed. In DQN approach, 
+instructed speed, but if the safety regulations are violated, the  the neural network is used for Q-value approximation. The 
+speed is corrected to avoid collisions. Since Deep Merging  network architecture of Deep Merging is shown in Fig 2 (a). 
+aims to adjust the time of merging and speed, the speed  The objective is to minimize the following loss function L(: 
+instruction is not given after merging. Deep Merging adjusts 
+the  ego-speed  and  achieves  an  effective  merge  while 
+  
+minimizing impact on the main-lane and on-ramp traffic. 
+         
+                  
+B.  Deep Reinforcement Learning       
+In a RL problem, an agent and the environment which is 
+where    is  the  parameter  of  the  network  and    is  the 
+formulated as a Markov Decision Process (MDP) interact at 
+parameter of the separate network, called target network. The 
+discrete time steps. The agent observes state s and selects an 
+target network parameter  is synchronized to the network 
+217
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 17:54:44 UTC from IEEE Xplore.  Restrictions apply.    
+Input vehicle positions and velocities in the section defined by the 
+images Value Q-values state are available. In addition, to understand the dynamics 
+CNN ・・・ ・・・     including acceleration of the ego vehicle and surrounding 
+ ・   vehicles, Deep Merging uses past and current images as state 
+Advantage ・
+・ representation. Increasing the number of images can provide 
+mReepmlaoyry ・・・ ・・・     more detailed dynamic  information, but  will take longer 
+  training convergence. 
+(a) 
+Embedding 2)  Action: This can be set as a target control command to 
+network
+Estimated instruct changes in the ego vehicle such as steering angle, 
+imInapguets ・・・ ・・・ Value eQg-ov saplueeesd speed,  acceleration  or  control  flag.  In  this  paper,  Deep 
+Merging  controls  the  target  speed  by  giving  the  target 
+CNN ・・・ ・・・     acceleration. The target speed is obtained by adding the 
+   
+Advantage ・・ output acceleration to the current speed. Thus, Deep Merging 
+・
+mReepmlaoyry ・・・ ・・・     cInacnr eaadsjiunsgt  tthhee  mneurmgibnegr  sopfe eadcc aenledr attiimoinn go potfi otnhse  ecgano  vperohvicildee.  
+ 
+(b)  smoother speed control, but will take longer to converge. 
+Figure 2.   Network architecture; (a) Deep Merging, (b) Deep Merging  3)  Reward: Deep Merging agent learns the action to 
+with embedding network 
+maximize  accumulated  future  reward.  To  achieve  the 
+ 
+effective merging onto the main-lane while minimizing the 
+parameter  every synchronization cycle. In double DQN [16], 
+to reduce the overestimation of Q-value, the yDQN is given as:  traffic impact, the impact of the merging on traffic flow 
+should be considered in reward setting. In our study, rewards 
+           
+                              are given only when the merging is completed. That is, the 
+  
+   reward is 0 when the ego vehicle is on the ramp. The merging 
+DQN with experience replay is used to successfully train  completion reward is set as the average speed of all vehicles 
+the network. During Q-network training, instead of only using  from merging to reaching the terminal area of the road. The 
+the  current  experience  in  standard  temporal-difference  merging completion reward rcomp is given as: 
+learning (TD-learning), the network is trained by sampling 
+mini-batches of experiences s, a, r, s´ from the experience 
+replay memory uniformly at random. 
+  
+In order to focus on the importance of taking certain 
+where T is the number of steps from merging to reaching the 
+actions, dueling DQN [15] introduces the advantage function, 
+terminal area, N is the number of vehicles in target section at 
+t
+relating to the value function and Q-functions:  step t, v t is the speed of each vehicle and V  is the value to 
+n max
+                        normalize the speed. With this reward setting, the ego vehicle 
+adjusts its speed to increase the average speed after merging. 
+ 
+                    Therefore, it is expected that smooth merging behavior, in 
+which the ego vehicle avoids the behavior that causes slow 
+As a result, the Q-function can be expressed as: 
+traffic flow and local congestion, will be achieved. However, 
+                           the number of experiences that the ego vehicle has completed 
+the merging much less than the number of experiences that it is 
+However, this equation has the issue of identifiability.  on the ramp. Thus, this reward is very sparse and in most 
+Therefore, the modified Q-function is expressed as:  experiences it will be 0. To solve this problem, a certain 
+    number of rewarded experiences is included in mini-batches 
+                                        of experiences to train the network with experience replay. 
+    
+The settings of state, action and reward for the deep RL are  C.  Embedding Network for Deep Reinforcement Learning 
+described as follows.  As shown in Fig. 2 (a), Deep Merging agent first uses the 
+convolutional neural network (CNN) to extract features from 
+1)  State:  To  achieve  effective  merging  onto  the 
+input images, and then calculates Q-value of each action. In 
+main-lane, the ego vehicle needs to know not only its own 
+order to make Deep Merging choose the appropriate output 
+state but also the state of its surrounding vehicle [6]. Also,  speed according to the situation, it is important to understand 
+vehicle controlled by deep RL should be given information on  the  dynamic  traffic  conditions  of  the  ego  vehicle  and 
+road shape to make the ego vehicle aware of reachable area.  surrounding vehicles. However, it is difficult to make a CNN 
+Therefore, we use the images that contain information on the  perform  appropriate  feature  extraction  for  output  speed 
+road shape, surrounding vehicles and the ego vehicle. Each  selection from sequential image information. This may cause 
+inadequate  and  slow  network  convergence.  In  order  to 
+road object is given a different color. It is assumed that the 
+improve the learning efficiency of deep RL, an embedding 
+image  of  a  merging  section  is  created  from  information 
+network  for  estimating  dynamic  traffic  conditions  is 
+collected by the roadside camera and / or onboard sensors. 
+introduced to the deep RL network architecture as shown in 
+The experiments in this paper are fully observed, that is, all 
+Fig. 2 (b). In this paper, the embedding network disentangles 
+218
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 17:54:44 UTC from IEEE Xplore.  Restrictions apply.    
+estimated  ego-speed  according  to  the  reward  and  action  TABLE I.   PARAMETERS OF TRAFFIC SIMULATOR 
+settings. Estimated ego-speed from the embedding network is  Traffic simulator terms  Value 
+added as a feature for both the advantage function and the 
+Simulation step  0.1 s 
+value function. The loss function for speed estimation and 
+Action update cycle  0.5 s (5 steps) 
+Q-value estimation is given as: 
+Training duration  1,500,000 cycle 
+  Testing duration  30,000 cycle 
+                                                   Traffic demand of main-lane  4,620 vehicles/h 
+Traffic demand of on-ramp  420 vehicles/h 
+where  v  is  the  actual  ego-speed,  w  is  a  weight  of  the  Initial speed  80 km/h 
+e e Main-lane vehicle 
+embedding  network  loss,  and  Ve  is  the  function  of  the  Maximum desired speed  80 km/h 
+embedding network to estimate ego-speed from state s. A  Initial speed  50 km/h 
+On-ramp vehicle 
+shared CNN for feature extraction is trained for two tasks:  Maximum desired speed  80 km/h 
+Q-value  calculation  and  ego-speed  estimation.  Actual 
+Initial speed  50 km/h 
+ego-speed information is needed for loss function calculations  Ego vehicle 
+Maximum speed  120 km/h 
+in  the  training  phase,  but  not  in  the  testing  phase.  This   
+ 
+embedding network enables the machine learning network to 
+TABLE II.   PARAMETERS OF DEEP MERGING 
+explicitly estimate the ego-speed and to efficiently understand 
+Deep Merging terms  Value 
+the state of the ego vehicle. Therefore, it is expected that this 
+embedding network boosts the learning efficiency of deep RL.  Replay database size  50,000 set 
+Target network synchronization cycle  10,000 cycle 
+IV.   EXPERIMENTS AND ANALYSIS  Learning rate  0.00025 
+Discount Factor   0.95 
+To verify the effectiveness of Deep Merging, we assumed 
+Mini batch size  32 set 
+a situation in which the ego vehicle merges onto the main-lane 
+Rewarded experience rate  25% (8 set) 
+from the on-ramp. We use a traffic simulator [11][12] as a 
+training and testing environment. The traffic simulator used in  Weight of the embedding network loss we  0.316 
+the experiments models the states and actions at the level of  Value for reward normalization Vmax  80 
+ 
+individual vehicles, and have been broadly used for empirical   
+evaluation of several complex automated tasks [10]. Traffic  TABLE III.   NETWORK ARCHITECTURE 
+simulator and vehicle controller communicate by using API of  Value 
+Network 
+the  traffic  simulator  every  action  update  interval.  Deep  Kernel  Stride  Feature maps / Units 
+Merging outputs the instructed speed according to the current  1st conv.  8x8  4x4  32 
+state s to the traffic simulator. The traffic simulator receives  2nd conv.  4x4  2x2  32 
+the instructed speed for the ego vehicle as action a from  Convolutional  3rd conv.  4x4  2x2  64 
+layers 
+vehicle controller, responds to the action a, presents new state  4th conv.  4x4  2x2  128 
+s´  and  calculates  the  reward  r.  Deep  Merging  agent  is 
+FC  -  -  3072 
+implemented in python with TensorFlow [18]. 
+Embedding  FC  -  -  1024 
+layers  FC  -  -  1 
+A.  Experimental Conditions 
+Value function  FC  -  -  1024 (+ 1) 
+TABLE I. and TABLE II. show the experiment settings of  layers  FC  -  -  1 
+the traffic simulator and Deep Merging, and Fig. 3 shows an  Advantage function  FC  -  -  1024 (+ 1) 
+overview of the system. Deep Merging is trained on a highway  layers  FC  -  -  3 
+with  two-lane  main-lane  and  on-ramp  using  a  traffic   
+ 
+simulator. All vehicles on the main-lane and on-ramp are 
+Ego 
+controlled by the vehicle controller of the traffic simulator  Terminal
+based on the initial entering speed and the maximum desired  area vehicle
+speed setting. However, the target speed is instructed from 
+Deep Merging only for the ego vehicle. It is assumed that there 
+is always one ego vehicle in the environment, that is, when the   
+current ego vehicle reaches the terminal area of the highway,  Figure 3.   Overview of the system 
+the next ego vehicle enters from the on-ramp.   
+and advantage function layers as shown in Fig. 2 (b). The 
+According  to our  simulation  scenario  settings,  we  set 
+detail of the network architecture is shown in TABLE III. 
+action as acceleration (+0.3 G), remaining speed (+0 G) and 
+When the embedding network is introduced to the network, 
+deceleration (-0.3 G). Also, we set state observation as 3 
+the output of embedding network is added to value function 
+grayscale images of -1.0, -0.5 and 0 seconds. We use 80 x 256 
+layer and advantage function layer as a feature. 
+pixel images, including on-ramp and first lane of main-lane, in 
+which the ego vehicle is white, surrounding vehicles and  For comparison with the proposed method, we define the 
+inaccessible places are black and the road is gray.  default vehicle controller in traffic simulator as method A and 
+vehicle controller with Deep Merging without an embedding 
+The network of Deep Merging consists of convolutional 
+network as method B. For this experiment, method A, method 
+layers followed by embedding layers, value function layers 
+B and the proposed method are applied to the ego vehicle, and 
+219
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 17:54:44 UTC from IEEE Xplore.  Restrictions apply.    
+we compared the traffic condition using three methods in 
+ecroxhbpaunesrgitemnse esonsvt o e1fr . e tIiamnc hea  dmidnei tttihhooen d,r ,e twhalee  w tsrioamrflfudilc.a  Ttveohdle utrhmeefeo v roeehf,  ittcohl eev  behreiighfhyawv tiahoyer    Reward oving average
+by changing the traffic demand of main-lane or on-ramp in  M
+experiment 2 and 3. 
+0 500k 1.0M 1.5M
+Training steps
+To verify the merging efficiency and the impact on traffic   
+(a) 
+flow, the experimental results were evaluated in terms of 
+toetroxna p-ftrhfeaiercmi  mnpvue osmnlputbaemele rdce o  oanofn dfdm i teaiegovroneg rsian,v ggtere has ifmucfcilaceci ,env s-oasllvaeunesm reoa esgf p oeee fge eeodgg .o voA-e vschpeciehcoelirecdd.l, ie nA aigsvv  teeeorqr aatughgaeeel     Reward Moving average
+ego-speed is the average speed of ego vehicle of all testing 
+steps. Average on-ramp speed and average main-lane speed  0 500k Training steps 1.0M 1.5M  
+are the average speeds of all vehicles of all testing steps in  (b) 
+each lane.  Figure 4.   Training reward curve; (a) Method B, (b) Proposed method 
+ 
+B. Experimental Results and Discussion 
+In training, we trained Deep Merging agent for 1,500,000 
+steps. Fig. 4 shows the training reward curves of method B and 
+the proposed method. The moving average of reward of the 
+proposed  method  raised  more  quickly  than  method  B.  Ego 
+vehicle
+Moreover,  in  method  B,  the  moving  average  of  reward 
+converged to about 0.03, whereas in the proposed method, it 
+converged  to  about  0.04.  Thus,  we  confirmed  that  the 
+embedding  network  boosts  the  learning  efficiency  and  t = 0.0 s t = 2.0 s t = 4.0 s t = 6.0 s t = 8.0 s t = 10.0 s  
+performance of deep RL in training phase.  Figure 5.   Merging behavior of the ego vehicle using proposed method 
+ 
+In experiment 1, we conducted a testing for 30,000 steps 
+using a traffic simulator with the same parameters as during  TABLE IV.   EXPERIMENTAL RESULTS OF EXPERIMENT 1 
+training. Fig. 5 shows the merging behavior of the ego vehicle  Traffic  Ave.  Ave. on-  Ave. 
+using the proposed method in experiment 1. The ego vehicle  Methods  volume of   ego-speed  ramp speed  main-lane 
+was able to select an appropriate output speed according to the  ego vehicle  [km/h]  [km/h]  speed [km/h] 
+state including surrounding vehicle behavior. Therefore, the  Method A  709  38.8  37.6  76.6 
+ego vehicle succeeded to merge onto the main-lane smoothly  Method B  844  46.2  39.4  75.2 
+by  adjusting  its  speed.  In  addition,  we  compared  the  Proposed method  932  51.1  42.9  74.9 
+experimental results of method A, method B and the proposed    
+method, as given in TABLE IV. Bold face in TABLE IV.  results of  experiment 2.  As  shown  in  Fig. 6 (a)-(c),  the 
+indicates  best  performance.  Method  B  improved  traffic 
+proposed method had the highest traffic volume of ego vehicle, 
+volume  of  ego  vehicle,  average  ego-speed  and  average 
+average  ego-speed  and  average  on-ramp  speed  for  all 
+on-ramp speed with less impact on average main-lane speed 
+main-lane demand conditions. Of all the main-lane demand 
+by using deep RL compared to method A. Moreover, the 
+conditions, the condition of 4,200 vehicles/h generated the 
+proposed  method  further  improved  these  3  terms  by 
+smoothest traffic flow, and the proposed method had 1,093 
+introducing the embedding network. Traffic volume of ego 
+vehicles, 60.0 km/h, and 52.5 km/h for traffic volume of ego 
+vehicle of the proposed method was improved by 31.5% 
+vehicle,  average  ego-speed  and  average  on-ramp  speed 
+compared to method A. On the other hand, average main-lane 
+respectively. This may be due to the fact that the smaller the 
+speed of the proposed method was 2.2% lower than that of 
+main-lane demand, the easier it is for the ego vehicle to merge 
+method A. This is due to the fact that the vehicles on the 
+smoothly,  which  results  in  less  traffic  congestion  due  to 
+main-lane does not have to slow down frequently if the traffic 
+irregular lane change behaviors and unexpected braking. On 
+volume of ego vehicle is less. Therefore, it can be said that the 
+the other hand, average main-lane speed had almost the same 
+proposed method improved the merging efficiency with less 
+value in all methods and all conditions. 
+impact  on  average  main-lane  speed.  Thus,  the  results  of 
+experiment 1 confirm that the proposed method is able to  In experiment 3, we changed the traffic demand of the 
+realize  effective  merging  behavior  while  minimizing  the  on-ramp of the traffic simulator from 420 vehicles/h to 210 
+traffic impact on the main-lane and on-ramp by using deep RL  vehicles/h and 630 vehicles/h, and conducted a testing for 
+taking into account the ego vehicle speed and the average  30,000 steps using pre-trained model. Fig. 7 shows all results 
+speed of all vehicles after merging.  of experiment 3. As shown in Fig. 7 (a)-(c), the proposed 
+method had the highest traffic volume of ego vehicle, average 
+In experiment 2, we changed the traffic demand of the 
+ego-speed and average on-ramp speed for all on-ramp demand 
+main-lane of the traffic simulator from 4,620 vehicles/h to 
+conditions.  Of  all  the  on-ramp  demand  conditions,  the 
+4,200 vehicles/h and 5,040 vehicles/h, and conducted a testing 
+condition of 210 vehicles/h generated the smoothest traffic 
+for 30,000 steps using pre-trained model. Fig. 6 shows all 
+flow, and the proposed method had 942 vehicles, 51.6 km/h, 
+220
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 17:54:44 UTC from IEEE Xplore.  Restrictions apply.    
+traffic volume of ego vehicle112468020000000000000 4200     4620      MMP  r eeo ttp hh5ooo0sdde4  dAB0 Average ego-speed [km/h] 123456700000000 4200     4620       MMP r eeo tt phh5ooo0sdde4  dAB0 traffic volume of ego vehicle112468020000000000000 210     420     MMPreeottp6hho3oosdd0e  dBA Average ego-speed [km/h] 123456700000000 210     420     MMPreeottp6hho3oosdd0e  dAB
+Main-lane demand [vehicles/h]   Main-lane demand [vehicles/h]   On-ramp demand [vehicles/h]   On-ramp demand [vehicles/h]  
+(a)  (b)  (a)  (b) 
+Average on-ramp speed [km/h] 1234560000000 4M2a0in0-  la  ne dem46a2n0d   [ v  e hMMP  ri eeco ttlp hhe5ooos0sdd/e4h  dAB0]   Average main-lane speed [km/h] 1234567890000000000 4M2a0i0n - l a ne dem46a2n0d   [ v  e MMPh r eeoi ctt phhl oe5oossdd0e/  4dABh0]   Average on-ramp speed [km/h] 1234560000000 O2n1-0r a m  p dem42a0n d    [veMMPrheeoittpchhl6oooes3ddse0  /dABh]   Average main-lane speed [km/h] 1234567890000000000 O2n1-0r a m  p dem42a0n d    [veMMPrheeoittpchhl6oooes3ddse0  /dABh]  
+(c)  (d)  (c)  (d) 
+Figure 6.   Experimental results of experiment 2; (a) Traffic volume of ego  Figure 7.   Experimental results of experiment 3; (a) Traffic volume of ego 
+vehicle, (b) Average ego-speed, (c) Average on-ramp speed, (d) Average  vehicle, (b) Average ego-speed, (c) Average on-ramp speed, (d) Average 
+main-lane speed  main-lane speed 
+   
+and 45.6 km/h for traffic volume of ego vehicle, average  [3]   . M  in scu  J. Cu n  M. Bou och   nd V. C hill  “On-ramp traffic 
+ego-speed and average on-ramp speed respectively. This may  merging using cooperative intelligent vehicles: A slot-b s d  pp o ch ” 
+Intell. Transp. Syst. Conf. (ITSC), pp. 900–906, 2012. 
+be due to the fact that the smaller the on-ramp demand, the less 
+[4]  J. W i  J. M.  ol n  nd B. Litkouhi  “Autonomous vehicle social 
+the on-ramp vehicles are blocked from merging by other 
+b h vio  fo  hi hw y  nt  nc     p   n     nt ” Int ll. V h. Symp. 
+on-ramp vehicles. On the other hand, average main-lane speed 
+(IV), pp. 201–207, 2013. 
+had almost the same value in all methods and all conditions.  [5]  I. Sobh  t  l.  “E plo in   pplic tions of d  p   info c   nt l   nin  
+for real-wo ld  utono ous d ivin  syst  s ” Und     vi w for the Int. 
+Thus,  the  results  of  experiment  2  and  experiment  3 
+Conf. on Comput. Vision Theory and Appl. (VISAPP), 2019. 
+confirm that the proposed method can improve the merging  [6]  P. W n   nd C. Ch n  “Autono ous    p         n uv   b s d on 
+efficiency without adversely affecting to the traffic flow even    info c   nt l   nin  with continuous  ction sp c  ” Int ll. T  nsp. 
+if the demand of main-lane or on-ramp is different from the  Syst. Conf. (ITSC), pp. 1-6, 2017. 
+training condition.  [7]  M. Schutera, N. Goby   .   u  nn  nd M. R ischl  “T  nsf   l   nin  
+versus multi-agent learning regarding distributed decision-making in 
+hi hw y t  ffic ” A  nts in T  ffic  nd T  nsp.  ATT   Vol.    9  pp. 
+V.  CONCLUSION  57-62, 2018. 
+[8]  M.  Jaderberg  et  al.   “R info c   nt  l   nin   with  unsupervised 
+In this study, to realize the merging behavior considering   u ili  y t sks ” Int. Conf. on L   n. R p  s nt tions  ICLR   pp -14, 
+the impact on traffic flow for controlled vehicles, we have  2017. 
+proposed the vehicle merging controller based on the deep RL  [9]  P. Mirowski et al.  “L   nin  to n vi  t  in citi s without     p ” 
+with an embedding network named Deep Merging.  Advances in NIPS, pp. 2419-2430, 2018. 
+[10] E.  Vinitsky   t   l.   “B nch   ks  fo     info c   nt  l   nin  
+The main contribution of this study is that the controlled  inmixed- utono y t  ffic ” Conf. on Robot. Learn., pp. 399-409, 2018. 
+vehicle  can  effectively  merge  onto  the  main-lane  while  [11] J.B  c ĺo  E.Codin   J.C s s  J.L.F        nd  . G  cí   “Mic oscopic 
+minimizing the traffic impact on the main-lane and on-ramp.  traffic simulation: A tool for the design, analysis and evaluation of 
+int lli  nt t  nspo t syst  s ” J. Int ll. Robot. Syst.  Vol. 4   pp. 
+Moreover, the learning efficiency of deep RL is boosted by 
+173-203, 2005. 
+introducing an embedding network to estimate dynamic traffic  [12] J. Casas, J. L. Ferrer, D. Garci   J. P    n u   nd A. To d y  “T  ffic 
+conditions, such as a controlled vehicle speed.  si ul tion with  i sun ” Fund   nt ls of t  ffic si ul tion  pp. 
+173–232, 2010. 
+One of the future works is to improve the robustness of 
+[13]  . Silv    t  l.  “M st  in  th       of  o without hu  n knowl d   ” 
+Deep Merging for roads with different shapes, traffic demands 
+Nature, Vol. 550, No. 7676, pp. 354-359, 2017. 
+and maximum speeds. In addition, it is also important to  [14] V. Mnih et al.  “Pl yin  At  i with d  p   info c   nt l   nin  ”  IPS 
+extend  Deep  Merging  to  multi-agent  control  to  further  Deep Learning Workshop, pp. 1-9, 2013. 
+improve traffic flow. To realize these, it is effective to change  [15] Z. Wang, T. Schaul, M. Hessel, H. Van Hasselt, M. Lanctot, and N. De 
+the network structure and training framework.  F  it s   “ u lin   n two k    chit ctu  s  fo   d  p    info c   nt 
+l   nin  ”  Int.  Conf.  on  M chin   Learn.  (ICML),  Vol.  48,  pp. 
+1995-2003, 2016. 
+REFERENCES  [16] H. V n H ss lt   . Gu z   nd  . Silv    “   p   info c   nt l   nin  
+[1]  M. Treiber and A. Kesting, "Evidence of convective instability in  with double Q-l   nin  ” AAAI Conf. on A tif. Intell. (AAAI), pp. 
+2094-2100, 2016. 
+congested  traffic  flow:  A  systematic  empirical  and  theoretical 
+inv sti  tion ” T  nsp. R s. P  t B: M thodolo ic l  Vol. 45   o. 9  pp.  [17] C. Wu et al.  “F    wo k fo  cont ol  nd d  p   info c   nt learning 
+1362–1377, 2011.  in t  ffic ” Int ll. T  nsp. Syst. Conf.  ITSC   pp.  -8, 2017. 
+[2]  R. Sc  inci   nd B. H yd ck    “Cont ol conc pts fo  f cilit tin   [18] M. Ab di  t  l.  “T nso flow: A syst   fo  l    -scale machine 
+motorway On-   p     in  usin  int lli  nt v hicl s ” T  nspo t  l   nin  ” USE IX Sy p. on Op  . Syst.   s.  nd I pl   nt.  OS I   
+Reviews, Vol. 34, No. 6, pp. 775–797, 2017.  pp. 265-283, 2016.  
+221
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 17:54:44 UTC from IEEE Xplore.  Restrictions apply. 

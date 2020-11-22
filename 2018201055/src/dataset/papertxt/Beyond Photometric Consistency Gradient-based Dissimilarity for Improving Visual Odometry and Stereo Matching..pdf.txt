@@ -1,0 +1,539 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Dex-Net AR: Distributed Deep Grasp Planning
+Using a Commodity Cellphone and Augmented Reality App
+Harry Zhang, Jeffrey Ichnowski, Yahav Avigal, Joseph Gonzales, Ion Stoica, and Ken Goldberg1
+Abstract—Consumer demand for augmented reality (AR) in
+mobile phone applications, such as the Apple ARKit. Such
+applications have potential to expand access to robot grasp
+planning systems such as Dex-Net. AR apps use structure
+from motion methods to compute a point cloud from a se-
+quence of RGB images taken by the camera as it is moved
+around an object. However, the resulting point clouds are
+often noisy due to estimation errors. We present a distributed
+pipeline, Dex-Net AR, that allows point clouds to be uploaded
+to a server in our lab, cleaned, and evaluated by Dex-Net
+(a)Object (b)Noisypointcloud
+grasp planner to generate a grasp axis that is returned and
+displayed as an overlay on the object. We implement Dex-
+Net AR using the iPhone and ARKit and compare results
+with those generated with high-performance depth sensors.
+The success rates with AR on harder adversarial objects
+are higher than traditional depth images. The server URL is
+https://sites.google.com/berkeley.edu/dex-net-ar/home
+I. INTRODUCTION
+Grasping real-world objects using a robot gripper is
+complicated due to the limitations of sensing modalities. (c)Cleanedpointcloud (d)Plannedgrasp
+In highly controlled environments, such as industrial ware-
+houses, sensing modalities such as depth sensors can be
+calibrated to their environment. However, in everyday life,
+such controlled circumstances are unlikely. To address this
+problem, we propose using structure from motion (SfM) to
+generate point clouds that can be used to generate grasps.
+To use and generate the data for SfM, one needs to move
+an RGB camera (such as one found on most smartphones)
+through 3D space to create a representative image set. Then, (e)ARgraspoverlay (f)ABBYuMiphysicalgrasp
+SfM extracts points from the images, reﬂecting the location
+Fig. 1. Distributed deep grasp planning applied on a 3D printed object.
+of objects located in a 3D space. As the camera moves Top row: Original object, and the visualization of raw point cloud data
+throughspace,thedensityofthepointcloudincreases,better whichexhibitalargeamountofnoise,collectedbyiPhoneARKit.Middle
+row:pointclouddataafterremovinggroundplaneusingRANSACanda
+detecting and deﬁning the object’s surfaces for grasping.
+kNN-basedcleaningprocess,andtheplannedgraspsimulatedbyGQ-CNN.
+In this paper, we present Dex-Net AR, a system that Bottom row:AugmentedrealitygraspoverlayandrealgraspbyanABB
+collects images, generates and cleans a point cloud, uploads YuMirobot.
+it to a deep learning system, and generates high-quality
+grasp points for a grasp planning system such as Dex-Net
+all around the object, collecting three-dimensional point
+[1]. We use an iPhone and ARKit [2], a popular consumer
+cloud data. Such data are able to reﬂect more geometric
+smartphone and a free software developer kit from Apple
+details and features from other facets of the objects that are
+Inc., to generate a point cloud from which Dex-Net AR
+less likely to be captured by any depth camera from a top-
+can compute grasp points and a mobile manipulator robotic
+down view, which can potentially reveal better grasp points
+grasp.Dex-NetARcangenerategraspswithaccuracysimilar
+in areas that are usually occluded or poorly inferred from
+to state-of-the-art systems that rely on expensive, industry-
+a single ﬁxed view. Dex-Net AR has potential to expand
+grade depth sensors. Compared with depth camera systems
+the collection of more 3D data of a variety of novel real-
+that capture images from a ﬁxed view, usually top-down,
+world objects due to the ubiquity of smartphones compared
+Dex-NetARallowstheusertomovethesmartphonecamera
+to depth cameras, which can in turn be used to further train
+1The authors are with the {University of California at the existing grasp planning systems such as Dex-Net.
+Berkeley, Berkeley, CA, USA 94720 harryhzhang, je}ffi, This paper contributes:
+yahav avigal, jegonzal, istoica, goldberg
+@berkeley.edu 1) Apipelinetorecordpointclouddataofanobjectusing
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 552
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. commoditysmartphones,uploadthisdatatoourserver Dexterity Network (Dex-Net) 2.0 [1]. Speciﬁcally, Dex-Net
+which applies an outlier removal algorithm based on 4.0 introduced an ambidextrous policy for robot grasping
+RandomSampleConsensus(RANSAC)andk-Nearest andsuction,which evaluatestheQvalueof thegraspsusing
+Neighbors (kNN) to clean up the point cloud data, Grasp Quality CNN (GQ-CNN) [16], [17]. In order to fully
+and feed the point cloud data to a deep learning grasp satisfy the assumption of known state, analytic methods use
+planning policy, Dex-Net 4.0, to plan grasps on the aregistration-basedperceptionsystem:matchingsensordata
+object. to known 3D models available in the existing database [18],
+2) Amethodtoshowmultiplefacetsoftheobjectstothe [19],[20],[21],[22].Empiricalapproaches[23]uselearning-
+robot in order to generate grasps with higher qualities. based methods to develop models that map sensor readings
+3) Experiments measuring the advantage of 3D point to success labels from humans or physical trials [24]. Both
+clouds as input over traditional depth maps, that point classes of approaches often use depth images taken from
+clouds reveal more geometric information of the ob- high-end depth cameras for both training and real data. In
+jects by calulating the success rates of grasping eight contrast, we explore planning grasps from relatively low-
+geometrically complex objects, which we call adver- cost point cloud data taken from commodity devices, such
+sarial objects, from 9 different synthetic orientations as iPhones.
+generated by Dex-Net AR.
+III. PROBLEMDEFINITION
+II. RELATEDWORK
+We wish to take a sequence of images of an object from
+a) Augmented Reality: Augmented reality (AR) is an
+moving the camera of a commodity smartphone, and plan
+interactive experience of a real-world environment where
+a grasp on the object. Suppose we move a camera around
+the objects in the real-world can be enhanced by perceptual
+an object to scan it, during the recording process, which we
+information generated by a computer. It was ﬁrst introduced
+deﬁne as a session, n frames are recorded. In each frame i,
+by USAF Armstrong Labs [3] in order to create a virtual ∈R × ×
+thecameracapturesanRGBimagef ,wheref W H 3.
+augmentation of a real environment to improve human i i
+W and H are the width and height of f , and they vary
+performance in physical tasks. Recently, researchers have i
+depending on the camera we are using. Therefore, the input
+combined AR with computer vision techniques to recognize F
+is a sequence of captured RGB images:
+and classify objects in physical environments [4], [5], [6],
+F { }
+[7]. = f ,f ,...,f
+1 2 n
+b) Structure from Motion: In 3D reconstruction, Struc-
+ture from Motion (SfM) is used when 3D point positions In each frame, SfM can detect notable geometric features
+are not known in advance [8], [9], [10], SfM simultaneously of the object in the RGB image, and record the features as
+R
+recoversthe3Dstructureandposeofthecamerafromimage points, where each point is a 3D vector in 3, representing
+correspondences given multiple frames of RGB images. In the (x,y,z) coordinates in the camera’s local coordinates
+this way, SfM estimates the 3D locations of points on the system. Multiple features detected in a frame can then be
+F
+object’s notable geometric features from continuous frames. recorded as a point cloud of this frame. Thus, from , we
+OnelimitationofSfMisthattheobjectsbeingreconstructed use SfM to generate point cloud data:
+must have notable geometric features such as contours, C ∪ ∪ ∪
+=c c ... c
+edges, and vertices. Thus, the objects need to be non- raw 1 2 n
+reﬂective and chromatic for the feature points to be detected where c is the set of points extracted from image f . In
+i i
+and recorded. each frame, we also record the frame number, a camera
+c) Point Cloud Cleaning: To clean the SfM-generated transformation matrix, and the points’ unique identiﬁers.
+3D point cloud, we use a k-Nearest Neighbors (kNN) based However, for SfM to generate point clouds with higher
+approach which removes remote and isolated outliers. Ning qualities, the scanned objects should not be monochromatic,
+et al. [11] developed a method to locally ﬁt a plane using reﬂective,orsmall.Thus,theobjectsthatperformbetterina
+kNN and then project the near-surface, non-isolated outliers session are those with a decent amount of texture variation.
+totheplane,furthermakingthesurfacesmootherandcleaner. PointsextractedbySfMalsocontainalargeamountofnoisy
+C
+In addition, Rakotosaona et al. [12] suggested a learning- points, so , as an aggregation of all point clouds that
+raw
+based approach to denoise dense point cloud data. We build are recorded, contains both the point cloud of the object
+on this line of research by cleaning the point cloud recorded of interest and points from noise. Let Q ⊂ R3 be the
+by a smartphone to generate better quality grasps. actual points of the objects’ surfaces captured in F, and let
+d) GraspPlanning: Graspplanningconsiderstheprob- X ⊂R3\Q be the noise points that are captured. We want
+C
+lem of ﬁnding a gripper conﬁguration that maximizes the Q toclean byremovingX fromittoobtainapointcloud
+raw
+value of grasp. There are several different approaches. An- with less noise:
+alytic approaches typically assume knowledge of the object C C
+=f( )
+and gripper state and consider the capability of constraining clean raw
+the object’s motion [13] under perturbations and noises. where f is our cleaning method applied to the aggregation
+Examples include GraspIt! [14], OpenGRASP [15], and the of all point clouds from different frames.
+553
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. Clean up the Feed into
+Record RGB Extract noisy noisy point Transform into GQ-CNN and
+F C D
+images point cloud cloud and depth map return the grasp
+raw C
+obtain quality value Q
+clean
+Fig.2. PipelineofDex-NetAR
+With a cleaner aggregated point cloud of the object, we
+D
+transform the data to a depth map :
+D C
+=g( ,d ,n ,K,T)
+clean plane plane
+whered andn arethedepthandthenormalvector,
+plane plane
+respectively, of the ground plane or desktop on which the
+objectisplaced,andK istheknowncameraintrinsicsmatrix
+∈ R ×
+of a depth camera, and T 4 4 is the camera pose
+transformation matrix.
+D
+To plan a grasp, we feed into a convolutional neural
+N
+networkarchitecture calledGQ-CNN[1],[16],[25],[17]:
+N D Fig. 3. Drifted points in a point cloud. Points that are extracted by the
+Q= ( ) ARKitfromthesamefeatureandarefromdifferentframesarecoloredby
+∈ the same color. A magniﬁed window at the upper left corner exhibits the
+where the output value Q [0,1] represents the quality of driftandshowsthatthedriftingpointsroughlylieonthesameline.
+thegraspplanned.Theobjectiveistogeneratearobustgrasp
+while maintaining a relatively high Q value, which largely
+relies on high-quality point cloud data. of the object and m drifts occur in total. We have m points
+with the same identiﬁer, but different (x,y,z) coordinates.
+IV. METHOD Each point p of a geometric feature k has its coordinates
+Our distributed system is divided into ﬁve steps. Fig 2 (p ,p ,p ), and the set of all points for geometric feature k
+xP y z |P | (cid:88)
+shows the pipeline of our method. is ,som= .Weupdatefeaturek’spointsasfollows:
+k k
+A. Point Cloud Data Recording (cid:48) 1
+p = p
+The purpose of the ﬁrst and second steps of Fig 2 is to m ∈P
+recordthepointclouddataoftheobjectofinterest.Theinput p k
+F
+data isasetofRGBimages.SfMextractsthepointcloud AsillustratedinFig3,whenapointdrifts,itroughlycreates
+data, and points’ unique identiﬁers from the RGB images. astraightline,andinmostcases,theactualgeometricfeature
+F
+Theaggregatedpointcloudgenerated from containslarge point of the object lies right in the middle of the line.
+amounts of noise from the ground plane that the object is Thus, we are able to recover the actual geometric feature
+C F
+placed on. As a result, after extracting from , we points by taking an average over drifted points. We iterate
+raw
+have an extremely noisy and dense point cloud that contains througheverypointofgeometricfeaturebasedonitsunique
+large amounts of noise (X) such as from the ground plane identiﬁer. After this step, each geometric feature only has
+which is not usable for the experiments because in this case one point. While we have reduced the drifting problem, we
+U
+the grasp planning tool is likely to grasp the noise. now have a sparser point cloud, which we denote as .
+Our assumption, that the drifting problem originates from a
+B. Point Cloud Data Cleaning linear transformation (rotation and translation), is reinforced
+Weobservedanoiseproblemthatwerefertoas“drifting”. by different point cloud registration methods we have tried
+During a session, the same geometric feature of an object (iterative closest point and bundle adjustment [8]). However,
+is likely to be recorded multiple times across different the results are similar to the averaging method while these
+frames, resulting in multiple points of the same geometric methods are much more time-consuming.
+feature. Such points share the same unique identiﬁer, but Having reduced the drifts, we proceed to further clean
+have different (x,y,z) coordinates. The points that share up and denoise the new point cloud. First, we need to
+the same unique identiﬁer tend to ﬁt a straight line, hence eliminatethedensegroundplanethatcameracapturesduring
+the notion of a drift. However, different lines don’t share asession.Thepointsonthegroundplaneareamajorsource
+the same direction, so the drift effect does not appear to of noise in the point cloud. They are as dense as the feature
+C
+be uniform across the point cloud. To clean up we points from the object, so it is essential to get rid of the
+raw
+average out points with same unique identiﬁers as the ﬁrst noise points from the plane. We ﬁt and remove the plane
+cleaning technique. Suppose we record geometric feature k usingRANSACbecauseRANSACisfastenoughforalarge
+554
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. Algorithm 1 kNN-Based Outliers Removal depth of the bin or the desk in grasping scenarios, which
+U should be the farthest from the camera.
+Require: , k, and 
+1: for p ∈oUbj do One of the potential advantages of point clouds over
+obj traditional depth images is that a point cloud contains richer
+2: knn = k-Nearest Neighbors of p
+geometric information about the object: depth images only
+3: dist = 0
+4: for nn ∈ knn do contain top-down views. Since we artiﬁcially create a depth
+← (cid:107) − (cid:107) camera,wecanmanipulatethecameraposeinordertoview
+5: dist dist + p nn
+← theobjectfromdifferentangles,thusrevealingmoregeome-
+6: dist dist / k
+7: if dist > then tryoftheobjectswhichispotentiallyusefultogeneratemore
+U ←U \{ } robust grasps. We use a camera pose matrix T to adjust the
+8: p
+9: returnobjupdateodbjU as C view orientations of the object, which can potentially reveal
+obj clean more information about grasp locations on other facets of
+the object.
+One caveat about changing view orientation is that the
+numberofdatapointscapturedbythecamera.Afterrunning
+system is not aware of the ground after we change view an-
+U
+RANSAC [26], [27] on , we obtain two output values
+gle.Underthiscircumstance,theroboticarmmightinterfere
+dplane,nplane, where dplane is the threshold value in locally withthe planewhen itistrying tograsp fromtheside. Even
+ﬁt z-direction, representing the approximate z-coordinate of
+∈ R though such grasps have high Q values, interfering with the
+the plane that we are trying to get rid of, and nplane 3 ground plane makes such grasps not applicable. To address
+is the approximate normal vector of the plane calculated by
+this, we introduce a constraint function c, where c takes in
+RANSAC.Usingdplaneandn(cid:16)plane,weca(cid:17)ncutoffthepoints a grasp, analyzes its pose, and outputs a boolean value. If
+on the ground plane by rejecting any point p with: the parallel jaws try to grasp some point beyond the plane
+(cid:54) · limit, we reject the grasp, and c outputs False. Since GQ-
+p d n kˆ
+z plane plane CNN samples all possible grasps and outputs the grasp with
+the highest Q, we will return the grasp G with the highest
+The above criterion separates the object from the plane in
+U Q such that it does not interfere with the ground plane and
+the point cloud . We call the separated object point cloud
+U c(G) returns True.
+without plane .
+obj After setting the camera pose and deﬁning the grasp
+After rejecting the points from the ground plane noise
+constraint function, we obtain a depth map converted from
+in the point cloud, outliers still exist, and they are either
+the point cloud. Note that this depth map may have some
+near-surface or isolated. Such outliers are easier to remove
+holesinitbecauseofthesparsityofthepointclouddata.The
+because they are usually sparser than regular data points.
+resultingdepthmapislikelytobeporous,whereeachholeis
+We propose an algorithm based on k-Nearest Neighbor
+a group of zero-valued pixels. So one last step we do before
+(kNN)toridthepointcloudofthesparseoutliersbyiterating
+U feedingtheimageintoGQ-CNNistoinpaint[28]theimage.
+througheverypointpin .kNNisabletoeffectivelyﬁlter
+obj Thisstepﬁllsinthezero-valuedpixelsintheholesbasedon
+out the noise while maintaining the features captured in the
+thevaluesofsurroundingpixelsusingOpenCV[29].Having
+pointcloud.InAlgorithm1,foreachpointp,wecalculateits
+reducedthenumberofholes,wecanthenfeedtheimageinto
+kNN,andwerejecttheselectedpointiftheaveragedistance
+GQ-CNN to plan a grasp.
+fromittoitskNNisaboveathresholdvalue,meaningthat
+the point is potentially a sparse outlier. Here, k and  are D. Feeding into GQ-CNN
+hyperparameters.
+U In this step, the pre-trained network GQ-CNN takes in a
+The updated point cloud contains substantially less
+obj depth image and generates 100 potential grasps, where each
+noise from the ground and isolated outliers. As a result, we
+potential grasp should satisfy the constraint function c. The
+obtain a better-quality point cloud data, and we can convert
+U output grasp will be the grasp with the highest Q value. We
+the updated into a depth map that is compatible with
+obj U C visualize the grasp with the overlaid grasp vector onto the
+GQ-CNN. We denote the updated as .
+obj clean depth map and record the Q value of the grasp.
+C. Transformation to a Depth Map V. RESULTS
+We want to transform the point clouds to depth maps A. Simulation
+because most grasp planning tools are based on the depth To record the point cloud, we use an iPhone X with
+images captured by a depth camera. To generate a depth ARKit. ARKit uses SFM to extract feature points from
+map, we ﬁrst create an artiﬁcial depth camera(cid:16), and we ﬁ(cid:17)x an RGB image sequence [2]. As shown in Fig 1 and 3,
+the camera at depth 0. Then to create an artiﬁcial “bin” to the points collected by ARKit is extremely noisy. We use
+emulateregularrobotgraspingandbin-pickingtasks,weuse the default setting of the iPhone’s camera, which is 60fps.
+·
+the output from RANSAC. First, since d n kˆ In the simulation, we use parallel-jaw grippers with jaw
+plane plane
+represents the approximate z-coordinate of the ground plane widths of 5 and 10 centimeters. Therefore, the objects are
+in the camera’s local coordinates, we use this value as the chosen according to that size limit for the grippers to grasp
+555
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. Obj 1 Obj 2 Obj 3 Obj 4 Obj 5 Obj 6 Obj 7 Obj 8 Obj 9
+Q=0.996 Q=0.999 Q=1.000 Q=1.000 Q=0.981 Q=0.785 Q=0.980 Q=0.876 Q=N/A
+Fig. 4. Results with nine objects and their Q values. Top Row: photos. Middle Row: the cleaned and denoised point clouds. Bottom Row: planned
+graspsonthetransformeddepthimages.NotethatObj9isafailurecaseduetothereﬂectiveandmonochromaticfeatureoftheobject.
+successfully. We use  = 0.005 and k = 10, and this
+combinationofhyperparametersgivesusthebestpointcloud
+cleaning result. To add an artiﬁcial depth camera, we use
+the intrinsics of a Photoneo PhoXi camera, which is the
+camerathatwasusedinGQ-CNN’strainingprocess,andthe
+intrinsics are: fx = 1122.0,fy = 1122.0,cx = 511.5,cy =
+384.0. (a)Withoutconstraint (b)Withconstraint (c)Physicalgrasp
+To test the proposed pipeline, we run the method on Fig.5. TheusageofconstraintfunctionspreventsGQ-CNNfromgrasping
+nine different objects. Other than the size limit, the objects ground noise on Object 3. When the ground noise exists, we set the
+constraint function such that the gripper will not grasp any point near the
+should have relatively complex physical shapes in order to
+groundsurface
+reﬂect discrepancy in geometry when viewed from different
+orientations.Object9inFig4isactuallyafailurecase.Such
+an object demonstrates the drawback of SfM, which is that
+from top-down views.
+it does not recognize features on reﬂective, monochromatic,
+or small objects. Good point cloud quality is an essential element to
+In the trials, for each object, we record 5 point clouds of satisfactory grasps. It is infeasible for Dex-Net to plan
+theobjectseparately.Foreachpointcloud,weplan9grasps grasps on the point clouds without cleaning because of the
+based on 9 different view orientations of the camera: one sheer amount of noise. When the cleaning process is not
+grasp from traditional top-down view, four grasps from 45 sufﬁciently aggressive, some noise on the ground plane fails
+degrees camera poses, with each pose 90 degrees apart, and to be removed. In such a case, GQ-CNN is likely to grasp
+four grasps from 90 degrees camera poses, with each pose noisypointsonthegroundplane.Weresolvethisproblemby
+90 degrees apart. In total, we end up having a dataset with using the RANSAC procedure with higher threshold values
+360 different grasps. From this dataset, we choose the best anddecreasinginthekNN-basedoutliersremovalmethod.
+grasp of each object based on point cloud data quality, Q Meanwhile, we try to add in and ﬁne-tune the constraint
+value,andgrasplocation.Inthecaseswhereatop-downview function that we create in order to prevent the parallel jaws
+depthimagecannotrevealenoughgeometricinformation,the from grasping any point on the ground plane surface or
+generated grasps on those objects are not physically robust. interfering with the ground plane. In most cases, when the
+Generally,whenoneviewlimitsgeometricinformationfrom parallel jaws do not collide with the ground plane, they
+view, the planned grasp is possibly bad, despite being the are less likely to grasp noises. Hence, making use of and
+best grasp from that view. Therefore, viewing it from other adjusting the constraint functions also alleviates the noise
+directionssuchas90degreesor45degreesislikelytoreveal problemifweareplanninggraspsonapointcloudwithbad
+more geometry of the objects, thus generating grasps with quality. Fig. 5 shows a failure case when planning a grasp
+higher robustness. on Obj 3 from a 90 degrees view orientation that without a
+In Fig 4, the grasps planned on Obj 2, Obj 3, and Obj 7 constraintfunction,GQ-CNNisplanningtograsptheground
+arenotbasedontop-downviewdepthmaps.Incontrast,Obj noise when it persists after RANSAC, and with a constraint
+2’sgraspisbasedon45degreesvieworientation,andObj3 function that keeps the gripper from grasping any point near
+and7’sgraspsarebasedon90degreesvieworientation.The the ground surface, even though the noise remains the same,
+resulting grasps have better qualities than traditional grasps the gripper now tries to grasp the object instead.
+based on top-down view depth maps and are inaccessible The pipeline takes approximately 3 minutes for an object
+556
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. Objects
+Obj 1 Obj 2 Obj 3 Obj 4 Obj 5 Obj 6 Obj 7 Obj 8 Obj 9 Total
+Success Rate (%) 100 100 90 100 90 100 80 100 N/A 95
+Processing Time (sec) 25 37 49 30 28 48 33 24 N/A 34.25
+Fig.6. Physicalexperimentsresulton8differentobjects,thatweresuccessfullyrecordedbySFM.Tentrialsoneachobject.
+to plan a grasp from any angle. The majority of the time
+is allocated to the data collecting part of the pipeline. In
+order to sufﬁciently collect the geometry of the object, we
+need to carefully scan each facet three to four times, and
+we also need to reduce the speed of movement in order to
+keepthedriftingminimalandstable.Therefore,thescanning
+process takes 2 minutes, and we ﬁx this amount of time to
+(a)Object3geometry (b) Top-down grasp us-(c)Sidewaysgraspusing
+all objects. Cleaning a recorded point cloud using RANSAC
+ingPhoXidepthmap ARdepthmap
+and Algorithm 1 typically takes 30 seconds, and converting
+Fig. 7. The depth map converted from AR point cloud reveals more
+the point cloud into a depth image and feeding the resulting
+geometricinformation,thusfacilitatingbettergrasp.
+depth image to GQ-CNN to plan a grasp takes less than 10
+seconds.
+orientation converted from the AR point cloud, Dex-Net AR
+B. Physical Experiments
+successfully grasps the object by its neck area. Thus, even
+To test Dex-Net AR on a physical robot, we execute it
+the converted depth map has lower quality and resolution,
+on an ABB YuMi robot. We reroute YuMi robot’s input
+the generated grasp is superior in this case.
+from depth images taken from a PhoXi depth camera to the
+artiﬁcialdepthmapconvertedfromthepointcloudsrecorded
+VI. CONCLUSION
+by an iPhone. For each object, we run the algorithm on 5
+depthmapsconvertedfrom5pointcloudsintheorientations We present Dex-Net AR: a pipeline to plan grasps from
+thathavethehighestQscores.Foreachdepthmap,wegrasp data taken from commodity smartphones. With appropriate
+the corresponding object twice. Therefore, we grasp each post-processing and cleaning methods, the point clouds col-
+object 10 times in total. To measure the performance, we lected by a smartphone can be used to plan robust grasps
+use metrics in [1]: from different view orientations using Dex-Net, and used as
+1) SuccessRate:asthepercentageofgraspsthatwewere input to pass into a physical robot to grasp the objects.
+abletolift,transport,andholdadesiredobjectwithout However, the time spent on data collection is exceedingly
+collision when approaching the object. high: one needs to spend at least 120 seconds to scan the
+2) ProcessingTime:astheamountoftimespenttoclean object in order to record sufﬁcient data. Therefore, one
+up the point cloud using RANSAC and Algorithm 1. potential improvement is that we can try to bring down
+the amount of time in video capturing using a learning-
+Since we keep the scanning time for all objects identical
+based method to augment and complete the point cloud data
+(2 minutes), the major difference of running time for the
+given that only limited data are available. Alternatively, we
+objects comes from the cleaning process. As the geometric
+might train a network to learn depth from the motion of
+complexity of the object increases, the number of points
+smartphone cameras [30]. Emerging smartphones may also
+that are recorded by SfM also increases correspondingly, so
+havedepthcameras[31],whichcoulddirectlycollectcleaner
+the running time of Algorithm 1 on the point cloud also
+point clouds.
+increases. For example, Obj 8 in Fig 4 has the simplest
+geometry among all objects, so it requires the least cleaning
+time as shown in Fig 6. ACKNOWLEDGEMENTS
+From Fig 6, the average success rate for all eight objects
+This research was performed at the AUTOLAB at UC Berkeley in
+(we have excluded Obj 9 whose point cloud failed to be afﬁliation with the Berkeley AI Research (BAIR) Lab, Berkeley Deep
+recorded) is 95%. Drive(BDD),theReal-TimeIntelligentSecureExecution(RISE)Lab,and
+the CITRIS ”People and Robots” (CPAR) Initiative. This research was
+In another notable experiment, as shown in Fig. 7, the
+supported in part by: the Scalable Collaborative Human-Robot Learning
+robot attempts to grasp Object 3 using a standard top-down (SCHooL)Project,NSFNationalRoboticsInitiativeAward1734633andby
+view depth image from a ﬁxed PhoXi camera. Note that aGoogleCloudFocusedResearchAwardfortheMechanicalSearchProject
+jointlytoUCBerkeley’sAUTOLABandtheStanfordVisionLearningLab.
+Object 3 is an adversarial object which is difﬁcult to grasp
+The authors were supported in part by donations from Siemens, Google,
+from a top-down view. The planned grasp on this top-down ToyotaResearchInstitute,Autodesk,Honda,Intel,Hewlett-Packardandby
+view is not optimal since the parallel jaw grippers collide equipmentgrantsfromPhotoNeo,NVidia,andIntuitiveSurgical.Wethank
+ourcolleagueswhoprovidedhelpfulfeedbackandsuggestions,inparticular
+withtheobject’searsareaduetothecomplexshapeofObject
+Priya Sundaresan, Jackson Chui, Michael Danielczuk, Kate Sanders, and
+3. In contrast, based on an artiﬁcial depth map of sideways AjayTanwani.
+557
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [23] J. Bohg, A. Morales, T. Asfour, and D. Kragic, “Data-driven grasp
+synthesis—asurvey,”IEEETransactionsonRobotics,vol.30,no.2,
+[1] J.Mahler,J.Liang,S.Niyaz,M.Laskey,R.Doan,X.Liu,J.A.Ojea,
+pp.289–309,2013.
+and K. Goldberg, “Dex-net 2.0: Deep learning to plan robust grasps
+[24] D.Wang,D.Tseng,P.Li,Y.Jiang,M.Guo,M.Danielczuk,J.Mahler,
+withsyntheticpointcloudsandanalyticgraspmetrics,”2017.
+J.Ichnowski,andK.Goldberg,“Adversarialgraspobjects.”
+[2] (2019) ARKit: Apple Developer Documentation. [On-
+[25] J.MahlerandK.Goldberg,“Learningdeeppoliciesforrobotbinpick-
+line]. Available: https://web.archive.org/web/20190912200131/
+ingbysimulatingrobustgraspingsequences,”inProceedingsofthe1st
+https://developer.apple.com/documentation/arkit
+Annual Conference on Robot Learning, ser. Proceedings of Machine
+[3] L. B. Rosenberg, “The use of virtual ﬁxtures as perceptual overlays
+LearningResearch,S.Levine,V.Vanhoucke,andK.Goldberg,Eds.,
+to enhance operator performance in remote environments.” Stanford
+vol.78. PMLR,13–15Nov2017,pp.515–524.
+UnivCaCenterforDesignResearch,Tech.Rep.,1992.
+[26] M. A. Fischler and R. C. Bolles, “Random sample consensus: a
+[4] P.NowackiandM.Woda,“Capabilitiesofarcoreandarkitplatforms
+paradigm for model ﬁtting with applications to image analysis and
+forar/vrapplications,”inInternationalConferenceonDependability
+automatedcartography,”CommunicationsoftheACM,vol.24,no.6,
+andComplexSystems. Springer,2019,pp.358–370.
+pp.381–395,1981.
+[5] T.LeeandT.Hollerer,“Handyar:Markerlessinspectionofaugmented
+[27] M.Y.YangandW.Fo¨rstner,“Planedetectioninpointclouddata,”in
+reality objects using ﬁngertip tracking,” in 2007 11th IEEE Interna-
+Proceedingsofthe2ndintconfonmachinecontrolguidance,Bonn,
+tionalSymposiumonWearableComputers. IEEE,2007,pp.83–90.
+vol.1,2010,pp.95–104.
+[6] M. Billinghurst, A. Clark, G. Lee et al., “A survey of augmented
+(cid:13) [28] M. Bertalmio, G. Sapiro, V. Caselles, and C. Ballester, “Image
+reality,”FoundationsandTrendsR inHuman–ComputerInteraction, inpainting,”inProceedingsofthe27thannualconferenceonComputer
+vol.8,no.2-3,pp.73–272,2015.
+graphics and interactive techniques. ACM Press/Addison-Wesley
+[7] T. Starner, S. Mann, B. Rhodes, J. Levine, J. Healey, D. Kirsch,
+PublishingCo.,2000,pp.417–424.
+R.W.Picard,andA.Pentland,“Augmentedrealitythroughwearable
+[29] G.Bradski,“TheOpenCVLibrary,”Dr.Dobb’sJournalofSoftware
+computing,”Presence:Teleoperators&VirtualEnvironments,vol.6,
+Tools,2000.
+no.4,pp.386–398,1997.
+[30] J. Valentin, A. Kowdle, J. T. Barron, N. Wadhwa, M. Dzitsiuk,
+[8] R.Szeliski,Computervision:algorithmsandapplications. Springer
+M. Schoenberg, V. Verma, A. Csaszar, E. Turner, I. Dryanovski
+Science&BusinessMedia,2010.
+et al., “Depth from motion for smartphone ar,” ACM Transactions
+[9] O. O¨zyes¸il, V. Voroninski, R. Basri, and A. Singer, “A survey of
+onGraphics(TOG),vol.37,no.6,pp.1–19,2018.
+structurefrommotion*.”ActaNumerica,vol.26,pp.305–364,2017.
+[31] (2019) Samsung Galaxy S10. [Online]. Available:
+[10] A.Chandrashekar,J.Papadakis,A.Willis,andJ.Gantert,“Structure-
+https://www.samsung.com/us/mobile/galaxy-s10/camera/
+from-motionandrgbddepthfusion,”inSoutheastCon2018. IEEE,
+2018,pp.1–8.
+[11] X. Ning, F. Li, G. Tian, and Y. Wang, “An efﬁcient outlier removal
+method for scattered point cloud data,” PloS one, vol. 13, no. 8, p.
+e0201280,2018.
+[12] M.-J. Rakotosaona, V. La Barbera, P. Guerrero, N. J. Mitra, and
+M.Ovsjanikov,“Pointcleannet:Learningtodenoiseandremoveout-
+liersfromdensepointclouds,”inComputerGraphicsForum. Wiley
+OnlineLibrary,2019.
+[13] A.Rodriguez,M.T.Mason,andS.Ferry,“Fromcagingtograsping,”
+The International Journal of Robotics Research, vol. 31, no. 7, pp.
+886–900,2012.
+[14] C.Goldfeder,M.Ciocarlie,H.Dang,andP.K.Allen,“Thecolumbia
+graspdatabase,”in2009IEEEInternationalConferenceonRobotics
+andAutomation. IEEE,2009,pp.1710–1716.
+[15] B.Leo´n,S.Ulbrich,R.Diankov,G.Puche,M.Przybylski,A.Morales,
+T. Asfour, S. Moisio, J. Bohg, J. Kuffner et al., “Opengrasp: a
+toolkit for robot grasping simulation,” in International Conference
+onSimulation,Modeling,andProgrammingforAutonomousRobots.
+Springer,2010,pp.109–120.
+[16] J.Mahler,M.Matl,V.Satish,M.Danielczuk,B.DeRose,S.McKinley,
+and K. Goldberg, “Learning ambidextrous robot grasping policies,”
+ScienceRobotics,vol.4,no.26,p.eaau4984,2019.
+[17] V. Satish, J. Mahler, and K. Goldberg, “On-policy dataset synthesis
+for learning robot grasping policies using fully convolutional deep
+networks,”IEEERoboticsandAutomationLetters,2019.
+[18] P. Brook, M. Ciocarlie, and K. Hsiao, “Collaborative grasp planning
+with multiple object representations,” in 2011 IEEE International
+Conference on Robotics and Automation. IEEE, 2011, pp. 2851–
+2858.
+[19] M. Ciocarlie, K. Hsiao, E. G. Jones, S. Chitta, R. B. Rusu, and
+I.A.S¸ucan,“Towardsreliablegraspingandmanipulationinhousehold
+environments,”inExperimentalRobotics. Springer,2014,pp.241–
+252.
+[20] C. Hernandez, M. Bharatheesha, W. Ko, H. Gaiser, J. Tan, K. van
+Deurzen,M.deVries,B.VanMil,J.vanEgmond,R.Burgeretal.,
+“Teamdelft’srobotwinneroftheamazonpickingchallenge2016,”in
+RobotWorldCup. Springer,2016,pp.613–624.
+[21] B. Kehoe, A. Matsukawa, S. Candido, J. Kuffner, and K. Gold-
+berg,“Cloud-basedrobotgraspingwiththegoogleobjectrecognition
+engine,” in 2013 IEEE International Conference on Robotics and
+Automation. IEEE,2013,pp.4263–4270.
+[22] S. Hinterstoisser, S. Holzer, C. Cagniart, S. Ilic, K. Konolige,
+N. Navab, and V. Lepetit, “Multimodal templates for real-time de-
+tection of texture-less objects in heavily cluttered scenes,” in 2011
+internationalconferenceoncomputervision. IEEE,2011,pp.858–
+865.
+558
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:46:36 UTC from IEEE Xplore.  Restrictions apply. 

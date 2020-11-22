@@ -1,0 +1,471 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Beyond Photometric Consistency: Gradient-based Dissimilarity
+for Improving Visual Odometry and Stereo Matching
+Jan Quenzel Radu Alexandru Rosu Thomas La¨be Cyrill Stachniss Sven Behnke
+Abstract—Pose estimation and map building are central Featuresareoftendesignedtoberesilientagainstchanges
+ingredients of autonomous robots and typically rely on the in the intensity values of the images, for example caused by
+registration of sensor data. In this paper, we investigate a
+illuminationchanges.Often,featuresaresparselydistributed
+new metric for registering images that builds upon on the idea
+overtheimageandtheirextractioncanbeatimeconsuming
+of the photometric error. Our approach combines a gradient
+orientation-based metric with a magnitude-dependent scaling operation. In contrast to that, the intensity values of each
+term.Weintegratebothintostereoestimationaswellasvisual pixel are directly accessible, raw measurements, and can
+odometry systems and show clear beneﬁts for typical disparity be compared easily. Several direct methods consider the so-
+and direct image registration tasks when using our proposed
+called photometric consistency of the image as the objective
+metric. Our experimental evaluation indicats that our metric
+functiontooptimize.Akeychallengeofdirectapproachesis
+leads to more robust and more accurate estimates of the scene
+depth as well as camera trajectory. Thus, the metric improves toachieverobustnessbecauseslightvariationsofthecamera
+camera pose estimation and in turn the mapping capabilities exposure, illumination change, vignetting effects, or motion
+of mobile robots. We believe that a series of existing visual blurdirectlyaffecttheintensitymeasurements.Inthispaper,
+odometry and visual SLAM systems can beneﬁt from the
+we address the problem of robustifying the direct alignment
+ﬁndings reported in this paper.
+of image pairs through a new dis-similarity metric and in
+this way enable an improved depth estimate and alignment
+I. INTRODUCTION
+of image sequences.
+The ability to estimate the motion of a mobile platform The main contribution of this paper is a novel metric for
+based on onboard sensors is a key capability for mobile direct image alignment and its exploitation in direct visual
+robots,autonomouscars,andotherintelligentvehicles.Com- odometry. We build upon the gradient orientation-based
+puting the trajectory of a camera is often referred to as metric proposed by Haber and Modersitzki [9] and improve
+visual odometry or VO and several approaches have been itthroughtheintroductionofamagnitudedependingscaling
+presented in this context [1], [2], [3], [4], [5]. VO as term.Wefurthermoreintegrateourmetricintofourdifferent
+well as stereo matching approaches should provide accurate estimation systems (OpenCV, MeshStereo, DSO and Basalt)
+estimates of the relative camera motion and scenes depth to show that our metric leads to improvements and evaluate
+under various circumstances. Thus, optimizing such systems our system to support our key claims, which are: First,
+towards increased robustness is an important objective for our proposed metric is better suited for stereo disparity
+robots operating in the real world. estimation than existing approaches. Second, it is also well-
+The gold standard for computing the relative orientation suited for direct image alignment. Third, our metric can
+oftwoimagesofacalibratedcameraisNister’s5-pointalgo- be integrated into existing VO systems and increase their
+rithm[6].Thisapproachcomputesthe5-DoFtransformation robustness while running at the frame rate of a typical
+between two monocular images based on known feature camera.
+correspondences.Itrequiresatleastﬁvecorrespondingpoints
+per image pair. In practice, more points are required to II. RELATEDWORK
+combine the 5-point algorithm with RANSAC followed by There has been extensive work to improve the robustness
+a least-squares reﬁnement using only the inliers correspon- of visual odometry and visual SLAM methods towards
+dences. An alternative approach to using explicit feature illuminationchangestoensurephotometricconsistency.Typ-
+correspondencesarecomparisonsofthepixelintensityvalues ically, feature-based methods are more resilience towards
+within the image pair. This approach is also called direct illumination changes since descriptors are designed to be
+alignment and one often distinguishes semi-dense and dense distinguishable even under severe changes, across different
+methods, depending on the amount of compared pixels [5], seasons and invariant of camera type. SIFT is the standard
+[7], [8]. choice for Structure-from-Motion [11] but has a signiﬁcant
+computational cost. PTAM [12] using FAST [13] features
+ThisworkhasbeensupportedaspartoftheresearchgroupFOR1505by and ORB SLAM [4] are two prominent examples, which
+theDeutscheForschungsgemeinschaft(DFG,GermanResearchFoundation)
+showthatfeature-basedvisualSLAMcanworkwellinmany
+as well as under Germany’s Excellence Strategy, EXC-2070 - 390732324
+(PhenoRob). Jan Quenzel, Radu Alexandru Rosu and Sven Behnke are scenarios while maintaining real-time performance when
+with the Autonomous Intelligent Systems Group, University of Bonn, exploiting binary descriptor.
+Germany. Thomas La¨be and Cyrill Stachniss are with the Robotics and
+Under the assumption of a good initial guess, direct
+PhotogrammetryLab,InstituteofGeodesyandGeoinformation,University
+ofBonn,Germany. methods can obtain more accurate estimates of the camera
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 272
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. RGB image Modiﬁed RGB e e e e e e
+photo ncc mag gom ugf sgf
+Fig.1:Matchingcostcomparisonon[10]:Disparityestimationagainstthesameimagewithslightvignettinganddifferentexposuretime
+results in large disparity errors. The circle in e occurs where vignetting and exposure change cancel out.
+photo
+trajectory than feature-based approaches as they exploit all In our work1, we improve the gradient orientation based
+intensity measurements of the images. For this reason, Dai metric of Haber and Modersitzki [9] by introduction of a
+et al. [14] use features for initialization and to constrain a magnitude-dependent scaling term to simultaneously match-
+subsequent dense alignment. A popular approach, e.g. used ing gradient magnitude and orientation. We apply this to
+by Schneider et al. [15], is to extract GoodFeaturesToTrack solve direct image alignment for visual odometry as well
+based on the Shi-Tomasi-Score and use the KLT optical as semi-dense disparity and depth estimation. We integrated
+ﬂow tracker operating directly on intensity values. Similar our metric in two stereo matching algorithms as well as two
+to that, the Basalt system [16] uses locally scaled intensity VO systems. Hence, we evaluate and compare the metric
+differences between patches at FAST features within optical againstexistingapproachesontwostereoestimationandVO
+ﬂow. datasets.
+A further popular method for motion estimation from III. OURMETHOD
+camera images is LSD-SLAM [1]. For robustness, the au-
+thorsusetheHubernormduringmotionestimationandmap Ourapproachprovidesanewmetricforpixel-wisematch-
+creation, while minimizing a variance-weighted photometric ing and is easy to integrate into existing visual state estima-
+error. LSD-SLAM creates in parallel the map for tracking tion system. The metric measures the orientation of image
+by searching along the epipolar lines minimizing the sum of gradientswhilealsotakingthemagnitudeintoconsideration.
+squared differences. For the stereo version, Engel et al. [17] In the following, we denote sets and matrices with capital
+alternate between estimating a global afﬁne function to letters and vectors with bold lower case letters. We aim to
+model changing brightness and optimizing the relative pose ﬁndforapixeluiintheith imagethecorrespondingpixeluj
+during alignment. As an alternative, Kerl et al. [2] propose inthejth imagethatminimizesadissimilarity(cid:124)measurement
+to weight the photometric residuals with a t-distribution that e(ui,uj).Theimageco⊂ordRinatesu=(ux,uy)F aredeﬁned
+better matches the RGB-D sensor characteristics. in the image domain Ω 2. For stereo matching, i and j
+correspond to the left and right image, while in direct image
+Engel et al. [5] furthermore proposed with DSO a sparse- alignmentiisoftenthecurrentframeandj aprevious(key-)
+frame.
+directapproachthatfurtherincorporatesphotometriccalibra-
+tion if available or estimates afﬁne brightness changes with A basic error function ephoto is photometric consistency
+alogarithmicparametrization.Theymaintainaninformation −
+ﬁlter to jointly estimate all involved variables. ephoto(ui,uj)=Ii(ui) Ij(uj), (1)
+but more robust versions often rely on intensity gradients:
+Pascoe et al. [18] proposed to use the Normalized Infor-
+mation Distance (NID) metric for direct monocular SLAM. (cid:107)∇ (cid:107)−(cid:107)∇ (cid:107)
+e (u ,u )=( I (u ) I (u ) ), (2)
+This works well even for tracking across seasons and un- gm i j ∇ i i−∇ j j
+e (u ,u )= I (u ) I (u ). (3)
+der diverse illumination. Yet, the authors report to prefer gn i j i i j j
+photometric depth estimation for a stable initialization and
+The difference of the gradients e incorporates both, mag-
+only use NID after revisiting. Furthermore, Park et al. [8] gn
+nitude and orientation. PatchMatch Stereo algorithms [20]
+presented an evaluation of different direct alignment metrics
+typically combine this with the photometric error:
+for visual SLAM. They favored the gradient magnitude
+due to its accuracy, robustness and speed while the census − | | (cid:107) (cid:107)
+e (u ,u )=(1 α)e (u ,u ) +α e (u ,u ) .
+transform provided more accurate results at a much larger pm i j photo i j gn i j ((cid:96)41)
+computationalcost.InStereomatchingthecensustransform,
+e.g.inMeshStereo[19],andtheabsolutegradientdifference
+1Anaccompanyingvideoisavailableat
+combined with the photometric error, e.g. in StereoPatch-
+https://www.ais.uni-bonn.de/videos/ICRA_2020_
+Match [20], are common. Gradient_Dissimilarity.
+273
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. noise-free noisy
+e
+al
+c
+s
+y
+a
+Gr
+I
+∇ε a)e b)e
+ugf sgf
+Fig. 3: Association impact: e and e tend to match patches
+ngf ugf
+with similar gradient orientation but stronger magnitude. This can
+causeseveredistortionsinthe3Dreconstruction(left).Associating
+eugf palaltocwhessfowritchorsriemcitlatrriagnragduileantitoonri(eringthatti)o.n and magnitude using esgf
+This effectively downweighs the gradients magnitude in low
+g (cid:107)∇ (cid:107)
+ma gradient regions such that I will be close to zero. We
+e ε
+estimatetheparameterεonaperimagebasisandwilluseε
+andϑtomakethedistinctionbetweendifferentimagesmore
+visible.
+gf
+es In the context of multi-modal image registration the au-
+thors of [9] minimize the per pixel error e :
+ngf
+o
+hot e (u ,u )=1−[∇ I (u )·∇ I (u )]2. (8)
+p ngf i j ε i i ϑ j j
+e
+Fig. 2: Error comparison for gradient based metrics on a toy Squaring the dot product, or taking the absolute value,
+example. The lower boxes show the error between the green ensures, that not only gradients with same orientation but
+reference box and a shifted box along the red horizontal line. eugf also with opposite orientation coincide. This is important
+prefers strong edges with same orientation, while e does not
+mag for registering CT to MRT data and vice versa where the
+take the orientation into account and thus generates further local
+minima. Our e provides the correct minima which are marked image gradients may have opposite direction. This error has
+sgf
+with a green circle. animportantﬂawaslowgradientpixelsprefertomatchwith
+higher magnitude ones rather than similar gradients. If the
+largest magnitude edge is always matched, we would obtain
+A. Normalized Gradient-based Direct Image Alignment
+inconsistent depth estimates with high reprojection errors or
+Acomplementaryapproachistoalignthegradientsorien-
+whensuccessivelyreducingthesearchregionskewtheregion
+tation.Thena¨ıveapproachmayusethecostlyatan-operation
+and obtain wrong estimates as visualized in Fig. 3.
+to obtain the orientation angle θ and simply calculate differ-
+Since we want to use images from the same sensor type,
+ences. Instead, we follow the approach of [9], [21] to use
+we can omit the square and only use the following residual:
+the dot product and its relation to the cosine as a measure
+of orientation. If the two vectors a,b have unit length, the −∇ ·∇
+dot product is equal to the cosine of the angle between the e (u ,u )=1 I (u ) I (u ). (9)
+ugf i j ϑ j j ε i i
+vectors,whichiszeroforperpendicularvectors,oneforsame
+and minus one for opposite orientation. Simply normalizing The errors e and e are bounded in the interval [0,2].
+ngf ugf
+the gradient by its magnitude is undesirable as noise in low To ensure the correct behavior for smaller gradients as visu-
+gradient regions will predominate the orientation. Hence, alized in Fig. 2, we scale the dot product by the maximum
+Tayloretal.[21]normaliz(cid:80)esthedotproductbyitsmagnitude value:
+(cid:16) (cid:17)
+over a window: (cid:80)
+∇ ·∇
+|∇ ·∇ | − I (u ) I (u )
+egom(ui,uj)=1− u∈u∈WW(cid:107)∇IIii((uuii))(cid:107)(cid:107)∇IIjj((uujj))(cid:107). (5) esgf(ui,uj)=1 max (cid:107)∇εIϑi(jui)j(cid:107)2,(cid:107)∇εϑiIj(iuj)(cid:107)2,τ .
+(10)
+Instead we follow [9] and regularize the magnitude by a
+(cid:88)
+parameter ε:
+The scaling term of SGF thereby increases the number of
+ε= |1| (cid:107)∇I(u)(cid:107)2, (6) successfullyestimatedpointsinsemi-densedepthestimation.
+(cid:113)Ω ∈ Here, τ is a small constant to prevent division by zero.
+u∇Ω
+∇ I To further reduce the number of mathematical operations
+I = . (7)
+ε (cid:107)∇ (cid:107) in above equation, especially the division by the regularized
+I 2+ε
+norm, we derived two further combinations of orientation
+274
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Evaluation on Middlebury Stereo 2014 training set [22]
+and magnitude:
+∇ ·∇ Orig. esad eagm epm esgf
+n(u ,u )= I (u ) I (u ), (11) mean 7.20 5.80 6.31 4.56 3.29
+i j (cid:107)∇j j (cid:107) i i
+I (u ) (cid:107)∇ (cid:107) M bad1 18.36 20.51 21.33 17.19 12.60
+nij(ui,uj)= (cid:107)∇ϑIj(uj)(cid:107) Ii(ui) 2, (12) eoB bad2 16.41 17.01 17.79 14.25 10.36
+(cid:107)∇εIi(ui)(cid:107) (cid:107)∇ (cid:107) Ster bad4 14.88 14.19 14.69 11.94 8.61
+nji(u ,u )= (cid:107)∇ε i i (cid:107) I (u ) 2, (13) invalid 40.44 34.51 52.69 44.74 45.49
+i j I (u ) j j
+ϑ j j − mean 5.68 11.22 7.85 6.70 4.17
+esgf2(ui,uj)=(cid:107)m∇ax(nij,(cid:107)n(cid:107)j∇i) n(u(cid:107)i,−uj) (14) ereo bad1 16.87 46.55 33.45 28.51 20.61
+e (u ,u )= I (u ) I (u ) n(u ,u ). (15) St bad2 13.02 40.25 27.38 23.32 15.94
+sgf3 i j i i j j i j h
+es bad4 10.71 33.18 22.02 18.78 12.53
+M
+Given a formulation for the error, we can now formulate invalid 0.01 1.01 0.09 0.08 0.04
+stereomatchinganddirectimagealignment.Theformeraims
+to ﬁnd for each pixel u in the left image the corresponding TABLE II: Evaluation on KITTI Stereo 2015 training set [23]
+l
+pixel ur in the right image t(cid:88)hat minimizes a dissimilarity Orig. esad eagm epm esgf
+measurement e(ul,ur): mean 6.11 3.21 3.17 1.74 1.61
+M bad1 19.80 19.79 22.13 15.93 13.99
+∗ B
+d =argmin e(u ,u (d)), (16) o bad2 11.60 10.07 11.04 6.87 5.91
+u d−∈R ul∈(cid:124)W l r Stere bad4 9.03 6.34 6.73 3.94 3.41
+u (d)=u (d,0) . (17) invalid 46.74 29.57 53.02 39.33 45.17
+r l
+mean 2.03 2.94 2.92 2.07 2.02
+Here, the disparity d is deﬁned as the distance along the ereo bad1 27.95 42.34 33.84 29.60 29.35
+x-axis of the stereo rectiﬁed left and right image pair. For St bad2 12.00 25.45 17.32 13.67 13.48
+h
+robustness,theerrorfunctioneiscalculatedoverapatchW Mes bad4 5.57 14.01 8.85 6.77 6.67
+u
+with window size w centered around the pixel u rather than invalid 0.07 0.15 0.10 0.08 0.06
+a single pixel. In the latter, we seek the transformation T
+cr
+that aligns the reference with the current image optimally IV. EVALUATION
+N
+w.r.t. an error metric e between a reference pixel-patch
+(cid:88) (cid:88) (cid:16) (cid:17) pr Theﬁrstexperimentisdesignedtoillustratetherobustness
+around p and its projection onto I :
+r c of our metric under small image variations. To underline
+(cid:107) (cid:107) how even minimal image variations impact the dissimilarity
+Tcr =argmin ρ e(pi) 2 . (18) metrics, we used images from the ICL-NUIM ”lr kt2”
+∈M ∈N
+pr pk pr sequence [10] and changed the exposure time and added
+a vignetting to frames 120 and 808, see Fig. 1 for a
+A robust cost function ρ like the Huber norm reduces
+visualization.Thedisparityerrorisminimalingreenregions
+the effect of outliers. This minimization is typically solved
+withidealdisparitybeing0andwindowsize3.Weevaluated
+iteratively with the standard Gauss-Newton algorithm. ∈
+d [0,20) for the different metrics. As expected, e is
+Hence, the Jacobian for esgf w.r.t. the pixel ui is needed: large (avg. 8.13 px / 7.76 px ), while gradient oriepnhtoatotion
+(cid:40)
+∇ ·∇ alone (e ) achieves on avg. 4.49 px / 4.78 px. Normalized
+nn= ϑIj(uj) εIi(ui), (19) cross-courrgeflation(e )resultsinadisparityerrorof3.04px
+− ncc
+s1 =nn 1−1,(cid:107)∇2 (cid:107), iofth(cid:107)e∇rϑwIjis(cid:107)e2>(cid:107)∇εIi(cid:107)2 (20) /1.24.038pxp)x.wThhilee megaogmni(t2u.d0e2(pemxa/g0).4is9bpextt)eransduietepdm((21..1214 ppxx //
+∇ εIi ∇ (cid:124) ∇ 0.18 px) perform best after our metric (1.21 px / 0.18 px)
+∂esgf =− ( ϑ(cid:107)I∇(cid:16)j +s(cid:107)1 (cid:107)∇εIi) (cid:107)(cid:17)(cid:107)(∇2)(cid:107)Ii, (21) showing the smallest dissimilarity values.
+∂ui max( εIi , ϑIj ) Ii ε The second experiment is designed to show our metrics
+suitability for (semi-) dense depth estimation supporting the
+(cid:107)∇ (cid:107) − (cid:107)∇ (cid:107)
+s = (cid:107)(cid:107)∇∇ϑεIIij(cid:107)(cid:107) 2(cid:107)∇ (cid:107)(cid:107)∇IiI(cid:107)i2+2ε , if nij>nji (22) ﬁforrstccolsatimv.olFuomrethciasl,cuwlaetioinnteignrtaotedOpaenvCaVrisetysteorfeombetlroiccks
+2 (cid:107)∇ϑεIIij(cid:107)((cid:107)∇IiI(cid:107)j2+2ε), otherwise matching as well as the more sophisticated MeshStereo
+∂e ∇ −∇ ∇ algorithm [19]. We evaluate the mean disparity error and
+sgf2 =(cid:18)(s I I )( )I(cid:19), (23)
+∂u 2 i j 2 i report the percentage of bad pixels with 1, 2, and 4 px
+i
+disparityerror.Bothalgorithmsaretestedonthetrainingsets
+(cid:107)∇ (cid:107) (cid:80)
+∂e 1 I ∇ −∇ ∇ oftheMiddleburyStereoBenchmark[22](halfsize)andthe
+sgf3 = (cid:107)∇ j(cid:107) I I ( )I . (24)
+∂ui 2 Ii i j 2 i KITTI Stereo Benchmark [23]. We compare our me|tric esg|f
+against the sum of absolute differences e = e ,
+∇ sad p|hoto|
+Here, ( )I denotes the hessian of the intensity at pixel the absolute difference of gradient magnitude e = e ,
+2 i agm gm
+u . the PatchMatch dissimilarity e , and the original imple-
+i pm
+275
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. TABLE III: ATE results in meters on EuRoC dataset [24].
+MH1 MH2 MH3 MH4 MH5 V11 V12 V13 V21 V22 Avg
+OKVIS 0.085 0.083 0.135 0.143 0.278 0.041 0.956 0.102 0.054 0.063 0.194
+al ORB-SLAM2 0.124 0.094 0.253 0.151 0.132 0.090 0.219 0.270 0.149 0.203 0.168
+n
+gi SVO2 0.093 0.111 0.355 2.444 0.456 0.074 0.174 0.270 0.109 0.158 0.424
+Ori DSO 0.051 0.045 0.165 0.164 0.460 0.194 0.151 1.075 0.080 0.098 0.227
+Basalt 0.076 0.045 0.058 0.096 0.141 0.041 0.052 0.073 0.032 0.046 0.066
+DSOw/e 0.071 0.050 0.264 0.235 0.237 0.142 0.178 0.933 0.072 0.086 0.206
+sgf
+Basaltw/egm 0.090 0.044 0.084 0.091 0.135 0.049 0.099 0.161 0.030 0.079 0.086
+Basaltw/egn 0.076 0.055 0.057 0.112 0.115 0.039 0.042 0.093 0.037 0.048 0.067
+s
+ur Basaltw/e 0.078 0.062 0.080 0.215 0.111 0.043 0.107 0.156 0.037 0.108 0.100
+O sgf
+Basaltw/e 0.086 0.065 0.081 0.109 0.148 0.040 0.069 0.061 0.029 0.058 0.075
+sgf2
+Basaltw/e 0.061 0.042 0.065 0.094 0.106 0.041 0.056 0.082 0.034 0.054 0.063
+sgf3
+from e . The results are shown in Tab. I and Tab. II. As
+pm
+can be seen, our metric provides in all cases the best mean
+disparityerror.Fig.5showsanexampleontheKITTIStereo
+GB GT Benchmark. Please note for esgf, although the bicyclist is
+R not well represented with MeshStereo, it is with StereoBM.
+Furthermore, in the background less incorrect (too close)
+disparities are calculated with our metric.
+To support our second and third claim, we provide com-
+parisons to a set of state-of-the-art VO and VIO approaches
+including DSO [5], ORB-SLAM2 [4], OKVIS [25] and
+SVO2 [7] on the EuRoC dataset. We implemented the
+g. g. different metrics in the optical ﬂow frontend of Basalt and
+Ori Ori
+carried out a two-fold cross validation with hyperopt [26]
+to obtain suitable parameters for each metric. We use the
+Scharr-Operator [27] on the rotated patches to obtain the
+intensity gradients. We observed that using ﬁnite differences
+degraded the obtainable precision for this task. For disparity
+estimation ﬁnite differences are sufﬁcient.
+In the case of DSO, we also show a modiﬁed version
+m m which replaces in the depth estimation the original patch
+p p
+e e
+similaritymetricbasedonBrightness-Constancy-Assumption
+e with our e term. Fig. 6 shows an example for both
+photo sgf
+on V1 01 of the EuRoC dataset. For a fair comparison we
+disable the global bundle adjustment of ORB-SLAM2 and
+use Basalt purely in VIO mode. Furthermore, we evaluate
+the approaches, if provided, with the tailored parameters for
+the EuRoC dataset.
+esgf esgf WereportthemeanATEafteralignmentusing[28]forall
+the frames which have a pose estimate. We align DSO with
+a similarity transform and the stereo algorithms with a rigid
+transform. To achieve a more reliable error estimate we run
+StereoBM MeshStereo the algorithms repeatedly for each scenario and average the
+Fig. 4: Disparity comparison on Teddy of the Middlebury Stereo results.Wereportalsothenumberofsuccessfultrackingsfor
+2014 Benchmark [22] for the original algorithms and the two best each algorithm out of a total of 250. Tracking is considered
+metrics. failed if the maximum scale error is above 1.5m or the
+median scale error is greater than 0.1m. Tab. III gathers
+mentation. The dissimilarity in MeshStereo is calculated the ﬁnal results.
+withCensus-Transform.WhileOpenCVStereoBMusese One can see that our modiﬁed DSO using the e term
+sad sgf
+too, a different preﬁlter provided a better result for e . for depth estimation performs better than the original DSO,
+sad
+All other metrics were evaluated without preﬁltering. We having a lower average ATE. Furthermore, we observed an
+omitted e since the results were nearly indistinguishable increase in successful tracking attempts by 10% on V1 02
+gn
+andV1 03whichexhibitstronglightingchangesandreduced
+276
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. variance in ATE.
+Basalt achieves with all tested metrics excellent results.
+Presumably e performs worse than our other derived
+sgf
+metrics due to the more complex Jacobian, which is more
+difﬁcult to optimize. Here, the simpliﬁcations of e and
+sgf2
+e payoff with e achieving the best result.
+sgf3 sgf3
+B
+G
+R
+T Orig.
+G
+g.
+Ori
+m
+p
+e
+e
+sgf
+gf Fig.6:Resultingmapandtrajectory(redline)ofDSO[5]w/oand
+es withe fordepthestimationonV1 01oftheEuRoCdataset[24].
+sgf
+The reduced drift is clearly visible in the sharper edges and an
+reduction of double walls.
+V. CONCLUSION
+g.
+Ori In this paper, we proposed a new metric for direct im-
+age alignment that is useful for motion and stereo depth
+estimation. Our metric improves the gradient orientation
+metric proposed by Haber and Modersitzki [9] and inte-
+grates a magnitude-dependent scaling term. This improves
+the robustness of the image alignment and is beneﬁciary
+m
+p for stereo matching and visual odometry computation alike.
+e
+We integrated and evaluated our approach in a multitude of
+settings showing that the proposed metric is better suited
+for disparity estimation than existing approaches and well
+suited for image alignment. Furthermore, our approach is
+easy to integrate into existing visual systems and thus can
+gf
+es make a positive impact on various visual odometry, SLAM,
+or similar state estimation approaches.
+Fig. 5: Disparity comparison on image pair 2 of the KITTI Stereo
+2015 Benchmark [23] for the original algorithms and the two best
+metrics.
+277
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [15] J.Schneider,F.Schindler,T.La¨be,andW.Fo¨rstner,“Bundleadjust-
+mentformulti-camerasystemswithpointsatinﬁnity,”inProc.ofthe
+[1] J.Engel,T.Scho¨ps,andD.Cremers,“LSD-SLAM:Large-scaledirect
+Int.Arch.Photogramm.RemoteSens.SpatialInf.Sci.(ISPRS),2012.
+monocularSLAM,”inProc.oftheEuropeanConferenceonComputer
+Vision(ECCV),2014. [16] V. Usenko, N. Demmel, D. Schubert, J. Stu¨ckler, and D. Cre-
+[2] C.Kerl,J.Sturm,andD.Cremers,“Robustodometryestimationfor mers,“Visual-inertialmappingwithnon-linearfactorrecovery,”arXiv
+RGB-D cameras,” in Proc. of the IEEE Int. Conference on Robotics preprintarXiv:1904.06504,2019.
+andAutomation(ICRA),May2013. [17] J. Engel, J. Stueckler, and D. Cremers, “Large-scale direct SLAM
+[3] C. Forster, M. Pizzoli, and D. Scaramuzza, “SVO: Fast semi-direct with stereo cameras,” in Proc. of the IEEE/RSJ Int. Conference on
+monocularvisualodometry,”inProc.oftheIEEEInt.Conferenceon IntelligentRobotsandSystems(IROS),September2015.
+RoboticsandAutomation(ICRA),2014. [18] G. Pascoe, W. Maddern, M. Tanner, P. Pinie´s, and P. Newman,
+[4] R. Mur-Artal and J. Tards, “ORB-SLAM2: An open-source SLAM “NID-SLAM:RobustmonocularSLAMusingnormalisedinformation
+system for monocular, stereo, and RGB-D cameras,” IEEE Transac- distance,” in Proc. of the IEEE Conference on Computer Vision and
+tionsonRobotics,vol.33,no.5,pp.1255–1262,2017. PatternRecognition(CVPR),2017.
+[5] J.Engel,V.Koltun,andD.Cremers,“Directsparseodometry,”IEEE
+[19] C.Zhang,Z.Li,Y.Cheng,R.Cai,H.Chao,andY.Rui,“MeshStereo:
+Transactions on Pattern Analysis and Machine Intelligence, vol. 40,
+A global stereo model with mesh alignment regularization for view
+no.3,pp.611–625,2018.
+interpolation,” in Proc. of the IEEE Int. Conference on Computer
+[6] D. Niste´r, “An efﬁcient solution to the ﬁve-point relative pose prob-
+Vision(ICCV),2015,pp.2057–2065.
+lem,” IEEE Transactions on Pattern Analysis and Machine Intelli-
+gence,vol.26,no.6,pp.756–770,2004. [20] M.Bleyer,C.Rhemann,andC.Rother,“PatchMatchStereo-stereo
+[7] C.Forster,Z.Zhang,M.Gassner,M.Werlberger,andD.Scaramuzza, matching with slanted support windows,” in Proc. of the British
+“Svo: Semidirect visual odometry for monocular and multicamera MachineVisionConference(BMVC),2011.
+systems,”IEEETrans.onRobotics,vol.33,no.2,pp.249–265,2017. [21] Z.Taylor,J.Nieto,andD.Johnson,“Multi-modalsensorcalibration
+[8] S.Park,T.Scho¨ps,andM.Pollefeys,“Illuminationchangerobustness using a gradient orientation measure,” JFR, vol. 32, no. 5, pp. 675–
+in direct visual SLAM,” in Proc. of the IEEE Int. Conference on 695,2015.
+RoboticsandAutomation(ICRA),2017.
+[22] D.Scharstein,H.Hirschmu¨ller,Y.Kitajima,G.Krathwohl,N.Nesic,
+[9] E. Haber and J. Modersitzki, “Intensity gradient based registration
+X. Wang, and P. Westling, “High-resolution stereo datasets with
+and fusion of multi-modal images,” in International Conference on
+subpixel-accurate ground truth.” in Proc. of the German Conference
+MedicalImageComputingandComputer-AssistedIntervention,2006.
+onPatternRecognition(GCPR),vol.8753,2014.
+[10] A.Handa,T.Whelan,J.McDonald,andA.Davison,“Abenchmarkfor
+[24] M. Burri, J. Nikolic, P. Gohl, T. Schneider, J. Rehder, S. Omari,
+RGB-D visual odometry, 3D reconstruction and SLAM,” in Proc. of
+M. Achtelik, and R. Siegwart, “The EuRoC micro aerial vehicle
+theIEEEInt.ConferenceonRoboticsandAutomation(ICRA),2014.
+datasets,”TheInt.JournalofRoboticsResearch,2016.
+[11] J. Scho¨nberger, M. Pollefeys, and J. Frahm, “Structure-from-Motion
+revisited,”inProc.oftheIEEEConferenceonComputerVisionand [25] S. Leutenegger, S. Lynen, M. Bosse, R. Siegwart, and P. Furgale,
+PatternRecognition(CVPR),2016. “Keyframe-based visualinertial odometry using nonlinear optimiza-
+[12] G. Klein and D. Murray, “Parallel tracking and mapping for small tion,”TheInt.JournalofRoboticsResearch,vol.34,no.3,pp.314–
+ARworkspaces,”inProc.oftheIEEEInt.SymposiumonMixedand 334,2015.
+AugmentedReality(ISMAR),2007,pp.225–234. [26] J.Bergstra,D.Yamins,andD.D.Cox,“Makingascienceofmodel
+[13] E.RostenandT.Drummond,“Machinelearningforhigh-speedcorner search: Hyperparameter optimization in hundreds of dimensions for
+detection,”inProc.oftheEuropeanConferenceonComputerVision vision architectures,” in Proceedings of the International Conference
+(ECCV),2006,pp.430–443. onMachineLearning,2013,pp.I–115–I–123.
+[14] A.Dai,M.Nießner,M.Zollo¨fer,S.Izadi,andC.Theobalt,“Bundlefu-
+[27] H.Scharr,“Optimalﬁltersforextendedopticalﬂow,”inInternational
+sion:Real-timegloballyconsistent3Dreconstructionusingon-the-ﬂy
+WorkshoponComplexMotion(IWCM),2004.
+surfacere-integration,”ACMTransactionsonGraphics,2017.
+[23] M.Menze,C.Heipke,andA.Geiger,“Joint3Destimationofvehicles [28] Z. Zhang and D. Scaramuzza, “A tutorial on quantitative trajectory
+and scene ﬂow,” in ISPRS Workshop on Image Sequence Analysis evaluation for visual(-inertial) odometry,” in Proc. of the IEEE/RSJ
+(ISA),2015. Int.ConferenceonIntelligentRobotsandSystems(IROS),2018.
+278
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:49:33 UTC from IEEE Xplore.  Restrictions apply. 

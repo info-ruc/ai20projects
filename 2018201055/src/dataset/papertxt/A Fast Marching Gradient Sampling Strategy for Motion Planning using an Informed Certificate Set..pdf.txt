@@ -1,0 +1,521 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+DirtNet: Visual Dirt Detection for Autonomous Cleaning Robots
+Richard Bormann, Xinjie Wang, Jiawen Xu, Joel Schmidt
+Abstract(cid:151)Visual dirt detection is becoming an important
+capability of modern professional cleaning robots both for op-
+timizingtheirwetcleaningresultsandforfacilitatingdemand-
+oriented daily vacuum cleaning. This paper presents a robust,
+fast,andreliabledirtandof(cid:2)ceitemdetectionsystemforthese
+tasksbasedonanadaptedYOLOv3framework.Itssuperiority
+over state-of-the-art dirt detection systems is demonstrated in
+several experiments. The paper furthermore features a dataset
+generator for creating any number of realistic training images
+from a small set of real scene, dirt, and object examples.
+I. INTRODUCTION
+With the development of more advanced cleaning robots
+dirt detection becomes a research topic of increasing impor-
+tance. On the one hand, the detection of local dirt levels
+can be used for achieving a desired level of cleanliness
+with consumer robots [1]. On the other hand, professional
+cleaningmachinesstarttoenterlessstructuredenvironments
+which require more powerful and intelligent algorithms.
+Fig.1. Dirtandobjectdetectiononreal(left)andsynthesizeddata(right).
+Professional of(cid:2)ce (cid:3)oor cleaning is often conducted as daily
+cleaningondemandnowadays.Acleaningrobotmusthence
+be able to focus on (cid:2)nding and cleaning only dirty spots alarms. Moreover, the system cannot distinguish between
+instead of cleaning the whole ground each day, wasting useful objects and dirt items [2]. This paper introduces a
+energy and time [2]. Professional cleaning robots are also learning-based dirt and object detection system which is
+supposed to verify their cleaning results for tuning local signi(cid:2)cantly superior to the baseline system [6] both in
+cleaning efforts and documentation purposes [2], [3]. performance and functionality while still being applicable
+Cleaning companies strive to incorporate robots into their to new environments without any retraining. Fig. 1 provides
+services due to increasing shortages on quali(cid:2)ed personnel. some exemplary classi(cid:2)cation results of the new system.
+Several publicly funded research projects like AutoPnP [2], Collecting and labeling suf(cid:2)ciently large datasets for the
+Flobot [3], or Baker [4] underline the importance of robotic initial training is a common problem in robotics. To over-
+cleaning machines. The work demonstrated in this paper come dataset size limitations due to manually arranged,
+originates from the BakeR project which is concerned with captured,andlabeledscenes,wedevelopedadatasetcreation
+developing a modular of(cid:2)ce cleaning robot for vacuum tool which combines all necessary ingredients for synthesiz-
+cleaning,wetcleaning,andtrashbinclearing.Thevisualdirt ing realistic training images from a small set of real data.
+detectionsystemissupposedtoguidetherobottopollutions For obtaining dirt and object detection training samples,
+during room inspection for cleaning dirt spots but it should the dataset generator blends randomly modi(cid:2)ed patches of
+also detect typical of(cid:2)ce items lying on the ground without dirt and of(cid:2)ce objects with clean ground (cid:3)oor images and
+raising a false alarm or trying to clean those items. optionally adds simulated light sources and shadows to the
+A basic, learning-free dirt detection system is already scene. This way, all kinds of realistic scene images can
+available from previous work [2], [5], [6], i.e. it can be be created in any desired amount. We believe that the
+directly applied in any new environment. Though achieving image synthesizer might be useful beyond our application
+a high recall rate, it comes with a high false positive rate for creating other kinds of datasets as well. The dataset and
+due to the lack of a learning mechanism. Operators can software are online available1.
+only mark certain locations in the environment as false In summary, the main contributions of this paper are:
+(cid:15) a dataset generator for synthesizing image data based
+This project has received funding from the German Federal Ministry
+of Economic Affairs and Energy (BMWi) through grant 01MT16002A on a few (cid:3)oor, dirt, and object samples,
+(BakeR), and from the Ministry of Economic Affairs of the state Baden- (cid:15) a learning-based dirt and object detection system, di-
+Wu¤rttemberg(Zentrumfu¤rCyberCognitiveIntelligence(cid:150)GrantNo.017-
+rectly applicable to new (cid:3)oor types, and
+192996).
+The authors are with the Robot and Assistive Systems (cid:15) a comprehensive evaluation of the proposed methods.
+Department, Fraunhofer IPA, 70569 Stuttgart, Germany.
+<first>.<last name>@ipa.fraunhofer.de 1Instructions:http://wiki.ros.org/ipa_dirt_detection
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1977
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK III. METHODS
+Thedirtandobjectdetectionsystemproposedinthiswork
+Cleaning machines become smarter and more automated
+is based on YOLOv3 [14], which offers three branches for
+these days. A good overview on smart cleaning machines
+small, medium, and large object detection as needed for
+and their components can be found in [1], [2], [7] and with
+detecting small dirt spots and large objects simultaneously.
+special focus on the navigation capabilities also in [8], [9].
+YOLOcanprocesshighresolutionimagesatsuf(cid:2)cientspeed
+Dirt detection is relevant to wet and dry cleaning [2], [3],
+for the online, onboard operation on a fast moving cleaning
+[7]. So far, levels of cleanliness have been evaluated by
+robot, inspecting its environment for dirt. In this work, the
+consumer robots with optical and piezo-electronic sensors
+utilized baseline YOLOv3 system with Darknet53 backend
+inside the vacuum bin sensing the degree of pollution and
+originates from [16], which achieves the same performance
+adaptingthecleaningprocess.However,thesesensorscannot
+on COCO as the original YOLOv3, and is implemented
+detect all types of dirt, e.g. stains on a carpet, and they can
+in PyTorch [17]. This section explains several (cid:2)ne-tuning
+only sense cleanliness after cleaning a location [3]. Visual
+measures to the baseline implementation for optimized per-
+dirt detection in contrast has a larger receptive (cid:2)eld and can
+formance in the dirt and object detection setting.
+run without an activated cleaning device, thus saving energy
+a) Rectangletrainingandinference: Insteadofkeeping
+and machine lifetime.
+the square aspect ratio the network input is redesigned as
+There are only two approaches that directly deal with (cid:2)
+rectangular shape of size 1024 832 pixels. Thus, no image
+visual dirt detection tasks [3], [6]. Our previous approach
+padding is necessary as proposed in original YOLOv3, and
+[6] is based on a saliency detection algorithm [10] for
+theimagesareresizedtothedesirednetworkinputresolution
+(cid:2)nding outstanding regions at the (cid:3)oor. [3] proposes the
+without padding. This saves 19% FLOPs ((cid:3)oating point
+unsupervised online learning of a Gaussian Mixture Model (cid:2)
+operations) compared to a square resolution of 1280 1024,
+representing the (cid:3)oor pattern with high success rates.
+and hence accelerates the training and inference phases and
+In both approaches, the authors developed their own
+even comes with a slightly higher mAP (see Sec. V-B).
+datasets. The IPA dataset contains 9 categories of dirt [6], b) Individual detection thresholds for each branch:
+whereas the TU Vienna dataset provides 3 dirt types [3]. Detectors like YOLOv3 [14] or Feature Pyramid Networks
+However, none of these datasets collected ’non-dirt’ objects [18] detect small objects in shallow layers, which contain
+suchaspensandnotebooks.Further,thetotalamountofdirt moredetailsandedgeinformation,andlargeobjectsindeep
+and types of ground patterns is limited in these datasets and layerswhichcontainmoreabstractsemanticrepresentations.
+extensions are very time consuming. To reproduce training We observed that the larger objects with deeper feature
+data in suf(cid:2)cient amounts and variety for the use in real representation tend to have higher con(cid:2)dence. In the dirt
+applications, this work introduces a synthetic dataset with detection task, some dirt samples are smaller than 15 (cid:2)
+expanded amounts of dirt, of(cid:2)ce objects, and ground pattern 15 pixels whereas some objects like books or rulers are
+samples, which can easily be extended with further data of larger than 200(cid:2)200 pixels. It is necessary to reduce the
+any kind. The approach is comparable to image synthesizers con(cid:2)dence threshold for detecting more small dirt, but this
+for object detection, see [11] for a good overview. increases false positive detections from higher layers espe-
+Since learning-based methods were not powerful enough cially on sophisticated (cid:3)oor patterns, resulting in decreasing
+to cover the variety of ground patterns and dirt types in precision. Therefore, individual con(cid:2)dence thresholds were
+the past, learning-free methods were preferred [3], [6]. The implemented for each branch: a low con(cid:2)dence threshold in
+advent of Convolutional Neural Networks opened new pos- the small object branch, and higher con(cid:2)dence thresholds in
+sibilities for treating the dirt detection problem as an object themiddleandlargeobjectdetectionbranches.Theresulting
+detectiontaskleveragingdomain-speci(cid:2)cfeaturelearningfor bounding boxes from all 3 layers are then (cid:2)ltered by Non
+coping with the vast variety of dirt types. The current most Maximum Suppression (NMS).
+main-stream object detection methods are region proposal c) GIOU loss and focal loss: Generalized Intersection
+approaches [12], single shot methods [13], and YOLO [14]. over Union (GIOU) loss [19] is used for bounding box
+A core requirement on a combined dirt and object detection regression since the mAP evaluation is mainly based on
+system is good detection performance over several scales maximizing IoU. The GIOU loss is directly related to this
+since dirt may be captured as small as a few pixels whereas criterion in contrast to the commonly used indirect distance
+largeobjectslikebooksmayoccupyseveraltenthousandsof losses. Focal loss [20] is applied on top of the binary cross
+pixels. Single shot methods are said to degrade signi(cid:2)cantly entropy loss for foreground and background classi(cid:2)cation to
+when dealing with small objects [13]. Though, recorded im- cope with foreground-background class imbalances.
+ages need to be presented to the network at high resolution, d) Warm up and cosine learning rate: Inspired by
+which requires an ef(cid:2)cient architecture. We evaluated the SGDR [21], the learning rate is raised from nearly 0 at
+region proposal method Faster RCNN [12] beforehand, but the beginning to l at the end of the second epoch during
+i
+inference was too slow (max. 2 Hz) when the network was a warm up phase and then continuously decreases according
+tunedforhighdetectionperformance[15].Consequently,the toacosinelearningratescheduletol attheendoftraining.
+e
+potential of YOLO is leveraged in this work to design a e) Mixup: Mixup[22]isintroducedintothetrainingas
+robust, fast, and accurate dirt detection system. it increases robustness of the detection system by blending
+1978
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. 𝑐𝑥 𝑔𝑥 Dirt Masks Clean Floors
+𝑐𝑦 𝑝ℎ 𝑡𝑝𝑥𝑤𝑏𝑤𝑡𝑦 𝑏𝑏𝑏𝑏𝑏ℎ𝑤𝑦𝑥ℎ====𝜎𝜎𝑝𝑝𝑤(ℎ(𝑡𝑡𝑒𝑒𝑥𝑦𝑡𝑡))ℎ𝑤++𝑐𝑐𝑥𝑦 𝑔𝑦 𝑡𝑥1𝑡𝑡𝑦𝑦𝑡12𝑥2 𝑏𝑏𝑏𝑏𝑦𝑥𝑦𝑥2121====𝑒𝑒𝑒𝑒𝜎𝜎𝜎𝜎((((𝑡𝑡𝑡𝑡𝑥𝑦𝑦𝑥2112))))++++𝑔𝑔𝑔𝑔𝑥𝑥𝑦𝑦 DirtSamples SegRAmamneodnuotanmttion ⋮ R&ot aRtees,iFzleip LRoacnadtoiomn Results
+⋮
+Synthetic
+Image
+Objects
+Fig.2. VisualizationoftheoriginalYOLO-basedprede(cid:2)nedanchors(left)
+and corner offset de(cid:2)nition used for bounding box regression throughout ObjectSamples RAamnoduonmt ⋮ 20%
+thiswork(right). ⋮
+Rotate,Flip Random
+& Resize Location
+Shadows&
+multiple ground truth images and their labels in addition to Segmentation Brightness
+the original data.
+Masks
+f) Label smoothing: Inspired by Inception v2 [23],
+label smoothing is employed during training for category Fig.3. Overviewofthepipelineforsynthesizingthedirtdataset.
+classi(cid:2)cation.
+g) MobilNetV2 backbone: While the previous steps Food
+focused on increasing robustness and accuracy, replacing
+Fuzz
+the Darknet53 backbone of YOLO by MobileNetV2 [24]
+majorly aims for gains in processing ef(cid:2)ciency. Leaves
+h) Separable convolution: Inspired by Xception [25],
+Liquids
+the convolutional layers in the detection branches are re-
+Office
+placed with depthwise separable convolutional layers keep-
+ing the same parameters, likewise for ef(cid:2)ciency reasons. Paper
+i) Redesign layers: As discussed in [26] the receptive
+Stones
+(cid:2)eldalsoaffectsthedetectionperformance.Largerreceptive
+(cid:2)eldshurtthedetectionperformanceofsmalldirtspotssince Street Dirt
+more context information of the (cid:3)oor becomes included.
+Fig.4. Examplesofthecollectedrealworlddirtsamples.
+Further,featuresofsmalldirteasilygetlostthroughreduced
+feature map resolution in deeper convolutional architectures.
+(cid:2) (cid:2) clean (cid:3)oors, various kinds of dirt, and typical of(cid:2)ce objects.
+Therefore, one 1 1 and one 3 3 convolutional layer is
+All images were recorded with an Asus Xtion Pro Live
+removed from the small object detection branch. Since the (cid:2)
+receptive (cid:2)eld from the last layer of MobileNetV2 is not camera at 1280 1024 pixels resolution from a top view
+perspective at 1 m distance to the ground since in earlier
+large enough for large object detection with input images of
+(cid:2) (cid:2) work we found that working from a normalized perspective
+1024 832 pixels resolution, one 3 3 convolutional layer
+is advantageous [6]. This way we recorded images of clean
+isaddedtothelargeobjectdetectionbranch.Finally,thelast
+(cid:3)oorareasaswellasobjectsanddirtsamplesplacedindivid-
+layer of MobileNetV2 is removed because we observed that
+ually on unicolored sheets of paper with high contrast to the
+the features are already suf(cid:2)cient for succeeding in the dirt
+respective samples. Dirt and objects were segmented from
+detection task at hand.
+(cid:3) (cid:3) (cid:3)
+the background by Mean Shift clustering in L a b color
+j) Removeprede(cid:2)nedanchors: YOLOv2[27]proposes
+space, yielding segmentation masks. These masks encode
+kmeans for determining bounding box priors, which can be
+opacitylevelsat(cid:2)negrainedstructuresandobjectboundaries
+sensitive to the data distribution and initial value. Here we
+for more realistic blending effects.
+removetheprede(cid:2)nedanchors,whichintroducemanyhyper-
+parameters for the training phase. Instead, the two corners’
+offsets t ;t ;t ;t from the center of the feature map
+x1 y1 x2 y2
+grid are regressed directly. Fig. 2 illustrates this approach, USB Sticks
+where b ;b ;b ;b are the coordinates of the bounding Tapes
+x1 y1 x2 y2
+box, (cid:27) stands for the sigmoid function, and gx;gy are the Scissors
+center coordinates of the grid. As there is limited scale
+Rulers
+variance in the appearance of the target objects in the dirt
+Pens
+detection task and since there are already three branches for
+Paper and
+differently scaled objects, the number of regressed anchors Notebooks
+per grid is reduced from 3 to 1 for ef(cid:2)ciency reasons. Other
+Keys
+IV. DATASET
+Business 
+This section explains the dataset and the synthesizing tool Cards
+for creating realistic training data from real image data of
+Fig.5. Examplesofthecollectedrealworldof(cid:2)ceobjects.
+1979
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. dirt samples, (iii) 38 different object samples. All dirt and
+objectsamplescoincidewiththoseinsetTest.Theyarenew
+and not contained in the training set. This set is very similar
+to TestSynth except for the training (cid:3)oor types. It is meant
+as a veri(cid:2)cation dataset for evaluating the generalization
+performance to new (cid:3)oor types in TestSynth.
+V. EVALUATION
+Fig.6. Exemplarycleangroundpatternsofthe21trainingset(cid:3)oortypes.
+A. Experimental setup
+The dirt detection task at hand considers the detection of
+For image synthesis random numbers of segmented dirt
+foreground objects on ground (cid:3)oors and their classi(cid:2)cation
+andobjectsamplesareselectedandrandomlyrotated,(cid:3)ipped
+into dirt or (of(cid:2)ce) object samples (2 class task). A cleaning
+and resized (resize factor between 0.8 and 1.2) before being
+robot needs to clean the dirt occurrences while avoiding
+blended into the clean ground images. The corresponding
+useful objects. If required, the detection system can also be
+object bounding boxes are computed and saved according to
+trainedtodistinguishdirtandtheindividualobjectcategories
+themasks.Thesynthesizedimagesare(cid:2)nallypost-processed
+of the dataset (10 class task).
+byaddingarti(cid:2)cialshadowsandbrightnessofrandomshape
+(cid:2)
+and intensity at random positions to better mimic real scene Thedatabaseimagesofsize1280 1024aredownsampled
+(cid:2)
+variance. Shadows and brightness masks are modeled as to the network input of size 1024 832. The Darknet53
+and MobileNetV2 backends are pre-trained on ImageNet.
+random polygons with blurry edges and affect all rendered
+A representative validation set (last 5 of the 21 training
+dirt spots and objects as well. Shadow masks are subtracted
+set (cid:3)oors) is split off the training set. During (cid:2)ne-tuning
+with some opacity factor, brightness masks are added to the
+training all layers are trained for 15 epochs. The validation
+given image. The whole pipeline is illustrated in Fig. 3. The
+error always settled before 15 epochs of training and the
+imagesynthesistoolcancreatein(cid:2)nitenumbersofdistinctive
+best model according to validation loss was always found
+images. Some exemplary dirt, object, and (cid:3)oor images are
+between epoch 10 and 15.
+shown in Fig. 4, 5, and 6. Examples of synthesized images
+are provided in Fig. 1 (right column), in Fig. 10, an in the The network was trained with typical parameters for
+accompanying video. We generated a training set and two training; there was no special tuning on the parameters w.r.t.
+test sets with this technique with the following properties. mAPoptimization.Themostimportantsettingsare:IoU=0.5;
+a) Synthesized training data: The training set contains small/medium/large object detection thresholds = (0.25, 0.3,
+(cid:0) !
+9248synthesizedimageswhichwerecreatedwiththefollow- 0.3); NMS-IoU=0.1; learning rate: warm up 3:33e 7
+(cid:0) ! (cid:0)
+ing real world samples: (i) 21 (cid:3)oor types with 1156 images l = 3:33e 4 (2 epochs), then l l = 3:33e 7 at the
+i i e
+altogether, (ii) 358 different dirt samples, (iii) 438 different 15th epoch; batch size: 2 (Darknet), 3 (MobileNetV2). The
+object samples. Each image is blended with 5 to 8 dirt spots utilizedcomputersystemconsistsofanNvidiaGeforceGTX
+and 3 to 6 of(cid:2)ce objects. 1080Ti GPU with 11 GB memory and an Intel i7-7700K
+b) Real test data (Test): The Test set contains 80 im- eight-core CPU.
+ages of manually arranged and labeled real scenes, recorded
+B. DirtNet Adaptations
+on8novel(cid:3)oortypeswhicharenotcontainedinthetraining
+set. Dirt and objects are likewise new and not contained in The (cid:2)rst experiment demonstrates the impact of all im-
+the training set. This dataset is quite small since recording provement steps as introduced in Sec. III. Results on the
+was extremely time-consuming (2 days). 10 class detection task in the real test set are summarized
+c) Synthesized test data (TestSynth): The TestSynth set in Tab. I. The rectangular network input speeds up infer-
+contains 1360 synthesized images which were created with ence time while all other enhancements on the Darknet53
+the following real world samples: (i) 8 (cid:3)oor types with 170 backbone increase mAP incrementally adding up to a total
+images altogether (new (cid:3)oor types, same as in Test), (ii) 70 mAP improvement of 7.2%. The network obtained from all
+different dirt samples, (iii) 38 different object samples. All optimizations until here is termed DirtNet-D. The introduc-
+dirtandobjectsamplescoincidewiththoseinsetTest.They tion of the signi(cid:2)cantly smaller MobileNetV2 and separable
+are new and not contained in the training set. The advantage convolutions reduces the computational complexity further
+of a synthesized test set is the potentially unlimited amount by more than factor 12 at only 4.8% lower mAP. Some of
+of test data with novel (cid:3)oors, dirt, and object samples at the lost mAP performance is recovered with the remaining
+limited recording effort. It is meant to compensate for the 2 optimizations. The resulting network is called DirtNet-M.
+small real world test set (Test). Tab. II shows that the series of smaller improvements is
+d) Synthesized test data with training (cid:3)oor types (Test- not speci(cid:2)c to the dirt detection setting but also leads to an
+SynthTF): The TestSynthTF set contains 3448 synthesized increased performance on the Pascal VOC 2007 test set for
+images which were created with the following real world objectdetectionsurpassingthebaselineYOLOv3implemen-
+samples:(i)21(cid:3)oortypeswith431imagesaltogether(same tation by 4.5% in mAP. All reported results originate from
+(cid:3)oor types as in training but new images), (ii) 70 different training with the 2007 and 2012 training sets.
+1980
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. TABLEI TABLEIII
+IMPROVEMENTSTEPSOVERTHEBASICYOLOV3IMPPLEMENTATION INFLUENCEOFTRAININGSETSIZEONTHEPERFORMANCEINTHE
+MEASUREDONTESTSETOFTHE10-CLASSDIRTDETECTIONPROBLEM. THREETESTSETSONTHE2-CLASSDIRTDETECTIONTASK.
+Improvement mAP (cid:1) (cid:1) BFLOPs Backbone Datasetsize TestSynthTF TestSynth Test
+baseline[16](withDarknet53) 73.5 0.0 0.0 396.66 (#images) mAP mAP mAP
++rectangletrainingandinfer. 73.7 +0.2 +0.2 322.29 1156 81.4 81.6 83.7
++thresholdsfordiff.layers 74.2 +0.5 +0.7 322.29 4624 82.4 83.2 85.1
++GIOUloss[19] 75.0 +0.8 +1.5 322.29 Darknet53 9248 83.9 84.6 85.5
++focalloss[20] 76.5 +1.5 +3.0 322.29 23120 84.5 84.6 84.1
++warmup,coslearnrate[21] 77.9 +1.4 +4.4 322.29 46240 82.1 83.0 83.2
++mixup[22] 79.5 +1.6 +6.0 322.29 1156 78.1 78.9 79.6
++labelsmoothing[23] 80.7 +1.2 +7.2 322.29 4624 79.7 82.3 82.2
++backboneMobileNetV2[24] 76.0 -4.7 +2.5 89.35 MobileNetV2 9248 79.4 81.6 83.8
++separableconvolution[25] 75.9 -0.1 +2.4 26.68 23120 80.7 81.9 82.0
++redesignlayers 77.0 +1.1 +3.5 21.49 46240 79.9 81.3 82.1
++removeprede(cid:2)nedanchors 77.1 +0.1 +3.6 21.45
+TABLEII
+generalization ability of the DirtNets from a representative
+PERFORMANCECOMPARISONONPASCALVOC2007TESTSET, selection of (cid:3)oors to new and untrained (cid:3)oor types.
+TRAINEDONPASCALVOC2007AND2012,MAP@IOU=0.5.
+Detector Faster SSD YOLOv3 DirtNet- DirtNet- D. Dirt Detection Performance
+R-CNN [13] [14],[28] D M
+Having motivated the design of the method and the
+[12]
+mAP 73.2 76.8 79.6 84.1 79.0 training procedure in the previous experiments, here we
+summarizetheresultsoverallevaluatedconditionsasshown
+in Tab. IV, Fig. 7 and Fig. 8. The performance metrics on
+classifying 10 classes are lower than for 2 classes as to be
+C. In(cid:3)uence of synthetic training set size
+expected. Moreover, while all metrics are quite consistent
+SincethedatasetblenderintroducedinSec.IVmaydeliver
+over the three test sets in the 2 class setting, the real test set
+any desired amount of training data it needs to be examined
+hassigni(cid:2)cantlybetterresultsthantheothersforthe10class
+wherethesweetspotbetweendatasetsize,andhencetraining
+task.ThiseffectiscausedbythesmallsizeofsetTestandthe
+time, and achievable test set performance is located. In
+larger variance in the 10-class problem because some object
+this experiment, 5 differently sized training datasets were
+classeslikeotherandkeyshaveahighvarianceinappearance
+synthesizedandevaluatedonallthreetestsetsonthe2class
+but too few samples in the training set for modeling this
+task. For each training set the maximal number of training
+variance well. This is especially visible for class other in
+epochs was adapted accordingly to yield a constant total
+Fig.8.Theperformanceonotherclassesremainsquitestable
+number of images presented to the learning algorithm.
+over all test sets, though. For con(cid:2)rming this claim, the
+The results in Tab. III indicate that a training set size of
+reader may have a look at the detailed performance tables
+only 9248 images is the optimal or close-to-optimal choice which are available online2.
+over all test sets and backbones and was hence chosen
+The inference time on an Nvidia Geforce GTX 1080Ti is
+throughout this work. Larger datasets do not improve mAP
+70.6 ms for DirtNet-D and 33.1 ms for DirtNet-M which
+anymore since the visual variance of the provided dirt and
+is both fast enough for online inference on a moving
+object samples seems to be mostly covered by 9248 images
+cleaning machine. If no GPU is available on the mobile
+already: each image contains 11 samples of dirt or objects
+robot, DirtNet-M can be converted to a CPU model using
+onaverage,yieldingabout100,000trainingsamplesin9248
+OpenVino [29] which conducts inference within 38.8 ms
+images. As there are almost 800 dirt and object samples
+on an Intel Core i7-7700K CPU @ 4.20GHz with 8 cores.
+in the training set, each item is represented 128 times in
+Further experiments showed that an Nvidia Jetson could
+the dataset on average (i.e. 6 times per (cid:3)oor type). We
+run DirtNet-D with ca. 800 ms inference time and DirtNet-
+assume that an increased performance can only be achieved
+M with ca. 300 ms when operating on images of size
+by adding more dirt and object samples to the training set. (cid:2)
+640 480pixels.ItisnoteworthythatDirtNet-Dhasamodel
+Another observation is that the results are very consistent
+size of 235 MB whereas DirtNet-M requires only 26 MB.
+between the small Test (real images) and the much larger
+ExemplarydetectionresultsarevisualizedinFig.1,Fig.10,
+TestSynth (synthetic images) sets, which contain different
+and in the accompanying video.
+images of the same samples and (cid:3)oors. This supports the
+validityoftrainingbothDirtNetsonlywithsuf(cid:2)cientlymany E. ComparisonwithState-of-the-ArtDirtDetectionMethods
+synthesized images and testing with a relatively small real
+The dirt detection performance is compared to our pre-
+world test set. Thus, data collection for dirt detection tasks
+vious spectral residual method [6] and to the GMM1-16
+can be signi(cid:2)cantly simpli(cid:2)ed and sped up. Likewise, the
+approach of [3] using another synthesized test set which
+results obtained on the TestSynthTF (synthetic images) are
+only contains dirt samples as both previous methods cannot
+not better than for the other test sets although this test set
+containsimagesofknown(cid:3)oortypes.This(cid:2)ndingprovesthe 2http://wiki.ros.org/ipa_dirt_detection
+1981
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. TABLEIV
+DIRTNETPERFORMANCEFORTHE2AND10CLASSESTASKSONTHETHREETESTSETSUSINGDARKNET53ORMOBILENETV2ASBACKBONE.
+TestSynthTF TestSynth Test time
+Classes Backbone mAP recall precision f1 mAP recall precision f1 mAP recall precision f1 (GPU)
+DirtNet-D 83.9 86.6 83.3 84.9 84.6 87.3 77.3 81.7 85.5 88.8 78.3 83.2 70.6ms
+2classes
+DirtNet-M 79.4 83.0 83.4 83.2 81.6 84.8 82.2 83.5 83.8 86.3 82.8 84.5 33.1ms
+DirtNet-D 73.9 79.7 75.2 76.0 74.4 80.2 73.4 75.3 80.7 84.0 78.6 79.4 70.6ms
+10classes
+DirtNet-M 67.5 75.3 71.0 71.8 68.4 76.8 70.5 72.5 77.1 80.9 75.9 77.5 33.1ms
+1.0 1.0 1.0
+0.9 0.9 0.9
+0.8 0.8 0.8
+0.7 0.7 0.7
+0.6 0.6 0.6
+Precision00..45 Precision00..45 Precision00..45 DirtNet-D, IoU=0.1
+DirtNet-D, IoU=0.5
+0.3 dirt, TestSynthTF 0.3 dirt, TestSynthTF 0.3 DirtNet-M, IoU=0.1
+object, TestSynthTF object, TestSynthTF DirtNet-M, IoU=0.5
+0.2 dirt, TestSynth 0.2 dirt, TestSynth 0.2 GMM-16, IoU=0.1
+object, TestSynth object, TestSynth GMM-16, IoU=0.5
+0.1 dirt, Test 0.1 dirt, Test 0.1 Spectral, IoU=0.1
+object, Test object, Test Spectral, IoU=0.5
+0.0 0.0 0.0
+0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0
+Recall Recall Recall
+Fig. 7. Precision recall diagrams on all three test sets in the 2 class task for Darknet53 (left) and Fig. 9. Comparison of different dirt detection
+MobileNetV2(right)asbackbone. approachesevaluatedforIoU=0.1andIoU=0.5.
+1.0 1.0
+0.9 0.9
+0.8 0.8
+0.7 0.7
+0.6 0.6
+Precision00..45 dppiearpntesr_and_notebooks Precision00..45 dppiearpntesr_and_notebooks
+keys keys
+0.3 usb_sticks 0.3 usb_sticks
+other other
+0.2 rulers 0.2 rulers
+business_cards business_cards
+0.1 scissors 0.1 scissors
+tapes tapes
+0.0 0.0
+0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0
+Recall Recall
+Fig. 8. Precision recall diagrams on the real test set in the 10 class task for Darknet53 (left)
+and MobileNetV2 (right) as backbone. It becomes visible that class other is obviously insuf(cid:2)ciently
+Fig. 10. Exemplary dirt detection results for
+representedinthetrainingset.
+the spectral and GMM method (upper row) and
+DirtNet-DandDirtNet-M(lowerrow).
+TABLEV
+VI. CONCLUSIONSANDFUTUREWORK
+COMPARISONWITHPREVIOUSDIRTDETECTIONSYSTEMSW.R.TMAP
+DETERMINEDFORIOU=0.1ANDIOU=0.5,ANDCOMPUTATIONTIME. This paper has introduced a useful dataset blending tool
+for generating unlimited labeled training data from limited
+mAPfor Spectral[6] GMM[3] DirtNet-D DirtNet-M
+IoU=0.1 66.3 68.2 94.5 92.8 amounts of real example footage as well as DirtNet, an
+IoU=0.5 45.4 30.2 83.7 80.9 adapted YOLOv3 detector for dirt and objects on arbitrary
+comp.time 8.2ms 161.5ms 70.6ms 33.1ms
+(cid:3)oor types. The presented system surpasses the previously
+utilized approach [6] and state-of-the-art [3] signi(cid:2)cantly in
+detection performance and speed, and can be well-utilized
+distinguish objects from dirt. The results are summarized in as onboard detection system for real cleaning machines. We
+Tab. V and precision recall graphs are provided in Fig. 9. presentedexperimentsthatprovedtheapplicabilityandvalid-
+The DirtNets are those trained on the 2 class task, i.e. the ity of training our system solely on the basis of synthesized
+reported performance could even be higher if the DirtNets images.
+would have been trained solely for detecting dirt spots and Future work should aim at collecting an even larger
+no objects. Still, DirtNet-D and DirtNet-M achieve much dataset than the one presented in this work for boosting the
+better mAP and are up to 5 times faster compared to GMM. detection performance and robustness further. Additionally,
+Spectral is the fastest method because of its simplicity, but an online learning framework could be developed which
+bothspectralandGMMdegradequicklywithincreasingIoU collects data from numerous cleaning machines operating in
+and suffer from lower achievable recall and higher numbers the (cid:2)eld to enhance recognition models with new types of
+offalsepositives.Fig.10visualizestypicalresultsofallfour dirt and objects automatically. Moreover, the detector could
+methods on a synthesized test image. Typical false positives be enhanced with motion-based cues which should provide
+are visible for the spectral and GMM approaches. notably different features that the smoother background.
+1982
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [15] J.Xu,(cid:147)VisualDirtDetectionforProfessionalOf(cid:2)ceCleaningRobots,(cid:148)
+Master’sthesis,TechnicalUniversityofMunich,2018.
+[1] J.Hess,M.Beinhofer,andW.Burgard,(cid:147)Aprobabilisticapproachto [16] (cid:147)UltralyticsYOLOv3githubrepository,(cid:148)https://github.com/ultralytics/
+high-con(cid:2)dencecleaningguaranteesforlow-costcleaningrobots,(cid:148)in yolov3/,accessed:2019-09-14.
+Proceedings of the IEEE International Conference on Robotics and [17] A. Paszke, S. Gross, S. Chintala, G. Chanan, E. Yang, Z. DeVito,
+Automation(ICRA),2014. Z.Lin,A.Desmaison,L.Antiga,andA.Lerer,(cid:147)Automaticdifferen-
+[2] R.Bormann,J.Hampp,andM.Ha¤gele,(cid:147)NewBroomsSweepClean tiationinPyTorch,(cid:148)inNIPSAutodiffWorkshop,2017.
+-AnAutonomousRoboticCleaningAssistantforProfessionalOf(cid:2)ce [18] T.-Y. Lin, P. Dolla·r, R. B. Girshick, K. He, B. Hariharan, and
+Cleaning,(cid:148) in Proceedings of the IEEE International Conference on S. J. Belongie, (cid:147)Feature pyramid networks for object detection,(cid:148) in
+RoboticsandAutomation(ICRA),May2015. ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+[3] A. Gru¤nauer, G. Halmetschlager-Funek, J. Prankl, and M. Vincze, Recognition(CVPR),2017,pp.936(cid:150)944.
+(cid:147)The Power of GMMs: Unsupervised Dirt Spot Detection for In- [19] H. Rezato(cid:2)ghi, N. Tsoi, J. Gwak, A. Sadeghian, I. Reid, and
+dustrial Floor Cleaning Robots,(cid:148) in Proceedings of the Conference S.Savarese,(cid:147)Generalizedintersectionoverunion,(cid:148)inProceedingsof
+TowardsAutonomousRoboticSystems. Springer,2017,pp.436(cid:150)449. the IEEE Conference on Computer Vision and Pattern Recognition
+[4] (cid:147)Bakerprojecthomepage,(cid:148)https://www.baker-projekt.de. (CVPR),June2019.
+[5] R. Bormann, J. Fischer, G. Arbeiter, F. Wei(cid:223)hardt, and A. Verl, (cid:147)A [20] T.-Y. Lin, P. Goyal, R. B. Girshick, K. He, and P. Dolla·r, (cid:147)Focal
+visualdirtdetectionsystemformobileservicerobots,(cid:148)inProceedings loss for dense object detection,(cid:148) in Proceedings of the International
+ofthe7thGermanConferenceonRobotics(ROBOTIK2012),Munich, ConferenceonComputerVision(ICCV),2017,pp.2999(cid:150)3007.
+Germany,May2012. [21] I. Loshchilov and F. Hutter, (cid:147)Sgdr: Stochastic gradient descent with
+[6] R.Bormann,F.Weisshardt,G.Arbeiter,andJ.Fischer,(cid:147)Autonomous warm restarts,(cid:148) in Proceedings of the International Conference on
+dirt detection for cleaning in of(cid:2)ce environments,(cid:148) in Proceedings LearningRepresentations(ICLR),2016.
+of the IEEE International Conference on Robotics and Automation [22] H.Zhang,M.Cisse·,Y.Dauphin,andD.Lopez-Paz,(cid:147)mixup:Beyond
+(ICRA),2013,pp.1252(cid:150)1259. empirical risk minimization,(cid:148) in Proceedings of the International
+[7] U. Jost and R. Bormann, (cid:147)Water streak detection with convolutional ConferenceonLearningRepresentations(ICLR),2018.
+neural networks for scrubber dryers,(cid:148) in Proceedings of the 12th [23] C.Szegedy,V.Vanhoucke,S.Ioffe,J.Shlens,andZ.Wojna,(cid:147)Rethink-
+InternationalConferenceonComputerVisionSystems,2019. ingtheinceptionarchitectureforcomputervision,(cid:148)inProceedingsof
+[8] R. Bormann, F. Jordan, W. Li, J. Hampp, and M. Ha¤gele, (cid:147)Room the IEEE Conference on Computer Vision and Pattern Recognition
+Segmentation:Survey,Implementation,andAnalysis,(cid:148)inProceedings (CVPR),2015,pp.2818(cid:150)2826.
+of the IEEE International Conference on Robotics and Automation [24] M. Sandler, A. G. Howard, M. Zhu, A. Zhmoginov, and L.-C.
+(ICRA),2016. Chen, (cid:147)Mobilenetv2: Inverted residuals and linear bottlenecks,(cid:148) in
+[9] R.Bormann,F.Jordan,J.Hampp,andM.Ha¤gele,(cid:147)Indoorcoverage ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+path planning: Survey, implementation, analysis,(cid:148) in Proceedings Recognition(CVPR),2018,pp.4510(cid:150)4520.
+of the IEEE International Conference on Robotics and Automation [25] F.Chollet,(cid:147)Xception:Deeplearningwithdepthwiseseparableconvo-
+(ICRA),2018. lutions,(cid:148)inProceedingsoftheIEEEConferenceonComputerVision
+[10] X. Hou and L. Zhang, (cid:147)Saliency Detection: A Spectral Residual andPatternRecognition(CVPR),2017,pp.1800(cid:150)1807.
+Approach,(cid:148) in Proceedings of the IEEE Conference on Computer [26] P. Hu and D. Ramanan, (cid:147)Finding tiny faces,(cid:148) in Proceedings of
+VisionandPatternRecognition(CVPR),2007,pp.1(cid:150)8. the IEEE Conference on Computer Vision and Pattern Recognition
+[11] M. H. Debidatta Dwibedi, Ishan Misra, (cid:147)Cut, paste and learn: Sur- (CVPR),2017,pp.1522(cid:150)1530.
+prisinglyeasysynthesisforinstancedetection.(cid:148)inProceedingsofthe [27] J. Redmon and A. Farhadi, (cid:147)Yolo9000: Better, faster, stronger,(cid:148) in
+InternationalConferenceonComputerVision(ICCV),2017. ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+[12] S.Ren,K.He,R.Girshick,andJ.Sun,(cid:147)FasterR-CNN:Towardsreal- Recognition(CVPR),2017,pp.6517(cid:150)6525.
+timeobjectdetectionwithregionproposalnetworks,(cid:148)inAdvancesin [28] (cid:147)Tencent YOLOv3 github repository,(cid:148) https://github.com/
+NeuralInformationProcessingSystems(NIPS),2015,pp.91(cid:150)99. TencentYoutuResearch/ObjectDetection-OneStageDet/tree/master/
+[13] W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. Reed, C.-Y. Fu, and yolo,accessed:2019-09-14.
+A. C. Berg, (cid:147)Ssd: Single shot multibox detector,(cid:148) in Proceedings of [29] (cid:147)OpenVino Toolkit,(cid:148) https://software.intel.com/en-us/
+the European Conference on Computer Vision (ECCV). Springer, openvino-toolkit,accessed:2019-09-14.
+2016,pp.21(cid:150)37.
+[14] J.RedmonandA.Farhadi,(cid:147)YOLOv3:AnIncrementalImprovement,(cid:148)
+arXive-prints,p.arXiv:1804.02767,Apr2018.
+1983
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:31 UTC from IEEE Xplore.  Restrictions apply. 

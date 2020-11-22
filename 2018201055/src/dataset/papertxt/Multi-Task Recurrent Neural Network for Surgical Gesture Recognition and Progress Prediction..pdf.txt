@@ -1,0 +1,510 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Hand Pose Estimation for Hand-Object Interaction Cases
+using Augmented Autoencoder
+∗ ∗
+Shile Li1, , Haojie Wang1, and Dongheui Lee1,2
+Abstract—Hand pose estimation with objects is challenging
+duetoobjectocclusionandthelackoflargeannotateddatasets.
+To tackle these issues, we propose an Augmented Autoencoder
+baseddeeplearningmethodusingaugmentedcleanhanddata.
+Ourmethodtakes3Dpointcloudofahandwithanaugmented
+objectasinputandencodestheinputtolatentrepresentationof
+the hand. From the latent representation, our method decodes
+3D hand pose and we propose to use an auxiliary point cloud
+decoder to assist the formation of the latent space. Through
+quantitativeandqualitativeevaluationonbothsyntheticdataset
+and real captured data containing objects, we demonstrate
+state-of-the-art performance for hand pose estimation with
+objects, even using only a small number of annotated hand-
+object samples.
+I. INTRODUCTION Fig. 1. The raw data are captured from a RGB-D camera. We use only
+the depth image to acquire the input cloud. The RGB image is used for
+Hand pose estimation plays an important role in visualization. For the output, besides the predicted pose, a clean hand is
+many human-robot interaction tasks, such as teleopera- simultaneously reconstructed. (Brightness in point cloud indicates depth,
+i.e.darkerdenotesfurther.)
+tion, virtual/augmented reality and robot imitation learn-
+ing [1][2][3][4][5]. These applications require real-time
+and accurate hand pose estimation in 3D space. Re-
+cently, deep learning based methods have made signiﬁcant Therefore, it is worth considering how to utilize existing
+progress in this area, which can be categorized to depth- clean hand datasets for hand-object cases.
+based approaches [6][7][8][9][10][11][12][13] and RGB-
+Inthiswork,weproposeanoveldeeplearningframework
+based approaches[17][18][19]. Despite the success of these
+using Augmented Autoencoder to tackle hand-object inter-
+methods, they rarely concern the hand-object interaction
+action problem in hand pose estimation tasks. Our method
+cases. These methods typically fail in manipulation tasks
+takes 3D occluded hand point cloud as input, which is
+because of the occlusions caused by the grasped object.
+obtained by a random data augmentation process from clean
+Recently,severalworksstarttotakeobjectocclusionprob-
+hand samples. The encoder extracts point-wise features and
+lems for hand pose estimation task into consideration. The
+fuses them to a latent vector. Addressing the problem of
+majority are tracking based approaches [20][21][22]. The
+object occlusion in hand-object interaction cases, we use
+robustperformanceofthesemethodsreliesontrackingalgo-
+an auxiliary decoder to reconstruct the clean hand point
+rithms to exploit the temporal constraints between consecu-
+cloud from the latent vector, and another decoder estimates
+tiveframesininputsequence.However,agoodinitialization
+simultaneouslythe3Dhandposefromthesamelatentvector.
+is required for the ﬁrst frame, and sometimes tracking drift
+To the best of our knowledge, this is the ﬁrst work that uses
+happens. Other conventional methods [22][23][24] resort to
+3D point cloud data to tackle object occlusion problem in
+multi-camera setups to reduce the inﬂuence of object occlu-
+hand-object interaction tasks (Fig. 1).
+sionsfrommultipleviewpoints.However,itisexpensiveand
+Our contribution can be summarized as follows:
+complex to set up a synchronous and calibrated system with
+multiple sensors. • We present an augmentation strategy to simulate hand-
+Currently, hand pose estimation for hand-object interac- object interaction cases utilizing existing large clean
+tion cases is limited by existing available datasets. Public hand datasets. Since unlimited types of objects could
+large-scale datasets with reliable 3D ground-truth anno- be augmented, the trained model is more generalizable
+tations are lacking due to the complexity of annotating on unknown objects.
+3D hand pose. Although some large-scale datasets, like • We propose an auxiliary clean hand reconstruction
+Hands2017Challenge [26], have accurate 3D pose annota- decodertoimprovethequalityofthelatentspace,which
+tions, they are entirely composed from clean hand samples. in turn improves the hand pose accuracy.
+• We demonstrate the advantages of the proposed aug-
+1 Human-centeredAssistiveRobotic,TechnicalUniversityofMunich.
+mentation and reconstruction approaches both qualita-
+2 InstituteofRoboticsandMechatronics,GermanAerospaceCenter.
+∗ Theﬁrsttwoauthorscontributedequallytothiswork. tively and quantitatively through multiple experiments.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 993
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK an attraction loss to encourage the hand to be in contact
+with the object. These methods require complex annotation
+In the following, we ﬁrst review some hand pose estima-
+process and could not fully utilize existing annotated clean
+tion works on both clean hand and hand-object interaction
+hand datasets for hand-object interaction cases.
+cases. Then we brieﬂy introduce the backbone of our frame-
+work, Augmented Autoencoder and the utilized point cloud
+C. Augmented Autoencoder and 3D Shape Reconstruction
+reconstruction method, FoldingNet.
+Augmented Autoencoderisthebackboneofourmethod,
+A. Clean Hand Pose Estimation which is ﬁrstly proposed by Sundermeyer et al. [28] in their
+In the past few years, a lot of 2D deep learning based real-time RGB-based pipeline for object detection and 6D
+methods for clean hand pose estimation has been proposed pose estimation. In order to remove the effects of object
+[12][13][11][14][15][16]. In particular, 2D depth image occlusions and background clutters, they use an augmen-
+based methods demonstrate robust performance. Oberweger tation process to generate input data, which superimposes
+et al. [13] use 2D CNN to estimate the hand pose from the artiﬁcialocclusionsandclutterstothecleandata.Theirwork
+image features, where they introduce a bottleneck layer to demonstrates that this training procedure is able to enforce
+force the predicted pose obey certain prior distribution. Wan theinvarianceoftheencodedlatentvariableagainstavariety
+et al. [12] estimate hand pose with a proposed pose param- of different input augmentations. Encouraged by the idea of
+eterization strategy, which decomposes the pose parameters augmentation invariance, we apply a random augmentation
+into a set of per-pixel estimations, i.e. 2D/3D heat maps and process on clean hand samples of existing datasets to gener-
+unit 3D directional vector ﬁelds, to leverage the 2D and 3D ateourinput,andrecovercorrespondingcleanhandsamples
+properties of the input depth map. with an auxiliary 3D shape reconstruction decoder.
+Recently, 3D deep learning methods gain more at- 3D Shape Reconstruction using deep learning has made
+tention due to the abundant information in input data a lot of advancement in recent years [35][36][37][38]. Yang
+[7][8][29][9][10].Geetal.[8]presentaPointNet[29]based et al. [37] propose a folding-based network, FoldingNet,
+approach that directly takes point cloud as input to regress which deforms a canonical 2D grid onto the underlying 3D
+3Dhandjointlocations.Inordertohandlevariationsofhand target surface of a point cloud with two consecutive folding
+globalorientations,theyintroducetheorientedboundingbox operations. For network complexity, FoldingNet consumes
+(OBB) to normalize the hand point clouds. Li et al. [7] only about 7% parameters of a fully-connected layer based
+propose a point-to-pose voting based residual permutation neural network to reconstruct a 3D target. Their method
+equivariant network for hand pose estimation task. Without achieves low reconstruction errors even for targets with
+the need of complex preprocessing steps, their method takes delicate structures. Therefore, we use FoldingNet for the
+unordered 3D point cloud as input to compute point-wise clean hand reconstruction decoder.
+features and through weighted fusion to obtain ﬁnal hand A critical challenge in 3D shape reconstruction is to
+poseestimates.Despitetheirgoodperformanceonhandpose evaluate the predicted point cloud. The loss function should
+estimation, they commonly ignore the crucial hand-object be not only computationally efﬁcient but also differentiable
+interaction cases. with respect to point coordinates. The Chamfer Distance
+(CD) and the Earth Mover’s Distance (EMD) [39] are two
+B. Hand Pose Estimation with Object Interaction
+outstanding candidates to compare the reconstructed clean
+There are some previous works that have taken the prob- hand point cloud with ground-truth in our work.
+lem of object occlusion in hand pose estimation task into
+III. METHOD
+account [30][31][32][33]. The work by Tekin et al. [33] has
+impressive success of 3D hand pose estimation jointly with The overview of our method is illustrated in Fig. 2 (left).
+otherparalleltasks.Theirmethodtakesasequenceofframes The framework is based on the structure of Variational Au-
+as input and outputs per-frame 3D hand and object pose toencoder (VAE) [27]. Our method takes 3D occluded hand
+predictions along with the estimates of object and action point cloud as input, which is obtained by an augmentation
+categoriesfortheentiresequence,whereasitreliestoomuch process from clean hand and random objects. The encoder
+on a frame sequence rather than a single image. Gao et al. extractspoint-wisefeaturesandfusesthemtoalatentvector,
+[31] propose an object-aware method to estimate 3D hand which is the latent representation of the input hand. Then,
+pose from a single RGB image, where they rely on a deep the acquired latent vector is used to reconstruct clean hand
+structure to infer the category of the grasped object shape point cloud by the auxiliary Decoder 1 and predict 3D hand
+under the assumption that objects of a similar category are pose by Decoder 2.
+grasped in a similar way. Boukhayma et al. [17] propose to
+A. Data Augmentation
+useextractedhandparameterstocontrolameshdeformation
+hand model MANO [34] and project it into image domain ThemotivationbehindourAugmentedAutoencoderbased
+to train the network. A similar hand model based work by handposeestimationframeworkistocontrolwhatthelatent
+Hasson et al. [25] uses a contact loss to describe the spatial vectorencodesandwhichpropertiesareignored.Totakead-
+state of hand and object when a hand manipulates object, vantages of current large-scale clean hand dataset, we apply
+i.e. using a repulsion loss to penalize interpenetration and a random augmentation process by superimposing random
+994
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. Fig.2. Overviewofourmethod(left)andthestructureoftheencoder(right).Theinputofournetworkisoccludedhandpointcloud,whichisobtained
+byarandomaugmentationprocessfromcleanhandpointcloud.Theencoderencodestheinputhandtoalatentvector.Theobtainedlatentvectoristhen
+usedtoreconstructcleanhandpointcloudbytheauxiliaryDecoder1andpredict3DhandposebyDecoder2.TherearethreelossesinourVAEbased
+framework,whicharetheKLloss,reconstructionlossandposeloss.(Brightnessinpointcloudindicatesdepth,i.e.darkerdenotesfurther.)
+objectsfromShapeNet[40]oncleanhandstosimulatehand- modules respectively, resulting in two separate terms, an
+∈ R ×
+object interaction scenarios in reality. Simultaneously, the importance term G N 256 and a new feature term
+∈ R ×
+clean hand point cloud also serves as the ground-truth for F N 256, where the local feature dimension for each
+2
+reconstructed points by the auxiliary Decoder 1. Through point is shrunk to 256. Each element of G indicates the
+this approach, we make the latent representation invariant weight for corresponding feature value in F and provides
+2
+against object occlusions when a hand is in contact with an vital information of the importance of current feature value.
+object. Then, by a weight fusion module, we merge the information
+∈R(cid:80)
+The random augmentation process is shown in Fig. 3. of both terms to F 256:
+3
+In step 1, a randomly selected object from ShapeNet is (cid:80)
+superimposed on a clean hand point cloud sample after N (G F )
+random rotation, scaling and translation. Step 2 renders the fi = n=1N nGi 2ni , (1)
+combined point cloud to depth image, where we only keep n=1 ni
+the point which is the closest to the camera among those
+where f is the i-th feature value in F .
+projectedtothesame2Dimagegrid.Finally,step3converts i 3
+In order to extract complex features, we use a 5-layer
+the depth image to occluded hand point cloud.
+perceptron to encode F to the ﬁnal K-dimensional latent
+3 ∈R
+B. Residual Permutation Equivariant Layer based Encoder vector, which consists of a latent mean vector µ K, and
+∈R
+a latent standard deviation vector σ K.
+We use Residual Permutation Equivariant Layer (PEL)
+During training stage, a reparameterization process to
+[7] as backbone to encode the input point cloud (Fig. 2
+∈ R × sample from the distribution of the latent vector [27] is
+(right). The input occluded hand point cloud Pa N 3 (cid:12) ∈ R ∼(cid:0)N (cid:1)
+representedbyN unoredered3Dpointspassesﬁrstlythrough need(cid:12)ed: z = µ + σ , where  K,  (0,I)
+and denotes element-wise multiplication. The ﬁnal latent
+ablorecskisd.uTalhePnEpLoimnto-wduislee,fewahtuicrhe Fcon∈sisRtsNo×f10324reissidcoumalpPuEteLd vector z∈RK is Gaussian distributed and z∼N µ,σ2 .
+1
+for each individual input point, where each row of F
+1
+represents the local feature for one point. The obtained
+C. Decoder and Training Loss
+F is imported to two separate point-wise fully-connected
+1
+The obtained latent vector z from encoder is fed into
+decoders. The clean hand reconstruction Decoder 1 is based
+on FoldingNet [37]. The pose prediction Decoder 2 consists
+of multiple fully-connected layers.
+Decoder 1 is a FoldingNet [37] that transforms (”folds”)
+2d grid points of a square into 3D point cloud with two
+foldingoperations.Inthefoldingoperation,eachgridpoint’s
+coordinate is concatenated with the latent vector z and fed
+into a 4-layer perceptron to construct a more complex shape
+compared to the input. The ﬁnal reconstructed points Pˆ are
+evaluated by Chamfer Distance (CD) and Earth Mover’s
+Fig. 3. Data augmentation process. Step 1: combine hand point cloud Distance (EMD) [39] with respect to the ground-truth clean
+and object; Step 2: project combined point cloud to depth image; Step 3: ∈R ×
+convert depth image to occluded hand point cloud. (Brightness in point handpointcloudP N 3.Notethatthenumberofpoints
+cloudindicatesdepth,i.e.darkerdenotesfurther.) in Pˆ is required to be the same as P.
+995
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. (cid:16) (cid:17) (cid:88) (cid:88)
+The Chamfer Distance is deﬁned as: all experiments, we use an input and reconstruction point
+LCD Pˆ,P = |Pˆ1|pˆ∈Pˆmp∈iPn(cid:107)pˆ−p(cid:107)+|P1|p∈Pmpˆ∈iPˆn(cid:107)pˆ−p(cid:107), stKhizee=laotfe6nN4t va=necd6to2tr5hezfoK∈rLtRraKLino,isnwsge,isasnewdtetNihgeh=tneud9m0ub0seifrnogorftaedsiftmaincegtno.srFiooonfr
+(2)
+α = 0.001. Before our object augmentation process, we
+where the CD algorithm ﬁnds for each point the nearest
+performforeachhandsamplerandomtranslationinallthree
+neighborintheotherpointcloudandsumsuptheEuclidean −
+dimensions within [ 15,15] mm, random scaling within
+distances. −
+[0.75,1.25]andrandomrotationaroundz-axiswithin[ π,π]
+The Earth M(cid:16)ove|r’(cid:17)s|Dis|tan|ce requi(cid:88)res that Pˆ and P have radian. The trained model can be employed for real-time
+the same size, i.e. Pˆ = P, and it is deﬁned as: applications, since the network backbones, the ResPEL [7]
+L 1 (cid:107) − (cid:107) and FoldingNet [37], are both real-time capable.
+Pˆ,P = | | min p φ(p) , (3)
+EMD P φ:P→Pˆ ∈
+p P A. Datasets
+where φ denotes one-to-one bijective correspondences from
+For training and evaluating the proposed network, we
+the ground-truth P to the predicted point set Pˆ. The Eu-
+use the Hands2017Challenge dataset [26], the SynthHands
+clideandistancesofallmatchedpointpairsarethensummed.
+dataset [41] and also the EgoDexter dataset [41]. The
+Both loss functions have their own intrinsic characteris-
+Hands2017Challenge is collected from parts of the Big-
+tics. For example, while EMD roughly captures the shape
+Hand2.2M [42] and the First-Person Hand Action (FHAD)
+corresponding to the mean value of the hidden variable of
+[43]. The training set contains 957032 depth images, and
+the hand point cloud, CD tends to give a splashy shape that
+the test set contains 295510 depth images. All samples in
+blurs the shape’s geometric structure [38]. To make the re-
+Hands2017Challenge are clean hands, where the hands are
+constructionbyDecoder1moreexpressive,wecombineboth
+not in contact with objects. The egocentric dataset Synth-
+lossfunctionsduringtrainingtime.Therefore,implicitly,our
+Hands is a synthetic dataset created by posing a photore-
+methodrequiresthereconstructedcleanhandpointshavethe
+alistic hand model with real hand motion data. It captures
+same size N as the ground-truth.
+multiple variations in natural hand motion, such as pose,
+For 3D hand pose prediction, Decoder 2, which consists
+skin color, shape, texture, background clutter as well as
+of 5 fully-connected layers, takes the reparameterized latent
+camera viewpoint. This dataset contains accurate annotated
+vector as input and outputs the vectorized 3D hand pose
+∈R × 92536 RGB-D images of clean hands and 91600 RGB-D
+yˆ J, where J =3 #joints. The training loss between
+∈ R images of hands interacting with objects, of which we use
+predicted hand pose yˆ and ground-truth pose ygt J is
+(cid:88)(cid:0) (cid:1) 69402cleansamplesand68700interactinghandsamplesfor
+the L2 loss:
+training. Except the training samples, the rest 23134 clean
+L = 1 J yˆ −ygt 2. (4) samples serve as our clean test set and 22900 interacting
+pose 2 j j samples as our interacting test set. The benchmark dataset
+j=1 EgoDexter consists of four real sequences with hand-object
+As the proposed framework is based on VAE, a KL (Kull- interactions (Rotunda, Desk, Kitchen, Fruits), which contain
+backLeibler divergence) loss is essential to force the com- in total 1485 frames with 3D ﬁnger tip annotations. We
+putedlatentvectorzgivenobservedoccludeddatatobeclose compare the accuracy to the state-of-the-art method in [41]
+N
+to the centered isotropic multivariate Gaussian (z;0,I) using this dataset. We exclude the Kitchen sequence due to
+(Fig. 2 left) . The K(cid:88)L lo(cid:0)ss is deﬁned as(cid:0): (cid:1) (cid:1) itsmanyannotationerrors,andusetheotherthreesequences
+for evaluation.
+L 1 K − −
+= µ2 +σ2 log σ2 1 , (5) For the random augmentation process for clean hand
+KL 2 k k k samples, we use objects from ShapeNetCore, which is a
+k=1
+subset of the object repository ShapeNet [40] and covers 55
+where K denotes the number of dimensions of the latent
+vector z, µ is the k-th dimension of the latent mean µ object categories with about 51300 unique 3D models. As
+k preprocessing, we sample these 3D models to point clouds.
+and σ denotes the k-th dimension of the latent standard
+k
+deviation σ.
+B. Evaluation Metrics
+The resulting total loss for our method is the summation
+L L L L
+of , , and weighted terms: We evaluate the performance of our method only
+CD EMD pose KL
+L L L L L qualitatively on real data for the trained model on
+= + + +α , (6)
+total CD EMD pose KL Hands2017Challenge,becauseitcontainsnoannotatedsam-
+where α is the weight factor. ples for hand-object interaction cases. For the SynthHands
+dataset, two standard metrics are used for evaluation. The
+IV. EXPERIMENTANDRESULT
+ﬁrst one is the mean joint error (mm), which measures the
+Our method is implemented using the TensorFlow frame- average Euclidean distance error for all joints across the
+workwiththeADAMoptimizer.Thelearningrateistapered wholetestset.Thesecondmetriciscorrectframeproportion,
+downfrom0.01to0.00001duringthecourseoftraining.For which indicates the percentage of frames that have all joint
+996
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. Fig.4. Left:Comparisontostate-of-the-artmethodonEgoDexterbenchmark.Middle:ComparisontobaselinesonSynthhandsTest-Proportionofcorrect
+frameswithrespecttodifferenterrorthresholds.Right:ComparisontobaselineonSynthhandsTest-Meanerrorsofdifferentjoints.
+TABLEI
+errors within a certain threshold compared to the ground-
+COMPARISONOFDIFFERENTTRAININGMETHODSONSYNTHHANDS.
+truth. The correct frame proportion metric is challenging,
+since a single joint violation will cause an incorrect frame.
+ErroronTestDataset(mm)
+For the EgoDexter dataset with only ﬁnger tip annotations, TrainingDataset cleanhand interactinghand
+weuseﬁngertiperrorforevaluation,whichisthemeanjoint A 9.67 19.13
+B 9.63 14.16
+error for 3D ﬁnger tip positions.
+C 10.69 14.35
+D 12.52 15.99
+C. Comparison to state-of-the-art Method
+Since the EgoDexter dataset is only annotated on 3D testsetis19.13mm,whichindicatestheeffectivenessofthe
+ﬁnger tip positions, we use the ﬁnger tip error to compare augmentation strategy.
+the performance of our method with the kinematic pose Furthermore, the best performance is achieved with train-
+tracking method proposed by Mueller et al. [41]. We follow ingDatasetB,whichcontains25%interactinghandsamples.
+the same training dataset in their work, where all samples Compared to Dataset A, the mean joint error is decreased
+in SynthHands are used. As shown in Fig. 4 (left), our for 5 mm on interacting hand test set by mixing only a
+method outperforms the state-of-the-art method on the test small proportion of real interacting hand samples in the
+sequences, achieving the average error of 28.70 mm. Note training dataset. However, with the increasing proportion
+thattheobjectsinEgoDexteraredifferentfromtheobjectsin of interacting hand for training, the results become slightly
+SynthHands training data. It shows the generalization ability worse, even on the interacting test set. The possible reason
+of our method to unknown objects. forthisisthatthedecreaseofcleanhandproportionleadsto
+lessdataaugmentation,whichmeanslessrandomobjectsare
+D. Ablation Study
+seenforthetrainingprocess,resultinginlessgeneralizability
+In the ﬁrst ablation experiment, we mix different propor- on the unseen objects in the test set. Moreover, for the
+tions of interacting hand samples to training set to compare interacting training samples, hand reconstruction part were
+the performance of different trained models. Then we use nottrainedsincethereisnoavailablecleanhandground-truth
+the optimal mixing proportion for the next experiments. c to guide reconstruction, this leads to insufﬁcient training of
+Using the training samples from SynthHands, we set 4 the reconstruction decoder and in turn inﬂuences the quality
+different training datasets with varying percentages of hand- of the latent space. This experiment shows that, in practice,
+object interaction samples: we can utilize large clean hand dataset and mix a small
+proportion of interacting hand samples, which are expensive
+• Dataset A: 100% clean hand samples.
+to annotate, to achieve robust performance.
+• DatasetB:75%clean+25%interactinghandsamples.
+• DatasetC:50%clean+50%interactinghandsamples. In the second experiment, for ablation study, we set
+• DatasetD:25%clean+75%interactinghandsamples. the following baselines to show the effects of the data
+augmentation and points reconstruction approaches:
+Note that the interacting hand samples are not augmented
+during training time. Also, note that the performance of • Baseline 1. Ours without object augmentation.
+interacting hand is usually much worse than the clean hand • Baseline 2. Ours without clean hand reconstruction.
+samples due to occlusion. Both baselines are trained using Dataset B. As seen in
+The detailed comparison of mean joint errors on our both Fig. 4 (middle and right), our method outperforms the two
+test sets can be found in Table I. We can already obtain baselinesonbothcleanhandtestsetandinteractinghandtest
+a reasonably good result on 100% clean hand Dataset A. set.TableIIshowsthattheresultsofbaselinesareworseeven
+Evenifusingonlyaugmentedhandsamplesfromcleanhand on clean hand test set. The possible reason for this is that
+withoutanyinteractinghandsamples,theerroroninteracting the latent representation in baselines is implicitly correlated
+997
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. Fig.5. QualitativeresultscomparedwithbaselinesonSynthHands.(Brightnessinpointcloudindicatesdepth,i.e.darkerdenotesfurther.)
+TABLEII
+COMPARISONWITHBASELINESONSYNTHHANDS.
+ErroronTestDataset(mm)
+Model
+cleanhand interactinghand
+Ourmethod 9.63 14.16
+Baseline1 15.44 20.78
+Baseline2 19.60 23.46
+to the mixture of clean hands and interacting hands rather
+thancleanhandsaloneinourAugmentedAutoencoderbased
+framework.Bythisresult,wedemonstratethesigniﬁcantef-
+fects of the augmentation component and the reconstruction
+component in our method.
+E. Qualitative Results
+For the SynthHands dataset, the qualitative comparison of
+Fig.6. Qualitativeresultsonrealdata.(Brightnessinpointcloudindicates
+our method with two baselines is shown in Fig. 5 on the depth,i.e.darkerdenotesfurther.)
+interacting test set.
+mation tasks for hand-object interaction cases. Our method
+For the Hands2017Challenge dataset, as the training set
+consumes 3D hand point cloud and predicts accurate 3D
+and test set contain only clean hands, we train our model
+handpose.Theproposedaugmentationprocessandauxiliary
+without mixing any interacting hands. Furthermore, we just
+clean hand reconstruction decoder implicitly force the latent
+giveaqualitativeresultonthetrainedmodelwiththisdataset
+representationoftheposeonlytobecorrelatedtocleanhand
+for evaluation. Fig. 6 shows qualitative results on real data,
+andthereconstructedcleanhanddespitetheobjectocclusion
+where the hand interacts with different objects, such as ball,
+in hand-object interaction cases. Furthermore, the proposed
+bucket,phone,paperbox,whicharenotseenduringtraining.
+hand pose estimation training strategy is able to utilize
+Although the model is trained only with clean hand data
+existingcleanhanddatasetstotacklehand-objectinteraction
+on the Hands2017Challenge dataset, the results shows good
+cases. Quantitative and qualitative evaluation results show
+performance.
+that our framework is capable of achieving low joint errors
+Note that high quality point cloud reconstruction is not ∼
+strictly required in our method. Fig. 6 shows that occluded on both∼clean hand input ( 9 mm) and interacting hand
+objects are roughly removed after reconstruction, indicating input ( 14 mm). In the future work, more aspects of joint
+hand-object case will be investigated such as object pose
+the importance of Decoder 1 for the formation of the latent
+estimation [44] and physical constraints. Another interesting
+space of the clean hand.
+aspect will be evaluating the grasp quality of reconstrcuted
+V. CONCLUSION hand pose.
+Inthispaper,weproposeanoveldeeplearningframework Acknowledgement: This work has been partially sup-
+using Augmented Autoencoder to handle hand pose esti- ported by Helmholtz Association.
+998
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [23] L.Ballan,A.Taneja,J.Gall,L.VanGool,andM.Pollefeys. Motion
+capture of hands in action using discriminative salient points. In
+[1] L. Zollo, S. Roccella, E. Guglielmelli, M. Carrozza, and P. Dario. EuropeanConferenceonComputerVision,pages640–653,2012.
+Biomechatronic design and control of an anthropomorphic artiﬁcial
+[24] D. Tzionas, L. Ballan, A. Srikantha, P. Aponte, M. Pollefeys, and J.
+handforprostheticandroboticapplications.IEEE/ASMETransactions
+Gall. Capturing hands in action using discriminative salient points
+OnMechatronics,12(4):418–429,2007. and physics simulation. International Journal of Computer Vision,
+[2] Y. Jang, S. Noh, H. Chang, T. Kim, and W. Woo. 3d ﬁnger
+118(2):172–193,2016.
+cape: Clicking action and position estimation under self-occlusions
+[25] Y.Hasson,G.Varol,D.Tzionas,I.Kalevatykh,M.Black,I.Laptev,
+in egocentric viewpoint. IEEE Transactions on Visualization and
+and C. Schmid. Learning joint reconstruction of hands and manipu-
+ComputerGraphics,21(4):501–510,2015. lated objects. In Proceedings of the IEEE Conference on Computer
+[3] T.Piumsomboon,A.Clark,M.Billinghurst,andA.Cockburn. User- VisionandPatternRecognition,pages11807–11816,2019.
+deﬁnedgesturesforaugmentedreality.InIFIPConferenceonHuman-
+[26] S.Yuan,Q.Ye,G.Garcia-Hernando,andT.Kim. The2017handsin
+ComputerInteraction,pages282–299.Springer,2013. themillionchallengeon3dhandposeestimation. arXiv:1707.02237,
+[4] B. Argall, S. Chernova, M. Veloso, and B. Browning. A survey of
+2017.
+robotlearningfromdemonstration.Roboticsandautonomoussystems,
+[27] D. Kingma and M. Welling. Auto-encoding variational bayes.
+57(5):469–483,2009. arXiv:1312.6114,2013.
+[5] S. Calinon and D. Lee Learning Control, Humanoid Robotics: a
+[28] M.Sundermeyer,Z.Marton,M.Durner,M.Brucker,andR.Triebel.
+Reference Springer,2017,57(5):469–483,2017
+Implicit 3d orientation learning for 6d object detection from rgb
+[6] S.Yuan,G.Garcia-Hernando,B.Stenger,G.Moon,J.Chang,K.Lee, images. In Proceedings of the European Conference on Computer
+P. Molchanov, J. Kautz, S. Honari, L. Ge, et al. Depth-based 3d Vision(ECCV),pages699–715,2018.
+handposeestimation:Fromcurrentachievementstofuturegoals. In
+[29] C. Qi, L. Yi, H. Su, and L. Guibas. Pointnet++: Deep hierarchical
+ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+featurelearningonpointsetsinametricspace.InAdvancesinneural
+Recognition,pages2636–2645,2018. informationprocessingsystems,pages5099–5108,2017.
+[7] S. Li and D. Lee. Point-to-pose voting based hand pose estimation
+[30] Q. Ye and T. Kim. Occlusion-aware hand pose estimation using
+using residual permutation equivariant layer. In Proceedings of the hierarchicalmixturedensitynetwork. InProceedingsoftheEuropean
+IEEEConferenceonComputerVisionandPatternRecognition,pages ConferenceonComputerVision(ECCV),pages801–817,2018.
+11927–11936,2019.
+[31] Y. Gao, Y. Wang, P. Falco, N. Navab, and F. Tombari. Variational
+[8] L. Ge, Y. Cai, J. Weng, and J. Yuan. Hand pointnet: 3d hand pose object-aware 3d hand pose from a single rgb image. IEEE Robotics
+estimation using point sets. In Proceedings of the IEEE Conference andAutomationLetters,2019.
+onComputerVisionandPatternRecognition,pages8417–8426,2018.
+[32] M. Madadi, S. Escalera, A. Carruesco, C. Andujar, X. Baro´, and
+[9] L. Ge, H. Liang, J. Yuan, and D. Thalmann. Robust 3d hand pose
+J. Gonza`lez. Occlusion aware hand pose recovery from sequences
+estimationinsingledepthimages:fromsingle-viewcnntomulti-view of depth images. In 2017 12th IEEE International Conference on
+cnns. InProceedingsoftheIEEEconferenceoncomputervisionand AutomaticFace&GestureRecognition(FG2017),p.230–237,2017.
+patternrecognition,pages3593–3601,2016.
+[33] B. Tekin, F. Bogo, and M. Pollefeys. H+ o: Uniﬁed egocentric
+[10] L.Ge,H.Liang,J.Yuan,andD.Thalmann. 3dconvolutionalneural recognitionof3dhand-objectposesandinteractions. InProceedings
+networks for efﬁcient and robust hand pose estimation from single oftheIEEEConferenceonComputerVisionandPatternRecognition,
+depth images. In Proceedings of the IEEE Conference on Computer
+pages4511–4520,2019.
+VisionandPatternRecognition,pages1991–2000,2017.
+[34] J.Romero,D.Tzionas,andM.Black.Embodiedhands:Modelingand
+[11] C.Wan,T.Probst,L.VanGool,andA.Yao.Crossingnets:Combining capturinghandsandbodiestogether. ACMTransactionsonGraphics
+gansandvaeswithasharedlatentspaceforhandposeestimation. In (TOG),36(6):245,2017.
+ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+[35] C. Choy, D. Xu, J. Gwak, K. Chen, and S. Savarese. 3d-r2n2: A
+Recognition,pages680–689,2017.
+uniﬁed approach for single and multi-view 3d object reconstruction.
+[12] C. Wan, T. Probst, L. Van Gool, and A. Yao. Dense 3d regression InEuropeanconferenceoncomputervision,p.628–644.,2016.
+forhandposeestimation. InProceedingsoftheIEEEConferenceon
+[36] T. Groueix, M. Fisher, V. Kim, B. Russell, and M. Aubry. Atlasnet:
+ComputerVisionandPatternRecognition,pages5147–5156,2018. \ \
+A papier-m ˆ ach ’e approach to learning 3d surface generation.
+[13] M. Oberweger, P. Wohlhart, and V. Lepetit. Hands deep in deep arXiv:1802.05384,2018.
+learningforhandposeestimation. arXiv:1502.06807,2015.
+[37] Y.Yang,C.Feng,Y.Shen,andD.Tian.Foldingnet:Pointcloudauto-
+[14] C. Zimmermann and T. Brox. Learning to estimate 3d hand pose encoderviadeepgriddeformation. InIEEEConferenceonComputer
+from single rgb images. In Proceedings of the IEEE International VisionandPatternRecognition,p.206–215,2018.
+ConferenceonComputerVision,pages4903–4911,2017.
+[38] H. Fan, H. Su, and L. Guibas. A point set generation network for
+[15] A.Spurr,J.Song,S.Park,andO.Hilliges. Cross-modaldeepvaria- 3d object reconstruction from a single image. In Proceedings of the
+tionalhandposeestimation. InProceedingsoftheIEEEConference IEEE conference on computer vision and pattern recognition, pages
+onComputerVisionandPatternRecognition,pages89–98,2018.
+605–613,2017.
+[16] L.YangandA.Yao. Disentanglinglatenthandsforimagesynthesis
+[39] Y.Rubner,C.Tomasi,andL.Guibas. Theearthmover’sdistanceas
+and pose estimation. In Proceedings of the IEEE Conference on ametricforimageretrieval. Internationaljournalofcomputervision,
+ComputerVisionandPatternRecognition,pages9877–9886,2019.
+40(2):99–121,2000.
+[17] A. Boukhayma, R. Bem, and P. Torr. 3d hand shape and pose from
+[40] A.Chang,T.Funkhouser,L.Guibas,P.Hanrahan,Q.Huang,Z.Li,S.
+images in the wild. In Proceedings of the IEEE Conference on
+Savarese,M.Savva,S.Song,H.Su,etal. Shapenet:Aninformation-
+ComputerVisionandPatternRecognition,pages10843–10852,2019. rich3dmodelrepository. arXiv:1512.03012,2015.
+[18] P. Panteleris, I. Oikonomidis, and A. Argyros. Using a single rgb
+[41] F. Mueller, D. Mehta, O. Sotnychenko, S. Sridhar, D. Casas, and C.
+frame for real time 3d hand pose estimation in the wild. In 2018
+Theobalt.Real-timehandtrackingunderocclusionfromanegocentric
+IEEEWinterConferenceonApplicationsofComputerVision(WACV), rgb-dsensor.InProceedingsoftheIEEEInternationalConferenceon
+pages436–445.IEEE,2018. ComputerVision,pages1284–1293,2017.
+[19] L. Yang, S. Li, D. Lee, and A. Yao. Aligning latent spaces for 3d
+[42] S. Yuan, Q. Ye, B. Stenger, S. Jain, and T. Kim. Bighand2. 2m
+handposeestimation. InProceedingsoftheInternationalConference
+benchmark: Hand pose dataset and state of the art analysis. In
+onComputerVision,2019. ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+[20] N. Kyriazis and A. Argyros. Physically plausible 3d scene tracking: Recognition,pages4866–4874,2017.
+Thesingleactorhypothesis. InProceedingsoftheIEEEConference [43] G.Garcia-Hernando,S.Yuan,S.Baek,andT.Kim.First-personhand
+onComputerVisionandPatternRecognition,pages9–16,2013. actionbenchmarkwithrgb-dvideosand3dhandposeannotations. In
+[21] H.Hamer,K.Schindler,E.Koller-Meier,andL.VanGool. Tracking ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+a hand manipulating an object. In 2009 IEEE 12th International Recognition,pages409–419,2018.
+ConferenceonComputerVision,pages1475–1482.IEEE,2009. [44] S.Li,S.KooandD.Lee Real-timeandModel-freeObjectTracking
+[22] I. Oikonomidis, N. Kyriazis, and A. Argyros. Full dof tracking of a using Particle Filter with Joint Color-Spatial Descriptor. In Interna-
+handinteractingwithanobjectbymodelingocclusionsandphysical tionalConferenceonIntelligentRobotsandSystems(IROS2015).
+constraints. In 2011 International Conference on Computer Vision,
+pages2088–2095.IEEE,2011.
+999
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:04:11 UTC from IEEE Xplore.  Restrictions apply. 

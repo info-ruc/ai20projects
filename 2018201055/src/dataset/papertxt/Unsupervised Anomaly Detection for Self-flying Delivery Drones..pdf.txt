@@ -1,0 +1,488 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Vehicle Localization Based on Visual Lane Marking and Topological
+Map Matching
+Rabbia Asghar1, Mario Garzo´n2, Je´roˆme Lussereau1, Christian Laugier1
+Abstract—Accurate and reliable localization is crucial to achieve accurate localization [2]. Additional to GPS and
+autonomous vehicle navigation and driver assistance systems. dead reckoning, our work brings together both lane level
+This paper presents a novel approach for online vehicle local-
+and topology of the map and fuses the information using
+izationinadigitalmap.Twodistinctmapmatchingalgorithms
+Extended Kalman Filter (EKF) to improve map relative
+are proposed: i) Iterative Closest Point (ICP) based lane level
+map matching is performed with visual lane tracker and localization.
+grid map ii) decision-rule based approach is used to perform Our strategy is based on using similar features, as those
+topological map matching. Results of both the map matching used for navigation of the vehicle for reliable localization.
+algorithms are fused together with GPS and dead reckoning
+For instance, an autonomous vehicle needs to be aware of
+usingExtendedKalmanFiltertoestimatevehicle’sposerelative
+the lane markings on the road to effectively maintain the
+tothemap.Theproposedapproachhasbeenvalidatedonreal
+life conditions on an equipped vehicle. Detailed analysis of the lane keeping of the vehicle. We use lane tracker to correct
+experimental results show improved localization using the two the vehicle’s pose by aligning visual lane markings to lane-
+aforementioned map matching algorithms. level grid map. Similarly, it’s a common practice to use
+Index Terms—Map Relative Localization, Topological Map
+Topological Map Matching (TMM) for route planning. We
+Matching, Lane Level Matching, Autonomous Vehicles.
+use TMM as another observation in EKF to correct the
+vehicle position.
+I. INTRODUCTION
+The main contribution of this paper is a novel approach
+Localization is one of the key components of the system that incorporates both visual lane-level map matching and
+architecture of autonomous driving and Advanced Driver TMM with EKF. Instead of independently implementing
+AssistanceSystems(ADAS).Accuratelocalizationiscrucial TMM with GPS alone, we integrate it with the multi-
+to reliable vehicle navigation and acts as a prerequisite for sensor fusion EKF. We perform online topological map
+the planning and control of autonomous vehicles. An in- matching using the already fused information from GPS,
+depth literature overview of various localization techniques dead reckoning and ICP based lane matching. This reduces
+is presented in [1]. the error variance of the estimated vehicle position and con-
+Ofﬂine digital maps are readily available especially in sequently,improvesmapmatching.Whilethelane-levelmap
+urban scenarios and they play an important role in ﬁeld matching is the primary source of map relative observation,
+of autonomous vehicles and ADAS. Modern navigation thetopologicalmapmatchingalsocontributestotheEKFby
+approaches use ofﬂine maps not only for route planning but making observation to the ﬁlter in case pose estimate drifts
+also for tactical decision making. Moreover, for situational off the road.
+awareness, localizationof the vehiclewithin the mapis very
+important. It is common in the literature to fuse different II. RELATEDWORK
+types of sensors to improve the vehicle’s localization. Fus- Both online and ofﬂine map matching algorithms have
+ing an ofﬂine map with on-board vehicle sensors provides been extensively explored in past three decades [3]. Accord-
+complementary beneﬁts. An accurate map helps integrate ingly, there has been a growing trend for incorporating map
+acquired sensor data and also provides information that is matching into localization of the vehicle, by using the map
+outside of sensor’s reach. In this work, we use an ofﬂine itself as an additional information.
+map database to deﬁne grid and topological maps and assist Among features based localization, lane level map match-
+online localization of the vehicle. ing approaches are most popular. With the advancement
+We propose a novel approach that fuses GPS and dead in computer vision and machine learning based methods,
+reckoning sensors along with two map matching algorithms cameras are widely used for the extraction of lanes and
+to implement online pose estimation of the vehicle. Due to othervisualfeatures.Pinketal.usesvisuallanemarkingsas
+theiraffordabilityandconvenience,GlobalNavigationSatel- features to match with lane level map generated from aerial
+lite System (GNSS) receivers together with dead reckoning imagery.ItusesICPformatchingwithnoadditionalsensors
+sensors are commonly used for localization of the vehicle. [4]. Another work uses dead reckoning to keep a history
+However, this conventional methodology is not sufﬁcient to of lane markings deﬁned as a registry, instead of just using
+the short ranged visual lane markings in front of the ego
+1 Univ. Grenoble Alpes, Inria, 38000 Grenoble, France, email: First- vehicle, and matches this registry with the map [5]. It uses
+Name.LastName@inria.fr
+non probabilistic ﬁlter to fuse map matching results with
+2 Univ. Grenoble Alpes, Inria, Grenoble INP, 38000 Grenoble France,
+email:mario.garzon-oviedo@inria.fr dead reckoning. Apart from cameras, laser scanners are also
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 258
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. used for features based localization, such as lane markings unicycle model and thus only the map matching algorithms
+[6], crossroad detection [7] and landmarks [8]. and their fusion with EKF is discussed in detail.
+Many works have used EKF to fuse map matching infor-
+Lane 
+mation with other sensors. Tao et al. proposed to use EKF- Camera
+tracking
+based algorithm for fusing GPS, lane markings and dead
+reckoning without using grid maps. A video camera system
+isusedtodetectandparameterizelanemarkingandestimate Yicp maLpa nme aletcvheiln g Grid map
+the lateral distance and heading information to the vehicle
+GPS
+Multisensor 
+[9]. Gruyer et al. presents a similar EKF based approach
+fusion
+that uses two lateral cameras to detect ego-lane markings, (EKF) Xk+1
+withemphasisonimprovinglateralmaprelativelocalization Xk Estimated  GIS
+[10].However,incontrastwithourwork,thetopologyofthe Odometry pose
+road network is not taken into account in the previous two + 
+IMU
+approaches. Apart from EKF, particle ﬁlters are popularly
+used to localize the vehicle on lane or road network ([11], Ytmm Topological  Topological map
+map matching
+[12], [13]), since particle ﬁlters allow for multi-hypothesis
+map matching in case of ambiguous situations. Fig. 1: Overview of the map relative localization approach.
+Topological map matching approaches are used in the
+scenarios where the vehicle always travels on road. Drevelle Geographical Information System (GIS) in Fig. 1 rep-
+et al. takes into account the topology of the map and solves resents ofﬂine map database that provides layouts of the
+thelocalizationbydeﬁningitasaconstraintsatisfyingprob- drivable lanes and central lane markings. Both lanes and
+lem [14]. Another approach proposes a particle ﬁlter based central lane markings are comprised of segments of varying
+map matching algorithm that uses camera lane marking to lengths. A lane segment is deﬁned by two points in WGS84
+computelikelihoodofthematchedroad[15].Theirproposed coordinates along with lane width and the direction of road
+map matching algorithm also respects the topology of the trafﬁc.
+lane-level map. Similar to our work, Najjar et al. uses EKF To incorporate GPS measurements and map matching
+formaprelativelocalization.Itproposestousebelieftheory in local navigation frame, a local tangent plane is deﬁned
+toﬁndtheprobabilityofthemapmatchedroadsegmentsand using East, North, Up (ENU) coordinate frame with its
+selectthemostlikelysegment.Theirapproachhoweverdoes origin deﬁned at arbitrarily chosen ﬁxed coordinates. This is
+nottakevisualfeaturesinaccount[16].Agridbasedmethod acceptableforasmallmapwithinaradiusoffewkilometers
+is proposed in Matthaei et al. [17], where lane markings with the assumption that the change in earth curvature is
+or building lines on the grid can be deﬁned using both negligible. By convention x-axis of the frame points to the
+cameraandlaserscans.Theyproposetousetopologicalmap East,y-axistotheNorthandz-axisisorientedupwardswith
+matching with GPS, map and extracted features to make an respect to WGS84 ellipsoid. The pose of the vehicle in 2D
+initial guess of the pose and further fuse the map matched is deﬁned by vehicle’s position (x,y) and it’s heading θ.
+posewithodometryandinertialsensorswithhelpofanEKF. GPSmeasurementsareconvertedtoENUcoordinatesand
+To summarize, the main difference in our work and the position of the vehicle in 2D is used for measurement
+previous ones is that we perform TMM as well as lane update. GPS observation is only made when the vehicle is
+level matching using the already fused information from in motion and GPS error is used to deﬁne it’s covariance
+GPS and dead reckoning. Moreover, TMM observations to matrix.
+EKF are non-periodic and are only made if the vehicle’s The details of lane markings and topological map match-
+estimatedposedriftsoutofitslane.Weshowwithrealsensor ing based localization as shown in Fig. 1 are discussed in
+data experiments that our proposed method can improve the sections III-B and III-C respectively.
+robustness and accuracy of the map relative localization.
+B. Lane-level map matching
+III. MAPRELATIVELOCALIZATION For lane marking based localization, we translate the map
+information to a 2D grid representation, hereby referred to
+A. System overview
+as map grid. WGS84 coordinates are converted to a local
+The map relative localization approach described here is ENU coordinates system. The map grid illustrated in Fig.
+based on Extended Kalman ﬁltering, as illustrated in Fig. 2a, has a resolution of 10cm and represents 3 spaces: road
+1. The multisensor EKF fuses GPS and dead reckoning in white, central lane marking in gray and no road in black.
+comprising of INS feedback and wheel odometry, as well With an accurate and reliable localization, this same map
+as two distinct map matching algorithms. The state vector grid can be potentially fused with occupancy grid [18] and
+X consists of vehicle’s pose, twist and linear acceleration aid in situational awareness and decision making.
+k
+in three-dimensional space. Vehicle’s kinematic model is We extract the central lane marking and road edges,
+deﬁned by classical unicycle model. We assume the reader signifying the side lane markings, to perform lane-level map
+isfamiliarwithfusionofINSandodometryinanEKFfora matching. They are illustrated by white cells in Fig. 2b and
+259
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. σ represents standard deviation of vehicle’s heading.
+θ
+Detailed derivation of the covariance matrix can be referred
+to in Najjar et al. [16].
+Fault detection scenarios are used to verify if the ICP
+corrected pose is suitable for EKF observation. Error metric
+in ICP is deﬁned by sum of squared distances between
+corresponding points. If the metric error does not fall below
+(a) (b) (c) a threshold in a given number of iterations, the ICP is
+considered non convergent. For experiments, this threshold
+Fig. 2: Lane level map matching on grid map with lane
+was set to 0.6m2 for every respective pair of source and
+tracker. a) original map grid, b) extracted lane markings in
+target points. In some cases, it is possible that the ICP is
+white,c)lanetrackerbasedlanemarkingsprojectedingreen
+convergent but corrected pose is still incorrect, e.g. in case
+with respect to ego vehicle’s pose (yellow triangle).
+of convergence to local minima. To take this into account,
+a separate threshold is set for acceptable translational and
+heading correction, based on the assumption that the vehicle
+represent target points for map matching algorithm. A par-
+isheadingparalleltothedirectionofroad.Theexperimental
+ticle ﬁlter based lane tracker [19] is used, that takes camera
+valuesusedforthistranslationalandheadingthresholdwere
+image and camera’s intrinsic and extrinsic parameters as ◦
+10mand10 respectively.Incase,theICPisnonconvergent
+inputandprovidesroadparametersi.e.roadwidth,curvature
+or the threshold is crossed, ICP observation for the EKF is
+oftheroad,vehicle’slateraldisplacementwithrespecttoego
+skipped.
+lanemarking.ThisinformationalongwiththeEKFpredicted
+poseoftheego-vehicleX¯ isusedtoprojectpotentiallane C. Topological map matching
+k+1
+markingspointsonthemapgrid.Thesepointsareillustrated
+Our map database contains lane-level waypoints which
+by green cells in Fig. 2c and represent source points. They
+for the sake of TMM are deﬁned as a topological graph
+are projected upto 10m ahead of the vehicle with steps of
+comprising of nodes (points deﬁned in WGS84 coordinates)
+0.25m. For each source point, corresponding lane marking
+and directional edges, identiﬁed by pairs of nodes. The map
+targetpoints(cellmatches)onthemapgridareselectedusing
+matching algorithm uses if-then decision-rule approach [21]
+nearest neighbor search. 2D Iterative Closest Point (ICP)
+tosnapthevehicleontothemostappropriateedge.Initially,
+algorithm [20] is used to make pose correction between the
+thealgorithmdeﬁnesasearchareaofﬁxedradiusaroundthe
+sets of source and corresponding target lane marking points.
+estimated vehicle position. For experiments, this radius was
+EKF predicted pose X¯ is taken as the initial guess for
+k+1 setto30m.Alltheedgespartiallyorcompletelypartofthis
+ICP.Thecorrected2Dposethatalignssourcepointstotarget ◦
+radius and oriented within 90 of the vehicle’s heading are
+lane marking points on grid map is introduced as a new
+shortlisted. This way for any road, only the lanes feasible
+observation for EKF. ICP observation equation is deﬁned in
+for the respected vehicle direction are considered. This is
+    
+Eq. 1.
+illustrated in Fig. 3. For the ego-vehicle positions in green,
+     only the edges in blue are considered for TMM.
+xicp 1 0 0 x With availability of new vehicle pose estimate, TMM
+Yicp = yicp = 0 1 0 y +mk (1) algorithm snaps on to the closest edge to vehicle’s position.
+θicp 0 0 1 θ Along the stretch of snapped edge E , the algorithm or-
+n
+where x , y and θ represent ICP corrected 2D thogonally projects the vehicle’s position on the edge and
+icp icp icp
+pose of the vehicle in ENU coordinate frame and m selects it as the snapped point. The snapped point represents
+k
+represents the observation error. Assuming that mk in the topologicallymapmatchedposition Ptmm asrepresentedby
+ICPobservationisGaussiandistributedandthenoisesources a cross in Fig. 3 for respective ego-vehicle pose. For every
+of position and orientation are independent, error covariance new edge snapped E , the algorithm veriﬁes that the current
+  s
+matrix Qicp is given in Eq. (2). snapped edge En, has a feasible path to the new edge. If
+  not, TMM algorithm enters a conﬂict resolution mode. This
+σ2 σ2 0 conﬂictmayoccurnearanintersectionortwoseparateroads
+x xy
+Q = σ2 σ2 0 (2) running close by. In such a scenario, it is unknown whether
+icp xy y
+0 0 σ2 E or E are incorrect (Fig. 3 illustrates a TMM conﬂict
+θ n s
+While the observation is in the world ENU frame, it is scenario where E is incorrectly identiﬁed). Thus, TMM
+n
+moreintuitivetodeﬁnethelongitudinalσ andlateralσ algorithmawaitsasubsequentedgeE tocorrectthemap
+long lat s+1
+standard deviations in the vehicle frame. The translational matching and resolve the conﬂict. Subsequent edge is not
+components of the Q can then be computed as follows: necessarily the next edge in the map. In straight sections
+icp
+of road, an edge can be of signiﬁcant length. If the vehicle
+σ2 =σ2 cos2(θ)+σ2 sin2(θ)
+x lat long moves some distance from the conﬂict position, the same
+σy2 =σl2atsin2(θ)+σl2ongcos2(θ) edge can be subsequent edge. We set this distance to 4m
+−
+σ2 =(σ2 σ2 )cos(θ)sin(θ) signifying the vehicle has moved at least its own length.
+xy lat long
+260
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. E E E
+only make the EKF observation when the estimated pose
+s+1 s n-1
+of the vehicle is out of lane. To represent this, TMM
+E
+observation to EKF is shown by a dashed line in Fig. 1.
+n
+An example scenario is illustrated in Fig. 3 where yellow
+ego-vehicle’s estimated position is outside of lane. TMM
+observation Y is determined by computing point (x ,
+tmm tmm
+y )onthelanesectionofmapmatchededgethatisclosest
+tmm
+P to estimated vehicle’s position. This point is represented by
+Ytmm the black triangle in pale yellow ego-vehicle. The TMM
+tmm
+node observationequation(Eq.3)isdeﬁnedintheENUcoordinate
+directional edge frame, similar to IC(cid:20)P obse(cid:21)rvatio(cid:20)n Eq.(cid:21)1(cid:20). n(cid:21)k represents the
+ego-vehicle TMM observation error.
+Fig. 3: Topological map at a 3-way intersection. Nodes and x 1 0 x
+Y = tmm = +n (3)
+edges are deﬁned on the center of lane respectively. Green tmm y 0 1 y k
+tmm
+trianglesillustratepositionoftheego-vehicleatfourinstants The covariance matrix Q is deﬁned in the same
+tmm
+representing a TMM conﬂict scenario; TMM relevant edges manner as ICP covariance matrix Q , except with only
+icp
+are shown in blue. Yellow triangle represents a different position components. The observation for EKF is skipped if
+case where the ego-vehicle’s estimated position is outside of the TMM algorithm is in a conﬂict mode.
+lane, and the position shown by dotted triangle is the TMM
+IV. VALIDATIONMETHODOLOGY
+observation.
+A. Experimental setup
+Experiments were conducted on a Renault Zoe vehicle,
+The conﬂict resolution is illustrated in the ﬂow diagram shown in Fig. 5. For the proposed localization approach
+in Fig. 4. The algorithm checks if any of the previous describedearlier,low-costGPS,IMU,vehicle’swheelodom-
+two edges, E − or E − , has a feasible path to the new etry and a front camera were used.
+n 1 n 2
+edge E and then to the subsequent edge E , this holds
+s s+1
+true for conﬂict shown in Fig. 3. Otherwise, if that is not
+the case, alternate new edge, Alt E from shortlisted ones
+s
+is considered. Candidate alternate edges are part of the
+search areas and they are considered one by one in order of
+increasing proximity. Should no feasible path be found with
+alternate edges as well, the TMM conﬂict is not resolved.
+The TMM is stopped and re-initialized with an warning.
+Start
+no no
+E E E E
+n-1 s n-2 s
+yes yes
+Fig. 5: Experimental platform.
+no no no
+E E E E E E AltE
+n-1 s s+1 n-2 s s+1 s
+AdditionallyOpenStreetMap,showninFig.6,wasusedto
+yes Stop
+extracttherelevantlatitudeandlongitudeinformationneeded
+yes to deﬁne grid and the topological map. The test course used
+E= AltE
+End yes s s for experiments is about 2.2km long and includes a speed
+bump and a roundabout. The curved sections of the road are
+notcontinuouscurvesandhavediscreterepresentationinthe
+Fig. 4: Flow diagram of conﬂict resolution in TMM. map.However,weassumetheOSMmaptobeaccurate.The
+experimentswereperformedwithvaryingweatherconditions
+Since TMM algorithm operates by snapping on to an from sunny, cloudy to drizzling.
+edge, it always provides information about vehicle’s posi- The software is written in Python and C++ inside the
+tion (P ) strictly on the center of the lane. However, ROS framework. The grid map is deﬁned such that it is
+tmm
+the vehicle’s actual position can be anywhere along the compatiblewithROSmap server.TheupdaterateforGPS,
+width of the lane. In consequence, making a periodic TMM wheel odometry, IMU measurements and EKF are 2Hz,
+observation as a Gaussian distribution with mean position 50Hz, 100Hz and 100Hz respectively. The lane level map
+value P will be inappropriate. Therefore, we propose to matchingalgorithmupdatesat10Hz.TMMobservationsare
+tmm
+261
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. Estimatedposeremainswithinlane
+non-periodic.Duringthetests,thevehiclerunsatanaverage
+GPS+DR+ GPS+DR+
+speedof60km/h.Lanechangingorovertakingscenariosare Approach GPS+DR Lane-levelMM Lane-levelMM+
+not considered. TopologicalMM
+mean 43% 97% 99%
+st.deviation 9% 0.7% 0.3%
+median 44% 97% 99%
+min 18% 95% 98%
+TABLE I: Comparison of localization approaches based on
+percentage of total runtime during which estimated vehicle
+pose remained within the lane. Our proposed approach with
+lane-levelandtopologicalmapmatchingoutperformsothers.
+when the vehicle pose has already drifted out of the lane.
+In the last column of Table I, it is apparent that TMM
+Fig.6:SnapshotofOpenStreetMapillustratingthetestroute
+improves robustness of localization by further reducing the
+and respective positions of AprilTag markers.
+time interval in which the vehicle’s estimated pose drifts out
+of the lane. Figure 7 shows a curved section of the road,
+WeuseAprilTagvisualﬁducialdetectionalgorithm[22]at where the estimated pose of the vehicle drifts out of lane
+4 ﬁxed and known positions in the map in order to evaluate in all three approaches. One can observe the red path with
+the performance of localization algorithm. Fig. 6 illustrates ourproposedapproachhasfastestrecoverytowardsthelane.
+therespectivepositionsofthetagsandexperimentalrouteon ThebluepathwithoutTMMtakeslongertime,thegreenpath
+OpenStreetMap.Eachtagfacesthedirectionoftrafﬁcofthe illustrating the GPS and DR only approach widely goes out
+rightsidelane.Therefore,vehiclecancaptureonlyonetagin of the lane and recovers slowest.
+anyregion.TheAprilTagalgorithmprovidestransformations
+of a tag with respect to vehicle. We use this information
+alongwiththetag’spositioninmaptoﬁnderrorinestimated
+position of the vehicle. Markers A and D are placed on the
+start and end of the traversed route, both of them are at
+curved sections of the road. Markers B and C are placed
+before and after the roundabout respectively.
+B. Comparison of localization approaches
+Three sensor fusion use cases are considered to compare
+and characterize our proposed approach.
+1) GPS and dead-reckoning (DR) only
+2) GPS, DR and lane-level map matching
+3) GPS, DR, lane-level and topological map matching
+As a measure of deviation in the localization results in
+GPS+DR, GPS+DR+Lane-level MM,
+each of these three approaches, we take note of the time
+GPS+DR+Lane-level MM+Topological MM
+interval during which the estimated vehicle position remains
+within its lane. Map relative localization in or out of lane Fig. 7: Estimated pose of the vehicle using three different
+is a qualitative measure of lateral displacement on straight localization approaches on a curved section of road. It is
+sectionsofroadandalsolongitudinaldisplacementoncurved visible that our proposed approach with TMM recovers
+sections. fastest when the pose drifts out of lane. The vehicle is
+Table I summarizes the results as percentage of the total provided as a reference where the estimated pose is still
+run time for a test distance of 70km. Since there is no partially out of lane. Black arrow represents direction of
+map matching involved in the GPS and dead-reckoning only travel.
+approach, the vehicle in this case moves in and out of the
+lane sporadically and the estimated pose was noted to be
+within the lane for even less than 50% of the time. Often, Furthermore, in our experiments, TMM assures proper
+the main source of error in the localization of vehicle being localization of the vehicle where lane level map matching
+the GPS error itself. fails, for instance at the roundabout, which results in lane
+With introduction of the proposed lane level map match- level map matching getting rejected. However, the proposed
+ing, the algorithm is efﬁciently able to localize the vehicle algorithm works as intended during and after the round-
+within the lane for a mean of 97% of the runtime. In our about. A video of a complete test run can be accessed at
+approach, the TMM observation is brieﬂy introduced only https://www.youtube.com/watch?v=oGNz-ECspXY.
+262
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. C. Results used in assistance for the navigation of the vehicle. The
+proposed method has been validated using readily available,
+Apart from qualitative evaluation, we have validated the
+open source map. Three use cases were studied, to compare
+proposed localization approach with respect to 4 ﬁxed po-
+differentlevelsofsensorfusion:withboththemapmatching
+sitions, previously explained in IV-A. For each tag frame
+algorithms, only lane level map matching algorithm and
+detected, lateral and longitudinal error in position of the
+neither of them. It was shown that two algorithms together
+vehicle was determined using vehicle’s heading. Fig. 8 and
+can robustly localize the vehicle within the lane. Finally,
+TableIIshowthestatisticsoflateralandlongitudinalposition
+accuracyofthelocalizationofthevehiclewasestablishedat
+errors for each tag for a total run of 35km.
+four points of interest using visual tags.
+Future research will study the use of RTK GPS to deﬁne
+a high deﬁnition map with well-deﬁned curved sections of
+the road and more detailed lane markings. That will further
+increase the accuracy and robustness of the localisation
+approach. We also plan to integrate lane change assist to
+supportlocalizationinscenarioswherethevehicleovertakes
+or changes lane. Furthermore, we will use the estimated
+pose of the vehicle to fuse the grid map with ego-centric
+occupancy grid to contain information whether a respective
+cellisfreeoroccupiedandwhetheritispartoftheroadand
+navigable.
+ACKNOWLEDGMENT
+These researches have been conducted within the ANRT
+FUI TORNADO project. The authors also wish to thank
+AgostinoMartinelliforhisfruitfulinputanddiscussionsand
+Jean-Alix David for his help with experiments.
+Fig. 8: Box plot of longitudinal and lateral position errors
+REFERENCES
+at4respectivetagsusingtheproposedlocalizationapproach
+for total test runs of 35km. [1] S. Kuutti, S. Fallah, K. Katsaros, M. Dianati, F. Mccullough, and
+A.Mouzakitis,“Asurveyofthestate-of-the-artlocalizationtechniques
+andtheirpotentialsforautonomousvehicleapplications,”IEEEInter-
+netofThingsJournal,vol.5,no.2,pp.829–846,2018.
+Longitudinalerror(m) Lateralerror(m) [2] F.Zhang,H.Sta¨hle,G.Chen,C.C.C.Simon,C.Buckl,andA.Knoll,
+Tag
+mean st.deviation mean st.deviation “A sensor fusion approach for localization with cumulative error
+A 0.81 0.60 0.17 0.11 elimination,” in 2012 IEEE International Conference on Multisensor
+B 0.67 0.38 0.22 0.20 Fusion and Integration for Intelligent Systems (MFI). IEEE, 2012,
+pp.1–6.
+C 0.61 0.46 0.29 0.13
+[3] M. Hashemi and H. A. Karimi, “A critical review of real-time map-
+D 1.17 0.51 0.29 0.16
+matchingalgorithms:Currentissuesandfuturedirections,”Computers,
+TABLE II: Statistical values for absolute longitudinal and EnvironmentandUrbanSystems,vol.48,pp.153–165,2014.
+[4] O.Pink,“Visualmapmatchingandlocalizationusingaglobalfeature
+lateral position error at 4 respective tags.
+map,”in2008IEEEComputerSocietyConferenceonComputerVision
+andPatternRecognitionWorkshops. IEEE,2008,pp.1–7.
+The lateral errors for all tags remained within 1m with a [5] R. P. D. Vivacqua, M. Bertozzi, P. Cerri, F. N. Martins, and R. F.
+Vassallo,“Self-localizationbasedonvisuallanemarkingmaps:Anac-
+mean absolute value of 0.25m. This also conforms with the curatelow-costapproachforautonomousdriving,”IEEETransactions
+observation that estimated vehicle position always remained on Intelligent Transportation Systems, vol. 19, no. 2, pp. 582–597,
+within the lane in the test area close to tags. All tags have 2017.
+[6] J. Levinson, M. Montemerlo, and S. Thrun, “Map-based precision
+maximum longitudinal error within 2.5m, with an absolute vehiclelocalizationinurbanenvironments.”inRobotics:Scienceand
+mean value of 0.8m. Tag A was placed near the start of test Systems,vol.4. Citeseer,2007,p.1.
+run, where the initial estimated position was every time at [7] A.Mueller,M.Himmelsbach,T.Luettel,F.v.Hundelshausen,andH.-
+J. Wuensche, “Gis-based topological robot localization through lidar
+an offset. Therefore, longitudinal localization error at Tag A
+crossroaddetection,”in201114thInternationalIEEEConferenceon
+varied signiﬁcantly at every run. Moreover, both Tags A and Intelligent Transportation Systems (ITSC). IEEE, 2011, pp. 2001–
+Dwererecognizedatregionofhighvehiclespeed,50km/h 2008.
+[8] T.Weiss,N.Kaempchen,andK.Dietmayer,“Preciseego-localization
+and 60km/h, which also contributed to larger localization in urban areas using laserscanner and high accuracy feature maps,”
+error. in IEEE Proceedings. Intelligent Vehicles Symposium, 2005. IEEE,
+2005,pp.284–289.
+V. CONCLUSIONANDFUTUREWORK [9] Z.Tao,P.Bonnifait,V.Fremont,andJ.Ibanez-Guzman,“Mappingand
+localizationusinggps,lanemarkingsandproprioceptivesensors,”in
+This paper has presented a new approach to map relative 2013 IEEE/RSJ International Conference on Intelligent Robots and
+localization that fuses visual lane level and topological map Systems. IEEE,2013,pp.406–412.
+[10] D.Gruyer,R.Belaroussi,andM.Revilloud,“Map-aidedlocalization
+matching with GPS and dead reckoning. Both matching
+withlateralperception,”in2014IEEEIntelligentVehiclesSymposium
+algorithms described are based on common features that are Proceedings. IEEE,2014,pp.674–680.
+263
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. [11] I.Miller,M.Campbell,andD.Huttenlocher,“Map-aidedlocalization
+in sparse global positioning system environments using vision and
+particleﬁltering,”JournalofFieldRobotics,vol.28,no.5,pp.619–
+643,2011.
+[12] W. Lu, E. Seignez, F. S. A. Rodriguez, and R. Reynaud, “Lane
+marking based vehicle localization using particle ﬁlter and multi-
+kernelestimation,”in201413thInternationalConferenceonControl
+AutomationRobotics&Vision(ICARCV). IEEE,2014,pp.601–606.
+[13] I. Szottka, “Particle ﬁltering for lane-level map-matching at road
+bifurcations,” in 16th International IEEE Conference on Intelligent
+TransportationSystems(ITSC2013). IEEE,2013,pp.154–159.
+[14] V. Drevelle and P. Bonnifait, “igps: Global positioning in urban
+canyons with road surface maps,” IEEE Intelligent Transportation
+SystemsMagazine,vol.4,no.3,pp.6–18,2012.
+[15] F.Li,P.Bonnifait,andJ.Iban˜ez-Guzma´n,“Map-aideddead-reckoning
+withlane-levelmapsandintegritymonitoring,”IEEETransactionson
+IntelligentVehicles,vol.3,no.1,pp.81–91,2018.
+[16] M. E. El Najjar and P. Bonnifait, “A road-matching method for
+precisevehiclelocalizationusingbelieftheoryandkalmanﬁltering,”
+AutonomousRobots,vol.19,no.2,pp.173–191,2005.
+[17] R.Matthaei,G.Bagschik,andM.Maurer,“Map-relativelocalization
+in lane-level maps for adas and autonomous driving,” in 2014 IEEE
+IntelligentVehiclesSymposiumProceedings. IEEE,2014,pp.49–55.
+[18] L.Rummelhard,A.Ne`gre,andC.Laugier,“Conditionalmontecarlo
+denseoccupancytracker,”in2015IEEE18thInternationalConference
+onIntelligentTransportationSystems. IEEE,2015,pp.2485–2490.
+[19] J. Lussereau, P. Stein, J.-A. David, L. Rummelhard, A. Negre,
+C.Laugier,N.Vignard,andG.Othmezouri,“Integrationofadasalgo-
+rithm in a vehicle prototype,” in 2015 IEEE International Workshop
+onAdvancedRoboticsanditsSocialImpacts,2015.
+[20] S. Rusinkiewicz and M. Levoy, “Efﬁcient variants of the icp algo-
+rithm.”in3dim,vol.1,2001,pp.145–152.
+[21] C. A. Blazquez, J. Ries, and P. A. Miranda, “Towards a parameter
+tuning approach for a map-matching algorithm,” in 2017 IEEE In-
+ternationalConferenceonVehicularElectronicsandSafety(ICVES).
+IEEE,2017,pp.85–90.
+[22] J. Wang and E. Olson, “AprilTag 2: Efﬁcient and robust ﬁducial
+detection,”in2016IEEE/RSJInternationalConferenceonIntelligent
+RobotsandSystems(IROS). IEEE,oct2016,pp.4193–4198.
+264
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:50 UTC from IEEE Xplore.  Restrictions apply. 

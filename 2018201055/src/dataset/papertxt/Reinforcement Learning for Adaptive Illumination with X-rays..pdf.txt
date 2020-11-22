@@ -1,0 +1,528 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Context-Aware Task Execution Using Apprenticeship Learning
+Ahmed Faisal Abdelrahman, Alex Mitrevski, and Paul G. Plo¨ger
+Abstract—An essential measure of autonomy in assistive
+service robots is adaptivity to the various contexts of human-
+oriented tasks, which are subject to subtle variations in task
+parameters that determine optimal behaviour. In this work,
+we propose an apprenticeship learning approach to achieving
+context-aware action generalization on the task of robot-to-
+human object hand-over. The procedure combines learning
+from demonstration and reinforcement learning: a robot ﬁrst (a) Standing up (b) Sitting down (c) Lying down
+imitatesademonstrator’sexecutionofthetaskandthenlearns
+Fig.1:AnHSRadaptingtothedifferentcontextsofahuman-
+contextualized variants of the demonstrated action through
+oriented task: human-robot object hand-over
+experience. We use dynamic movement primitives as compact
+motion representations, and a model-based C-REPS algorithm
+forlearningpoliciesthatcanspecifyhand-overposition,condi- In human-oriented applications, non-adaptive behaviours
+tionedoncontextvariables.Policiesarelearnedusingsimulated
+may be particularly unsatisfactory. For instance, various
+task executions, before transferring them to the robot and
+studies on user preferences for object hand-overs support
+evaluatingemergentbehaviours.Weadditionallyconductauser
+study involving participants assuming different postures and the hypothesis that factors like posture, approach direction,
+receivinganobjectfromarobot,whichexecuteshand-oversby and individual capability, should be taken into account by
+eitherimitatingademonstratedmotion,oradaptingitsmotion a robot [8][9][10]. It follows that programming a robot to
+to hand-over positions suggested by the learned policy. The
+executethesamemotionoraction-equippingitwithastatic
+results conﬁrm the hypothesized improvements in the robot’s
+skill - for all cases it may face, is undesirable. On the other
+perceivedbehaviourwhenitiscontext-awareandadaptive,and
+provide useful insights that can inform future developments. hand, learning separate modes of execution for each context
+is inefﬁcient. The compromise is to have a single adaptive
+I. INTRODUCTION representationofthemotion(s)requiredtofulﬁlatask,inthe
+formofamotorskillthatistoleranttosituationalvariations.
+Asservicerobotsapproachintegrationintohouseholdsand
+workplaces, their possession of competences and cognitive In this paper, we present an implementation of a context-
+qualities similar to ours becomes a natural requisite. One aware robot motor skill and a user study conducted to
+such aspect is that of motor skills: movements performed conﬁrm improvements over a conventional non-adaptive ap-
+with the intent of achieving a goal or accomplishing a proach to task execution. We propose an apprenticeship
+task, characterized by acquisition and reﬁnement through learning approach to the problem of learning a generaliz-
+learning processes, and being generalizable to reasonably able motor skill that achieves contextually adaptive robot-
+novel situations. Although recently applied with demonstra- to-human object hand-overs. The strategy enables a robot
+blesuccessinroboticsfortaskssuchaslearningtowalk[1], to learn the action from an expert’s example, encoding
+playingtable-tennis[2],andpouringdrinks[3][4],equipping motiontrajectoriesindynamicmovementprimitives(DMPs),
+robotswiththeentailedcapabilitiesrequiredtoachievesuch followed by experiential learning of contextualized policies,
+complex behaviours remains a signiﬁcant challenge. with which different variants of the demonstrated action are
+Physical behaviours are traditionally embodied using rep- executed according to what ﬁts the current context best. We
+resentations ranging from conventional parameterized con- presentamodel-basedversionoftheC-REPSalgorithm[11]
+trollers to movement primitives [5][6][7]. In addition to en- for extending the demonstrated, static hand-over policy to a
+ablingthereproductionofmovementtrajectoriesorpatterns, contextually adaptive one, which can learn contextualized
+these skill representations must be compliant to behavioural policies in simulation before transferring to the real system.
+adjustments. This is particularly important since skills must
+Through our user study, performed with a Toyota HSR
+be robust to changes in the context of a task. This idea of
+[12], we conclude that behaviour under a policy that se-
+contextual adaptivity suggests that motor skills or actions
+lects hand-over positions based on receiver postural context,
+should be applicable to a range of different contexts without
+as learned in simulations, is strongly preferred by users
+necessitatingdrasticmeasuressuchasre-learningbehaviour.
+over the traditional alternative, especially in factors such
+as naturalness, perceived suitability to context, and likeness
+We gratefully acknowledge the support by the b-it International Center
+forInformationTechnology. to human executions. We demonstrate how this result is
+The authors are with the Autonomous Systems group in the accomplished through a single task demonstration, a simple
+Department of Computer Science at Hochschule Bonn-Rhein-Sieg, Sankt
+formofcontextualknowledge,andguidancethroughascalar
+Augustin, Germany ahmed.abdelrahman@inf.h-brs.de,
+{ }
+aleksandar.mitrevski, paul.ploeger @h-brs.de reward signal by C-REPS.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1329
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK prevalent mixed-option policy formulation: a gating policy
+picks options (separate policies analogous to movement
+The problem of robot motor skill learning and context
+primitives),giventhestate,andeachsub-policyspeciﬁesthe
+generalization has been handled through diverse approaches.
+low-level actions to be executed. This avoids a single, ’con-
+These include the use of explicit contextual knowledge
+centrated’policy,andallowslearningmultipletasksolutions.
+and context-based architectures, and pure control-based ap-
+Contextual Policy Search (CPS) applies in cases where
+proaches that achieve contextual adaptivity through im-
+solution spaces are not necessarily uni-modal, and where
+plicit means. Particularly relevant methods leverage human
+policies must cope with variable operating conditions on
+demonstrations to facilitate imitating motions, and aug-
+which optimal behaviour may depend. An agent chooses
+ment these behaviours with reinforcement learning (RL):
+policy parameters based on an observed context variable
+autonomousskilllearningandimprovementthroughappren-
+and learns from a context-dependent reward signal. CPS
+ticeship learning, from direct or simulated experience.
+algorithms are usually formulated in hierarchies. Kupcsik et
+Learning from demonstration (LfD) can be used to teach al. [24] present C-REPS, a contextual variant of REPS, to
+robots the skills in the desired manner of execution, by deal with the learning and generalization of robot skills, and
+capturing demonstrated movements in robust movement further extend it to the model-based GPREPS [2]. C-REPS
+primitive representations. DMPs have been effectively used relies on a hierarchy: an upper-level policy that chooses
+in LfD for encoding desired movements, reproducing them parameterstomaximizereturngiventhecontextandalower-
+robustly, generalizing to different contexts, and generating level policy that speciﬁes control actions given the current
+sequential, compound movements [4]. For generalizing to state and the policy parameters dictated by the former. A
+unseen task contexts, mappings between ’task parameters’ similar algorithm, C-MORE, operates on more expressive
+and DMP meta-parameters have traditionally been learned context variables, such as camera images [25]. Abdolmaleki
+using locally weighted regression and Gaussian process et al. address common premature convergence concerns by
+regression to facilitate adaptive robot skills [13][14]. introducing a covariance regularization method to better
+LfD and RL form a natural connection: drawing parallels estimate policy parameters, giving rise to the CECER [26]
+with skill acquisition processes in humans, the union of the and the non-parameteric local CECER [27] algorithms.
+two has been termed apprenticeship learning, underscoring
+the virtues of learning from both a teacher and indepen- III. PROPOSEDALGORITHM:CONTEXTUAL
+dent rehearsal [15]. Apprenticeship learning, thanks to RL RELATIVEENTROPYPOLICYSEARCH(C-REPS)
+algorithmsthataccommodatecontextualknowledgeinpolicy
+C-REPS(Kupcsiketal.[24][2])learnscontextualpolicies
+learning, can also be well-suited for learning contextually-
+inahierarchicalstructure.Thegeneralproblemofcontextual
+adaptive behaviour.
+policy search involves adapting the parameters of a parame-
+BehaviouraladaptationhaslongbeenrealizedthroughRL terized policy to observed contexts, and C-REPS solves this
+for the adjustment of skills or general behaviour. Guenter et using a hierarchical policy decomposition consisting of:
+al. [16] demonstrate an advantage of integrating RL in LfD, |
+• Upper-level policy, π(ω c): a linear-Gaussian model
+whichisusuallydevoidofexploration,usingaNaturalActor- |
+• Lower-level policy, π(ux,ω): DMPs
+Critic (NAC) algorithm to adapt demonstrated trajectories
+encodedasGMMs.Similarself-improvementstrategieshave Theupper-levelpolicychoosesparametersωthatinﬂuence
+beendemonstratedwithDMPsandthePoWERalgorithmfor the lower-level policy, given some context parameter c, and
+is implemented as a linear-Gaussian model:
+skill reﬁnement [17][18][7], facilitating parameterized skills
+and contextual adaptivity. Cost-regularised Kernel Regres- | ≈N |
+π(ω c) (ω a+Ac,Σ) (1)
+sion (CrKR) enables learning a mapping from task parame-
+ters to DMP meta-parameters, while encoding a predictive This parametric form makes sampling ω for artiﬁcial roll-
+variance that facilitates exploration in an on-policy, non- outsparticularlysimple.Thelearnablepolicyparametersθ =
+{ }
+parametric, policy search algorithm [19]. a,A,Σ represent the mean and covariance of the param-
+Hierarchical reinforcement learning (HRL) enables con- eter distribution, the latter directly encoding the exploration
+structing a hierarchy of policies, usually called options, that required for learning. The context variable c is assumed to
+determinetheselectionoflower-leveloptionsor’leaf’action be sampled from a distribution deﬁned by µ(c)=a+Ac.
+primitives. Its relevance lies in making policies amenable The problem of ﬁnding optimal upper-level policy param-
+to contextualization: a compact, monolithic policy, however eters θ amounts to ma(cid:90)xim(cid:90)izing the expected return over the
+expressive, would struggle to capture optimal behaviour in distribution of context and policy parameters:
+multi-modal and context-dependent solution spaces. Stulp
+et. al. [20] integrate DMPs in an HRL approach to learn- J = p(c,ω)R dcdω, (2)
+π cω
+ing sequential skills, using the PI2 algorithm ([21]). By c ω
+|
+simultaneouslylearninggoalandtrajectoryshapeparameters where p(c,ω) = µ(c)π(ω c) deﬁnes a so-called trajectory
+at different levels of temporal abstraction, demonstrated distribution as a joint probability over the context and
+motions can be effectively generalized. HiREPS [22][23], a parameter variables, and R is the expected return of an
+cω
+hierarchicalvariantoftheREPSalgorithm([11]),appliesthe execution (or episode).
+1330
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. REPS algorithms, in general, employ information- executing subsequent roll-outs. The latter capability is espe-
+theoretic updates: policy updates are restricted so that the cially instrumental in our learning-by-simulation approach,
+relative entropy between consecutive trajectory distributions since it allows simulating an end-effector trajectory that can
+is bounded in order to minimize excessively greedy policy be achieved with a particular parameterization of the DMPs.
+updates and information loss. Using a Lagrangian formu- For our purposes, this provides a convenient way to esti-
+lation, a dual optimization problem is solved to yield im- mate the results (return) of a particular hand-over trajectory,
+D
+portance weights, p[i], for each sample in a data-set = and thus constitutes a ’predictive’ model of the motion that
+{ }
+c[i],ω[i],R[i] of N simulated or real trajectories, would be executed by the robot. Using this to learn the
+cω i=1,...,N
+containingrespectiveobservedcontexts,sampledparameters, skill in simulations, sometimes called mental rehearsal [31],
+andestimatedrewards.Theseweightsareusedtore-estimate makes our C-REPS implementation model-based.
+∗ |
+the parameters θ of π(ω c) through a weighted maximum In our work, the DMP lower-level policy governs the
+(cid:20) (cid:21)
+likelihood estimation (WMLE) policy update rule: evolution of the end-effector position in three-dimensional
+Cartesian space1, and is of the form (Ijspeert et al. [5]):
+aT =((cid:80)STPS)−1STPΩ (3) τy¨=α (β (g−y)−y˙)+f(x) (6)
+AT (cid:80) −y y
+− − τx˙ = α x (7)
+N p[i](ω[i] µ[i])(ω[i] µ[i])T x
+Σ= i=1 (4) Weinitializeourlearningprocedurefromahumandemon-
+N p[i]
+i=1 stration of the hand-over task by capturing the demonstrated
+µ[i] =a+Ac[i] (5) trajectory2. Extracting these pre-structured policies serves to
+wherethematricesS,P,and Ωcontainc[i],p[i],andω[i], speeduplearningandallowsexploitinghumanexpertknowl-
+∀
+i=1,...,N. edge, with the aim of attaining learned contextual policies
+REPSalgorithmsareoftensusceptibletoaproblemshared andpossiblyevensurpassingperformanceofdemonstrations.
+bymoststochasticsearchprocedures:prematureconvergence The DMPs learned from the demonstration constitute a
+on sub-optimal parameters. Updating the search distribution deterministiclower-levelpolicy.Inordertomakethispolicy
+using the information-theoretic approach is expected to mit- generalizable to different contexts, we learn the upper-level
+igate this, but it remains an issue: the policy search may policies required to sample the parameters of the DMPs, ω,
+still collapse into an undesirable point-estimate [26]. In this which result in the most appropriate trajectories.
+work,weintroduceasimpleregularizationstepthatperforms
+B. Learning to Generalize to Different Contexts
+random restarts of Σ to avoid this problem.
+The upper-level policies can be initialized and progres-
+IV. PROPOSEDAPPROACH
+sively improved to optimize altered executions of the task,
+We pursue an apprenticeship learning approach, com- conditioned on the current context, using C-REPS. For
+|
+bining learning from demonstration and model-based re- learning contextual upper-level policy π(ω c), we ﬁrst ini-
+inforcement learning, to address the problem of learning tialize its parameters θ to the value of ω obtained from the
+generalizable, context-dependent object hand-overs. demonstration. For policy evaluations, we execute roll-outs
+The choice of model-based policy search is motivated by thatonlydependonthesampledω byﬁxingthevaluesofall
+|
+thedesireformoredataefﬁciencyinordertominimizeinter- other lower-level policy parameters. Policy π(ω c) is guided
+action time. A preliminary comparison of promising model- by a reward function that is shaped to facilitate learning
+basedalgorithmsincludingPILCO[28],Black-DROPS[29], values of ω that suit the values of c.
+and M-GPS [30], shows the GPREPS algorithm [2] to be Wemodelanupper-levelpolicydesignedtolearnadequate
+particularlysuitableforcontextualpolicylearning.Thealgo- hand-over positions3 to handle postural context, c as
+1
+rithmusesGaussianProcess(GP)forwardmodels.However, | N |
+to avoid the general complexity of GPs, we use a simpler π(g c1)= (g µ(c1)=a+Ac1,Σ) (8)
+notionofaforwardmodel,enabledbyDMPsandpre-shaped |
+To initialize π(g c ) from a demonstration, we set the
+reward functions. The result is a variant of C-REPS that 1
+initial mean to the observed hand-over position: µ(c ) =
+learnspoliciesinsimulations,asopposedtotheconventional 1
+g .ParametersaandAareinitializedaccordingly,while
+model-free version. We employ this model-based algorithm demo
+Σ can be initialized for equal, uncorrelated exploration:
+and augment it with an improved exploration strategy, to
+Σ = I, although, as shown in section IV-C, this strategy
+equiparobotwiththeabilitytoextendademonstratedhand-
+isnotideal.Thelearningprocessthenamountstoiteratively
+over action into a context-aware hand-over skill.
+evaluating and updating parameters θ for N iterations.
+This section presents the constituents of our proposed ap-
+prenticeshiplearningprocedure.Fig.2illustratesthegeneral 1This is in turn processed by a low-level inverse kinematics controller,
+stages of the procedure. todeterminethenecessaryrobotjointcommands.
+2Inordertoteachtherobotaparticularend-effectortrajectory,weusea
+A. Capturing Demonstrated Trajectories in DMPs motioncaptureapproachpresentedbyMitrevskiet.al.in[32].
+3Notethatitisthepossibletolearnotherpoliciesforcontext-dependent
+TherepresentationoftrajectoriesasDMPsallowslearning
+hand-overtrajectoryshapesandexecutionspeeds.Weleavethisasafuture
+parameters from a provided demonstration trajectory and extensiontothiswork.
+1331
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. Fig. 2: The main stages of our apprenticeship learning procedure for constructing a context-aware hand-over skill.
+At each iteration, a random value of c is drawn and C. Context Vectors and Exploration Random Restarts
+1 ∼ |
+used to sample a candidate hand-over position g π(g c1), A limitation of the linear-Gaussian policy model and
+which is provided to the DMP-based lower-level policy.
+its update strategy is that it places undesirable constraints
+This policy has trajectory shape, initial position, and time
+that force strictly linear and diminishing policy updates. In
+constant parameters ﬁxed at the values extracted from the
+particular, sampled positions are quickly constrained to lie
+demonstration. The only variable parameter, g, thus wholly onasinglelineinCartesianspace,whichpassesthroughthe
+governsthedifferenceinoutcomesbetweenconsecutiveroll-
+commoninitialpositionandclosetoonlyonegˆ.Weaddress
+outs,asdeterminedbytherewardfunction.Hence,weassign
+this issue by (i) using a vectorized representation of c , and
+credit or blame solely to the parameter values chosen by the 1
+(ii) applying random restarts of the values of exploration
+stochastic upper-level policy.
+parameters Σ, as an addition to C-REPS.
+The context-dependent reward function is a Euclidean
+Thecontextvariablerepresentationwaschangedfromthat
+distance-based performance measure, which rewards an exe-
+of a scalar to vectorsthat collectively resemble a 1-of-K
+cution based on closeness to empirically determined ’ideal’ coding scheme, as illustrated:
+hand-over positions. Namely, we experimentally4 identiﬁed
+→
+a setof positionvectors gˆ1, gˆ2, and gˆ3 that weredetermined [x ] [x ,0,0]
+1 1
+tfoollsouwitinegacchonrdeistpioencatilverewvaalrudefuonfccti1onb:est. The result is the c1 = [x2]→→[0,x2,0] (10)
+[x ] [0,0,x ]
+3 3
+R ||g−1gˆ1||2, if c1 =standing wherex1,x2,andx3 representthearbitraryvaluesoriginally
+g(g,c1)= ||g−1gˆ2||2, if c1 =seated (9) selected for c1. This removes the restriction of sampled goal
+|| −1 || , if c =lying down positions lying on a single line, and allows exploring along
+g gˆ3 2 1 different lines, dictated by the drawn value of c .
+The crafted reward function constitutes contextual knowl- 1
+Although the modiﬁed representation removes the con-
+edge incorporated into the robot’s process of learning a
+straint of policy samples lying on a single line, they still
+human-orientedtask:’expert’knowledgeoftheapproximate
+exhibit a clear linear correlation, albeit in different regions
+positions at which an object should be handed over, with
+of the search space. This collapse into linear explorations is
+regards to the receiver’s posture.
+attributed to premature convergence of some values of Σ,
+After executing M simulated roll-outs with current pa- which we address by applying random exploration restarts.
+rameters θ, and recording the estimated Rcω of each, the The matrix Σ controls the rate of exploration, and rapidly
+algorithm computes each sample’s weight, p[i]. With the vanishing elements cause the policy to explore only within
+sampled parameters g, their associated context variables c1, some sub-space. The WMLE update equations seemingly
+and their calculated weights, the WMLE equations (3-5) are
+cause this as a side-effect, leading to occasions where
+then applied to update the parameters at that iteration.
+values of parameters a and A are not explored sufﬁciently5.
+As the algorithm iterates, parameters θ are expected to This suggests an approach resembling a technique used in
+shift appropriately such that Rcω is simultaneously maxi- random-restart hill climbing, where the values of Σ are
+mized for all values of c1. This can be observed in the regularly re-set by sampling from a uniform distribution:
+simulated trajectories, with the ﬁnal trajectory positions ∼U
+Σ (0,k), where k is a tunable parameter. The algorithm
+sampled for each context value progressively converging to
+then performs a more balanced exploration, since it resets Σ
+gˆ1,gˆ2,andgˆ3.Ideally,aandAwouldstabilizeandthevalues values before the policy converges to a local optimum.
+ofΣwoulddiminishasitbecomesmorecertainofthevalues Fig. 3 illustrates how the modiﬁed context representation
+of sampled parameters that yield maximum reward.
+and the exploration restart strategy affect the exploration
+As a result of this learning procedure, the original trajec-
+behaviour of a policy trained for learning three hand-over
+tory shape is altered as policies that ﬁt multiple contexts are
+learned through simulations.
+5The policy update strategy is a variant of MLE, which is known to
+underestimatevariancesintheunderlyingdistribution,andthusappearsto
+4A better approach could be to conduct a brief survey with external imposethesamerestrictionsonΣ[33].Anotherreasonmaybethechoiceof
+subjectswhosecollectiveopinionswouldbeusedinstead. alinear-Gaussianmodel,whosesolutionspresentaformoflinearregression.
+1332
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. Fig. 4: Mean iteration rewards vs. number of iterations for
+theproblemoflearningyˆin500iterationswithoutΣrestarts
+(solid) and with Σ restarts: with initial Σ=I (dash-dotted)
+U
+and Σ = (0,2) (dotted). The red dotted lines show the
+iterations at which Σ was restarted for the latter case.
+function. Fig. 5 displays a solution found by the algorithm
+for the empirically determined, ’ideal’ hand-over positions.
+The algorithm ran for 4.33 minutes on a quad-core XMG
+laptop with an Intel Core i5-4210M processor and 8GB
+RAM. The trajectory roll-outs sum up to a total of 40,000
+×
+(N M) simulated hand-overs, which would have clearly
+required signiﬁcantly more time to run on the robot directly,
+in addition to the extreme tedium of the task.
+Fig. 3: Policy samples when learning three hand-over posi-
+tions. The ﬁgure shows the effects of context vectors and Σ
+restarts on the exploration characteristics. The blue point is
+the sampled hand-over position, orange points are positions
+sampled in earlier iterations, the blue line is the executed
+trajectory, the thick grey line is the demonstrated trajectory,
+and thin grey lines represent per-iteration trajectories.
+positions (magenta). With arbitrary context scalars and no
+|
+Σ restarts, π(g c ) samples collapse on a single line. Using Fig.5:Simulatedroll-outsforeachcontextusingthelearned
+1
+context vectors and restarting Σ regularly leads to sampled policy. The stars signify gˆ − , while the dots depict the
+1 3
+points that neither lie on a single line nor adhere strictly to positions sampled by the policy. The grey curve shows the
+a linear form of exploration6. trajectory captured in demonstration being simulated by ex-
+Correlated Exploration Strategy Initializing a full co- ecuting a roll-out with the same observed DMP parameters.
+variance matrix, Σ, instead of the more traditional diagonal
+initialization, Σ=I, corresponds to a correlated exploration V. EXPERIMENTALRESULTS
+strategy. This was experimentally found to signiﬁcantly Following evaluations of learned policies in simulation,
+increase learning speed, as can be seen from Fig. 4. This we evaluate the resultant behaviour on the robot to verify
+veriﬁes that algorithms like PILCO, which enforces strictly the hypothetical improvements of context-aware behaviour,
+uncorrelated exploration, would perform worse than others learned through apprenticeship learning, over a more naive
+like Black-DROPS and REPS algorithms [34]. approach that disregards context.
+We perform experiments with the objective of estimating
+D. Evaluating Learned Behaviour
+typical users’ perceptions of context-aware and context-
+The model-based C-REPS implementation successfully
+| unaware behaviours. These experiments involve the robot
+learns an upper-level policy π(g c1) that starts from the performing hand-overs for participants in either case, before
+demonstratedbehaviourandgraduallylearnstochoosehand-
+theyﬁlloutstudyquestionnaires.Intheﬁrstcase,therobotis
+over positions that resemble those implicated in the reward
+settoexecutethesame,demonstratedmotioninallscenarios;
+inthesecond,itsamplesexecutionsfromitslearnedpolicies,
+6Wehaveachievedthebestresultsbycombiningthesetechniques,which
+allowlearningallgˆinasmallnumberofiterations(lessthan200). parameterized by observed context variables.
+1333
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. A. Experiment Setup and Procedure
+Our experiments were performed using the Toyota HSR
+inaquasi-domesticsettinginourlab.Theyweredesignedto
+testalearnedpolicythatchoosesdifferentpositionstoadapt
+therobot’shand-oversaccordingtouserposture(c ).Thisis
+1
+compared to the aforementioned contextually non-adaptive
+policy. The setting included three postures a person could
+assume; standing up, sitting, or lying down. Fig. 1 shows
+the respective positions and postures during an experiment7.
+The study involved ten participants with varying levels
+of familiarity with the robot. Participants receive an object
+fromtheHSRineachcontext,undertwo’behaviourmodes’:
+context-unaware(B1)andcontext-aware(B2).Thesequence
+of the experiment along either dimension is randomized
+between participants, who are oblivious to the difference
+between the two modes.
+At each run, the robot detects and perceives the person’s
+posture8,identifyingthecurrentvalueofc .Itthenexecutes
+1
+a hand-over of the object in its gripper using the parameter- Fig. 6: A diverging stacked bar chart used to visualize the
+ized DMP policy with a pre-set initial end-effector position, results of the questionnaire for the context unaware and
+motiontrajectory,andtimeconstant.Thevariableparameter, context aware behaviours, respectively.
+hand-over position, g, is set to the value observed in an
+original demonstration (g ) in mode B1, and sampled context-aware mode B2, two preferred it at a lesser degree,
+| demo
+from learned policy π(g c ), in mode B2. This is the policy and two preferred behaviour under B1.
+1
+whose results are displayed in Fig. 5. An object reception
+VI. CONCLUSIONS
+detectioncomponentthendetermineswhetherthereceiveris
+In this paper, we explored an approach to acquiring and
+trying to pull the object from the robot’s grasp9, at which
+generalizing a robot motor skill to different contexts, and
+point it releases it and returns its arm to a neutral position.
+conducted a human user study to evaluate its results, with
+Following the three hand-overs under either behaviour
+the aims of demonstrating a concrete application of context-
+mode, the participants are instructed to grade their agree-
+awareness, and validating its virtues.
+ment, on a 5-point Likert scale, with statements concerning
+Our model-based variant of the C-REPS algorithm suc-
+the behaviour of the robot. At the end of the experiment,
+ceeds in learning policies that choose context-dependent
+theparticipantsindicatetheirpreferenceoverthetwomodes
+optimal hand-over positions through ’mental rehearsal’: run-
+on a 5-point Likert scale, and answer a set of open-ended
+ning hand-over trajectory simulations and guiding learning
+questions intended to gather additional insights.
+throughshapedrewardfunctions. Weaugmentthealgorithm
+with a random exploration restarts strategy, and show that
+B. Results
+performance improves with fully-correlated exploration.
+The results of the questionnaire are visualized in Fig. 6 The results of our user study indicate a signiﬁcant pref-
+as a diverging stacked bar chart. The chart illustrates the erence for the context-aware behaviour, especially through
+proportions of responses for each statement, ranging from perceptions of similarity to human executions, suitability to
+strong disagreement to strong agreement (SD-D-N-A-SA). current situation, and naturalness. This supports the fact that
+The number of positive responses on the bottom plot contextually adaptive behaviour comes off as instinctively
+generally exceed those of the ﬁrst: a visual illustration of more preferable, particularly since users were not informed
+general inclination towards the context-aware behaviour. of the underlying differences between the two behaviour
+The participants’ ﬁnal comparative evaluation reveals a modes of the study.
+similarindicationofoverallpreferenceforthecontext-aware In future work, other dimensions of contextual adaptivity
+behaviour. Out of the ten participants, the scores imply that will be explored and validated, wherein factors such as
+six strongly preferred the robot’s hand-over behaviour under trajectory shape and execution speed will be taken into
+account in the robot’s motor skill. In addition, various
+7Weprovideavideodemonstratingthehand-oversperformedduringthe extensions to the apprenticeship learning procedure could
+experiments:https://www.youtube.com/watch?v=GguFJ2a7O6E facilitate autonomous ’lifelong learning’ of motor skills,
+8Person posture identiﬁcation is achieved using a simple heuristic that
+such as inverse reinforcement learning to infer reward func-
+comparestheheightandwidthdimensionsoftheboundingboxassociated
+withtheperson,yieldingaheight-widthratio,κ.Thedecisionfunctionis tions from demonstrations, and curriculum learning to ease
+deﬁnedintermsofκandexperimentallydeterminedthresholdvalues. learningparticularlydifﬁcultbehaviours,orincreaselearning
+9For this, we make use of a wrist force sensor. According to an
+efﬁciency in general. Finally, Gaussian Processes could be
+empiricallydeterminedthreshold,thechangeinsteady-stateforcereadings
+iscontinuouslyevaluatedusingCUSUM,achangedetectionalgorithm[35]. integrated in C-REPS, either as policies or forward models.
+1334
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [24] A.G.Kupcsik,M.P.Deisenroth,J.Peters,andG.Neumann,“Data-
+efﬁcientgeneralizationofrobotskillswithcontextualpolicysearch,”
+[1] K. Chatzilygeroudis and J.-B. Mourer, “Using parameterized black- in27thAAAIConf.ArtiﬁcialIntelligence,2013.
+box priors to scale up model-based policy search for robotics,” in
+[25] V. Tangkaratt, H. van Hoof, S. Parisi, G. Neumann, J. Peters, and
+2018IEEEInt.Conf.RoboticsandAutomation(ICRA),pp.1–9,IEEE,
+M. Sugiyama, “Policy search with high-dimensional context vari-
+2018. ables,”in31stAAAIConf.ArtiﬁcialIntelligence,2017.
+[2] A. Kupcsik, M. P. Deisenroth, J. Peters, A. P. Loh, P. Vadakkepat,
+[26] A.Abdolmaleki,N.Lau,L.PauloReis,andG.Neumann,“Contextual
+and G. Neumann, “Model-based contextual policy search for data- stochasticsearch,”inProc.2016GeneticandEvolutionaryComputa-
+efﬁcientgeneralizationofrobotskills,”ArtiﬁcialIntelligence,vol.247, tionConf.Companion,pp.29–30,ACM,2016.
+pp.415–439,2017.
+[27] A. Abdolmaleki, N. Lau, L. P. Reis, and G. Neumann, “Non-
+[3] A.YamaguchiandC.G.Atkeson,“Neuralnetworksanddifferential parametriccontextualstochasticsearch,”in2016IEEE/RSJInt.Conf.
+dynamicprogrammingforreinforcementlearningproblems,”in2016 IntelligentRobotsandSystems(IROS),pp.2643–2648,IEEE,2016.
+IEEE Int. Conf. Robotics and Automation (ICRA), pp. 5434–5441,
+[28] M.DeisenrothandC.E.Rasmussen,“Pilco:Amodel-basedanddata-
+IEEE,2016. efﬁcientapproachtopolicysearch,”inProc.28thInt.Conf.Machine
+[4] P. Pastor, H. Hoffmann, T. Asfour, and S. Schaal, “Learning and Learning(ICML-11),pp.465–472,2011.
+generalizationofmotorskillsbylearningfromdemonstration,”in2009
+[29] K.Chatzilygeroudis,R.Rama,R.Kaushik,D.Goepp,V.Vassiliades,
+IEEEInt.Conf.RoboticsandAutomation,pp.763–768,IEEE,2009.
+andJ.-B.Mouret,“Black-boxdata-efﬁcientpolicysearchforrobotics,”
+[5] A. J. Ijspeert, J. Nakanishi, H. Hoffmann, P. Pastor, and S. Schaal, in 2017 IEEE/RSJ Int. Conf. Intelligent Robots and Systems (IROS),
+“Dynamicalmovementprimitives:learningattractormodelsformotor
+pp.51–58,IEEE,2017.
+behaviors,”Neuralcomputation,vol.25,no.2,pp.328–373,2013.
+[30] S. Levine, N. Wagener, and P. Abbeel, “Learning contact-rich ma-
+[6] B. Kim, A.-m. Farahmand, J. Pineau, and D. Precup, “Learning nipulationskillswithguidedpolicysearch,”in2015IEEEInt.Conf.
+from limited demonstrations,” in Advances in Neural Information roboticsandautomation(ICRA),pp.156–163,IEEE,2015.
+ProcessingSystems,pp.2859–2867,2013.
+[31] J. Kober, J. A. Bagnell, and J. Peters, “Reinforcement learning in
+[7] M.HazaraandV.Kyrki,“Speedingupincrementallearningusingdata robotics:Asurvey,”Int.JournalofRoboticsResearch,vol.32,no.11,
+efﬁcient guided exploration,” in 2018 IEEE Int. Conf. Robotics and
+pp.1238–1274,2013.
+Automation(ICRA),pp.1–8,IEEE,2018.
+[32] A.Mitrevski,A.Padalkar,M.Nguyen,andP.G.Plo¨ger,“”Lucy,Take
+[8] K.L.Koay,E.A.Sisbot,D.S.Syrdal,M.L.Walters,K.Dautenhahn,
+the Noodle Box!”: Domestic Object Manipulation Using Movement
+andR.Alami,“Exploratorystudyofarobotapproachingapersonin Primitives and Whole Body Motion,” in Proc. 23rd RoboCup Int.
+the context of handing over an object.,” in AAAI spring symposium: Symp.,(Sydney,Australia),2019.
+multidisciplinarycollaborationforsociallyassistiverobotics,pp.18– [33] C. M. Bishop, Pattern recognition and machine learning. springer,
+24,2007.
+2006.
+[9] A. M. Bestick, S. A. Burden, G. Willits, N. Naikal, S. S. Sastry, [34] M.P.Deisenroth,G.Neumann,J.Peters,etal.,“Asurveyonpolicy
+andR.Bajcsy,“Personalizedkinematicsforhuman-robotcollaborative search for robotics,” Foundations and Trends(cid:13)R in Robotics, vol. 2,
+manipulation,” in 2015 IEEE/RSJ Int. Conf. Intelligent Robots and
+no.1–2,pp.1–142,2013.
+Systems(IROS),pp.1037–1044,IEEE,2015.
+[35] M.Blanke,M.Kinnaert,J.Lunze,M.Staroswiecki,andJ.Schro¨der,
+[10] A. Bestick, R. Pandya, R. Bajcsy, and A. D. Dragan, “Learning Diagnosisandfault-tolerantcontrol,vol.2. Springer,2006.
+humanergonomicpreferencesforhandovers,”in2018IEEEInt.Conf.
+RoboticsandAutomation(ICRA),pp.1–9,IEEE,2018.
+[11] J.Peters,K.Mulling,andY.Altun,“Relativeentropypolicysearch,”
+in24thAAAIConf.ArtiﬁcialIntelligence,2010.
+[12] T. Yamamoto, K. Terada, A. Ochiai, F. Saito, Y. Asahara, and
+K. Murase, “Development of human support robot as the research
+platform of a domestic mobile manipulator,” ROBOMECH Journal,
+vol.6,no.1,p.4,2019.
+[13] A.Ude,A.Gams,T.Asfour,andJ.Morimoto,“Task-speciﬁcgeneral-
+izationofdiscreteandperiodicdynamicmovementprimitives,”IEEE
+Trans.Robotics,vol.26,no.5,pp.800–815,2010.
+[14] D. Forte, A. Gams, J. Morimoto, and A. Ude, “On-line motion
+synthesis and adaptation using a trajectory database,” Robotics and
+AutonomousSystems,vol.60,no.10,pp.1327–1339,2012.
+[15] J.KoberandJ.Peters,Learningmotorskills:fromalgorithmstorobot
+experiments,vol.97. Springer,2013.
+[16] F. Guenter, M. Hersch, S. Calinon, and A. Billard, “Reinforcement
+learning for imitating constrained reaching movements,” Advanced
+Robotics,vol.21,no.13,pp.1521–1544,2007.
+[17] P.Kormushev,S.Calinon,andD.G.Caldwell,“Robotmotorskillco-
+ordinationwithem-basedreinforcementlearning,”in2010IEEE/RSJ
+internationalconferenceonintelligentrobotsandsystems,pp.3232–
+3237,IEEE,2010.
+[18] B. Da Silva, G. Konidaris, and A. Barto, “Learning parameterized
+skills,”arXivpreprintarXiv:1206.6398,2012.
+[19] J. Kober, A. Wilhelm, E. Oztop, and J. Peters, “Reinforcement
+learning to adjust parametrized motor primitives to new situations,”
+AutonomousRobots,vol.33,no.4,pp.361–379,2012.
+[20] F. Stulp and S. Schaal, “Hierarchical reinforcement learning with
+movement primitives,” in 2011 11th IEEE-RAS Int. Conf. Humanoid
+Robots,pp.231–238,IEEE,2011.
+[21] E. Theodorou, J. Buchli, and S. Schaal, “Reinforcement learning of
+motor skills in high dimensions: A path integral approach,” in 2010
+IEEEInt.Conf.RoboticsandAutomation,pp.2397–2403,IEEE,2010.
+[22] C.Daniel,G.Neumann,andJ.Peters,“Hierarchicalrelativeentropy
+policy search,” in Artiﬁcial Intelligence and Statistics, pp. 273–281,
+2012.
+[23] C. Daniel, G. Neumann, O. Kroemer, and J. Peters, “Hierarchical
+relative entropy policy search,” The Journal of Machine Learning
+Research,vol.17,no.1,pp.3190–3239,2016.
+1335
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:04 UTC from IEEE Xplore.  Restrictions apply. 

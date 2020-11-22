@@ -1,0 +1,488 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Planning for the Unexpected: Explicitly Optimizing Motions for
+Ground Uncertainty in Running
+Kevin Green, Ross L. Hatton, Jonathan Hurst
+Abstract—Weproposeamethodtogenerateactuationplans
+for a reduced order, dynamic model of bipedal running. This
+method explicitly enforces robustness to ground uncertainty.
+The plan generated is not a ﬁxed body trajectory that is
+aggressively stabilized: instead, the plan interacts with the
+passivedynamicsofthereducedordermodeltocreateemergent
+robustness. The goal is to create plans for legged robots that
+will be robust to imperfect perception of the environment,
+and to work with dynamics that are too complex to optimize
+in real-time. Working within this dynamic model of legged
+locomotion, we optimize a set of disturbance cases together
+withthenominalcase,allwithlinkedinputs.Theinputlinking
+is nontrivial due to the hybrid dynamics of the running model
+but our solution is effective and has analytical gradients. The
+optimization procedure proposed is signiﬁcantly slower than a
+standardtrajectoryoptimization,butresultsinrobustgaitsthat Fig.1. ArobustmotionplanfortheactuatedSLIPmodel.Alltrajectories
+rejectdisturbancesextremelyeffectivelywithoutanyreplanning usethesamecontrolinputs,yettheyallconvergefromdifferentheightsto
+required. thesameﬁnalapexstate.
+I. INTRODUCTION
+Dynamic locomotion such as running and walking has of legged locomotion [1]. Feet can slip which complicates
+many dimensions beyond position trajectories, which are proprioceptive estimation [2]. Cameras, LIDAR and other
+merely one symptom of the resulting behavior. As such, sensorsexperiencedifﬁcult-to-predictmotionthroughoutthe
+new approaches are needed to incorporate powerful existing gait cycle. Due to the sharp cost of failures (falls and subse-
+motion planning and control methods with the dynamic be- quentdamage)itisdesirabletoberobusttotheuncertainties
+haviors of legged locomotion. Complicating factors include ingroundheight.Thisistheperspectivethatmotivatesmuch
+underactuation, nonlinear hybrid dynamics, large system of the work on generating robust blind locomotion [3].
+dimensionality and signiﬁcant uncertainties in ground prop- This work describes a method to search for open loop
+erties. However, legged locomotion is not so complex as it actuation plans for the ASLIP model that exactly reject a
+ﬁrstappears,becausemostbehaviorscanbedescribedbyrel- range of disturbances in the ground height (Fig. 1). There
+ativelysimplereduced-ordermodels,showingsomepromise are multiple reasonable ways to deﬁne rejection of a ground
+forplanningwithinthisdynamicspace.Manyreduced-order height disturbance; here we deﬁne rejection as returning to
+models consist of a point mass body and a massless leg thedesiredapexstaterelativetothedisturbedgroundheight.
+that can apply forces from a contact point toward the point If a different desired behavior can be expressed in terms of
+mass, where body motion is only inﬂuenced by gravity and the ﬁnal states in the disturbance cases (e.g. return to the
+the forces applied by the leg. Examples of this type of desired apex state relative to the previous state), then the
+model include the inverted pendulum (IP) model, the linear methodpresentedhereenablesinvestigationofthatbehavior.
+inverted pendulum (LIP) model, the spring loaded inverted Theresultingopenloopplansforthismodelconsistofswing
+pendulum (SLIP) model, and the actuated spring loaded leg motion and a trajectory for the extension of leg actuator.
+invertedpendulum(ASLIP)model.Thedifferentiatingfactor Leg swing motion controls the foot’s touchdown angle and
+between these models is the calculation of the applied leg the leg actuator controls the set point of the damped spring
+force. in the leg. Our approach is to optimize the expected motion
+Whenwalkingandrunning,thegroundheightforthenext for a set of disturbance cases in one large problem. This
+step cannot be measured perfectly so intrinsic robustness to is not trivial because it requires linking the inputs between
+errors in ground height is extremely desirable. Ground sens- thedifferentcasesincludingaccountingforthetimingofthe
+ing is a difﬁcult problem because of the complex dynamics hybridtransitions.Thesolutionweproposeforinputlinking
+is effective and includes analytical gradients throughout.
+ThisworkwassupportedbyDARPAcontractW911NF-16-1-0002,NSF
+GrantNo.1462555-CMMandNSFGrantNo.1314109-DGE. We provide an overview of relevant existing work in
+All authors are with the School of Mechanical, Industrial, Section II. The ASLIP model and its hybrid dynamics are
+& Manufacturing Engineering at Oregon State University,
+{ deﬁned in Section III. In Section IV we describe the two
+Corvallis, OR, USA. Email greenkev, ross.hatton,
+}
+jonathan.hurst @oregonstate.edu trajectory optimization techniques we are comparing and
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1445
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. the simulation we use to test performance. The results of
+both optimizations and the simulation testing are reported in
+Section V. Closing remarks are in Section VI.
+II. BACKGROUND
+Studying reduced order models has provided insight into
+the phenomenon of legged locomotion and how to create
+dynamic walking and running in robots. The passive SLIP
+modelexplainsmostoftheeffectsobservedinhumanground
+reactionforcesduringrunningandwalking[4].Ifthismodel
+is extended with swing leg dynamics, it can generate all
+common bipedal gaits [5]. Further, the SLIP model can be
+usedtogeneratefootplacementpoliciesthatregulateforward
+speed [6]. In the actuated and damped ASLIP model, an
+open loop cyclic reference trajectory was shown to reject
+both ground height and ground impedance variations when
+hopping vertically [7]. Preﬂex (pre-reﬂex) behaviors on an
+Fig. 2. The ASLIP model in stance with labeled parameters and state
+extension of the ASLIP model can aid in mitigating sensing variables.Theoriginforthebodyposition(x,y)isthecontactpoint.
+delays when the system encounters disturbances [8]. These
+discoveries inform us on how to create and stabilize legged
+locomotion. modelhasbothadiscretecontrolactioninthefootplacement
+The insights from reduced order models have been suc- as well as a continuous control action in the leg extension
+cessfully leveraged in generating control methods for legged actuatorwhichresultsinamuchricheractionspacethanthe
+robots. The ATRIAS robot successfully demonstrated robust passive SLIP model.
+blind walking by leveraging knowledge from reduced order
+models about foot placement, energy injection and clock
+A. Equations of Motion
+based open-loop feed-forward signals [9]. The RHex hexa-
+podrobotwasstabilizedwithafeedbackpolicyfromaclock- This system has two distinct dynamic modes, ﬂight and
+driven SLIP [10]. stance. In ﬂight phase the dynamics of the body and the leg
+Other control approaches directly manipulate reduced or- are fully decoupled. The body exhibits ballistic motion with
+dermodelstoplanmotionsonlineinamodelpredictivecon- the equations of motion
+trol approach. A common approach for bipedal locomotion
+is it use the linear inverted pendulum model due to its linear x¨=0 (1)
+−
+dynamics [11]–[13]. This allows the robot to quickly reason y¨= g. (2)
+about where to place its feet given the estimated state and
+the goals from a high level planner or an operator. The leg set point motion is only inﬂuenced by the com-
+manded acceleration (r¨ ) because it is assumed to be
+cmd
+III. DYNAMICMODEL rigidly actuated,
+TheASLIPmodelconsistofapointmassbodywithmass
+r¨0=r¨cmd. (3)
+mandnorotationalinertiaaswellasamasslessleg.Thisleg
+has a linear extension actuator that is assumed to be a rigid Thepassivedeﬂectionofthespringhasaﬁrstorderresponse
+position input. The output of this actuator is connected to during ﬂight due to the lack of foot mass,
+the massless point foot through a damped linear spring with
+stiffness k and viscous damping b. This system has states −k
+corresponding to the body position x, y and velocity x˙, y˙, r˙p= brp. (4)
+the leg actuator set point position r and velocity r˙ , and the
+0 0 In stance phase the toe is constrained to stay in contact
+passive spring deformation r . The leg actuation extension
+p with the ground and leg is able to apply forces on the main
+is limited to be between l0 and l0/2 where l0 is used as a body, but only in the leg length direction. In the application
+descriptive length of the leg. Gravitational acceleration is g.
+of this constraint, the spring deﬂection variable (r ) is made
+These coordinates and parameters are labeled on the system p
+dependentonthebodyandsetpointposition.Tosimplifythe
+diagram in Fig. 2. We include the actuator velocity as a
+descriptionof thedynamics,the originofthe bodysposition
+state because we use the acceleration of the set point r¨
+0 coordinate system is set to be the foot contact point. This
+as the control input. The commanded acceleration is limited
+makes the spring deﬂection and velocity
+in magnitude as a proxy for absolute torque limits. Here
+5g is used as the maximum acceleration The passive spring −
+deﬂection must be a part of the state because during ﬂight rp=r−r0 (5)
+phasethespringanddampercreateﬁrstorderdynamics.This r˙p=r˙ r˙0, (6)
+1446
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. Symbol Value Description
+where r is the total leg length and r˙ is the total leg velocity.
+BaseUnits m 1[m] Mass
+The stance center of mass dynamics are l 1[l ] MaxsetpointLength
+0 0 (cid:112)
+xF g 1[g] Gravitationalacceleration
+x¨= mr (7) Parameters k 20[mg/l0] Legspringstiffness
+yF − States bx 0-.[8l9][m g/l0] LHeogrizsopnritnaglpdoasmitpioinng
+y¨= mr g (8) y -[l√00] Verticalposition
+x˙ -[√gl ] Horizontalvelocity
+where F is the leg force on the body, deﬁned as 0
+y˙ -[ gl ] Verticalvelocity
+F =k(r0−r)+b(r˙0−r˙). (9) rr˙0 --[[l√0]gl0] LLeeggsseettppooiinnttlveenlogcthity
+0 0
+We assumed that the set point is a rigid position source so rp -[l0] Legspringdeﬂection
+Inputs r¨ -[g] Legsetpointacceleration
+it is inﬂuenced only by the r¨ control signal despite the cmd
+cmd
+external loads it is supporting in stance. TABLEI
+NONDIMENSIONALSYSTEMPARAMETERS,STATESANDINPUTS.
+B. Hybrid Transition Model
+We are using this model to represent the sagittal plane
+dynamicsofbipedalaerialrunning.Thismeansthattherobot
+will cycle through the phases of ﬂight, left leg stance, ﬂight IV. METHODS
+and right leg stance before repeating. Given symmetries in
+As a standard of comparison we ﬁrst present a conven-
+thesagittalplanewecananalyzeonlyhalfofthiscycle.The
+tional minimal effort trajectory optimization. Then we de-
+startandendpointsofthishalfcyclearesomewhatarbitrary,
+scribetheexplicitlyrobusttrajectoryoptimizationmethodwe
+but a common choice is to use the apex condition in ﬂight
+propose.Finally,wedescribeaseparatetestingsimulationto
+as the start and end point [4]. With this start and end point,
+analyzethedisturbancerejectioncapabilitiesoftheopenloop
+the phases of our half cycle are descending ﬂight, stance,
+motion plans produced by these two optimization methods.
+ascending ﬂight.
+Touchdown is when the model transitions from ﬂight to
+A. Minimum Effort Optimization
+stance which occurs when the foot reaches the ground. This
+is more precisely de(cid:112)scribed as the states at the moment of The minimum effort optimization seeks to ﬁnd a single
+touchdown intersect the guard surface state trajectory and input signal that will result in moving
+from an initial apex state to the following apex state while
+x2+y2=r0+rp. (10)
+minimizing a measure of actuator effort. This is formulated
+Liftoff is where the model transitions from stance phase
+as a direct collocation problem. In this technique, the opti-
+to ﬂight phase when the ground reaction force goes to zero.
+mizer has access to both the discretized states and control
+This is not the same as when the spring has zero deﬂection
+inputs as decision variables as well as the time between the
+because of the damping in the spring. The liftoff transition
+discretizations. It is conventional to have the states evenly
+guard is described as having zero force in the spring
+spaced in time with a single duration decision variable. The
+− −
+k(r0 r)+b(r˙0 r˙)=0. (11) dynamics are imposed as constraints between subsequent
+states and their inputs based on numeric integration tech-
+This model does not include the case where the force vector
+niques. In this work we use trapezoidal integration. Much
+exits the friction cone and causes the foot to slip.
+more detail on this approach can be found in [17]. Direct
+C. Nondimensionalization collocation optimizations such as those implemented here
+If this model was being used to generate motions for a contain hundreds or thousands of decision variables. This
+speciﬁcrobot,onewouldusemeaningfulphysicalparameters means that it is not feasible to report every individual con-
+from that robot for the reduced order model. Here we are straint. Instead we describe the general form of constraints
+interestedinresultsthataregenerallyapplicablesowenondi- which are applied across the time discretized states.
+mensionalize our model. The nondimensionalization of our Our optimization is complicated by the three separate
+ASLIP model is based on previous work nondimensionaliz- dynamicphases.Eachphaseofthedynamicsisimplemented
+ing SLIP models and variations on SLIP models [14], [15]. with its own set of discretized state and input variables
+Thecharacteristicunitsarethemaximumlegsetpointlength, and phase duration variable. The ﬁnal state of one phases
+mass of body and gravitational acceleration. All parameters is constrained to match the ﬁrst state of the next phases.
+and states are represented relative to these quantities and are Additionally the ﬁnal states of the ﬁrst ﬂight phase and the
+summarized in Table I. Two parameters must be chosen, the stancephasemustbeatthehybridtransitionguardsdescribed
+leg stiffness and the leg damping. The numbers we selected above in Section III-B.
+are similar to previous SLIP modeling papers [15] and are Theinitialheightandforwardvelocityaswellastheﬁnal
+(cid:112)
+based on observations of human biomechanics [16]. The leg height and forward velocity are constrained to match user-
+stiffness we used is 20 [mg/l0] and the leg damping is 0.89 speciﬁedvalues.Toensuretheinitialandﬁnalstatesareapex
+[m g/l0]. The damping value is such that the body and leg states, the vertical velocities are constrained to be zero.
+system has a damping ratio of 0.1 in stance. The objective (J) we use is the integral of the set point
+1447
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. (cid:90)
+acceleration squared, the indexing of the collocation nodes to link instances. This
+problem exists when trying to link disturbance cases in any
+τ
+J= r¨2dt (12) system that goes through hybrid transitions or has a variable
+0
+0 duration.
+where τ is the total duration of the motion. This is a useful The solution is to use an additional set of decision
+objective both theoretically and practically. If this was a real variables evenly spaced through time that are not linked to
+systemwherethesetpointactuatorisagearedelectricmotor, any speciﬁc dynamic phase or collocation node. Each of the
+this objective is proportional to the thermal energetic losses collocation node inputs are constrained to be equal to the
+in the motor due to accelerating the actuator inertia [18]. linear interpolated value from these control points.
+Practically this smooths the acceleration commands which To describe this constraint and its gradient, we ﬁrst deﬁne
+increases the accuracy of the trapezoidal integration scheme a generic linear interpolation function and a zero order hold
+[17]. function. Thelinear interpolation function (with extrapola-
+uotghspreaiTtndimhcgieoeinnzatascsttomrioanaoinnsndtatrpilsaﬁyr,iotcnicbatcostlaienlomlsanytnradgwoienfhnotieCblJrejaaOectcpAiootribLenvisEeaelniSrb,vfCruioanEnrbgc,yjteiat[coh1tnei9Mvsi]re.AaWsaTrpneLeadrAsggoiBeetbynnj.eeebrrcTaaatsttiheeevidddes tiLoIn()x,avs,xitq)is=convxxxx22iie++−−n11xx−−tq1ixoxvqin1va+il+lyxxq2xx−−uqi−−nxx11xdxiivev2ris+t1ood is xxqi<≤xxq2≤x−i+1,
+2<i<N 2
+pbreosdoulcveesdatonloonclainleoaprtipmroalgirtyamumsiningga(nNoLfPf)thperoshbelelfmnothnaltinceaanr xNxN−−xNx−q1vN−1+xxNq−−xxNN−−11vN xN−1<xq
+(13)
+solver.WeusedIPOPT(aninteriorpointtechniquepackage) where x∈RN is a strictly increasing vector of the sample
+to solve the NLP, but other implementations or optimization points,v∈RN isthevaluesofthosesamplepointsandx ∈R
+techniques could be used [20]. q
+isthequerypoint.Foruseinthegradientexpressionweneed
+B. Disturbance Aware Trajectory Optimization the zero order hold function (with extrapolation),
+≤
+The method we use to optimize for variations in ground v x x
+hpereigsehntteids aabnoveex.teWnseionnotoofntlhyecrmeainteimaullmtheeffsotarttetevcahrinaibqluees ZOH(x,v,xq)=v1i xqi<xq2≤x−i+1, (14)
+2<i<N 1
+andinputsfortheexpectedmotion,butalsoforsomenumber
+of disturbance cases with different initial conditions. All of vN xN <xq
+the disturbance cases are thought of as different versions were x, v, and x are the same as in the linear interpolation
+q
+of what may happen during the planned step; this means function deﬁnition.
+that they must all share the same set point motion. This is Consider the kth collocation node with input u at time
+ensured through an input linking opteration described in the t , and control points described by time T ∈Rm aknd value
+following section. Each disturbance case still has the same Uk ∈Rm. Our constraint (g) takes the form
+ﬁnal state constraints, forcing the optimizer to try to funnel −
+each of the disturbance cases to the single ﬁnal state. g(uk,tk,U,T)=uk LI(T,U,tk)=0. (15)
+Theminimumeffortobjectivewasremovedforthistrajec- This constraint means that the the actual input u must be
+k
+tory optimization because it was found to prevent the con- equal to the interpolated input from the control points at the
+vergence of the optimization. This makes this optimization current time t .
+k
+problem more accurately a constraint satisfaction problem. The optimization method we use beneﬁts from having
+The limits on the maximum acceleration of the set point analyticalgradientsofallconstraints,whichwecandescribe
+ensurethatevenwithoutanexplicitobjectivethatthemotion for this function. The gradient of the constraint in 15 can be
+of the set point is relatively smooth. found using basic calculus. With respect to some decision
+One subtle aspect of this problem is that the disturbance variable (y) the gradient1 of this constraint is
+casesareabletoeachselectadifferentlegtouchdownangle.
+This may appear to conﬂict with the assumption that the ∇yg(uk,tk,U,T)=∇yuk (16)
+− −
+model cannot know which disturbance case is occurring, but − Um Um 1
+the optimizer is implicitly selecting a leg swing trajectory. +ZOH(T1m 1, T2m−T1m−1∇ytk,tk) (17)
+Eachdisturbancecasecontactsthegroundatadifferenttime 2 − 1 −
+− Um Um 1
+aextaactldyifcfeornesnttituletegsaanlgelge.swThinisg sreettraocftiolengpaonligclye.s over time +ZOH(T1m 1, T2m−T1m−1,tk)LI(T,∇yT,tk) (18)
+2 1
+The difﬁcult aspect of working with all the disturbance +LI(T,∇yU,tk) (19)
+cases together is that their control inputs must be linked
+Thisconstraintallowsustolinkallofthesetpointacceler-
+together.Thesystemwillnotknowwhichofthedisturbance
+ation proﬁles together in a differentiable way. Unfortunately
+cases it is in so the inputs as a function of total time must
+match. Each disturbance case has ﬂight and stance phases
+1InthisexpressionthesymbolUb isthevectorofcomponentsdescribed
+a
+that take different lengths of time, so we cannot rely on by[Ua,Ua+1,...,Ub−1,Ub].
+1448
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. the gradient is undeﬁned at the node points themselves and
+1.1
+is frequently discontinuous. This discontinuous gradient can n
+o
+slowtheoptimizationprocedurebuttheconstraintsconverge siti 1
+o
+well to the desired tolerance in our application. A better al P0.9
+optioncouldbetouseapiecewisecubicinterpolationmethod ertic0.8 Flight Phase
+toensurethegradientsarewellformed,butitwoulddecrease V Stance Phase
+the sparsity of the constraints with respect to the decision -0.5 0 0.5
+variables. Horizontal Position
+1
+C. Testing Simulation
+h0.9
+Toobjectivelytestthedisturbancerejectionofthemotions gt
+n
+produced by the two trajectory optimization methods we Le
+implement a hybrid simulation of the ASLIP model. The eg 0.8
+L Set Point Position
+simulation uses the same model dynamics and hybrid tran-
+Deflected Leg Length
+sitions except that we treat the set point trajectory (position 0.7
+0 0.5 1 1.5 2
+r0(t)andvelocityr˙0(t))astheinputs.Thesystemisforward Time
+integrated using MATLAB’s variable step size ODE solver 4
+ODE45 with event sensing for the hybrid transitions. e
+c
+Additionally, the leg touchdown angle must be deﬁned For 2
+n 
+for each of the motions. The robust optimization ﬁnds an o
+cti
+explicit time varying leg touchdown angle. The minimum a 0
+e
+effortoptimizationonlyselectsasinglelegangle.Oneoption nd R VHeorrtiizcoanl tFaol rFcoerce
+wouldbetojustusethatsinglelegangle.Abetteroptionisto ou-2
+use the heuristic that the leg touchdown angle tracks a ﬁxed Gr 0 0.5 1 1.5 2
+Time
+horizontal touchdown location on the ground. This policy
+is similar to what guinea fowl do when they encounter an Fig. 3. An example solution from the minimum effort optimization. We
+unexpected step up or down [21], and should ensure that the see that the model lands with the leg retracted, then smoothly extends to
+themaximumlengthatliftofftoreplacetheenergylostinthelegspring
+minimum effort optimization is not unfairly hindered with
+damping.
+an unreasonable leg angle policy.
+Werunthisforwardsimulationforasetofinitialcondition
+disturbances until it reaches the next apex state. If the with the leg set point slightly retracted and stationary. Then
+disturbance is poorly handled it is possible that the body throughout stance the leg extends and reaches the maximum
+does not ever reach the next apex state. This generally is extension just before liftoff. As the leg extends it does
+because the model falls into the ground before lifting off or positive work against the spring, replacing the energy lost
+reaches liftoff with a negative vertical velocity. inthedamperduringstance.Duringtheﬂightphasestheleg
+issmoothlyretractedbacktoprepareforthenexttouchdown
+V. RESULTS event. The ground reaction forces appear very similar to
+To evaluate the optimization methods we generate motion thoseseeninhumanrunningtrialsaswellasinpassiveSLIP
+plans for 625 sets of initial states and ﬁnal goal states. The models.
+experiments were run single threaded on a standard desktop In the explicitly robust optimization we used +0.10,
+− −
+computer with an Intel Core i7-7700k and 24 GB of RAM. +0.05, 0.05 and 0.10 [l0] as the errors in ground height
+Thesecorrespondtoeverycombinationofﬁveinitialheights, for the disturbance cases which means this problem has
+initialhorizontalvelocities,ﬁnalheights,andﬁnalhorizontal ﬁve times the number of variables and constraints of the
+velocities. This results in creating motion plans for steady minimum effort problem. The mean solutions time was 4.3
+state gaits, changes in speed, planned step ups and planned seconds and 95% of successful solutions solved in under
+step downs. Observations on the optimization process and 8.9 seconds. This is notably slower than the minimum effort
+the resulting motions are presented for both the minimum optimization, particularly when you consider the average
+effort and the explicitly robust optimizations. Finally, the time per iteration which was 0.01 seconds for the minimum
+performanceoftheplansfrombothmethodsistestedusinga effort and 0.2 seconds for the robust optimization. This is
+separatesimulationforsigniﬁcantlymoredisturbanceheights to be expected because of the over ﬁve times difference in
+than were explicitly optimized. numberofdecisionvariablesandconstraintsbetweenthetwo
+problems.
+A. Optimization Results
+An example solution to the robust optimization is shown
+Theminimumeffortoptimizationsconvergedtooptimality in Fig. 4. We can see in the top plot that all ﬁve initial
+relatively quickly and reliably. The mean solutions time heights converge back to the nearly same ﬁnal height and
+was 0.90 seconds and 95% solved in under 3.1 seconds. forward velocity. Each trajectory has a different touchdown
+An example solution is shown in Fig. 3. The system lands angle, becoming steeper for later touchdowns. The second
+1449
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. 1.2
+1.2
+on 1
+siti 1
+o
+P
+al 0.8
+ertic FSltiagnhct eP hPahsaese 0.8
+V0.6
+n 
+-0.8 -0.6 -0.4 -0.2 0 0.2 0.4 0.6 o
+Horizontal Position siti 0.6
+o
+0.9 P
+al 
+0.8 ertic 0.4
+V
+h
+ngt 0.7 0.2
+e Robust Policy Flight
+L
+Leg  0.6 Set Point Position 0 RMoinb uEsffto Prto Plicoyli cSyt aFnlicgeht
+Deflected Leg Length Min Effort Policy Stance
+0.5
+0 0.5 1 1.5 2 2.5 -0.6 -0.4 -0.2 0 0.2 0.4 0.6
+Time Horizontal Position
+6
+Vertical Force
+ce 4 Horizontal Force Fig.5. Simulationresultsoftheopenloopplansfortherobustpolicyand
+or the minimum effort policy. The robust policy (orange) has an apex height
+action F 2 e[p√rrroogdrlu0oc]tffoolefrsstahltlehdaonipstt0ium.r0bi0za1antci[eol0nc]awasnhedsil.eaTnthhaeepsmewxinivniemgloulcemigtyeofeffrortrhoterporooflibclueysstsupstheosalincgyr0o.i0us0n1da
+Re 0 speedmatching.
+d 
+n
+u-2
+Gro 0 0.5 1 1.5 2 2.5 √
+Time than 0.001 [l0] error in ﬁnal height and 0.001 [ gl0] error
+in ﬁnal forward velocity.
+Fig.4. ArobustmotionplanfortheactuatedSLIPmodel.Alltrajectories
+Lookingattheresultsofallofthesimulationsweobserve
+use the same control inputs, yet they all converge to the same ﬁnal apex
+state. that 14% of the disturbances caused the minimum acceler-
+ation policy to fail to reach a valid subsequent apex state
+because the body contacted the ground before it reached an
+plotshowsthatasthedifferentdisturbancecasestouchdown,
+apexstate.Noneofthetesteddisturbancescausedtherobust
+thelegisalreadyextendinginlength.Allthetrajectorieslift
+policy to fail. When comparing the ﬁnal state error of the
+off at different points in time as the leg reaches its peak
+conditions where the minimum acceleration policy did not
+extension which is well short of the maximum extension of
+fail, the robust policy had on average 43 times less height
+1 [l ]. In the ground reaction force plot at the bottom, we
+0 error and 81 times less velocity error.
+can see that the later the touchdown, the greater the peak
+force vertical force. This intuitively makes sense because it
+VI. CONCLUSIONS
+shouldrequirealargerverticalimpulsetoreversethevertical
+velocity of the body and return it to the ﬁnal desired height. We presented a new method to create open loop plans for
+an ASLIP model that are extremely robust to ground height
+B. Simulation Testing Results
+uncertainty. The presented approach consists of optimizing
+Theperformanceofthetwodifferenttrajectorygenerators many different trajectories for different disturbance cases
+was tested using the simulation described in section IV-C. while linking the inputs together. The input linking used
+Each trajectory was tested using eleven different vertical here is effective and efﬁcient due to its analytical gradients
+disturbances representing different step ups and step downs, and can be applied to other hybrid or variable duration
+−
+between+0.1[l0]and 0.1[l0].Anexampleresultisshown trajectoryoptimizationproblemsacrossasetofdisturbances.
+in Fig. 5 for a steady state gait. Looking at the minimum The results show that the robust open loop motions plans
+acceleration results in blue, we can see that touchdown produced have an order of magnitude less ﬁnal state error
+points are at similar heights because the leg set point has compared to the minimum effort plans.
+almost zero velocity at this point in the cycle. As these
+motions exit stance, they have drastically different forward REFERENCES
+velocity but a smaller range of ﬁnal heights compared to the
+initial disturbances. The robust trajectories in orange show a [1] C.Cadena,L.Carlone,H.Carrillo,Y.Latif,D.Scaramuzza,J.Neira,
+I. Reid, and J. Leonard, “Past, present, and future of simultaneous
+very different reaction. The touchdown states are in a much
+localization and mapping: Towards the robust-perception age,” IEEE
+tighter grouping due to the leg extension and the precise leg TransactionsonRobotics,vol.32,no.6,pp.1309–1332,2016.
+placement policy generated by the optimization. The states [2] M.Bloesch,M.Hutter,M.Hoepﬂinger,S.Leutenegger,C.Gehring,
+C.DavidRemy,andR.Siegwart,“StateEstimationforLeggedRobots
+convergethroughstanceandascentuntiltheyreachtheapex
+- Consistent Fusion of Leg Kinematics and,” Robotics: Science and
+state. All of the robust apex states in this ﬁgure have less SystemsVIII,2012.
+1450
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. [3] A. Ramezani, J. W. Hurst, K. Akbari Hamed, and J. W. Grizzle, [13] T.Apgar,P.Clary,K.Green,A.Fern,andJ.W.Hurst,“Fastonline
+“Performance Analysis and Feedback Control of ATRIAS, A Three- trajectory optimization for the bipedal robot cassie,” in Robotics:
+DimensionalBipedalRobot,”JournalofDynamicSystems,Measure- ScienceandSystems,2018.
+ment,andControl,vol.136,no.2,p.021012,dec2013. [14] A. L. Hof, “Scaling gait data to body size,” Gait & posture, vol. 3,
+[4] H. Geyer, A. Seyfarth, and R. Blickhan, “Compliant leg behaviour no.4,pp.222–223,1996.
+explainsbasicdynamicsofwalkingandrunning,”Proceedingsofthe [15] T.Cnops,Z.Gan,andC.D.Remy,“Thebasinofattractionforrunning
+Royal Society B: Biological Sciences, vol. 273, no. 1603, pp. 2861– robots:Fractals,multisteptrajectories,andthechoiceofcontrol,”IEEE
+2867,2006. InternationalConferenceonIntelligentRobotsandSystems,vol.2015-
+[5] Z. Gan, Y. Yesilevskiy, P. Zaytsev, and C. D. Remy, “All common Decem,pp.1586–1591,2015.
+bipedal gaits emerge from a single passive model,” Journal of The [16] R. M. Alexander, Elastic mechanisms in animal movement. Cam-
+RoyalSocietyInterface,vol.15,no.146,p.20180455,2018. bridgeUniversityPress,1988.
+[6] M. Ernst, H. Geyer, and R. Blickhan, “Spring-Legged Locomotion [17] M.Kelly,“Anintroductiontotrajectoryoptimization:Howtodoyour
+onUnevenGround:aControlApproachToKeeptheRunningSpeed own direct collocation,” SIAM Review, vol. 59, no. 4, pp. 849–904,
+Constant,”MobileRobotics,pp.639–644,2009. 2017.
+[7] A. A. Rizzi, J. W. Hurst, B. Morris, and J. E. Chestnutt, “A policy [18] Y.YesilevskiyandC.D.Remy,“Acomparisonofseriesandparallel
+for open-loop attenuation of disturbance effects caused by uncertain elasticityinamonopedhopper,”in2015IEEEInternationalConfer-
+ground properties in running,” Proceedings - IEEE International enceonRoboticsandAutomation(ICRA),May2015,pp.1036–1041.
+ConferenceonRoboticsandAutomation,pp.1455–1460,2007. [19] M. S. Jones, “Optimal Control of an Underactuated Bipedal Robot,”
+MastersofScienceinMechanicalEngineering,OregonStateUniver-
+[8] C. Hubicki, M. Jones, M. Daley, and J. Hurst, “Do Limit Cycles
+sity,2014.
+Matter in the Long Run? Stable Orbits and Sliding-Mass Dynamics
+[20] A.Wa¨chterandL.T.Biegler,“Ontheimplementationofaninterior-
+EmergeinTask-OptimalLocomotion,”IEEEInternationalConference
+point ﬁlter line-search algorithm for large-scale nonlinear program-
+onRoboticsandAutomation(ICRA),2015.
+ming,” Mathematical Programming, vol. 106, no. 1, pp. 25–57, Mar
+[9] C.Hubicki,A.Abate,P.Clary,S.Rezazadeh,M.Jones,A.Peekema,
+2006.
+J.VanWhy,R.Domres,A.Wu,W.Martin,H.Geyer,andJ.Hurst,
+[21] Y. Blum, H. R. Vejdani, A. V. Birn-Jeffery, C. M. Hubicki, J. W.
+“Walking and running with passive compliance: Lessons from engi-
+Hurst,andM.A.Daley,“Swing-legtrajectoryofrunningguineafowl
+neering: A live demonstration of the atrias biped,” IEEE Robotics
+suggeststask-levelpriorityofforceregulationratherthandisturbance
+AutomationMagazine,vol.25,no.3,pp.23–39,Sep.2018.
+rejection,”PLoSONE,vol.9,no.6,pp.18–20,2014.
+[10] R. Altendorfer, D. E. Koditschek, and P. Holmes, “Stability analysis
+of a clock-driven rigid-body slip model for rhex,” The International
+Journal of Robotics Research, vol. 23, no. 10-11, pp. 1001–1012,
+2004.
+[11] S.Feng,“FullBodyControlfortheAtlasrobot,”2014IEEEInterna-
+tionalConferenceonRoboticsandAutomation,pp.3733–3738,2014.
+[12] D.Dimitrov,A.Sherikov,andP.-B.Wieber,“Asparsemodelpredic-
+tivecontrolformulationforwalkingmotiongeneration,”inIntelligent
+RobotsandSystems(IROS),2011IEEE/RSJInternationalConference
+on. IEEE,2011,pp.2292–2299.
+1451
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:08:51 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,474 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Unsupervised Anomaly Detection for Self-ﬂying Delivery Drones
+Vikas Sindhwani1, Hakim Sidahmed1, Krzysztof Choromanski1, Brandon Jones2
+Abstract—Weproposeanovelanomalydetectionframework
+foraﬂeetofhybridaerialvehiclesexecutinghigh-speedpackage
+pickupanddeliverymissions.Thedetectionisbasedonmachine
+learningmodelsofnormalﬂightproﬁles,trainedonmillionsof
+ﬂight log measurements of control inputs and sensor readings.
+We develop a new scalable algorithm for robust regression
+which can simultaneously ﬁt predictive ﬂight dynamics models
+whileidentifyinganddiscardingabnormalﬂightmissionsfrom
+thetrainingset.Theresultingunsupervisedestimatorhasavery
+high breakdown point and can withstand massive contamina-
+tion of training data to uncover what normal ﬂight patterns
+look like, without requiring any form of prior knowledge of
+aircraftaerodynamicsormanuallabelingofanomaliesupfront.
+Across many different anomaly types, spanning simple 3-
+sigma statistical thresholds to turbulence and other equipment
+anomalies, our models achieve high detection rates across
+the board. Our method consistently outperforms alternative
+robust detection methods on synthetic benchmark problems.
+To the best of our knowledge, dynamics modeling of hybrid
+Fig.1. HybridAerialVehicleforHigh-speedPackagePickupandDelivery
+deliverydronesforanomalydetectionatthescaleof100million
+measurements from 5000 real ﬂight missions in variable ﬂight
+conditions is unprecedented.
+throughthousandsofﬂightlogscomprisingofdozensoftime
+serieslookingforsubtleabnormalitiesstretchesthelimitsof
+I. INTRODUCTION
+what is manually feasible.
+As aerial robots [1], [2] become increasingly capable
+As in prior work [3], [4], [5], [6] on fault detection and
+of complex navigation, perceptual reasoning and ability to
+ﬂeet monitoring of aircrafts [7], [8], [9], our framework
+learn from experience, it is expected that a large number of
+relies on learning a predictive model of ﬂight dynamics.
+deliverymissionswillsoonbeexecutedbysmallair-vehicles
+The linear and angular acceleration of an aircraft depends
+takingoffautonomously,ﬂyingfarbeyondlineofsightover
+on the aerodynamic forces it is subject to, which are a
+densely populated areas, hovering inside a residential zone
+function of the vehicle state, control commands, dynamic
+within touching distance of humans to deliver the package,
+pressure and other ﬂight condition variables. As [3] show,
+and returning to their “home” upon mission completion.
+simple linear or quadratic models trained on historical ﬂight
+Ensuring as high degree of operational reliability and safety
+logs show impressive predictive power. The norm of the
+as passenger airplanes is critical for delivery drones to
+predictive residuals at a given time for a given ﬂight, or the
+achieve economies of scale.
+mean residual over an entire ﬂight can be used as thresholds
+While simple statistical thresholds and logical rules can
+for anomaly detection. However, in contrast to prior work
+be hand-designed to trigger on frequently occurring prob-
+that focused on large ﬁxed wing passenger aircrafts and
+lematic events (e.g., battery too low, or control surface non-
+cruising performance only, we are interested in monitoring
+functional), they cannot exhaustively cover all potential fu-
+much smaller delivery drones [10] across an entire ﬂight
+turefailuremodeswhichareunknownapriori,particularlyas
+mission that includes takeoff, package delivery, and landing.
+theﬂeetgrowsinmissioncomplexityandvehicletypes.With
+Furthermore, to span a full range of conditions from stable
+this motivation, we develop an anomaly detection system
+hovering to energy efﬁcient cruising, we work with a hybrid
+based on a machine-learning model that is continuously
+smallair-vehicleschematicallyshownaboveinFigure1.An
+trained on thousands of ﬂight logs. When this model reports
+arrayof12verticallymountedelectricmotorsprovidesthrust
+large predictive errors for a new ﬂight, the vehicle can be
+forhoveringﬂight.Twoforward thrustmotors,twoailerons,
+ﬂagged for manual inspection and possibly grounded for
+and two ruddervators are used primarily for cruise ﬂight.
+safety until the issue is resolved. Importantly, the system is
+This hybrid conﬁguration makes the task of building
+designed to discover normality and does not require upfront
+an accurate model of the system more challenging as the
+labeling of normal and anomalous missions; indeed, sifting
+aerodynamic interactions are more complex than on larger
+{ ﬁxed-wing aircraft (e.g. rotor cross-ﬂow, ﬂow around small
+1Robotics at Google,} New York Email: sindhwani, structures). As an alternative to pushing the boundary of
+hsidahmed, kchoro @google.com
+2WingAviationEmail:brnjones@wing.com computational ﬂuid dynamics tools, or performing complex
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 186
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. and expensive measurement campaigns using wind tunnels, out missions for such abnormalities while ﬁtting a model
+learning models from raw ﬂight data turns out to be surpris- to the data that remains. In the absence of such a ﬁltering
+ingly effective. mechanism, it is well known that ordinary least squares
+Trained on among the largest scale real-world deliv- estimators and associated anomaly detectors may degrade in
+ery drone data reported to date, our detectors successfully quality due to the presence of highly abnormal missions in
+ﬂag missions with disabled actuators, off-nominal hard- the training set.
+ware conditions, turbulence and other anomalous events.
+Our approach is based on a combination of non-parametric
+III. ROBUSTDYNAMICSLEARNING
+dynamics modeling and a novel algorithm for robust and
+scalable least trimmed squares estimation, which may be of
+A measure of robustness of an estimator is the ﬁnite-
+independent interest.
+sample breakdown point [11] which in our context is the
+fraction of mission trajectories that may be arbitrarily cor-
+II. DYNAMICSLEARNINGANDANOMALYDETECTION
+rupted so as to cause the parameters of the estimator to
+In this section, we introduce notation and formulate the
+blowup (i.e., become inﬁnite). For least squares estimators
+problemabstractly.Considerarobotinteractingwithitsenvi-
+or even least absolute deviations (l ) regressors, the ﬁnite
+ronmentaccordingtoanunknowncontinuous-timenonlinear 1
+sample breakdown point is 1 making them fragile in the
+dynamical system, N
+presence of heavy outliers in the training set. A more robust
+x˙(t)=f(x(t),u(t)) alternativeistrimmedestimators.Foranyf,denotetheorder
+∈R ∈R statistics of the residuals as,
+wherestatesx(t) nandcontrolsu(t) m.Assumethat
+a ﬂeet of such robots collectively and continuously execute
+≤ ≤ ≤
+missions generating trajectory logs of the form, r(τ ,f) r(τ ,f) ... r(τ ,f)
+[1] [2] [N]
+{ }
+τi = (xi(t),ui(t),x˙i(t)) Tt=i0 Then we deﬁne the trimmed estimator [12], [11], [13] as
+where i indexes the mission. the sum of the smallest k resid(cid:88)uals,
+From N mission logs, one may naturally hope to learn
+F
+f over a suitable family of function approximators by ∗ k
+(cid:88) f =argmin r(τ ,f) (2)
+solving a least squares problem, ∈F [i]
+f
+i=1
+N
+∗ −
+f =argmin r(τ ,f) (1) Thebreakdownpointofsuchanestimatoris N k+1 where
+∈F i
+f i=1 k is the number of missions that should not be trNimmed. In
+(cid:88)
+where r denotes the predictive residual, practice, k is unknown and is treated as a hyper-parameter.
+By making k small enough, the breakdown point can even
+r(τ,f)= 1 T (cid:107)x˙(t)−f(x(t),u(t))(cid:107)2 be made larger than 50%.
+T 2 The price of strong robustness is computational complex-
+t=1
+ity of least trimmed squares estimation [14]: for an exact
+While this is reminiscent of model-based Reinforcement
+solution, the complexity scales as O(Nd+1) for d >= 3
+Learning,ourinterestinthispaperisnottolearncontrollers,
+∗ dimensional regression problems. The optimization task is
+but rather to turn the dynamics estimate f into a detector
+both non-smooth and non-convex. Due to its combinatorial
+that can ﬂag mission abnormalities. For any trajectory τ
+ﬂavor, it is not amenable to standard gradient techniques
+generated by a new mission, the per time-step residual norm
+(cid:107) − ∗ (cid:107) or least squares solvers even for linear models. Thus, the
+x˙(t) f (x(t),u(t)) 2 is a measure of “instantaneous
+2 ∗ developmentofpracticalapproximatealgorithms[15],[16]is
+unexpectedness”andthemeanresidualacrosstime,r(τ,f ),
+ofsigniﬁcantinterest.Wenowdevelopanovelalgorithmfor
+deﬁnes an anomaly score for that mission.
+robustlearningbasedonsmoothingthetrimmedsquaresloss.
+Chu et. al. [3] adopt this approach for predicting linear
+ThealgorithmisinspiredbyNesterov’ssmoothingprocedure
+and angular acceleration of the aircraft. By using linear
+for minimizing non-smooth objective functions [17], and is
+and quadratic functions, a single pass over the mission logs
+also closely related to Deterministic Annealing [18], [19],
+sufﬁces for least squares estimation.
+[20] methods for combinatorial optimization.
+In practice, such an approach to anomaly detection may
+become fragile in the face of the quality of real world
+data.Whenthesetoftrainingmissionsiscontaminatedwith A. Smoothing the Trimmed Loss
+operationalfailuresorcarrysubtlesignaturesoffuturecatas- ∈ R
+trophes (e.g., sensor degradation), the detector may extract Consider the function that maps a vector r N to the
+a misleading characterization of normal behavior. Unlike sum of its k sm(cid:88)allest elements,
+model-basedRLsettingswhereallcollectedtrajectoriesmay
+be useful for learning the unknown dynamics, for anomaly k ≤ ≤ ≤
+h (r)= r where r r ... r
+detection the learning process has to simultaneously ﬁlter k [i] [1] [2] [N]
+i=1
+187
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. (cid:88)
+This function admits a smoothing [21], [22] deﬁned as Equivalently,
+(cid:88)
+follows,
+N
+∗
+N f = (cid:88)arg ∈Fmin∈R αir(τi,f)+TH(αi) (6)
+hTk(r) = (cid:88)m∈Rin αTr+T H(αi) (3) f ,α N i=1
+α N
+i=1 N ≤ ≤
+N ≤ ≤ s.t.: αi =k, 0 αi 1 (7)
+s.t: α =k, 0 α 1 (4)
+i i i=1
+i=1 − − We now describe a procedure that alternates between a
+where H(u)=ulog(u)+(1 u)log(1 u) (5)
+ﬁtting phase and a trimming phase up to convergence. Both
+Above, T is a smoothing parameter also referred to as these phases are fast, efﬁcient and easily scale to thousands
+the “temperature” in the annealing literature. Intuitively, if of missions and millions of measurements. We initialize the
+α tends to zero, the corresponding mission is considered optimization with α = k which corresponds to the non-
+i N →∞
+too anomalous for training and is trimmed away. The α’s robust least squares estimator and the limit of T .
+may also be interpreted as probability distributions over 1) Fitting Phase: We consider linear combinations of
+binary indicator variables encoding whether or not to trim ﬁxed nonlinear basis functions,
+a mission. As such, when T is high, the smoothed objective
+f(x,u)=Wφ(x,u)
+is dominated by the entropy of the α’s and tend to approach
+theuniformdistribution∀i:α = k.AsT →0,theweights where φ : Rn+m (cid:55)→ Rd is a nonlinear feature map and W
+i N ×
+hardentowardsbinaryvalues.Thisstrategyofstartingwitha is a n d parameter matrix.
+highlysmoothedproxytoanon-convexnon-smoothfunction For ﬁxed α’s, optimizing W is a weighted least squares
+and gradually increasing the degree of convexity is the cen- problem which admits a fast single pass solution,
+tral idea of homotopy [23], continuation [24] and graduated
+non-convexity[25],[26]methodsforglobaloptimization.In (cid:88) (cid:88)−
+theidealcase,thehighlysmoothedfunctionisclosetobeing W = [A+λId] 1B where, (8)
+convexallowingtheglobalminimumtobefoundefﬁciently. N
+As smoothing is reduced, one hopes that following the A = (cid:88)αi(cid:88)φ(xi(t),ui(t))φ(xi(t),ui(t))T (9)
+continuous path of the minimizer would lead to the global i=1 t
+minimum.Figure2showshowspuriouslocalminimacanbe N
+B = α φ(x (t),u (t))x˙ (t)T (10)
+eliminated due to smoothing, making the optimization task i i i i
+much easier. i=1 t
+2) TrimmingPhase: ForﬁxedW,wecomputethevector
+of N residuals given by r =r(τ ,W). The α optimization
+i i
+takes the form [17],
+1
+α = − (11)
+i 1+exp(ri ν)
+T
+(cid:88)
+where the scalar ν satisﬁes the nonlinear equation,
+N 1 −
+ψ(ν)= − k =0 (12)
+1+exp(ri ν)
+i=1 T
+Fig. 2. Left: Normal data follows y = mx where the slope is m = 1. The root of this equation can be easily solved e.g., via the
+Right:trimmedlossanditssmoothing(T =0.025)asafunctionofm. −
+bisection method noting that ψ(a) < 0 for a = min r
+− − i i−
+T logN k and ψ(b) > 0 for b = max r T logN k
+In particular, the smoothing discussed above has the fol- N i i N
+provides an initial bracketing of the root.
+lowing properties [21], [22]:
+• hT is a concave function. C. Nonlinear Dynamics via Random Fourier Features
+k
+• hT is continuously differentiable. We experimented(cid:114)with both linear models as well as
+k − ≤ ≤
+• hTk(r) TR hk(r) hTk(r) holds for some ﬁxed nonlinear random basis functions [27], [28] of the form,
+constant R.
+2 − −
+B. Optimizing the Smoothed Trimmed Loss φ(x,u) = cos(σ 1Gx+σ 1Hu+b) (13)
+d
+∼N ∼U
+With this smoothing of the trimmed loss, for a ﬁxed where G ,H (0,1),b (0,2π)
+ij ij
+number of k missions to retain, we consider the following and G∈Rd×n,H ∈Rd×m (14)
+optimization problem,
+Here, the feature map dimensionality d controls the capacity
+→∞
+∗ ofthedynamicsmodel.Inparticular,asd ,innerprod-
+f =argminhT(r(f)), r(f)=[r(τ ,f)...r(τ ,f)]
+∈F k 1 N ucts in the random feature space approximate the Gaussian
+f
+188
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. Kernel [29],
+φ(x,u)Tφ(x¯,u¯)≈e−(cid:107)x−x¯(cid:107)222+σ2(cid:107)u−u¯(cid:107)22
+Theimplicationofthisapproximationisthateachcomponent
+of the learnt dynamics function is a linear combination of
+similaritytotrainingmissionmeasurements,inthefollowing
+(cid:88)(cid:88)
+sense.
+Fig.4. ObjectivevsIterations(left)andMissionWeights(α’slearnt)
+fj(x,u)=wjTφ(x,u)≈ N βj,i,te−(cid:107)x−xi(t)(cid:107)222+σ2(cid:107)u−ui(t)(cid:107)22
+i=1 t models, and several M-estimators proposed in the Robust
+Statistics [11] literature. Due to its non-robustness, the least
+for some coefﬁcients β and where wT refers to the j-
+j,i,t j squares detector is hurt the most due to corruptions in the
+th row of W. However, the random feature method scales
+training set. By limiting outlier inﬂuence, robust loss func-
+linearly in the number of measurements, as opposed to
+cubically for β when working with exact kernels. At the tionssuchasl1 andhubershowimprovedperformance.Yet,
+they are outperformed by the proposed trimming approach
+price of losing this linear training complexity and globally
+which gives perfect detection despite massive corruption of
+optimal solution, one may also embrace deep networks for
+the training data.
+this application to parameterize the dynamics model.
+D. Comparison on Synthetic Missions
+We generate synthetic 8-dimensional input and 3-
+dimensional output time series following a linear model
+as follows. The output time series for normal missions
+carry moderate Gaussian noise, but anomalous missions are
+heavily corrupted by non-Gaussian noise sampled uniformly
+from the interval [0,10]. 200 training and 200 test missions,
+eachwith100timestepsweregeneratedwith50%anomalies
+following the procedure below. The anomaly labels were
+discarded for training and only used for evaluation.
+x(t)∈R8 = c(cid:40)os(g∗t+b), g,b∈R8,g ,b ∼N(0,1)
+i i
+∈R ∈R ×
+y(t) 3 = Wx(t)+(t), W 3 8
+∼N
+(t)∈R3 := i ∼U (0,1) for normal
+ nif(0,10) for anomaly Fig.5. SmoothedTrimmed(proposed)vsRobustestimators.
+i
+Examples of output proﬁles in normal and anomalous mis-
+sions are shown below in Figure 3. IV. ANOMALYDETECTIONFORDELIVERYDRONES
+A. Missions
+We now report results on data collected from a ﬂeet
+of delivery drones ﬂying in multiple environments on real
+delivery ﬂight missions. A typical mission consists of a
+takeoff, package pickup, a cruise phase to deliver the pack-
+age, and subsequent landing. To the best of our knowledge,
+machine learning on real delivery drone data at this scale
+Fig.3. Normal(left)andAnomalous(right)outputproﬁles. is unprecedented: 5000 historical missions prior to a cutoff
+date generating around 80 million measurements are used
+Figure 4 shows how alternating optimization of the for training. Trained detectors were tested on 5000 outdoor
+smoothed trimmed loss (with temperature T=1.0) leads to missions after the cutoff date. By contrast, recent papers
+monotonic descent in the sum of the smallest k = 100 have reported results on 20 to 50 test missions in controlled
+residuals, a consequence of our smoothing formulation. The lab environments [30], [31]. Our large-scale ﬂight log data
+optimizationconvergestoasetofmissionweights(α’s)that covers multiple vehicle types, package conﬁgurations and
+clearly trim away nearly all the anomalies present in the variable temperature and wind conditions. Additionally, the
+training set despite heavy 50% corruption and no explicit mission logs are mixed with a variety of research and
+anomaly labels provided to the algorithm. development ﬂights that include ﬂight envelope expansion,
+Figure 5 shows a comparison of anomaly detectors based prototype hardware and software, and other experiments
+ontheproposedtrimmingapproachagainstpureleastsquares designed to stress-test the ﬂight system. Flight missions
+189
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. Fig.6. InputSignalsforAnomalyDetection
+Fig.7. Detectorpredictions:x-y-zaccelerationsfornormal(top),andanomalous(bottom)ﬂightswitherrorspikes.
+generally last approximately 5 minutes including several path, pitch, roll, Root Mean Squared pitch and roll
+kilometers of cruise ﬂight. error, pitch and roll torque commands are more than
+3standarddeviationsfromthemeancomputedoverthe
+B. Signals
+entire training set.
+Figure 6 shows the input signals used for training models • has-ﬂight-dynamics-issue: The particular ﬂight had an
+topredictlinearandangularaccelerationofthevehicle.Each
+issue where the ﬂight dynamics were off-nominal due
+inputtimeseriesisre-scaledsothatvalueslieintheinterval
+to various factors such as an intentionally disabled
+−
+[ 1.0,1.0]. Training a nonlinear trimmed model with d = actuator or other off-nominal airframe modiﬁcations to
+100 random Fourier features on 80 million measurements, test system robustness.
+includingdatapreprocessing,iscompletedwithin1.15hours • is-high-wind:Theprevailingwindspeedisgreaterthan
+on a single CPU. Predictions on a normal and an anomalous
+10m/s, which qualitatively indicates elevated levels of
+test mission are shown in Figure 7. The large spike towards
+turbulence.
+the end of the anomalous test mission causes the mean
+Approximately12%ofthetestsetof5000missionshasthese
+residual error to be large, ﬂagging the ﬂight as anomalous.
+anomalies.
+C. Control
+E. Detection Performance
+The vehicle’s position, velocity, and attitude estimates
+from an EKF-based state estimator are compared with com- Figure8showstheperformanceofournonlineartrimmed
+mands generated by a high-level mission planning system. detectors (d = 100,T = 1.0,k = 0.75N) on a test set of
+Thecontrollergeneratesactuatorcommandstoreduceerrors 5000 missions. On all three anomaly types, the area under
+between the state estimate and commands. The controller the True-Positive-Rate vs False-Positive-Rate curve exceeds
+incorporatesareal-timeairspeedestimatetoproperlyallocate 0.90. The detector coverage goes beyond simple statistical
+control between individual hover motors and aerodynamic anomalymeasuresﬁringreliablyacrossamultitudeoffactors
+control surfaces throughout the airspeed envelope. such as disabled actuators, otherwise off-nominal hardware
+conditionsandthevehicleexperiencingturbulentconditions.
+D. Anomaly Types
+We report detection rates for multiple anomaly types: F. Effectiveness of Trimming
+• are-basic-stats-exceeded: Basic statistical measures Figure 9 shows the smoothed distribution of mission
+suchasvelocitycommanderror,errorfromcommanded weights learned by the proposed trimming algorithm. The
+190
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. Fig.10. NominalHoveringvsIntentionallyFailedHoverMotor
+Figure 10 shows a comparison between a nominal and the
+Fig.8. AnomalyDetectionPerformanceon5000TestMissions
+failed hover motor test ﬂight. In this case the prediction
+residuals are large compared to the nominal ﬂight.
+Fig.9. DistributionofTrainingMissionWeights
+Fig.11. LowWindvsHighWindHoveringDynamics
+distribution of α’s peaks close to 0 in comparison to the
+mean over the entire training set which is close to 1.0. This 2) Impact of Wind Conditions: We compare two oth-
+conﬁrms the ability of the proposed method to successfully erwise nominal steady hovering ﬂights differing only in
+ﬁlter out anomalies from the training set, in order to ex- their anomaly score. In this case, the algorithm ﬂagged a
+tract normal ﬂight patterns, without requiring any form of ﬂight in high turbulent wind conditions as more anomalous
+supervision. Without nonlinear modeling and trimming, we than one in light wind conditions. This is reasonable since
+observedperformancedegradationinananalysisacrossﬁner wind represents an unmodeled random disturbance and not
+anomaly type categories. intendedtobepartofthelearntbareairframeﬂightdynamics
+model. Figure 11 shows a comparison of the total thrust
+G. Case Studies
+command and roll angle for each case. The high wind case
+Two example case studies are presented to illustrate the has a lower overall thrust command due to lift from the
+utility of the anomaly detection algorithm. wing,butismuchmorevariableasthecontrollerisrejecting
+1) Hover Motor Testing: A test ﬂight was performed the random disturbances. Roll angles in the high wind case
+with one of the 12 hover motors purposefully disabled. A are up to 25 deg as the vehicle is maneuvering to maintain
+disabled hover motor is expected to require additional thrust its hovering position. Flight data in low-wind conditions is
+and torque from the remaining hover motors to maintain desirable for system identiﬁcation applications where only
+trimmed ﬂight and therefore represents a different ﬂight the bare-airframe dynamics are desired. This algorithm can
+dynamics model. The unsupervised anomaly detection algo- beusedasapreprocessingstepinalargedatasettoﬁnddata
+rithmsuccessfullyﬂaggedthisparticularﬂightasanomalous. with the least amount of unmodeled disturbances.
+191
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [27] A. Rahimi and B. Recht, “Random features for large-scale kernel
+machines,” in Advances in neural information processing systems,
+[1] KumarandMichael,“Opportunitiesandchallengeswithautonomous 2008,pp.1177–1184.
+micro aerial vehicles,” in International Symposium on Robotics Re- [28] H.Avron,V.Sindhwani,J.Yang,andM.W.Mahoney,“Quasi-monte
+search,2011. carlofeaturemapsforshift-invariantkernels,”TheJournalofMachine
+[2] D. Floreano and R. J. Wood, “Science, technology and the future of LearningResearch,vol.17,no.1,pp.4096–4133,2016.
+smallautonomousdrones,”Nature,vol.521,2015. [29] B.ScholkopfandA.J.Smola,Learningwithkernels:supportvector
+machines,regularization,optimization,andbeyond,2001.
+[3] E.Chu,D.Gorinevsky,andS.Boyd,“Detectingaircraftperformance
+[30] A. Keipour, M. Mousaei, and S. Scherer, “Automatic real-time
+anomaliesfromcruiseﬂightdata,”inAIAAInfotech@Aerospace2010,
+anomaly detection for autonomous aerial vehicles,” in 2019 Interna-
+p.3307.
+tionalConferenceonRoboticsandAutomation(ICRA). IEEE,2019,
+[4] D.G.Dimogianopoulos,J.D.Hios,andS.D.Fassois,“Faultdetection
+pp.5679–5685.
+andisolationinaircraftsystemsusingstochasticnonlinearmodelling
+[31] ——, “Alfa: A dataset for uav fault and anomaly detection,” arXiv
+ofﬂightdatadependencies,”in200614thMediterraneanConference
+preprintarXiv:1907.06268,2019.
+onControlandAutomation. IEEE,2006,pp.1–6.
+[5] E.Chu,D.Gorinevsky,andS.Boyd,“Scalablestatisticalmonitoring
+ofﬂeetdata,”IFACProceedingsVolumes,vol.44,no.1,pp.13227–
+13232,2011.
+[6] D.stnevsky,B.Matthews,andR.Martin,“Aircraftanomalydetection
+usingperformancemodelstrainedonﬂeetdata,”in2012Conference
+onintelligentdataunderstanding. IEEE,2012,pp.17–23.
+[7] J.Qi,D.Song,H.Shang,N.Wang,C.Hua,C.Wu,X.Qi,andJ.Han,
+“Searchandrescuerotary-winguavanditsapplicationtothelushan
+ms 7.0 earthquake,” Journal of Field Robotics, vol. 33, no. 3, pp.
+290–321,2016.
+[8] M. Bragg, T. Basar, W. Perkins, M. Selig, P. Voulgaris, J. Melody,
+andN.Sarter,“Smarticingsystemsforaircrafticingsafety,”in40th
+AIAAAerospaceSciencesMeeting&Exhibit,2002,p.813.
+[9] E. Khalastchi and M. Kalech, “On fault detection and diagnosis in
+robotic systems,” ACM Computing Surveys (CSUR), vol. 51, no. 1,
+p.9,2018.
+[10] J.Xu,T.Du,M.Foshey,B.Li,B.Zhu,A.Schulz,andW.Matusik,
+“Learning to ﬂy: computational controller design for hybrid uavs
+withreinforcementlearning,”ACMTransactionsonGraphics(TOG),
+vol.38,no.4,p.42,2019.
+[11] R. A. Maronna, R. D. Martin, V. J. Yohai, and M. Salibia´n-Barrera,
+Robuststatistics:theoryandmethods(withR). JohnWiley&Sons,
+2019.
+[12] P. J. Rousseeuw and A. M. Leroy, Robust regression and outlier
+detection. Johnwiley&sons,2005,vol.589.
+[13] P.J.Huber,Robuststatistics. Springer,2011.
+[14] D.M.Mount,N.S.Netanyahu,C.D.Piatko,R.Silverman,andA.Y.
+Wu,“Ontheleasttrimmedsquaresestimator,”Algorithmica,vol.69,
+no.1,pp.148–183,2014.
+[15] F.Shen,C.Shen,A.vandenHengel,andZ.Tang,“Approximateleast
+trimmed sum of squares ﬁtting and applications in image analysis,”
+IEEE Transactions on Image Processing, vol. 22, no. 5, pp. 1836–
+1847,2013.
+[16] D.M.Mount,N.S.Netanyahu,C.D.Piatko,A.Y.Wu,andR.Sil-
+verman, “A practical approximation algorithm for the lts estimator,”
+ComputationalStatistics&DataAnalysis,vol.99,pp.148–170,2016.
+[17] Y.Nesterov,“Smoothminimizationofnon-smoothfunctions,”Math-
+ematicalprogramming,vol.103,no.1,pp.127–152,2005.
+[18] G.L.Bilbro,W.E.Snyder,andR.C.Mann,“Mean-ﬁeldapproxima-
+tionminimizesrelativeentropy,”JOSAA,vol.8,no.2,pp.290–294,
+1991.
+[19] S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi, “Optimization by
+simulatedannealing,”science,vol.220,no.4598,pp.671–680,1983.
+[20] V.Sindhwani,S.S.Keerthi,andO.Chapelle,“Deterministicannealing
+for semi-supervised kernel machines,” in Proceedings of the 23rd
+internationalconferenceonMachinelearning. ACM,2006,pp.841–
+848.
+[21] Y. Qi, “Smoothing approximations for two classes of convex eigen-
+valueoptimizationproblems,”Ph.D.dissertation,2005.
+[22] S. Shengyuan, “Smooth convex approximation and its applications,”
+2004.
+[23] D.M.DunlavyandD.P.O’Leary,“Homotopyoptimizationmethods
+for global optimization.” Sandia National Laboratories, Tech. Rep.,
+2005.
+[24] E. L. Allgower and K. Georg, Numerical continuation methods: an
+introduction. SpringerScience&BusinessMedia,2012,vol.13.
+[25] E.Hazan,K.Y.Levy,andS.Shalev-Shwartz,“Ongraduatedoptimiza-
+tionforstochasticnon-convexproblems,”inInternationalconference
+onmachinelearning,2016,pp.1833–1841.
+[26] A.BlakeandA.Zisserman,Visualreconstruction,1987.
+192
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:01 UTC from IEEE Xplore.  Restrictions apply. 

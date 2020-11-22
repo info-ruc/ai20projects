@@ -1,0 +1,474 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Semi-Empirical Simulation of Learned Force Response Models for
+Heterogeneous Elastic Objects
+Yifan Zhu1, Kai Lu2, and Kris Hauser1
+Abstract—This paper presents a semi-empirical method for
+simulating contact with elastically deformable objects whose
+force response is learned using entirely data-driven models.
+A point-based surface representation and an inhomogeneous,
+nonlinearforceresponsemodelarelearnedfromaroboticarm
+acquiring force-displacement curves from a small number of
+pokinginteractions.Thesimulatorthenestimatesdisplacement
+and force response when the deformable object is in contact
+with an arbitrary rigid object. It does so by estimating dis-
+placements by solving a Hertzian contact model, and sums the
+expected forces at individual surface points through querying
+thelearnedpointstiffnessmodelsasafunctionoftheirexpected
+displacements.Experiments ona varietyof challengingobjects
+show that our approach learns force response with sufﬁcient
+accuracy to generate plausible contact response for novel rigid
+objects.
+I. INTRODUCTION
+Roboticmanipulationofdeformableobjectshasanumber
+ofapplications,suchasin-homeenvironments,cablerouting,
+textile handling, handling packaging in automated ware-
+houses, and soft tissue modeling in biomedical settings, but
+it remains a topic of active research. Common deformation
+Fig. 1. Flow of our method. A point interaction model of a deformable
+simulationmethods,suchasﬁniteelementmethod(FEM)or object is ﬁrst learned through data acquired with the system shown here
+mass-spring modeling (MSM), require an object’s geometry afterasmallnumberofpokes.Themodelisthenusedinasemi-empircal
+simulator that solves for the deformation and contact wrench with an
+and its material properties to be represented by a volumetric
+arbitrary rigid object. The color of the deformed object represents the
+mesh model. Mesh models are challenging to build from amountofsurfacedeformation.
+noisy sensor data, and calibrating appropriate material con-
+stitutive parameters is a tedious, time-consuming, and error-
+proneprocessthatdependsonanappropriatemeshtopology data can enhance physics modeling when the physics of
+andconstitutiveequations.Data-drivenapproacheshavebeen certain phenomenon are not well understood [1]–[3], when
+studied in robotic palpation of biological tissue, where a the parameters for the governing physics equations are hard
+robotic probe gathers a dense ﬁeld of data to estimate tissue to identify [4], [5], or when applying the physics equation
+stiffness and identify anomalies. is computationally prohibitive [6], [7]. In our approach,
+We envision that robots could use naturalistic data ac- the simulator 1) accepts a point-based model of the object
+quisition to model deformable objects, in which behavior surface’s force response under displacements, which are
+is observed from a small number of interactions and the learned from data, and then 2) calculates a resultant contact
+model is improved continuously during interaction. Humans wrenchfor a novelrigid objectusinganalytical calculations.
+can very quickly generalize from the data gathered during Our model is quite general, as its deformation response can
+manipulation to predict plausible outcomes in vastly dif- be heterogeneous and nonlinear. Moreover, the visuo-tactile
+ferent scenarios. This paper takes preliminary steps toward model constructed by our method can overcome camera
+providing robots with similar capabilities. We take a semi- calibration error, sensor noise, and “fuzzy” objects with ill-
+empirical approach that integrates machine learning with deﬁned boundaries. It is important to note that we do not
+physics.Thisgeneralideaisappealingbecauselearningfrom expect a robot to need to touch an object hundreds of times
+during naturalistic interaction. Our experiments examine
+*This work was supported in part by NSF grants NRI-#1527826 and performance under a tiny fraction of pokes as training data.
+NRI-#1830366.
+Even with only a few touches, reasonably predictive models
+1: Y. Zhu and K. Hauser are with the Departments of C{omputer Sci-
+ence,UniversityofIllinoisatUrbana-Champaign,IL,USA. yifan16, canbelearned,whichsuggeststhatourpipelineispromising
+}
+kkhauser @illinois.edu for on-line use in naturalistic interaction.
+2: K. Lu is with the Department of Automation, Tsinghua University,
+Beijing,China.lu-k16@mails.tsinghua.edu.cn We evaluate this approach using an experimental testbed
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1646
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. (Fig. 1) consisting of a robot arm equipped with a RGB- et al. adopt a similar approach but select the next poking lo-
+D camera, a tapered probe attached at the end-effector, cationusingBayesianoptimization[15].Goldmanetal.ﬁrst
+and a force-torque (F/T) sensor. Experiments show that our design a hybrid motion-force controller to follow cycloidal
+approach can learn a point deformation model that predicts paths on a tissue surface to estimate the shape, then palpate
+force response 0.49N of root mean squared error (RMSE) atdiscretizedsurfacelocationswithmultiplegridresolutions
+over 5 test objects with 10 interactions each. When making to measure the impedance matrices across the surface [16].
+contact with novel rigid probes, which are a line-shaped Liu et al. map the stiffness by moving a mechanical roller
+paddle and a cylinder, our simulator’s force prediction has across the tissue with a robot arm [17]. While these works
+1.5NRMSE.Thisaccuracyiscomparabletolearnedmodels are able to map the stiffness of heterogeneous tissues, force
+obtainedwiththesamenumberofinteractions.Wealsoshow response is assumed to be linear.
+an application of our method to planning for packing a rigid
+object on top of a deformable object into a box. III. POINTDEFORMATIONMODELLEARNING
+II. RELATEDWORK Fig.1showstheﬂowofouroverallsystem.Theﬁrststage
+of our system learns a visuo-tactile model of the deformable
+Deformable object modeling has long been studied in
+object using data. We shall discuss the learning stage in the
+various ﬁelds including computer graphics, continuum me-
+currentsection,leavingthediscussionofsimulationforSec-
+chanics, and biomechanics. An overview of the existing
+tion IV. We assume that the object is elastic, quasistatic, and
+methods on deformable object modeling can be found in
+that interaction forces are dominated by normal deformation
+Ref. [8]. It still remains a challenge to build models that
+rather than friction and shear deformation. We hope to relax
+match real-world objects accurately both in deformation and
+these assumptions in future work.
+force response.
+The point deformation model consists of an equilibrium
+Several researchers have studied the problem of building
+surface model, and a force response model. The equilibrium
+elastic models of real-world object using experimental data. ∈ R
+surface model is a set S of points x 9, with each
+Frank et al. attempt to build homogeneous FEM models by
+point x = [p ,p ,p ,r,g,b,n ,n ,n ], representing posi-
+ﬁrst collecting force probing data using a mobile robot arm, x y z x y z
+tion, color, and (outward) normal, respectively. The position
+a thin probe, an F/T sensor and a RGBD camera [9]. An
+and normal are represented in the world frame. The force
+error minimization approach is used to estimate the FEM ∈ R
+response model is denoted as f = y(x,d), where f is
+model parameters such that the simulations match recorded
+forcemagnitudeinthenormaldirection,xisapointinS,and
+data. Boonvisut and Cavusoglu follow a similar scheme to d∈Risdisplacement.Lettingn=[n ,n ,n ]∈R3 denote
+build FEM models for elastic objects under stretching [10]. the normal in x and p=[p ,p ,p ]∈x R3y thez position, this
+Both methods require tens of minutes to perform the error x y z
+mapgivestheforceapointprobewouldfeelinthedirection
+minimization, making it less likely to be used online. Bickle − ·
+of n when the point is moved to position p d n.
+et al apply error minimization to inhomogeneous, nonlinear
+FEM models [11]. Radial basis functions (RBF) are used
+A. Data Collection
+to interpolate the strain-stress relationship in each ﬁnite
+element, and error minimization optimizes the weights used Although our methods are applicable to naturalistic inter-
+forRBFinterpolationtomatchobservations.Althoughbeing actions,forthecomparisonpurposesinthispaperweemploy
+able to handle more complex materials, the error minimiza- a separate data acquisition stage similar to Frank et al [9] to
+tion step is prone to being stuck in local minima and the build a ground truth dataset. The deformable object is laid
+data acquisition process requires complex apparatus setup, on a ﬂat surface, and it is assumed to return to its original
+including multiple cameras, carefully positioned and tuned position when pressed in the normal direction. If it is found
+light sources, and drawing markers on the testing objects. to move while pushed, then a central point on the bottom of
+Empirical data have also been used to tune MSM and the object is afﬁxed to the table using Velcro tape. In future
+meshless methods. Deussen et al use simulated annealing work it may be possible to simply track the movement of
+to estimate the elastic properties of an MSM object model, the object during acquisition. We include 5 different testing
+given data from simulation experiments [12]. Burion et al objects in our experiments, Sloth, Vest, Lamb, Shoe, and
+solve a similar problem using a particle ﬁlter [13]. Pauwels Bird, shown in Fig. 2a. Sloth and Bird are stuffed animals,
+et al. build meshless models of homogeneous 2D foams Vest and Shoe are clothing items, and Lamb is a piece of
+whose shape upon contact with a rigid object depends on lamb leg consisting of muscle, fat, and bone. Each object
+a deformability constant. This constant is estimated by error has varying stiffness across the object surface. The regions
+minimization of real-world data. Because the method only of interest of the objects are the surfaces facing up when
+simulatesdeformableshape,itisunabletopredicteforcesat the objects are laid ﬂat on a table, with the exception that
+contacts. we use only the face region of the sloth due to poor visual
+Ahighlyrelatedtopicisroboticpalpation.Yamamotoetal perception on the furry torso.
+use a robot equipped with an F/T sensor to poke at discrete To build a 3D point cloud of the equilibrium surface, a
+locations on ﬂat phantom tissue to estimate the stiffness wrist mounted RGB-D camera is used. Some objects need a
+across the object surface and ﬁnd anomalies [14]. Salman fewscansfromdifferentanglestogenerateacompletepoint
+1647
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. TABLEI
+STATISTICSOFCOLLECTEDDATAONTHETESTINGOBJECTS
+PointCloud PointProbe LineProbe CylinderProbe
+Sloth 67,923 121 363 121
+Vest 62,318 116 348 116
+Lamb 18,059 94 276 94
+Shoe 32,408 96 192 96
+Bird 41,515 116 315 116
+B. Force Response Model Learning
+(a) Sloth, Vest, Lamb, Shoe, and (b)GroundtruthdataonLamb,with The next step in our pipeline learns to predict force
+Bird objects, along with rigid color showing force felt at d = 0.5 responsesatdifferentlocationsontheobjectsurface.Recent
+probesusedintesting. mm.
+advancements in automated machine learning (AutoML)
+Fig.2. Theobjectsandprobesusedintheexperiments.Dataisgathered
+have greatly reduced the amount of manual effort needed
+usingthepointprobe,andthesimulatorgeneralizesforcepredictionstothe
+lineandcylinderprobes. to select a regression model and tune hyperparameters. In
+this paper we use the AutoML [19] package from scikit-
+learn [20] to perform the regression tasks.
+We compare performance of different types of regressors.
+cloud. Open3D [18] is applied to perform outlier removal TheAutoMLpackagesearchesamongensemblesofdifferent
+and normal estimation. types of regressors and preprocessors and runs until a user-
+Tocapturegroundtruthforceresponsedata,werandomly speciﬁed time limit is reached. We can also specify the type
+select a set of locations on the object to be poked with a of regressors during AutoML training to reduce the number
+pointprobe,showninFig.1.Duringexperiments,wecollect ofhyperparametersthatneedtobeoptimized,thusimproving
+data on a uniform grid, and randomly select among these training speed. Another option is to select an appropriate
+locations to be training data, and the rest to be testing data. regressor directly, without relying on AutoML to select the
+To complete one probing action at a point x, we align the hyperparamters.Inparticular,wetestthefollowingmethods:
+pointprobe’saxiswiththepoint’ssurfacenormal.Startingat (1) AutoML (Auto-M) trained for 360s (2) AutoML with
+a user-speciﬁed distance from the surface, the probe pushes Extra Trees as the regressor type (Auto-ET) trained for 30s;
+inthenegativenormaldirectionataconstantspeedof2mm/s (3)Adaboost(AB),GradientBoosting(GB),RandomForest
+until reaching a force threshold, which is set to 3-5 N in (RF), and Extra Trees (ET), all trained using scikit-learn
+our experiments depending on the overall stiffness of the with default parameters. Fig. 3b show the results on the
+testingobjects.Theamountofdisplacementandforceinthe Lambmodel.Althoughsingleregressorscantrainamodelin
+normaldirection,measuredbythewristmountedF/Tsensor, less 1s, Auto-ET generally achieves the best results in 30s.
+is recorded at 250 Hz. As a result, our force measurements If Auto-M were to be given more training time, it could
+are quite sparse in the spatial features, while being quite potentially learn a better model, but doing so would require
+dense in force / displacement. One example of the collected hours or even days of training. We settle on Auto-ET for
+data on the Lamb is shown in Fig. 2b. the rest of the paper given its balance between speed and
+accuracy on our dataset. The resulting force predictions that
+If both the visual and tactile data have no error, then we
+evolve after 2, 5, 10 locations are used as training data for
+would expect the force felt by the point probe tip away
+a 0.5mm displacement on Lamb are shown in Fig. 4.
+from the object surface to be zero and positive otherwise.
+Results with Auto-ET on all 5 testing objects are shown
+However, this is often not the case. As shown in Fig. 4a,
+in Fig. 3a. The Shoe and the Vest are the hardest to learn
+we often observe nonzero forces beginning anywhere from
+becausetheyarenotcompletelyelasticandaremadeofcom-
+-5 to 5mm of displacement. This is largely due to error in
+posite materials, resulting in signiﬁcantly varying stiffness
+the calibration and bias in the camera’s depth estimates, and
+across their surface.
+further motivates the use of learning to correlate visual and
+Prediction speed per point varies with the query size,
+tactile data.
+because of query overhead. With 1 point in each query, it
+≈
+Forvalidationpurposes,wecollectsecondandthirdsetsof takes 17ms per point, while with 10,000 points per query,
+≈
+pokingdatawithalineprobeandacylindricalprobe(capped it takes 0.015ms per point. Also, prediction speed is not
+at3-14N,dependingontheobjects),showninFig.2a.These directly related to the number of training points.
+arenotusedfortraining,butonlyforevaluationofhowwell
+our simulation model can generalize from point probe data. IV. SEMI-EMPIRICALSIMULATOR
+Weprobeonceateachlocationusingthecylinderprobe,and Thesecondphaseofourpipelineestimatesreactionforces
+three times with the line probe at each location with random betweenthedeformableobjectandacontactingrigidobject.
+orientation changes (about the local probe x-axis). We also The rigid object is represented as a 3D surface mesh M
+recordthetorqueabouttheEEframecenter.Theparameters deﬁned in the global frame. The contact detector determines
+of all three datasets are summarized in Table 1. if it is in contact with the deformable object’s equilibrium
+1648
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. (a) A point indentation moves (b)Displacedpointscalculatedby
+nearbypointsonthedeformable the collision detector (red) vs ac-
+(a) Testing error on each object us- (b)Comparingtestingerrorbetween object. tualdisplacements(blue).
+ing Auto-ET, with varying training regressors,overallobjects. Fig.5. Deﬁnitionsusedinthesurfacedeformationmodel.
+setsize.
+Fig.3. Breakdownoflearningcurvesforlearningforceresponsemodels.
+Regressorsaretrainedover10sampledsubsetsofthegroundtruthdataset, Let d denote the nominal displacement of asurface point
+andplotsshowRMSEmeanandvarianceacrosssamples. i
+at a contact patch, we assume that it consists of both dis-
+placementcausedbyneighboringpointdisplacementandthat
+actually contributes to the total force, which we call actual
+displacement and denote as d˜. We solve for non-negative
+i
+actual displacements that are no greater than the nominal
+displacements. A smaller nominal displacement would indi-
+catepenetration,whileanegativeactualdisplacementwould
+cause the deformable to apply a negative (pulling) force on
+the rigid object at that point (Fig. 5b).
+1) NominalDisplacementCalculation: Tocalculatenom-
+inal displacements of the deformable object’s surface points
+we use collision detection and estimate penetration depths.
+(a) Collected force vs d at one (b)2locations To do so, we ﬁrst discretize the surface of the rigid object
+pointonLamb.
+by placing equally spaced points on edges and 2D grids on
+facets based on a user-selected discretization. Via experi-
+mentation, we found that simulation results are relatively
+insensitive to the selection of this discretization, and we use
+a 3mm resolution for all experiments.
+Next, we ﬁnd the pairs of rigid surface points and the
+deformable surface points that will be touching after de-
+formation and the nominal displacement of the deformable
+surface points. Point correspondence is calculated by pro-
+jecting all the points to a 2D plane and performing nearest-
+(c)5locations. (d)10locations. neighbor searches. We let a be the approach direction of the
+Fig. 4. Collected force-displacement curve at one point and force rigid object and the normal of the projection plane, shown
+predictions on the Lamb object, learned with different numbers of poking
+in Fig. 6. To better approximate the shape of the underlying
+locations.Pokinglocationsareindicatedascircles,coloredbythetrueforce.
+dissettobe0.5mm.Becauseofcamerabias,thereisalreadysigniﬁcant continuous surface, we average the nominal displacements
+amountofforceatthisdepth.[Bestviewedincolor] of the the 3 nearest deformable surface points for each
+rigid surface point. Each nominal displacement is calculated
+according to
+surfacemodelS,andifso,whichpointsmustbedisplacedto
+− − ·
+resolve the contact. The contact force solver then computes d = (p p )T n , (1)
+i rigidj deformablei deformablei
+the 3D reaction force and torque and the deformed shape of where p ,n ∈ R3 are the equilibrium
+the object. surface pdeofsoitrimonabloefi podienftorimaabnldeiits associated normal. We
+averagetheequilibriumpositionsandnominaldisplacements
+A. Contact Force Solver
+of the 3 points to obtain the estimated equilibrium surface
+Classic Herztian contact theory predicts that displacement point and displacement, which we refer to as q and d. By
+at a surface point on a deformable object will cause neigh- keepingonlythepointswithd>0,wehaveN pairsofrigid
+boring surface points to move in a manner described by a surface points and its corresponding estimated equilibrium
+functionofdistanceandmaterialproperties(Fig.5a).Hence, surface points along with nominal displacements.
+we cannot simply sum the forces caused by each indepen- 2) Force Solving: The force solver uses the nominal dis-
+dent point displacement, but instead have to account for placements calculated above combined with an indentation
+correlations in displacement. We assume that normal forces basis function to compute the actual displacements.
+and displacements are the dominant effect, and experiments The shape function is deﬁned as follows. For each pair of
+on our object set suggest this assumption is reasonable for points on the deformable object, we deﬁne a shape function
+R → R
+normally-displaced objects. g(r) : to describe the correlation of a point
+1649
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. Fig. 6. An illustration of how the nominal displacements are calculated
+forapolyhedralrigidobject.
+Fig. 7. Predictions errors of our semi-empirical simulator on novel rigid
+objectsandthatofpuredata-drivenmodels.Errorsondifferentobjectsare
+indentation on its neighborhood. Here r is the Euclidean shown in different colors. We also include the errors of the point models
+usedinpredictionsasareference.
+distance between 2 points on the equilibrium surface, and
+we use the inverse function:
+g(r)=c/(c+r) (2) To predict the displacement of the entire object, not only
+thepointsincontact,wesumupcontributionsfromtheshape
+f(r) describes an inverse relationship between points’ rel- function over every positive actual displacement.
+ative displacement and equilibrium surface distance, which
+matchestheHertziantheory.Theconstantc>0ispickedby B. Experiments
+observation. However, for future work, we could determine
+Throughout this section, we use the point deformation
+this constant using a camera tracking the shape of deforma-
+models trained with Auto-ET and data from 10 poking
+tion during poking. While this constant may actually vary
+locations. All implementation is performed in Python code
+across the object surface, we keep it constant across the
+with the Numpy package for linear algebra, and all timing
+object in this paper.
+is conducted on a desktop PC with an Intel i7 3.8GHz
+By calculating the relative distance ri,j between all pairs processor.
+of deformable points qi and qj in collision with the rigid 1) Simulation accuracy for Line and Cylinder contact:
+object,weobtain a linear complementary problem (LCP) Fig. 7 shows evaluation of our simulator with line and
+relating nominal and actual displacements:
+cylinder probe contact in predicting 3D force and torque
+    
+d  g(r ) g(r ) ... g(r )d˜  vectors.Thesimulatorpredictionerrorsarecomparedtopure
+w=d...12−g(r...12,,11) g(r...12,,22) ...... g(r...12,,nn)d˜...12 (3) lpweoahkreenrsienfgArouumstoint-hEgeTtghreisoucaonlrdsroetcruuttshgeedloinmaesetartnyhd,etcrryaeliginnreeddsesrdoiprr.reocWbtlieyngnoondtai1tca0e,
+dn g(rn,1) g(rn,2) ... g(rn,n) d˜n that the actual displacements calculated could exceed the
+≤ ⊥ ≥ range of displacements in the point training data. We simply
+0 w [d˜1,d˜2,...,d˜n]T 0, extrapolate the training data following the estimated force-
+displacement slope to incorporate all possible queries from
+where the subscripts denote the indices of the deformable
+thesimulator.Overall,oursimulatorperformsslightlyworse
+surfacepointsincollision.Whentherearenotanyduplicated
+(cid:54) than pure learning, better on Lamb and Bird, and worse on
+points, i.e. g(r ) = 1 except for i = j, this symmetric
+i,j Vest and Shoe. We believe this is mainly due to the fact
+matrix is invertible. We solve the LCP by iteratively as-
+that Vest and Shoe are made of composite materials with
+suming equalities, solving the system of linear equations
+a mixture of elastic and inelastic components. As a result,
+by matrix inversion, and removing the points with negative
+shapefunctionsapproximatethedeformationoftheseobjects
+actual displacements.
+sub-optimally and lead to errors in the simulator. The key
+Fromtheactualdisplacementswesumtheforcespredicted
+advantageofourmethodisthatwedonotneedtore-acquire
+bythepointdeformationmodeltoobtainthecontactwrench.
+a new training set, and we can also predict force response
+Given the N points with positive actual displacements,
+final for different rolls and pitches of the rigid objects, which are
+the total response wrench (F ,τ ) on the object are
+total total not included as features in the learning-only training set.
+calculated as follows:
+− − 2) Simulation Visualization: We illustrate our simulator
+fi =y([qi,di]) y([qi,di d˜i]) by visualizing the simulation of a line or cylinder probe
+·
+F =ΣNfinalf n (4) poking straight at different objects, resembling the data
+total i=1 i i
+× · collection process in Section III.A. An example is shown
+τ =ΣNfinal(˜r ) (f n ),
+total i=1 j i i inFig.8a.ThesimulationframesaredisplayedinFig.9.As
+where r˜ is the vector from the torque center to the corre- the probes penetrate deeper, the calculated actual displace-
+j
+sponding rigid body point p . ments also increase, thus deforming the entire surface more
+rigidj
+1650
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. (a) The minimum height at which (b)Computationtimevsnumberof
+(a)Contactwithalineprobe. (b)Robotpackingsetup. therigidspherecanbepackedunder contacts,showingtotaltime(ttotal),
+forcethreshold2N. displacement calculation (t ), colli-
+Fig.8. Simulationexperiments,Lambobject. siondetection(tc),andpoidntmodel
+queries(tm).
+Fig.10. Resultsfromtheplanningproblem.
+in the negative z direction once the interaction force limit
+is exceeded, shown in Fig. 8b. A plot of minimum possible
+height of the sphere on the x-y grid is shown in Fig. 10a.
+On average in this experiment, a contact reaction force
+query takes 0.086s. Each query consists of 0.0738s of
+(a) Lamb probed by a line (b)Slothprobedbyalineprobe. collision detection, 0.010s of querying the point model, and
+probe.
+0.0017sofLCPsolvingbyoursimulator.Theaveragecom-
+putationtimeasafunctionofthenumberofdetectedcontact
+points m is plotted in Fig. 10b. The time for LCP increases
+cubically with m, because it mainly involves inverting a
+dense matrix. The time for querying the point model stays
+somewhat constant. There is a lot of room for improvement
+in speed, including implementation in a compiled language,
+bettercollisiondetectionalgorithms[21],andparallelization.
+V. CONCLUSION
+The paper proposed a 2-stage data-driven framework to
+(c) Shoe probed by a (d) Bird probed by a (e) Vest probed by a learnandsimulatetheforceresponsesofheterogeneouselas-
+lineprobe. cylinderprobe. cylinderprobe.
+tic objects. In the ﬁrst stage, a point deformation model of a
+Fig. 9. Simulation of the line and cylinder probes poking straightly at
+testing object is learned via a robot arm poking at the object
+all5experimentobjects,withthenumbersindicatingtheamountofprobe
+displacements.Theobjectsarecoloredwiththedisplacementsofthesurface a few times. In the second stage, a semi-empirical simulator
+points,causedbytheprobes.[Bestviewedincolor] predicts the contact wrench between the deformable object
+and a novel rigid object by integrating analytic calculation
+and the learned point model to obtain the expected restoring
+signiﬁcantly, calculated by the shape function. We can see forces at a series of contact points and summing them.
+grooves on the Lamb, the Bird, and the Sloth that ﬁt the
+For future work, we would like to relax several assump-
+probe geometry at deep penetration. The Shoe and the Vest
+tions made in this paper. First, learning and generalizing
+are stiffer objects, with c in the shape function much greater shearandfrictionforceswithsmallnumbersoftouchesisan
+than the other 3 objects. As a result, the grooves are harder
+open problem. Perhaps the deformation and force response
+to observe.
+ofanoveldeformableobjectcanbebootstrappedbytransfer
+3) Application to a Packing Problem: We consider a learning from an object that has already been acquired. We
+simple packing problem as an illustration of our approach, would also like learn the deformation and force response of
+shown in Fig. 8b. Given a rigid box with a deformable anobjectwhileitisundergoinggrossmovements,separating
+object (the Lamb) already packed, we would like to know therigidbodyandelasticcomponentsofthemovement.This
+if the robot can pack another rigid item (a sphere, with couldalsobeextendedtohandleplasticdeformation.Finally,
+diameter = 40mm and discretized into 150 surface points) we would like to enhance our simulator to handle combined
+into the box. In particular, we would like to know at what rigid and elastic deformation, as well as contact between
+positions in the box the sphere can be placed such that its deformable objects.
+interactionforcewiththedeformableobjectdoesnotexceed
+2N. We perform a grid search over the x-y-z position of the
+ACKNOWLEDGMENT
+rigid sphere centroid inside the box, where z starts with the
+maximum allowed height in the box and ﬁnishes the search WethankJoaoM.C.Marquesforproofreadingthepaper.
+1651
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[1] J. Zhou, R. Paolini, J. A. Bagnell, and M. T. Mason, “A Convex
+PolynomialForce-MotionModelforPlanarSliding:Identiﬁcationand
+Application,”IEEEInt.Conf.Rob.Aut.,no.3,pp.372–377,2016.
+[2] A. Kloss, S. Schaal, and J. Bohg, “Combining learned and an-
+alytical models for predicting action effects,” in arXiv preprint
+arXiv:1710.04102,2017.
+[3] J.Wu,J.-x.Wang,andH.Xiao,“Physics-InformedMachineLearning
+forPredictiveTurbulenceModeling:APrioriAssessmentofPrediction
+Conﬁdence,”inarXivpreprintarXiv:1607.04563,2016.
+[4] M. Raissi and G. E. Karniadakis, “Hidden physics models :
+Machinelearningofnonlinearpartialdifferentialequations,”Journal
+of Computational Physics, vol. 357, pp. 125–141, 2018. [Online].
+Available:https://doi.org/10.1016/j.jcp.2017.11.039
+[5] G.Carleo,I.Cirac,L.Cranmer,KyleDaudet,D.Bourse,M.Schuld,
+L. Vogt-maranto, and L. Zdeborova´, “Machine learning and the
+physicalsciences,”2019.
+[6] Y.Zhu,L.Abdulmajeid,andK.Hauser,“AData-drivenApproachfor
+Fast Simulation of Robot Locomotion on Granular Media,” in IEEE
+Int.Conf.Rob.Aut.,2019.
+[7] A. Oishi and G. Yagawa, “Computational Mechanics Enhanced by
+DeepLearning,”Comput.MethodsAppl.Mech.Engrg.,vol.327,pp.
+327–351, 2017. [Online]. Available: http://dx.doi.org/10.1016/j.cma.
+2017.08.040
+[8] A. Nealen, M. Matthias, R. Keiser, E. Boxerman, and M. Carlson,
+“PhysicallyBasedDeformableModelsinComputerGraphics,”Com-
+puterGraphicsForum,vol.25,no.4,pp.809–836,2006.
+[9] B.Frank,R.Schemedding,C.Stachniss,M.Teschner,andW.Burgard,
+“Learning the elasticity parameters of deformable objects with a
+manipulation robot,” in IEEE/RSJ Int. Conf. Intel. Rob. Sys., no.
+October,2010.
+[10] P. Boonvisut and M. C. Cavusoglu, “Estimation of Soft Tissue Me-
+chanical Parameters From Robotic Manipulation Data,” Transactions
+onMechatronics,vol.18,no.5,pp.1602–1611,2013.
+[11] B. Bickel, M. Ba¨cher, M. A. Otaduy, W. Matusik, H. Pﬁster, and
+M. Gross, “Capture and modeling of non-linear heterogeneous soft
+tissue,”inSIGGRAPH,NewYork,NewYork,USA,2009,p.1.
+[12] O. Deussen, L. Kobbelt, and T. Peter, “Using Simulated Annealing
+to Obtain Good Nodal Approximations of Deformable Bodies,” in
+EurographicsWorkshop,no.September,1995.
+[13] S. Burion, F. Conti, A. Petrovskaya, C. Baur, and O. Khatib, “Iden-
+tifying Physical Properties of Deformable Objects by Using Particle
+Filters,”inIEEEInt.Conf.Rob.Aut.,2008,pp.1112–1117.
+[14] T. Yamamoto, B. Vagvolgyi, K. Balaji, L. L. Whitcomb, and A. M.
+Okamura, “Tissue Property Estimation and Graphical Display for
+TeleoperatedRobot-AssistedSurgery,”IEEEInt.Conf.Rob.Aut.,pp.
+4239–4245,2009.
+[15] H.Salman,E.Ayvali,R.A.Srivatsan,Y.Ma,N.Zevallos,R.Yasin,
+L.Wang,N.Siman,andH.Choset,“Trajectory-OptimizedSensingfor
+ActiveSearchofTissueAbnormalitiesinRoboticSurgery,”inIEEE
+Int.Conf.Rob.Aut.,2018.
+[16] R.E.Goldman,A.Bajo,andN.Simaan,“Algorithmsforautonomous
+exploration and estimation in compliant environments,” Robotica,
+vol.31,no.1,2013.
+[17] H.Liu,D.P.Noonan,B.J.Challacombe,P.Dasgupta,L.D.Senevi-
+ratne, and K. Althoefer, “Rolling Mechanical Imaging for Tissue
+AbnormalityLocalizationDuringMinimallyInvasiveSurgery,”IEEE
+TransactionsonBiomedicalEngineering,vol.57,no.2,pp.404–414,
+2010.
+[18] Q.-y.Zhou,J.Park,andV.Koltun,“Open3D:AModernLibraryfor
+3DDataProcessing,”arXiv:1801.0984,2018.
+[19] M.Feurer,A.Klein,K.Eggensperger,J.Springenberg,M.Blum,and
+F. Hutter, “Efﬁcient and Robust Automated Machine Learning,” in
+AdvancesinNeuralInformationProcessingSystems,2015,pp.2962—
+-2970.
+[20] F. Pedregosa, G. Varoquaux, A. Gramfort, V. Michel, B. Thirion,
+O. Grisel, M. Blondel, P. Prettenhofer, R. Weiss, V. Dubourg,
+J.Vanderplas,A.Passos,D.Cournapeau,M.Brucher,M.Perrot,and
+E. Duchesnay, “Scikit-learn : Machine Learning in Python,” Journal
+ofMachineLearningResearch,vol.12,pp.2825–2830,2011.
+[21] R. Weller, “A Brief Overview of Collision Detection,” in New Geo-
+metricDataStructuresforCollisionDetectionandHaptics,2013,pp.
+9–46.
+1652
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:57:53 UTC from IEEE Xplore.  Restrictions apply. 

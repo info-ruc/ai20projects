@@ -1,0 +1,425 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Agile Legged-Wheeled Reconﬁgurable Navigation Planner
+Applied on the CENTAURO Robot
+Vignesh Sushrutha Raghavan1,2, Dimitrios Kanoulas3, Darwin G.Caldwell1 and Nikos G. Tsagarakis 1
+Abstract—Hybrid legged-wheeled robots such as the CEN-
+TAURO,arecapableofvaryingtheirfootprintpolygontocarry
+out various agile motions. This property can be advantageous
+for wheeled-only planning in cluttered spaces, which is our
+focus. In this paper, we present an improved algorithm that
+builds upon our previously introduced preliminary footprint
+varying A* planner, which was based on the rectangular
+symmetry of the foot support polygon. In particular, we
+introduce a Theta* based planner with trapezium-like search,
+Fig. 1: CENTAURO robot navigation based on plans from
+which aims to further reduce the limitations imposed upon
+theinitialObstacleNegotiatingA*planner[2].Theﬁrsttwo
+the wheeled-only navigation of the CENTAURO robot by
+the low-dimensional search space, maintaining the real-time images show CENTAURO expanding over a wide obstacle,
+computationalefﬁciency.Themethodistestedonthesimulated while the last two show it narrowing into a small space.
+andrealfull-sizeCENTAUROrobotinclutteredenvironments.
+I. INTRODUCTION to search for traversable plans. Being an initial version of
+the algorithm, this rectangular symmetry, as well as the A*
+In cluttered and unstructured environments, autonomous
+algorithm, severely limited the ﬂexibility of the navigation
+navigation is impeded by obstacles of various shapes and
+in the following ways:
+sizes. The spacing of the obstacles can be such that con-
+tinuous navigation of a wheeled robot with a ﬁxed robot • Only certain spaces could be traversed due to incom-
+footprintmightbeimpossible.Whilesteppingoverobstacles pleteexploitationoftheagilityoftherobot.Asshownin
+isapotentialsolution,switchingofthecontrolfromwheeled Fig.2,ifthereisnotsufﬁcientspacebetweenthenarrow
+to stepping and the planning required to make safe footsteps passage and the wide obstacle, as a simple rectangle is
+is time consuming, whereas wheeled only navigation could being used for the search, a collision would occur and
+reduce transit time in some cases. In such scenarios, a robot hence no path will be found. This problem also occurs
+capable of modifying its height and footprint polygon like in the reverse problem of going into a narrow passage
+the CENTAURO robot [1], may be capable of performing after expanding over a wide example.
+wheeled-only navigation in certain scenarios by expand- • The A* search used as the base of the planner does the
+ing over wide objects and narrowing into corridors. While search on a 8 neighbor grid. Thereby the orientations
+there exist many studies that present planning solutions for assumed by the robot are limited to nπ,n=0,1,...,8.
+4
+wheeledrobots,therearefewthatprovidereal-timeplanning So if the robot has to enter a narrow passage angled at
+for robots with re-conﬁgurable footprints. for instance 20 deg, no path will be found. The CEN-
+The CENTAURO robot is 42 DoF hybrid legged-wheeled TAURO wheels are also capable of omni-directional
+robot, with four 7DoF legs and wheel actuators as end- motion, but this is ignored in the A* search as well.
+effectors. In our previous work [2], we presented an initial In this paper, we present an improved version of the
+solution for re-conﬁgurable legged-wheeled navigation for Obstacle Negotiating A* planner, such that the aforemen-
+the CENTAURO robot based on a simple symmetric re- tioned limitations on CENTAURO’s wheeled-only motion
+conﬁgurable rectangle footprint and A* planner. The pre- which are imposed by the low-dimensional search planner,
+sented Obstacle Negotiating A* planner provided plans that are eliminated while still maintaining the computationally
+allowed the robot to negotiate wide, low-lying obstacles by efﬁcient low-dimensional search. This is done by allowing
+expandingoverthemortraversenarrowspacesbynarrowing independent operation of the front and back wheel pairs,
+into them, as seen from the experimental images in Fig. 1. as well as incorporating the omni-directional motion. This
+A rectangular constraint was imposed on the robot footprint allows the robot to navigate through even tighter spaces
+as well as perform more agile motions in the presence of
+1Humanoids and Human-Centered Mechatronics & Advanced
+multiple obstacles.
+Robotics, Istituto Italiano di Tecnologia (IIT), Via Morego 30, 16163,
+{
+Genoa, Italy. Vignesh.Raghavan, Darwin.Caldwell, The rest of the paper is organized as follows. First, we
+}
+Nikos.Tsagarakis @iit.it reviewtherelatedworkonre-conﬁgurableplanning(Sec.II).
+2DepartmentofInformationEngineering,UniversityofPisa.
+Then, we brieﬂy describe the initial algorithm [2], followed
+3Department of Computer Science, University College London, Gower
+Street,WC1E6BT,UK.d.kanoulas@ucl.ac.uk by the detailed description of the introduced modiﬁcations
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1424
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. In our previous work [2], we reduced the search space
+by using a rectangle-based search in the A* algorithm.
+Although the plans restricted the ﬂexibility of the wheeled-
+onlymotions,weconsideredthecostofmodifyingtherobot
+footprint polygon for wheeled-only motion in the standard
+A* cost functions. In this way, we controlled whether ob-
+stacle avoidance or negotiation is preferred. It was possible
+to force the robot to both change its polygon only in un-
+avoidable situations as well as to prefer polygon changes
+if it lead to a shorter traversal path. This work was further
+combined with a roughness estimation algorithm in [20] to
+Fig. 2: A scenario demonstrating a drawback of the initial allow for motion planning over low-lying rough surfaces.
+ObstacleNegotiatingA*planner[2],wheretherobot(green In this work, instead of using a rectangle symmetry and
+rectangle) needs to stand over the low lying obstacle (grey A* as the base planner, we use trapezium-like symmetry to
+rectangle). l and l represent the length of the space from facilitate independent motions for the front and back pair of
+1 2
+the end of the narrow passage (two white rectangles) to the wheels, and the Theta* [9] algorithm as a base planner to
+startofthewidelowlyingobstacle.L representsthelength allowforany-anglerobotorientation.Similartoourprevious
+R
+of the robot in its narrowest conﬁguration (green rectangle). work, we use data from the VLP16 Velodyne lidar sensor
+which is ﬁxed on the head of the robot, to create costmaps
+based on point clouds and ground plane ﬁltering extracted
+from the Octomap [21] environment representation. Two-
+and improvements (Sec. III). We then present simulated and
+dimensional (2D)images willbe usedin planningsearches.
+real CENTAURO robot experimental demonstrations of the
+improved capabilities of the planner (Sec. IV). Finally, we
+III. TRAPEZIUMOBSTACLENEGOTIATINGTHETA*
+conclude with some future directions (Sec. V).
+In this section, we present the improved Obstacle Negoti-
+II. RELATEDWORK ating algorithm. In particular, we brieﬂy describe our previ-
+ouslyintroducedalgorithm[2]andthedetailedmodiﬁcations
+Algorithms such as the A* [3], RRT, [4], and PRM [5], made to facilitate improvements. An overview of the both
+have formed the base of many autonomous navigation plan- methods can be seen in Fig. 3.
+ning methods. Improvements to the original algorithms such
+astheARA*[6]andD*[7],RRT-Connect[8],andTheta*[9] A. Obstacle Negotiating A*
+have been further developed and extensively used in many Usingpointcloudsfromtherobot’sVLP16Velodynelidar
+planning scenarios. Building on these algorithms, many sensor, Octomap [21], and costmap functionalities of the
+studies have presented re-conﬁgurable planning on robots. software package move base1, a 2D segmented map image
+For instance, in [10], [11], [12], re-conﬁguration is used by is created, e.g. Fig. 2. In the map image, the black pixels
+the robots to deal with uneven terrain, stairs, and obstacles. representfreespace,greypixelsrepresentlowlyingobstacle
+Although, these robots were not modifying their support points (negotiable) easily cleared by the robot base and
+polygon, they were always avoiding obstacles rather than white pixels represent tall obstacles (non-negotiable). More
+negotiating them. Studies such as [13] (using A*) and [14] detailed explanation of the segmented map creation can be
+presentedmethodstotakeadvantageofthesnake-likenature found in [2].
+of some robots, to plan for re-conﬁguring the robot polygon
+We use the 2D segmented map image for all the planning
+for obstacles avoidance.
+searches and hence the operations are done on pixels. Fur-
+Arecentstudyin[15]usedadeformableboxrobotmodel thermore,weuseintensitiesofthepixelsintheneighborhood
+to plan paths to both avoid overhead and ﬂoor obstacles of the queried pixel coordinate to determine a collision free
+and ﬁt in narrow spaces by modifying the width and height validconﬁgurationthattherobotcanassumetopassthrough
+of the robot. This was presented for legged-only motion thequeriedpixel.Thisoperationisexecutedasfollows.With
+for obstacle avoidance/negotiation and didnt consider the the segmented map, an 8-neighborhood-based grid search
+cost of modifying the robot polygon. While the research is executed on the image points from the start to the goal
+on humanoid footstep planning algorithms like [16], [17] point. The robot is forced to orient itself in the direction of
+has been widespread, recently there have been extensive motion. Furthermore, we impose a constraint on the chosen
+studies on real-time hybrid legged-wheeled robot motion robot rectangular footprint as follows. The sum of the robot
+planning. In [18], [19], a combined driving and stepping footprint rectangle width (w ) and length (l ) is set to S ,
+r r p
+motion planning for the Momaro robot was presented. It i.e. Sp=wr+lr. Sp is set to a constant value based on the
+is based on the ARA* algorithm, where longitudinal robot limits of the leg joints of the robot. Thus, if the width of the
+polygon changes were considered to facilitate driving and robot rectangle is known, the length of the robot footprint
+steppingontohighersurfaces.Obstaclenegotiationorlateral
+polygon changes were not considered. 1http://wiki.ros.org/move˙base
+1425
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. Fig. 4: Graphical overview of the
+RectangleSymmetrySearch() used in the Obstacle
+Negotiating A*.
+Fig.3:GraphicaloverviewofthepreviouslypresentedObsta- (cid:32) (cid:33)
+cleA*plannerandtheimprovedversion,namelyTrapezium (cid:112)
+Line Theta* planner. −
+x x
+θgoal =acos − g c − (3)
+(xg xc)2+(yg yc)2
+−
+polygon can be simply obtained as: lr =Sp wr. Let the where [xc,yc] is the child neighbour node being queried,
+maximum and minimum possible robot heights and widths [xp,yp] the corresponding parent|n|ode or searched node Ns,
+be (hmax,hmin) and (wmax, wmin), respectively. The height hr and [xg,yg] the goal node. The . is the absolute value, Wt
+of the robot for any given footprint rectangle is determined is the weight on the turning cost, W is the weight on the
+c
+by using simple proportions based on the robot footprint cost of conﬁguration change, θ is the angle at which the
+ext
+rectangle width wr by the following formula: robot exits the node prior to the parent node [xp,yp] or the
+angle at which it enters the parent node, θ is the angle at
+− ent | |
+hr=hmax−(w(wmrax−wwmmini)n)×(hmax−hmin) (1) wthheicchhatnhgeeroinborotbeonttefrosotthperincthpilodlyngoodnew[xicd,tyhc]t,haantdis(reδqwui)reids
+for obstacle collision-free negotiation at node [xc,yc] and it
+Thesearchforavalidrobotconﬁgurationisdonebyusing
+isdividedbythemaximumpermissiblehorizontalrobotaxis
+a rectangular region of interest of image pixels (ROI). First,
+(width)change.W istheweightonthecostofturningaway
+g
+depending on the orientation of the motion from the node
+from the direction of the goal. A more detailed analysis on
+NS being searched, to the neighborhood child NCi,i=1...8, the decision making process and the usage of weights can
+the image coordinates in the rectangle ROI are rotated such
+be found in our previous work [2].
+that they are in the frame as seen by the robot. Then,
+based on the presence of negotiable and non-negotiable B. Trapezium Line Theta* Planner
+obstaclepoints,decisionstomaintain,expand,ornarrowthe For operations of the proposed improved planner, the
+robot footprint rectangle are made. In the presence of only segmented map, the imposed constraint on the rectangle,
+negotiableobstacles,bothexpandingandnarrowingistested as well as the cost functions are reused. As mentioned
+based on the maximum and minimum horizontal coordinate earlier, the planner searches are done on 2D image pixels,
+of obstacles respectively, in the rotated and resolved ROI. In and the pixel coordinates and intensities of the pixels in
+the presence of non-negotiable obstacles, only narrowing is neighborhoodofthequeriedpointareusedtodeterminevalid
+done. Based on the horizontal coordinates chosen, the robot robot conﬁgurations. In the improved planner we proceed
+footprint rectangle width is set and checked if it ﬁts within similarly with the following differences. The ﬁrst of the key
+reasonable bounds of robot capabilities. An overview of this difference is that, instead of a simple singular rectangular
+rectangular search can be seen in Fig. 4. symmetry for the whole robot, similar symmetry rules are
+For the Obstacle Negotiating A*, the standard cost func- applied separately to the front and back pair of wheels,
+tions of A* namely, g() and h() are modiﬁed as follows: allowing independent operation of the two pairs of wheels
+g(xc,yc)=g(xp,(cid:32)yp(cid:112))+Wt×|θent2−πθext|+W(cid:33)c×(|δw|) asFfoirlslto,wws.e extend the rectangular symmetry introduced
+− (2) in our previous work to two separate pair of wheels, by
+x x
+θent =(cid:113)acos (xp−xcp)2+c(yp−yc)2 (cid:12)(cid:12) (cid:12)(cid:12) ctarregaetitngpoainttra(px,eyz)iumdurliinkge pclaalncunliantgio.nLe(Ftitgh.e5o).rieCnotnatsiiodneroaf
+entry or search be θ and the constant S introduced before
+p
+−
+h(xc,yc)= (xg−xc)2+(yg−yc)2+Wg× θgoal2πθent b2e×eSxpppre.sLseedt itnhepigxerilds abseSepxp.prCeossnesdideinr aasqcuoaorredignraitdeoffrasmizee
+1426
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. non-negotiable obstacle) that can be seen in Fig. 5, we
+decide whether to expand, narrow, or maintain the same
+conﬁguration. The difference this time is that the front and
+back pair of wheels operate independently. Once horizontal
+coordinates of obstacles are obtained from the local grid
+coordinates, the width of the front and back pair of wheels
+is set and checked for collisions.
+The second key difference from the previously presented
+work is that we use the Theta* search. Hence, in addition to
+thestandardA*search,thereisanextrastepwhereitisalso
+checkedifwecantravelfromtheparentofthesearchednode
+N , namely N , to the child target node N with the above
+S P Ci
+calculated front and back wheel pair conﬁguration, without
+any collisions. Depending on the costs, N is chosen as the
+P
+parent node for N if the cost is lesser, else N is chosen
+Ci S
+as the parent, thus giving an any angle traversal capability
+as the global angle of the motion direction from N to N
+P Ci
+need not be nπ,n=0,1...8.
+4
+The third key difference is that we also check for omni-
+directional traversal, meaning that the robot heading can be
+notorientedinthedirectionofmotion.Ifavalidpathwithout
+collisions is found, then, maintaining the same orientation
+and rolling in an omni-directional manner is preferred over
+changing the heading of the robot.
+Fig. 5: Graphical Overview of the TrapeziumLineSeach()
+Thefourthandﬁnaldifference/additiontothisalgorithmto
+used in the new planner presented in this paper.
+aid the Theta* aspect of the presented planner, is the simple
+collisiondetectionimplementedbasedonimagepixels.Once
+we obtain the robot conﬁguration for the target point, we
+oriented at θ and centered at the target point. Hence the
+− − extract a line of pixels between the previous and current
+grid coordinates run from ( Spp, Spp) to (Spp,Spp). We wheel image coordinates, and check if any of the pixels are
+extract image coordinates of the pixels corresponding to this
+part of an obstacle. If they are, then the conﬁguration and
+rectangulargridusingasimplehomogeneoustransformation.
+path is discarded.
+Thus, we have image coordinates of the pixels in the square
+Asinthecaseoftheoriginalstudytheheightofthepelvis
+grid centered at (x,y) as well as the corresponding local
+of the robot above the ground is determined by the width.
+square grid coordinates in the frame centered at (x,y) and
+Only in this case we obtain two heights h and h based
+orientedatθ.Letthecurrentwidthbetweenthefrontpairof f b
+on w , w (front and back wheel pair widths in m) and the
+wheels in pixels be w and the back pair of wheels be w . f b
+fp bp height calculations in Eq. 1. The pelvis height H and pitch
+So the x (forward with respect to the robot) coordinate of p
+θ arecalculatedasfollows,insuchawaythatthepelvis
+the front wheel and back wheel in the local grid coordinates pitch
+− − − maypitchtowardsthepairofwheelsthathasexpanded.This
+can be simply calculated as (Spp wfp) and (Spp− wbp). is done to maintain the stability of the robot.
+Soif−weex−tractallthepointsinthegridinthe(Spp wfp)th
+and (Spp wbp)th row, we know of all the grid points in
+the horizontal neighborhood of the wheel. So along with the If hb>=hf
+− × −
+acfoorrreemspeonntdioinngedimroawgse,pwixeeallssoofexthtreaicrtrtohwesgraibdopvoeinatnsdanbdeltohwe Hp=hf+((cid:16)S2p×wSb)−w(h−b whf)(cid:17)
+p f b
+them. A graphical view can be seen in Fig. 5. −
+cooInrditnearmtess aonfdctohdee,cowrreespmoenrdeilnygciomnadgeenspeixtehlecoloocradlingarteids θpitch=tan−1 (2×S(hpb−whff−) wb) (4)
+× else
+into a 2D vector array of length (2 Spp)2 and run vector − × −
+swehaercehlpianirtsh,emiankdiincgesthceorsreeasrpcohnldeisnsgctuomtbheersgormide.roHwesncoef,twhee Hp=hb+(S2p(cid:16)×wSpf)−w(fh−f wbhb) (cid:17)
+−
+hanavdecaolrlrethsepoinmdaignegclooocradlingaritdes,cocoorrrdeisnpaotensdionfgaimllatgheeppiixxeellss, θpitch=−tan−1 (2×S(hpf−whfb−) wb)
+near the two pairs of wheels.
+Similar to the RectangleSymmetrySearch (Fig. 4), we In the next section, we present simulated and real robot
+test for obstacle points and depending on the three afore- experiments, depicting the advantages of the presented im-
+mentioned scenarios (i.e., no obstacle, negotiable obstacle, proved planner.
+1427
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. Fig. 6: Plans by the Obstacle Negotiating A* planner (left)
+and the Trapezium Line Theta* Planner (right) for similar
+start and goal points. Red polygon represents the starting
+point, the green polygon represents the goal, the yellow Fig. 7: Simulation Sequence of the CENTAURO robot mov-
+polygon represents instances of conﬁguration change. ing to a goal behind a low lying object in a corridor angled
+at 60 deg. The robot travels omni-directionally till it turns
+approx.18degtoexpandthebackwheelstogooverthelow
+IV. SIMULATIONSANDREALROBOTEXPERIMENT lying object safely.
+For both simulated robot and real robot experiments, an
+obstaclesafetydistanceequaltothewheelwidth(inourcase
+10cm) was considered during the creation of costmaps and
+planningsearches.TheCartesianInterface[22]wasusedto
+commandthejointtrajectoriesofboththesimulatedandreal
+CENTAURO robot [1].
+A. Simulations
+We ﬁrst present an image-based simulation comparison
+of the Obstacle Negotiating A* and Trapezium Line Theta*
+algorithm. For both simulated plans, we experimentally set
+Wc=1,Wt =Wgt =3. The results of the plans generated can
+Fig. 8: Simulation sequence of the CENTAURO robot
+be seen in Fig. 6. The path length of the plan from Obstacle
+traversing through right angled corridors in the presence of
+Negotiating A* was 9.042m and the time it took to compute
+a low lying object.
+the plan was 1.88sec. Whereas, the Trapezium Line Theta*
+plannedapathoflength7.33mandtheplanwascomputedin
+0.650sec.Inspiteofhavingmorecomputationsduetoextra
+collision checks and front and back wheel pixel searches, The second simulation sequence as seen in Fig. 8, depicts
+the Trapezium Line Theta* had shorter computation time. the robot traversing a corridor with right angle turns with
+Furthermore, as can be seen, the path length of the ﬁrst ease by completely utilising omni-directional motion. Fur-
+planner was longer as the improved planner used omni- thermore, throughout the whole passage it only expands the
+directional searches to ignore turns and changes to robot frontwheelsandnotthebackwheelsasexpandingbothpair
+heading thereby having a more smooth motion, unlike the ofwheelsincreasesthecost.Hence,itﬁndsasolutionwhich
+ﬁrstcasewhere3changestotherobotheadingwereneeded. onlyneedsconﬁgurationchangeforthefrontpairofwheels,
+We now present two simulations to explicitly demonstrate demonstrating the effectiveness of the independent front and
+the improved capabilities of the planner to allow agile back pair operation. Our previous work would have failed
+wheeled-only motions on the simulated CENTAURO robot. to ﬁnd a plan over the low lying obstacle at the end of the
+For the following simulations and the real experiment, the ﬁrst passage as it would not have enough space to expand
+two turning weightsWt andWg where set to 1.0 andWc was the full footprint of the robot before reaching the object.
+set to 0.5, so as to give more preference to changing robot
+B. Real Experiment On the CENTAURO Robot
+conﬁguration over turning and taking longer paths with no
+re-conﬁguration. The ﬁrst simulation sequence can be seen We demonstrate our improved Trapezium Line Theta*
+in Fig. 7, where the robot has to traverse a passage angled planner on the real CENTAURO robot. A slightly cluttered
+at 60 deg. The sequence shows the robot travelling omni- environment with bricks was created. The environment con-
+directionally, expanding only the front wheel pair in the sisted of a small narrow passage with minimum width of
+beginning,then,turningapproximately18degandexpanding 75cmfollowedbyalow-lyingwideobstacleofwidth50cm.
+thebackwheelstosafelygooverthelowlyingobstacle.Our The distance between the end of the narrow passage and
+previous planner would not have been capable of planning a the low-lying brick is 80cm. As can be seen from Fig. 9,
+path of this orientation and allow such an agile motion in a the robot is not aligned with the narrow passage and not
+tight space. enough space is available on the sides. The robot ﬁrst aligns
+1428
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. Fig. 9: Sequence of the CENTAURO robot moving through a narrow passage to a goal point on the low-lying object.
+itself with the passage omni-directionally, while preparing of the presented planner with a stepping motion planner
+to narrow the front pair of wheels to a width of 50cm from such that, in the case where no valid wheeled motion is
+an initial width of 70cm, to safely move into the passage. found, a stepping motion planning is carried out. By using
+Halfway into the passage, the back wheels narrow so that the wheeled motion planner in conjunction with a stepping
+they can pass safely into it. When the front wheels are out motionplanner,therobotwillbeabletotraverseincreasingly
+of the passage and close to the wide low-lying obstacle, the more difﬁcult/tighter cluttered spaces. Such a planner will
+frontpairofwheelsaloneexpandtoawidthof80cm.Itisto allowtherobottoreachataskspaceinspiteofthepresence
+be noted that before expanding, the full length of the robot ofclutterbetweenitsstartingpointandthetargettaskspace.
+is 110cm, while the space between the end of the narrow Furthermore,sincethewheeled-onlyplannercomputesplans
+− −
+passage and the beginning of low-lying obstacle is 80cm. for path lengths of 9 11m within a maximum of 1 2 sec-
+Hence, our previous planner failed to provide valid plans onds, wheeled motion planning in the presence of dynamic
+as it was unable to ﬁnd enough space for the rectangle to obstacles as well as repeated re-planning can be carried out
+expand without the back wheels crashing into the bricks of without much loss of time and this improvement will be
+thepassage.Whereas,theimprovedalgorithm,onlyexpands worked upon in the future.
+the front wheels and facilitates the reaching of the goal.
+ACKNOWLEDGMENT
+The planned path length is approximately 3.49m and it is
+computed in 0.0634 seconds. This work is supported by the CENTAURO (no: 64483)
+EUproject.TheauthorswouldliketothankArturoLaurenzi
+V. CONCLUSIONSANDFUTUREWORK for his help with theCartesianInterface, and Enrico Mingo
+In this work, we presented a improved version of the Hoffman, Francesco Ruscelli and Malgorzata Kamedula for
+wheeled-only Obstacle Negotiating A* algorithm. The pre- their help with the real robot experiment.
+sented Trapezium Line Theta* algorithm was able to over-
+REFERENCES
+come the issues of ﬁxed robot orientations and absence of
+valid plans due to insufﬁcient space while going from a [1] N. Kashiri et al., “CENTAURO: A Hybrid Locomotion and High
+PowerResilientManipulationPlatform,”IEEERoboticsandAutoma-
+narrow passage to over a wide obstacle and vice-versa. This
+tionLetters(RA-L),2019.
+was achieved by using a trapezium-like search to ﬁnd valid [2] V. Raghavan, D. Kanoulas, A. Laurenzi, D. Caldwell, and
+widths for the front and back pair of wheels independent N.Tsagarakis,“Variableconﬁgurationplannerforlegged-rollingob-
+staclenegotiationlocomotion:Applicationonthecentaurorobot,”in
+of each other, thereby giving rise to a more agile motion
+IEEEInt.Conf.onRoboticsandAutomation,112019.
+planner. Simulations and real experiments were presented to [3] P. E. Hart, N. J. Nilsson, and B. Raphael, “A Formal Basis for the
+highlight the improvement. HeuristicDeterminationofMinimumCostPaths,”IEEEtransactions
+onSystemsScienceandCybernetics,vol.4,no.2,pp.100–107,1968.
+The authors are well aware that while the improvement
+[4] S. M. LaValle, “Rapidly-Exploring Random Trees: A New Tool for
+does reduce the limitations of wheeled only planning in PathPlanning,”1998.
+cluttered spaces, not all environments can be solved with [5] L.Kavraki,P.Svestka,J.-C.Latombe,andM.H.Overmars,“Proba-
+bilisticRoadmapsforPathPlanninginHigh-DimensionalConﬁgura-
+such a low-dimensional and symmetry imposing wheeled-
+tionSpaces,”IEEETransactionsonRoboticsandAutomation,vol.12,
+only planner. The future work will include combination no.4,pp.566–580,1996.
+1429
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. [6] E. A. Hansen and R. Zhou, “Anytime Heuristic Search,” Journal of
+ArtiﬁcialIntelligenceResearch,vol.28,pp.267–297,2007.
+[7] A.Stentz,“OptimalandEfﬁcientPathPlanningforPartially-Known
+Environments,” in IEEEE International Conference on Robotics and
+Automation(ICRA),1994,pp.3310–3317.
+[8] J.J.KuffnerandS.M.LaValle,“RRT-connect:AnEfﬁcientApproach
+toSingle-QueryPathPlanning,”inIEEEInternationalConferenceon
+RoboticsandAutomation,vol.2,2000,pp.995–1001.
+[9] A. Nash, K. Daniel, S. Koenig, and A. Felner, “Thetaˆ*: Any-angle
+pathplanningongrids,”inAAAI,vol.7,2007,pp.1177–1183.
+[10] M. Brunner, B. Bru¨ggemann, and D. Schulz, “Motion Planning for
+ActivelyReconﬁgurableMobileRobotsinSearchandRescueScenar-
+ios,”inIEEEInternationalSymposiumonSafety,Security,andRescue
+Robotics(SSRR),2012,pp.1–6.
+[11] M.Menna,M.Gianni,F.Ferri,andF.Pirri,“Real-timeAutonomous
+3D Navigation for Tracked Vehicles in Rescue Environments,” in
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),2014,pp.696–702.
+[12] M.Norouzi,J.V.Miro,andG.Dissanayake,“PlanningHigh-Visibility
+Stable Paths for Reconﬁgurable Robots on Uneven Terrain,” in
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),2012,pp.2844–2849.
+[13] A.Le,V.Prabakaran,V.Sivanantham,andR.Mohan,“ModiﬁedA-
+StarAlgorithmforEfﬁcientCoveragePathPlanninginTetrisInspired
+Self-Reconﬁgurable Robot with Integrated Laser Sensor,” Sensors,
+vol.18,no.8,p.2585,2018.
+[14] L. Pfotzer, S. Klemm, A. Ro¨nnau, J. M. Zo¨llner, and R. Dillmann,
+“Autonomous Navigation for Reconﬁgurable Snake-like Robots in
+Challenging, Unknown Environments,” Robotics and Autonomous
+Systems,vol.89,pp.123–135,2017.
+[15] R.Buchanan,T.Bandyopadhyay,M.Bjelonic,L.Wellhausen,M.Hut-
+ter, and N. Kottege, “Walking Posture Adaptation for Legged Robot
+Navigation in Conﬁned Spaces,” IEEE Robotics and Automation
+Letters(RA-L),2019.
+[16] D.Kanoulas,A.Stumpf,V.S.Raghavan,C.Zhou,A.Toumpa,O.Von
+Stryk, D. G. Caldwell, and N. G. Tsagarakis, “Footstep Planning in
+RoughTerrainforBipedalRobotsUsingCurvedContactPatches,”in
+IEEEInt.Conf.onRoboticsandAutomation(ICRA),2018,pp.1–9.
+[17] D. Kanoulas, C. Zhou, A. Nguyen, G. Kanoulas, D. G. Caldwell,
+and N. G. Tsagarakis, “Vision-based foothold contact reasoning us-
+ing curved surface patches,” in 2017 IEEE-RAS 17th International
+Conference on Humanoid Robotics (Humanoids). IEEE, 2017, pp.
+121–128.
+[18] T.KlamtandS.Behnke,“PlanningHybridDriving-SteppingLocomo-
+tiononMultipleLevelsofAbstraction,”inIEEEInt.Conf.onRobotics
+andAutomation(ICRA),2018,pp.1695–1702.
+[19] T. Klamt, D. Rodriguez, M. Schwarz, C. Lenz, D. Pavlichenko,
+D. Droeschel, and S. Behnke, “Supervised Autonomous Locomotion
+and Manipulation for Disaster Response with a Centaur-like Robot,”
+arXivpreprintarXiv:1809.06802,2018.
+[20] V.Suryamurthy,V.SushruthaRaghavan,A.Laurenzi,N.Tsagarakis,
+and D. Kanoulas, “Terrain segmentation and roughness estimation
+using rgb data: Path planning application on the centauro robot,” in
+IEEE-RAS International Conference on Humanoid Robots. IEEE-
+RAS,2019.
+[21] A.Hornung,K.M.Wurm,M.Bennewitz,C.Stachniss,andW.Bur-
+gard, “OctoMap: An efﬁcient probabilistic 3D mapping framework
+basedonoctrees,”AutonomousRobots,2013.
+[22] A. Laurenzi, E. M. Hoffman, L. Muratore, and N. G. Tsagarakis,
+“CartesI/O: A ROS Based Real-Time Capable Cartesian Control
+Framework,”inIEEEInt.Conf.onRoboticsandAutomation,2019.
+1430
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:41 UTC from IEEE Xplore.  Restrictions apply. 

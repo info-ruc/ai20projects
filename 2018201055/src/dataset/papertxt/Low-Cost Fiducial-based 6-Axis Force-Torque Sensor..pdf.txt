@@ -1,0 +1,510 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Inertial-Only Optimization for Visual-Inertial Initialization
+Carlos Campos, Jose· M.M. Montiel and Juan D. Tardo·s
+Abstract(cid:151)We formulate for the (cid:2)rst time visual-inertial algebraicsystemthatissolvedusingnon-linearleastsquares,
+initialization as an optimal estimation problem, in the sense toalso(cid:2)ndgyroscopebiasandtotakegravitymagnitudeinto
+of maximum-a-posteriori (MAP) estimation. This allows us
+account. The capability to (cid:2)nd accurate initial solutions in 2
+to properly take into account IMU measurement uncertainty,
+seconds was shown in simulations.
+whichwasneglectedinpreviousmethodsthateithersolvedsets
+ofalgebraicequations,orminimizedad-hoccostfunctionsusing Crucially, the original and modi(cid:2)ed methods ignore IMU
+least squares. Our exhaustive initialization tests on EuRoC noise properties, and minimize the 3D error of points in
+dataset show that our proposal largely outperforms the best space, and not their reprojection errors, that is the gold-
+methods in the literature, being able to initialize in less than
+standard in feature-based computer vision. Our previous
+4 seconds in almost any point of the trajectory, with a scale
+work[3]showsthatthisresultsinlargeunpredictableerrors,
+errorof5.3%onaverage.Thisinitializationhasbeenintegrated
+into ORB-SLAM Visual-Inertial boosting its robustness and that can be corrected by adding two rounds of Visual-
+ef(cid:2)ciency while maintaining its excellent accuracy. Inertial Bundle Adjustment (VI-BA), together with two tests
+to detect and discard bad initializations. This renders the
+I. INTRODUCTION
+method usable, obtaining on the public EuRoC dataset [4]
+Simultaneous Localization and Mapping (SLAM) tech-
+joint visual-inertial initializations in 2 seconds with scale
+niquesallowrobotsandAR/VRsystemstobeawareoftheir
+error around 5%. However, the method only works in 20%
+environments,whilelocatingthemselvesinthereconstructed
+of the trajectory points. Such a low initialization recall can
+scene.Visual-inertialSLAMwithasinglemonocularcamera
+be a problem for AR/VR or drone applications where the
+and a low-cost Inertial Measurement Unit (IMU) sensor,
+system is desired to be launched immediately.
+offers a small, compact and low power solution for most
+Disjoint visual-inertial initialization is based on the solid
+applications. IMU sensors measure acceleration and angular
+assumption that the up-to-scale camera trajectory can be
+velocity, providing robustness against fast motion or chal-
+estimated very accurately from pure monocular vision, and
+lenging environments, and allowing to retrieve the true scale
+then use this trajectory to estimate the inertial parameters.
+of the environment, which would remain unknown in a pure
+As modern visual-odometry and visual SLAM systems per-
+monocular system.
+form local bundle adjustment and provide trajectories with
+However, to start using them, some parameters need to
+much higher precision than IMU integration, this trajectory
+be estimated in an initialization process. These are scale,
+uncertaintycanbesafelyignoredwhileestimatingtheinertial
+gravity direction, initial velocity, and accelerometer and
+parameters. This idea was pioneered by Mur-Artal and
+gyroscope biases. A wrong initialization would lead to poor
+Tardo·s in ORBSLAM-VI [5], and later adopted by Qin et
+convergence, as well as inaccurate estimation of all other
+al. in VINS-Mono [6] [7]. In both cases, inertial parameters
+variables. In addition, a fast initialization is as important as
+are found in different steps by solving a set of linear
+an accurate one, because as long as IMU is not initialized,
+equations using least-squares. In [5] a linear system is built
+visual-inertial SLAM cannot be performed.
+by eliminating the velocities for each frame. However, after
+Previous works on visual-inertial initialization can be
+these algebraic manipulations, the errors to be minimized
+classi(cid:2)edinjointanddisjoint(orlooselycoupled)estimation
+are meaningless and unrelated to sensor noise properties. In
+methods. Joint visual-inertial initialization was pioneered by
+ordertoobtainaccurateestimations,includingaccelerometer
+Martinelli[1],whoproposedaclosed-formsolutiontojointly
+bias,themethodrequires15secondsforinitialization.In[7]
+retrievescale,gravity,accelerometerbiasandinitialvelocity,
+accelerometer bias is assumed to be zero, requiring only 1-
+as well as visual features depth. This method was built on
+2 seconds to initialize, depending on the motion. In both
+the assumption that camera poses can be roughly estimated
+methods, IMU measurements are manipulated and mixed in
+from IMU readings. The method tracks several points in all
+the same linear system, where the residuals of all equations
+the images, and builds a system of equations stating that the
+are considered with the same weight, ignoring sensor un-
+3D point coordinates, as seen from any camera pair, should
+certainties. In addition, the different inertial parameters are
+bethesame,thatissolvedbylinearleastsquares.Thiswork
+solved separately in different steps, not all at once, ignoring
+was extended by Kaiser et al. [2] building a similar linear
+thecorrelationsbetweenthem.Allthisleadstoanestimation
+which is not optimal in the sense of maximum-a-posteriori
+ThisworkwassupportedinpartbytheSpanishgovernmentundergrants
+PGC2018-096367-B-I00andDPI2017-91104-EXP,theArago·ngovernment (MAP) estimation.
+undergrantDGAT45-17R,andbyHuaweiundergrantHF2017040003. We propose a novel disjoint visual-inertial initialization
+The authors are with Instituto de Investigacio·n en Ingenier·(cid:17)a de
+method by formulating it as an optimal estimation problem,
+Arago·n(I3A),UniversidaddeZaragoza,Spaincampos@unizar.es;
+josemari@unizar.es; tardos@unizar.es in the sense of MAP estimation. For this, we build on the
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 51
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. excellentworkofForsteretal.[8]thatallowstopreintegrate (cid:15) Differently from [5] [7], we jointly optimize all the
+IMUreadingsand,takingintoaccounttheprobabilisticchar- IMU variables in one step, taking into account the
+acterization of sensor noises, properly compute the covari- cross-covariances between the preintegrated terms for
+ances of the preintegrated terms. Assuming that the error of position, and linear and angular velocities [8].
+themonocularSLAMtrajectoryisnegligiblecomparedwith Our initialization method can be split in three steps:
+the IMU errors, we derive a very ef(cid:2)cient MAP estimator 1) Vision-only MAP estimation: Initialize and run
+for inertial-only parameters, and use it to initialize a visual-
+monocular ORB-SLAM [10] for a short period (typ-
+inertial SLAM system. The main contributions of our work
+ically 2 s) using BA to obtain a vision-only MAP
+are:
+estimation up-to-scale. At the same time, compute
+(cid:15) Theformulationofthevisual-inertialinitializationasan IMU preintegrations between keyframes and their co-
+inertial-only optimal estimation problem, in the sense variances [8].
+of MAP estimation, taking properly into account the 2) Inertial-only MAP estimation: Inertial-only opti-
+probabilistic model of IMU noises. mization to align the IMU trajectory and ORB-SLAM
+(cid:15) We solve for all inertial parameters at once, in a trajectory, (cid:2)nding the scale, keyframes’ velocities,
+single step, avoiding the inconsistencies derived from gravity direction and IMU biases.
+decoupledestimation.Thismakesallestimationsjointly 3) Visual-inertial MAP estimation: Use the solution
+consistent. from the previous step as seed for a full VI-BA to
+(cid:15) We do not make any assumptions about initial velocity obtain the joint optimal solution.
+or attitude, which makes our method suitable for any
+After the initialization, we launch ORB-SLAM Visual-
+initialization case.
+Inertial [5], that performs local VI-BA. We have observed
+(cid:15) We do not assume IMU biases to be zero, instead we
+that scale estimation accuracy can be further improved after
+codetheknowninformationaboutthemasprobabilistic
+5-10 seconds performing a full VI-BA or, with much lower
+priors that are exploited by our MAP estimation.
+computational cost, repeating the inertial-only optimization.
+In the next section we present the theory and in-depth The three initialization steps are further detailed next.
+details behind our proposal. Later, we evaluate and compare
+A. Vision-only MAP Estimation
+itagainstthebestexamplesofjointanddisjointinitialization
+methods, proving to outperform them. We initialize pure monocular SLAM, using the same pro-
+cedureasinORB-SLAMto(cid:2)ndtheinitialmotion.Matching
+II. MAXIMUM-A-POSTERIORIINITIALIZATION
+ofFASTpoints,usingORBdescriptor,isperformedbetween
+Thegold-standardmethodforfeature-basedvisual-inertial
+two initial frames. Fundamental matrix and homography
+SLAM is visual-inertial bundle adjustment (VI-BA), that
+models are found and scored. The one with a higher score
+takes properly into account the noise properties in all the
+isusedto(cid:2)ndtheinitialmotionandtriangulatethefeatures.
+sensors,andobtainsamaximum-a-posteriorijointestimation
+Once the structure and motion are initialized, we do pure
+ofallvariables(see[5]foramodernformulationusingIMU
+monocular SLAM for 1 or 2 seconds. The only difference
+preintegrationonmanifoldfrom[8]).Themainlimitationof
+from ORB-SLAM is that we enforce keyframe insertion at
+VI-BAisthatitrequiresagoodseedtoconvergequicklyand
+a higher frequency (4 Hz to 10 Hz). In that way, IMU
+avoid getting stuck in local minima, due to its strong non-
+preintegration between keyframes has low uncertainty, since
+linearnature.Joint[3]anddisjoint[5]initializationmethods
+integrationtimesareveryshort.Afterthisperiod,wehavean
+basedonleast-squaresestimationshowedthatVI-BAlargely
+up-to-scalemapcomposedoftenkeyframesandhundredsof
+improves their initial solutions.
+points,thathasbeenoptimizedusingBAbytheORB-SLAM
+OurmaingoalisgoingonestepfurtherandalsouseMAP
+mapping thread.
+estimation in the initialization, making proper use of sensor
+The up-to-scale keyframe poses are transformed to the
+noise models. Our novel initialization method is based on
+body (or IMU) reference using visual-inertial calibration.
+the following ideas:
+These body poses are denoted as T(cid:22) = [R;p(cid:22)] , where
+(cid:15) Despitethenon-linearnatureofBA,MonocularSLAM R 2 SO(3) is rotation matrix fro0m:ki-th body0:tko world
+(or visual odometry) is mature and robust enough to refierence, and p(cid:22) 2 R3 is the up-to-scale position of i-th
+i
+obtain very accurate initial solutions for structure and body.
+motion, with the only caveat that their estimations are
+B. Inertial-only MAP Estimation
+up-to-scale.
+(cid:15) The uncertainty of visual SLAM trajectory is much The goal of this step is to obtain an optimal estimation
+smaller than the IMU uncertainties and can be ignored of the inertial parameters, in the sense of MAP estimation,
+while obtaining a (cid:2)rst solution for the IMU variables. using the up-to-scale trajectory obtained by vision. As we
+So, we perform inertial-only MAP estimation, taking don’t have a good guess of the inertial parameters, using at
+the up-to-scale visual SLAM trajectory as constant. this point a full VI-BA would be too expensive and prone
+(cid:15) Inspiredontheworkof[9],weadoptaparametrization to get stuck in local minima, as shown in the experiments
+that explicitly represents and optimizes the scale factor section. An intermediate solution would be to marginalize
+of the monocular SLAM solution. out the points to obtain a prior for the trajectory and its
+52
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. (fully dense) covariance matrix, and use it while optimizing where rp and rI(cid:0) are the residual of the prior and IMU
+i 1;i
+the IMU parameters. We opt for a more ef(cid:2)cient solution, measurementsbetweenconsecutivekeyframes,while(cid:6) and
+p
+considering the trajectory as (cid:2)xed, and perform an inertial- (cid:6)I(cid:0) are their covariances.
+i 1;i
+only optimization. The inertial parameters to be found are: In this optimization, vision reprojection errors do not
+appear, only inertial residuals. As IMU measurements do
+X f g
+k = s;Rwg;b;v(cid:22)0:k (1) notsufferfromdataassociationerrors,theuseofrobustcost
+2R function, like the Huber norm, does not make sense, since it
+where s + is the scale factor of the vision-only solution,
+2 would slow down the optimization.
+Rwg SO(3) is the gravity direction, parameterized by Following [11] and [8], we de(cid:2)ne the inertial residual as:
+two angles, such that gravity in world reference frame is
+ethxepremsasegdnitausdego=f gRrawvgigtyI,, wbith=gI(b=a;b(g0);0;2G2)RTR6beairnegthGe rIi;j =[r(cid:1)(cid:0)Rij;r(cid:1)vij;r(cid:1)pij] (cid:1) (6)
+accelerometer and gyroscope biases, and v(cid:22) 3 the up-
+0:k
+to-Wscealperbefoedrytoveulsoeciutipe-stof-rsocmale(cid:2)rvsetlotociltaiesst kv(cid:22)ey,firnasmteea.d of true r(cid:1)Rij =Log (cid:1)Rij(bg)TRTiRj (7)
+i
+ones v = sv(cid:22) , since it eases the initialization process.
+i i
+Biniiatisaelsizaarteioansspuemrieoddciosnsjtuasntt1fo-2raslelcionnvdoslv,eadnkdeyrafrnadmomesswinaclke r(cid:1)vij =RTi ((cid:18)s(cid:22)vj (cid:0)s(cid:22)vi(cid:0)RwggI(cid:1)tij)(cid:0)(cid:1)vij(bg;b(cid:19)a) (8)
+would have almost no effect. It is worth noting that this
+formulation takes into account gravity magnitude from the
+(cid:0) (cid:0) (cid:0) 1
+beginning, as opposed to [7] and [5] that require a separate r(cid:1)pij =RTi sp(cid:22)j sp(cid:22)i s(cid:22)vi(cid:1)tij 2RwggI(cid:1)t2ij
+step to (cid:2)x its value. (cid:0)
+(cid:1)p (bg;ba) (9)
+In our case, the only measurements used come from ij
+IMU, and are summarized in the IMU preintegrated terms where (cid:1)R (bg), (cid:1)v (bg;ba) and (cid:1)p (bg;ba) are prein-
+I ij ij ij
+de(cid:2)nedin[8].Wedenoteby i;j thepreintegrationofineIrtial tegrated IMU measurements from i-th to j-th keyframe,
+measurements between i-th and j-th keyframes, and by which only depend on biases. These terms can be linearly
+0:k
+thesetofIMUpreintegrationsbetweensuccessivekeyframes updated as explained in [8], avoiding reintegrating at each
+in our initialization window. iteration. (cid:1)t is the time between both keyframes. Log
+ij
+With the state and measurements de(cid:2)ned, we can for- stands for the logarithm map from Lie group SO(3) to its
+mulate a MAP estimation problem, where the posterior algebraso(3),isomorphictoR3.Sinceweassumethatbiases
+distribution is: can be considered constant during the initialization window,
+IMU residuals do not include random walk for biases. We
+X jI / I jX X
+p( ) p( )p( ) (2) assume that the residuals follow Gaussian distributions, and
+k 0:k 0:k k k
+their covariances can be computed as proposed in [8].
+I jX
+where p( ) is the likelihood distribution of the IMU As we are optimizing in a manifold we need to de(cid:2)ne
+0:k k X
+measurements given the IMU states, and p( ) the prior for a retraction [8] to update the gravity direction estimation
+k
+theIMUstates.Consideringindependenceofmeasurements, during the optimization:
+the likelihood can be factorized as:
+Y Rnwegw =RowlgdExp((cid:14)(cid:11)g;(cid:14)(cid:12)g;0) (10)
+being Exp(:) the exponential map from so(3) to SO(3). To
+I jX k I j
+p( )= p( (cid:0) s;g ;b;v(cid:0) ;v ) (3) guarantee that scale factor remains positive during optimiza-
+0:k k i 1;i dir i 1 i
+tion we de(cid:2)ne its update as:
+i=1
+To obtain the MAP estimator, we need to (cid:2)nd the pa- snew =soldexp((cid:14)s) (11)
+rameters which maximize the posterior distribution, that is
+(cid:18) Biases and velocities are updated additively. If we de(cid:2)ne
+equivalent to minimize its negative logarithm, thus:
+(cid:14)g = ((cid:14)(cid:11) ;(cid:14)(cid:12) ), the inertial parameters updates used
+dir g g f g
+X(cid:3) X jI (cid:0) X ! duringoptimizationare((cid:14)s;(cid:14)gdir;(cid:14)bg;(cid:14)ba; (cid:14)v(cid:22)i ).Deriva-
+=argmaXxp( )=argmin log(p( )) tives of IMU residuals w.r.t. these parameters can be found
+k X k 0:k X k
+k k in the appendix.
+(cid:0) k I j The (cid:2)nal optimization problem, represented in (cid:2)gure 1, is
+log(p( (cid:0) s;g ;b;v(cid:0) ;v )) (4)
+i 1;i dir i 1 i implemented and solved using g2o C++ library [12], using
+i=1
+analytic derivatives and Levenberg-Marquardt algorithm.
+AssumingGaussia nerrorforIMUpreintegrationan!dprior As it is well known in the literature, gravity and ac-
+distribution, the MAP problem isXequivalent to: celerometerbiastendstobecoupled,beingdif(cid:2)culttodistin-
+guishinmostcases.Toavoidthatproblem,sometechniques
+X(cid:3) k k k k k neglect accelerometer bias during the initialization assuming
+k =argmXikn rp 2(cid:6)p +i=1 rIi(cid:0)1;i 2(cid:6)Ii(cid:0)1;i (5) a zero value [7], while others wait for a long time to
+53
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. Map Points wascomputedsolvingalinearsystem,andnowiscomputed
+by means of a MAP estimator. A similar optimization is
+also done in VINS-Mono initialization, before launching VI
+odometry.
+In the literature, there are several proposed tests to deter-
+mine if an initialization is successful or not. In [3], observ-
+ability of the optimization problem and consensus between
+different sets of measurements are checked. In contrast,
+VINS-Mono checks that estimated gravity magnitude has
+Fig. 1: Underlying graph representation of the inertial- an error lower than 10%, and IMU readings have enough
+only optimization (left) and the (cid:2)rst visual-inertial Bundle variance. Here, we propose to discard initializations whose
+Adjustment (right). Yellow boxes represent IMU residuals, meanaccelerationisbelowsomethreshold(0.5%ofgravity).
+red boxes stand for reprojection error, while the purple one This discards only the worst attempts, with almost constant
+represents prior information for accelerometer bias. Dashed velocity, which are not observable [1].
+lines point out (cid:2)xed variables (keyframes poses for inertial- We remark that all initialization steps are performed in
+only optimization) a parallel thread, without having any effect on the real time
+trackingthread.Oncetheoptimizationis(cid:2)nished,thesystem
+is already initialized, and we switch from visual to visual-
+guarantee that it is observable [5]. Here we adopt a sound inertial SLAM.
+and pragmatic approach: we include ba as a parameter to be
+k k
+optimized,butaddingapriorresidualforit:r = ba 2 .If III. EXPERIMENTALRESULTS
+the motion performed does not contain enoupgh inform(cid:6)aption
+To analyze the capability to initialize under different
+toestimatethebias,thepriorwillkeepitsestimationcloseto
+sensor trajectories, we run an exhaustive initialization test.
+zero. If the motion makes ba observable, its estimation will
+We launch an initialization every 0.5 seconds (one out of
+converge towards its true value. A prior for bg is not needed
+10 frames) in every trajectory of the EuRoC dataset, what
+as it is always well observable from keyframe orientations
+results on testing 2248 different initialization trajectories.
+and gyroscope readings.
+To compare, we run the same exhaustive test with the
+Sincewehavetosolveanon-linearoptimizationproblem, joint initialization method of [3] and the loosely coupled
+we need an initial guess for inertial parameters. Hence, we initializationofVINS-Mono[7],usingthesoftwareprovided
+initialize biases equal to zero, while gravity direction is by the authors. As a baseline, we also try to initialize using
+initializedalongtheaverageofaccelerometermeasurements, only visual-inertial bundle adjustment with the same initial
+as accelerations are usually much smaller than gravity. guesses for gravity direction, velocities and biases, and the
+The scale factor needs to be initialized suf(cid:2)ciently close same three initial values for scale, keeping the solution with
+to its true value to guarantee convergence, but we do not smaller residual.
+haveanyinitialguess.Takingadvantageofourveryef(cid:2)cient The performance is measured in terms of the scale error
+inertial-only optimization (5ms), we launch the optimization before and after applying full VI-BA. To measure scale
+with three initial scale values, that correspond to median factor, and thus scale error, we align the initialization and
+scene depth of 1, 4 and 16 meters, keeping the solution ground-truthtrajectoriesusingHornalignment,suchthatfor
+that provides the lowest residual as de(cid:2)ned in equation 5. an instant t, the estimated p^(t) and ground-truth pGT(t)
+Our results show that, using this range of scale values, our trajectories are related by:
+method is able to converge in a wide variety of scenes.
+At the end of the optimization, the frame poses and (cid:8) 2
+p^(t)=T pGT(t) where T Sim(3) (12)
+velocities and the 3D map points are scaled with the scale
+value found, and are rotated to align the z axis with the We also report the duration of the initialization trajectory,
+estimated gravity direction. IMU preintegration is repeated denoted as t , as well as the total time, t , until a
+Init Tot
+with the new bias estimations, aiming to reduce future successful initialization is achieved. For all methods, if a
+linearization errors. bad initialization is detected, a new one is attempted with
+the next batch of available data. This, together with the time
+C. Visual-Inertial MAP Estimation (cid:21)
+needed for visual initialization, makes t t .
+Tot Init
+Inertial-only optimization provides an estimation accurate Results are summarized in table I. The (cid:2)rst two blocks
+enough to be used as seed for a (cid:2)rst joint visual-inertial compare our method with our previous joint initialization
+Bundle Adjustment, ensuring its convergence. In this opti- method [3], based on the work of Martinelli [1] and Kaiser
+mization,shownalsoin(cid:2)gure1,pureinertialparameterslike et al. [2], improved by VI-BA and two rejection tests. The
+g and s do not appear, but they are implicitly included proposedinitializationbeatsthejointinitializationbyawide
+dir
+in keyframe poses. Compared with [3], this step replaces margin, both in accuracy and needed time, being able to
+the BA1&2 steps. In fact, the optimization is exactly the initialize in less than 4 seconds with scale error of 5.29%,
+same, it only differs in the initial seed, which previously usingtrajectoriesof2.16secondsonaverage.Themethodof
+54
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Results of exhaustive initialization attempts every 0.5s in EuRoC dataset. The (cid:2)rst two blocks compare our
+(cid:24)
+proposal with the best joint initialization method [3] using trajectories of 2 seconds (t ), while the last two blocks
+(cid:24)Init
+compare it with the loosely-coupled initialization of VINS-mono [7] using trajectories of 1:3 seconds.
+Inertial-onlyOptimization VI VINS-Mono Inertial-onlyOptimization VI
+JointInitialization[3]
+(10KFs@4Hz) BA Initialization[7] (10KFs@10Hz) BA
+scaleerror(%) scaleerror(%) 4Hz scaleerror(%) scaleerror(%) 10Hz
+Seq. MK MK+ tInit tTot Inert. Inert. tInit tTot scale VI VIAlign. tInit tTot Inert. Inert.-Only tInit tTot scale
+Name BA1&2 (s) (s) Only Only+BA (s) (s) error(%) Align. +BA (s) (s) Only +BA (s) (s) error(%)
+V101 21.11 5.39 2.23 3.18 10.41 4.99 2.16 2.78 15.04 50.2 27.67 1.15 1.54 20.34 7.69 1.26 1.89 26.04
+V102 31.37 6.11 0.97 3.79 11.27 4.48 2.15 2.88 21.59 69.65 36.36 1.46 2.46 29.98 9.83 1.27 1.82 19.95
+V103 35.62 4.65 1.07 5.06 14.19 4.25 2.13 4.48 19.74 78.79 31.53 1.23 3.23 36.58 9.24 1.25 3.07 21.79
+V201 23.76 6.72 2.26 6.83 8.66 5.29 2.19 2.88 9.77 42.65 17.32 1.12 1.86 16.09 8.09 1.28 1.98 22.55
+V202 28.65 7.00 0.93 4.49 6.27 3.33 2.19 2.82 20.02 53.27 18.61 1.02 1.98 20.27 6.27 1.26 1.73 23.09
+V203 32.36 7.46 0.89 12.11 22.24 8.04 2.23 6.23 17.13 65.28 22.7 1.17 3.81 35.57 9.32 1.28 4.37 25.95
+MH01 29.23 7.65 2.98 12.87 6.21 4.48 2.14 5.03 11.78 20.98 16.86 2.78 3.08 18.12 6.2 1.26 3.97 18.90
+MH02 21.62 5.71 2.93 10.57 7.07 4.31 2.14 3.77 18.02 19.89 13.15 1.64 2.03 19.76 6.82 1.27 2.61 23.08
+MH03 28.75 6.38 2.06 15.51 9.88 4.77 2.16 3.32 5.27 39.3 16.09 1.30 1.75 31.32 9.89 1.25 2.29 10.34
+MH04 28.65 5.23 2.41 36.57 16.3 7.86 2.14 3.59 6.77 57.19 20.28 1.11 2.11 43.78 13.78 1.26 2.82 11.15
+MH05 25.28 3.51 2.73 38.00 16.05 6.37 2.17 3.48 6.84 55.6 21.96 1.34 1.72 41.64 12.88 1.26 2.4 12.13
+MeanValues 27.85 5.98 1.95 13.54 11.69 5.29 2.16 3.75 13.82 50.25 22.05 1.39 2.32 28.50 9.09 1.26 2.63 19.60
+TABLEII: Computingtimeofourmethodfortheexhaustive
+[3] was able to obtain a scale error only slightly worse, but
+initialization experiment in sequence V1 02.
+it was at the expense of a t of 13 seconds, owing to the
+Tot
+highrejectionrateoftheproposedtests.ThebaselineVI-BA Step mean(ms) median(ms) max(ms)
+(cid:2) (cid:2) (cid:2)
+initialization, using the same trajectories and initial guesses, Inertial-Only 3 5.24 3 4.92 3 6.39
+obtains an average scale error of 13.82%, which is even Mapupdate 11.18 11.25 13.98
+Visual-InertialBA 132.78 136.43 198.07
+higher than the 11.69% error obtained by just applying our
+Total 159.68 163.92 228.24
+inertial-onlyoptimization,whichisalsomuchmoreef(cid:2)cient
+(5 ms per run, compared with 133 ms, as shown in table II).
+The last blocks compare our method with the loosely- further reduced as the drone progresses.
+coupled initialization of VINS-Mono [7]. To ease compar- In (cid:2)gure 2, we plot the scale factor distribution for every
+ison, we have con(cid:2)gured our system to run with similar- studied method, along the whole EuRoC dataset. Results
+sized trajectories (tInit) of around 1.25 seconds. With these before visual-inertial BA show that all methods tend to
+shorter trajectories, our method beats the baseline VI-BA underestimate the true scale. This bias is worse in VINS-
+initialization doubling its accuracy and more than doubling Mono initialization, where there is a high number of initial
+the accuracy of VINS-Mono initialization, with a tTot 0.31 solutionswhosescaleisclosetozero.Incontrast,thebiasis
+seconds higher. This slightly higher tTot is the result of the much lower for inertial-only optimization at 4 Hz, that uses
+visual initialization used in our system, that one from ORB- 2.15strajectories,whosemeanisclosetoone.Aftervisual-
+SLAM, which in dif(cid:2)cult sequences can struggle to success. inertial BA, the bias almost disappears, having all methods
+We remark that reducing the scale error by using longer a distribution with mean close to one, but with different
+initialization trajectories, i.e. increasing tInit, may not be variances, being VINS-Mono with 1s trajectories the worst
+easy for VINS-Mono. Since this system is not prepared to and our inertial-only optimization with 2 s trajectories the
+work as a pure visual odometry system, visual and inertial best.
+initializations have to be solved simultaneously for the same
+Finally, considering the computing times in table II,
+set of frames, and increasing time for inertial initialization
+inertial-only optimization is extremely ef(cid:2)cient, taking
+wouldalsoincreasethevisualinitializationtime.Thisentails
+around 5 ms per run, rotating and scaling points, frames
+thatpointshavetobetrackedalongmoreframes,whichmay
+and velocities takes 11 ms, and full VI-BA requires 132 ms.
+be not feasible in case of camera rotation or fast motion.
+The inertial-only optimization time is much lower than the
+For VINS-Mono, there is sharp contrast between the time required by the Martinelli-Kaiser closed-form solution,
+22.05% scale error found in our exhaustive initialization which is around 60 ms [3]. Compared with the baseline VI-
+tests and the low RMS ATE error reported in [7] (in the BAwhichrequiresthreerunswithdifferentscalesforatotal
+range of 0.080-0.320m) when the whole trajectories are 400ms,ourcompletemethodonlytakes160ms,anddoubles
+processed. This may be explained because when launched the scale accuracy.
+from the beginning, the initialization is performed while the Once veri(cid:2)ed that our inertial-only optimization performs
+drone is taking off, which entails big accelerations, making better than previous initialization methods, we have made a
+inertialparametersmoreobservable,whileinourexperiment, second experiment whichconsists in launching ORB-SLAM
+initialization is performed along the whole sequence where Visual-Inertial [5] using our new initialization. As in [3],
+other motions that give lower observability are present. we perform two visual-inertial bundle adjustment 5 and 10
+Moreover, since VINS-Mono marginalizes old states, not seconds after initialization. We check three different se-
+(cid:2)xing them as ORBSLAM-VI does, this initial error can be quences of EuRoC dataset, with different dif(cid:2)culty degrees,
+55
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. of our initialization method with ORB-SLAM VI gives a
+Before Visual-Inertial BA
+9 very robust system that is signi(cid:2)cantly more accurate than
+Inertial-Only (4 Hz)
+8 Inertial-Only (10 Hz) VINS-Mono.
+Joint Init. [3]
+7
+VINS-Mono [7]
+y6 IV. CONCLUSIONSANDFUTUREWORK
+nsit
+e5
+y d The proposed initialization method has shown to be more
+bilit4 accurate than the top-performing methods in the literature,
+a
+ob3 with a very low computing time. This con(cid:2)rms that optimal
+pr
+2 estimation theory is able to make proper use of the prob-
+1 abilistic models of sensor noises, obtaining more accurate
+0 resultsthansolvinglinearsystemsofequationsorusingnon-
+0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+scale factor weighted least squares.
+Full visual-inertial BA is a very non-linear problem,
+After Visual-Inertial BA
+9 plagued with local minima, which hinders convergence. We
+Inert.-Only (4 Hz)
+8 Inert.-Only (10 Hz) havesplititinafullyobservableup-to-scalevisualproblem,
+7 Joint Init. [3] followed by an inertial-only optimization phase that can be
+VINS-Mono [7]
+y6 solved very ef(cid:2)ciently, producing an initial solution for VI-
+nsit BA that alleviates the local minima problem.
+e5
+d
+bility 4 As future work, we highlight that this inertial-only opti-
+a mization could be used not only for initialization, but also
+ob3
+pr to re(cid:2)ne the scale and other inertial parameters once SLAM
+2
+is initialized and running. This would have a much lower
+1
+computational cost than performing a full visual-inertial
+0
+0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 bundle adjustment, where all visual and inertial parameters
+scale factor
+are involved. Moreover, this new initialization can be easily
+Fig. 2: Experimental distribution of the scale factor (ratio adapted to the stereo-inertial case. It would be enough to
+between estimated and true scales) obtained by the different remove the scale from the inertial-only optimization.
+initialization methods along all sequences of the EuRoC
+dataset, before and after visual-inertial BA. A total of 2248 APPENDIX
+initializations have been launched.
+Derivatives w.r.t. (cid:14)bg, (cid:14)ba, (cid:14)v(cid:22) and (cid:14)v(cid:22) are found or
+i j
+immediately derived from [8]. Derivatives for (cid:14)s are:
+TABLE III: Results for ORBSLAM-VI with the proposed
+initialization (median values on (cid:2)ve executions are shown) @r(cid:1)Rij =0 (cid:2) (13)
+compared with results reported for original ORBSLAM-VI @(cid:14)s 3 1
+[5] and VINS-Mono in [13].
+ORBSLAM-VI ORBSLAM-VI VINS-Mono @r(cid:1)vij =RT((cid:22)v (cid:0)(cid:22)v )sexp((cid:14)s) (14)
++our [5] [13] @(cid:14)s (cid:0) i j i (cid:1)
+initialization
+Scale RMSE Scale RMSE RMSE
+SeVq.1N0a1me erro0r.4(%) AT0.E02(3m) erro0r.9(%) AT0.E02(7m) AT0.E06(0m) @r@(cid:1)(cid:14)spij =RTi p(cid:22)j (cid:0)p(cid:22)i(cid:0)(cid:22)vi(cid:1)tij sexp((cid:14)s) (15)
+V102 0.3 0.026 0.8 0.024 0.090
+V103 1.7 0.059 - - 0.180 Alltheseexpressionsareevaluatedfor(cid:14)s=0.Derivatives
+for (cid:14)g are:
+dir
+@r(cid:1)Rij =0 (cid:2) (16)
+running 5 experiments for each one. We align both SLAM @(cid:14)g 3 2
+dir
+and GT trajectories, and Absolute Trajectory Error (ATE) is
+meRaseusureltds.from table III show that ORB-SLAM VI reaches @@(cid:14)r(cid:1)gvij =(cid:0)RTiRwgG(cid:1)tij (17)
+dir
+insequencesV1 01andV1 02similaraccuracylevelsusing
+t[h5e].pIrnopaodsdeditiionnit,iasleizqauteionnceanVd1th0e3o,rwighinicahlinpirteivaliiozuastliyoncforuolmd @@(cid:14)r(cid:1)gpij =0(cid:0)12RTiRwgG1(cid:1)t2ij (18)
+not be processed, because the original initialization failed, dir
+can now be successfully processed. This is because the Where: @ A
+(cid:0)
+new initialization takes just 2 seconds, being possible to 0 G
+immediatelyusetheIMU,avoidingtrackinglossduringsub- G= G 0 (19)
+sequent fast motions. Our results show that the combination 0 0
+56
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [7] T. Qin, P. Li, and S. Shen, (cid:147)VINS-Mono: A robust and versa-
+tile monocular visual-inertial state estimator,(cid:148) IEEE Transactions on
+Robotics,vol.34,no.4,pp.1004(cid:150)1020,2018.
+[1] A. Martinelli, (cid:147)Closed-form solution of visual-inertial structure from [8] C.Forster,L.Carlone,F.Dellaert,andD.Scaramuzza,(cid:147)IMUpreinte-
+motion,(cid:148) International Journal of Computer Vision, vol. 106, no. 2, grationonmanifoldforef(cid:2)cientvisual-inertialmaximum-a-posteriori
+pp.138(cid:150)152,2014. estimation,(cid:148)inRobotics:ScienceandSystems,2015.
+[2] J.Kaiser,A.Martinelli,F.Fontana,andD.Scaramuzza,(cid:147)Simultaneous [9] H.Strasdat,J.M.M. Montiel,andA.J.Davison,(cid:147)Scaledrift-aware
+state initialization and gyroscope bias calibration in visual inertial large scale monocular SLAM,(cid:148) Robotics: Science and Systems VI,
+aidednavigation,(cid:148)IEEERoboticsandAutomationLetters,vol.2,no.1, vol.2,2010.
+pp.18(cid:150)25,2017. [10] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardo·s, (cid:147)ORB-SLAM: a
+[3] C.Campos,J.M.M. Montiel,andJ.D.Tardo·s,(cid:147)Fastandrobustini- versatileandaccuratemonocularSLAMsystem,(cid:148)IEEETransactions
+tializationforvisual-inertialSLAM,(cid:148)in2019InternationalConference onRobotics,vol.31,no.5,pp.1147(cid:150)1163,2015.
+onRoboticsandAutomation(ICRA). IEEE,2019,pp.1288(cid:150)1294. [11] T.LuptonandS.Sukkarieh,(cid:147)Visual-inertial-aidednavigationforhigh-
+[4] M.Burri,J.Nikolic,P.Gohl,T.Schneider,J.Rehder,S.Omari,M.W. dynamic motion in built environments without initial conditions,(cid:148)
+Achtelik,andR.Siegwart,(cid:147)TheEuRoCmicroaerialvehicledatasets,(cid:148) IEEETransactionsonRobotics,vol.28,no.1,pp.61(cid:150)76,2012.
+The International Journal of Robotics Research, vol. 35, no. 10, pp. [12] R.Ku¤mmerle,G.Grisetti,H.Strasdat,K.Konolige,andW.Burgard,
+1157(cid:150)1163,2016. (cid:147)g2o: A general framework for graph optimization,(cid:148) in IEEE Inter-
+[5] R.Mur-ArtalandJ.D.Tardo·s,(cid:147)Visual-inertialmonocularSLAMwith national Conference on Robotics and Automation (ICRA), 2011, pp.
+mapreuse,(cid:148)IEEERoboticsandAutomationLetters,vol.2,no.2,pp. 3607(cid:150)3613.
+796(cid:150)803,2017. [13] T. Qin, J. Pan, S. Cao, and S. Shen, (cid:147)A general optimization-based
+[6] T.QinandS.Shen,(cid:147)Robustinitializationofmonocularvisual-inertial frameworkforlocalodometryestimationwithmultiplesensors,(cid:148)arXiv
+estimationonaerialrobots,(cid:148)inIEEE/RSJInternationalConferenceon preprintarXiv:1901.03638,2019.
+IntelligentRobotsandSystems(IROS),2017,pp.4225(cid:150)4232.
+57
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 10:51:08 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,468 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Enhancing Coral Reef Monitoring Utilizing a Deep Semi-Supervised
+Learning Approach
+Md Modasshir and Ioannis Rekleitis
+Computer Science and Engineering, University of South Carolina
+Abstract—Coral species detection underwater is a challeng-
+ing problem. There are many cases when even the experts
+(marine biologists) fail to recognize corals, hence limiting
+groundtruthannotationfortrainingarobustdetectionsystem.
+Identifying coral species is fundamental for enabling the mon-
+itoring of coral reefs, a task currently performed by humans,
+whichcanbeautomatedwiththeuseofunderwaterrobots.By
+employing temporal cues using a tracker on a high conﬁdence
+prediction by a convolutional neural network-based object
+detector, we augment the collected dataset for the retraining
+of the object detector. However, using trackers to extract
+examplesalsointroduceshardormislabelledsamples,whichis
+counterproductive and will deteriorate the performance of the
+detector. In this work, we show that employing a simple deep
+neural network to ﬁlter out hard or mislabelled samples can
+Fig.1. Aqua2vehiclenavigatingoverareef,collectingcoralvisualdata.
+help regulate sample extraction. We empirically evaluate our
+approachinacoralobjectdataset,collectedviaanAutonomous
+Underwater Vehicle (AUV) and human divers, that shows
+the beneﬁt of incorporating extracted examples obtained from Direct Sparse Odometry (DSO) [7] system to create a 3D
+tracking. This work also demonstrates how controlling sample semantic mapping in order to improve the data acquisition
+generationbytrackingusingasimpledeepneuralnetworkcan
+andanalysissystem.Allthesesystems,toperformoptimally,
+further improve an object detector.
+requireanexcellentobjectdetectionalgorithmthatcandetect
+I. INTRODUCTION coral species under challenging situations.
+Deep learning has revolutionized the object detection sys-
+Coral reefs are an integral part of the marine ecosys-
+tems,resultinginstate-of-the-artobjectdetectorsinstandard
+tem. Coral reefs are also the habitat of numerous marine
+vision benchmarks. These object detection algorithms are
+species [1]. However, coral reefs are rapidly decreasing in
+proven to work well across many domains. In the case of
+areaandmarinepopulationduetoclimatechangeandocean
+pollution. Global temperature will increase by 2−45◦C coral detection datasets [2], [4], [8], most of these datasets,
+. being point annotated, are not compatible with object de-
+as per recent predictions from scientists. Due to this dire
+tection algorithms which require bounding box annotation.
+condition, marine biologists are closely monitoring the coral
+Hence, we have carefully developed a dataset of Caribbean
+reefs.Theirmethodsofmonitoringcoralreefsincludescuba
+coral species with bounding box annotations, which were
+divers and autonomous or remotely operated vehicles to
+used in our previous work [4], [5]. The annotation of coral
+capture visual data of the coral reefs. Usually, a transect
+species in our dataset was only possible when the coral
+over a coral reef is surveyed, and afterward, the data are
+objects were closer, less blurry, and well-exposed. However,
+manuallyannotatedaccordingtocoralspecies.Later,experts
+these optimal conditions were not common in the dataset
+analyze the annotated data to determine the health and the
+due to hazing, blurring, light variation, and red channel
+population diversity of the coral reefs. Such a procedure
+suppression. When we consider monitoring coral reefs via
+is tedious and time-consuming. In order to reduce such
+autonomousvehicles,thedetectionofobjectsbecomesmore
+ofﬂine tasks, there have been efforts to automate annotation
+complicated. Figure 1 presents the Aqua2 Autonomous Un-
+systems [2]–[4] and analysis procedures [5]. However,
+derwater Vehicle (AUV) [9] collecting part of our dataset
+these systems mentioned above only speed up a part of the
+over the coral reefs of Barbados. These complications arise
+entire coral reef monitoring process. The other tedious part,
+mainly from the nature of the AUV’s movement, which
+data collection, and online surveying, still relies entirely on
+introduces motion blur, mostly during rotations. Also, while
+human experts. For a fully autonomous surveying system,
+moving along a transect, the objects near the border of the
+we need an online detection guided navigation capability.
+ﬁeld of view (FOV) of the AUV are generally further away.
+Modasshir et al. [6] utilized coral detection along with the
+Due to poor visibility underwater, objects more than a few
+meters away are difﬁcult to recognize. Therefore, object
+TheauthorswouldliketothanktheNationalScienceFoundationfor
+detectionperformspoorly,resultinginaworseanalysisofthe
+itssupport(NSF1513203).Theauthorswouldliketoacknowledgethehelp
+oftheCollegeofEngineeringandComputing,UniversityofSouthCarolina. coral reefs. This issue also presents an opportunity: objects
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1874
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. further ahead and objects near the FOV’s left and right [14] performs reasonably online in AUVs [6]. The KCF
+corner,areusuallyequallyblurry.Sincethetransectsusually tracking method is capable of evaluating when an object is
+follow a straight line pattern, the further objects straight out of the ﬁeld of view while tracking in real-time.
+aheadbecomemoreevidentovertime.Hence,ﬁndingaway Semi-supervisedtraininghasarichhistoryincomputervi-
+to augment the training dataset with such objects will help sionliterature[15]–[20].Amongvariousapproachesinsemi-
+the detection algorithms. supervised methods, the proposed system matches mostly
+In work by Modasshir et al. [6], the semantic mapping self-training methods [21]–[24]. In a self-training approach,
+system employed both tracking and detection to perform the model is initially trained on fully annotated data then
+population estimation of coral species while building a 3D mines for pseudo-labels on weakly-annotated or unlabelled
+semantic map. In the experiments of that work, most of the data. The pseudo-labeled data is then used to retrain the
+detections were observed to take place when the objects got model. This process is repeated incrementally [25], [26].
+closer to the AUV’s forward motion. When objects were The mining of hard examples has also proven to be useful
+closer, sometimes detection failed (in a few frames), while to create robust object detectors [27]. Recent state-of-the-art
+tracking succeeded in identifying the objects in-between objectdetectionalgorithmsimplicitlymineforhardnegative
+successfulframes.Weproposeamethodtoutilizethesecoral examples from unlabelled parts of the images in the training
+objects carefully, either predicted or tracked, to improve the dataset. Rosenberg et al. [15] generated pseudo-labeled data
+detection model in a self-training manner. Self-training is byusingdetectionsfromapretrainedobjectdetectoronunla-
+a strategy where a trained model’s predictions are utilized belleddataandthenretrainedtheobjectdetectorusingthese
+to retrain the model. These tracked and detected corals, pseudo-labeleddatainanincrementalprocedure.Combining
+henceforth called “soft-labels”, are used to augment the tracking with detection can help generate better and more
+training dataset of the detection model. However, inserting hard positive examples. In a recent work by Radosavovic
+allsoft-labelsintotrainingmayalsobecounterproductiveas et al. [28], the authors showed improved performance for
+tracking systems are known to lose track, and the detection the state-of-the-art detectors by incorporating a tremendous
+model sometimes generates false predictions. Therefore, to amount of pseudo-labeled data. Jin et al. [29] used tracking
+constrain the soft-label usage in training, a classiﬁcation in videos to produce pseudo-labeled data to improve an
+networkisusedtoﬁlteroutpotentially“harmful”soft-labels. object detection model. Our work uses forward tracking
+In this paper, we propose a semi-supervised approach similar to [29]; however, we also track objects backward to
+of augmenting an autonomous coral tracking system by generate relatively harder soft-labeled data. The backward
+utilizing spatio-temporal continuity of the data. Our main tracked soft-labels are carefully ﬁltered using an outlier
+contributions are as follows: rejectionnetworktoimprovethedetectionmodel.Inavideo
+• We propose a framework for augmenting the training sequence,thespatio-temporalcuescanbeutilizedbySLAM
+datasetfromcoralreeftransects. Weshowhowtomine systems[30].Inourwork,DSO[7]isusedtoverifytracked
+soft-labels by back and forth tracking. objects by feature matching. Aruni et al. [31] proposed a
+• We construct a constrained loss function to retrain the soft-label distillation loss function to regulate a retraining
+detection network. procedure by assigning a lower weight to the soft-labels.
+• We demonstrate how a classiﬁcation network can help Down-scaling the effect of the loss of soft-labels allows the
+ﬁlter out “harmful” soft-labels. networktokeeptheknowledgeoftheannotatedlabelswhile
+The next section reviews related works. Section III intro- slowly learning the soft-labeled data and avoids learning
+duces the proposed method explaining soft-label generation incorrect soft-labels.
+and incorporation of these labels. Section IV describes the
+III. METHODOLOGY
+datasets and reports the experimental results to validate the
+proposedmethod.Finally,weconcludethepaperwithfuture Figure 2 presents the overview of the proposed system.
+work in section V. Consider frames f−m to fn−1, the system ﬁrst feeds frame
+f to the detection model. The bounding box locations with
+0
+II. RELATEDWORKS high conﬁdences, box from the detection model are then
+locs
+There are several works on coral classiﬁcation [3], [4], usedtoinitializethetrackingmethod.Trackingisperformed
+[8], [10] and detection [5]. In our previous works [4]–[6], in both direction: backward up to m frames and forward
+[11], we developed a CNN detector and tracker system for up to n−1 frames. At the nth frame, the detection is
+coral species. To mine soft-labels for retraining, we utilize again performed to retrieve the new bounding box locations,
+the detector developed in [5]. In work by Modasshir et al. box , of the corals. The new bounding box locations are
+locs
+[5], the RetinaNet [12] was redesigned to train a detector then matched against the tracked bounding boxes, track .
+locs
+for eight coral species. This work particularly suits our need Ifthereisasigniﬁcantoverlapbetweenbox andtrack ,
+locs locs
+because the experiments are all performed in the same area thenthelocationsoftrack aremodiﬁedtoreﬂectthecor-
+locs
+of a Caribbean reef with the same species of corals. Hence, responding box . Unmatched box are used to initialize
+locs locs
+we choose the RetinaNet with the settings and the dataset new trackers instances that search for spatio-temporal cues
+from [5] as our detection model. Among various vision- bothinbackwardandforwarddirection.Fordetailsaboutthe
+basedtrackers[13],theKernelizedCorrelationFilters(KCF) 3Dsemanticmappingincludedinthesystem,pleasereferto
+1875
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. Coral Detector
+Class subnet
+x
+4 Coral 
+Location
+Class + 
+box 
+subnets Tracking
+Box subnet Direction
+(a) ResNet (b) Feature pyramid net
+Coral Tracker Initializer
+Frame f
+0
+Coral Tracker & Counter
+Frame f-f
+Frame f -f 1 n
+-n  n Tracked locations
+of corals
+DSO
+Frame f-f
+1 n
+Fig.2. Overviewoftheproposedapproach.
+Modasshir et al. [6]. Both box and track are used to trained using smooth L1 loss. Once an object is detected, it
+locs locs
+create a soft-labeled dataset dataset which we describe in is tracked using Kernelized Correlation Filters (KCF) [14].
+s
+Sec. III-B. Retraining the detection model on both expert-
+labeled dataset and soft-labeled dataset is explained in B. Soft-Label Generation
+e s
+Sec. III-C.
+Soft-labeledsamplesaregeneratedjointlybythedetection
+A. Detection and Tracking model and tracking algorithm. We obtain the predictions
+box on unseen data by the detection model. Then, the
+The proposed detection model is inspired by Reti- loc
+predictionswithposteriorconf higherthansomethresh-
+naNet [12]. RetinaNet is a single-stage detection model score
+old θ , are added to the soft-labeled dataset, dataset . In our
+designed on top of a Feature Pyramid Network (FPN) [32]. c s
+work,weﬁndthatsetting0.65forθ workswellempirically.
+Utilizing top-down pathway and lateral connections, the c
+Trackedobjectsacrossframesareusuallynoisy;especially
+FPN enhances a standard CNN with multi-scale features.
+the backward tracked objects. These noisy labels are ﬁltered
+Thesemulti-scalefeaturesenableobjectdetectionatdifferent
+usingtwoprocedures.Forforwardtrackedobjects,weobtain
+sizes. In our detection model, the FPN builds on top of a
+the predictions after certain frames, n. We match predictions
+ResNet [33] network with a 50 layer variation. There are
+with conﬁdence scores higher than θ with forward tracked,
+two sub-networks on top of the FPN for classiﬁcation and
+track . If the intersection-over-union (IOU) is above a
+bounding box regression. We redesign the ﬁnal layer of the loc
+certain threshold, θ , and the labels match, we add these
+classiﬁcation network to reﬂect the number of classes in our o
+samples to dataset . The IOU is the ratio of the intersection
+dataset. The model is optimized using Focal Loss [12] that s
+area of box and track over the union of box and
+ensures classes with fewer samples are focused. For a target loc loc loc
+track . Empirically we select 0.7 as θ . For backward
+class, k with estimated probability, p ∈[0 1], the focal loss loc o
+k , tracked objects, we observed a very high level of noise.
+is deﬁned as:
+Because these track represent the hard instances for the
+loc
+detectionmodel,theyareattimesdetrimentaltothedetector
+loss(p )=−α(1−p )γlog(p ) (1)
+k k k during training. We back-track up to some m frames and
+where α ∈ [0 1] is the weighting factor and γ ≥ 1 is a ﬁlter using the outlier rejection net III-D before adding to
+,
+focusing hyper-parameter. These hyper-parameters assign datasets except for the very ﬁrst iteration when we do not
+lowerlosstoeasilyclassiﬁableexamples,enablingthemodel have a trained outlier rejection network.
+to focus on hard samples. The regression sub-network is Handling false positive predictions by the detector can
+1876
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. Dataset #images #annotations
+GoPro-GT 13523 34510
+Aqua-GT 2410 7041
+GoPro-Det 20000 36524
+GoPro-Trackfor 20000 7484
+2 GoPro-Trackback 20000 3426
+224 14 Aqua-Det 1500 3745
+224 112 256256256 56 512 co5n12v4 512 28 512 co5n12v5 512 ﬂat1ten AAqquuaa--TTrraacckkbfaocrk 11550000 1647271
+6464 conv3
+6464 conv2
+conv1 TABLEI
+DATASETSUMMARY:LISTINGTHENUMBEROFIMAGESAND
+Fig.3. OutlierRejectionNetwork
+ANNOTATIONS.GOPRO-GTANDAQUA-GTARETHEEXPERT
+ANNOTATEDDATASET.FORDETECTIONANDTRACKINGINVIDEOS
+also be used to create soft-labeled samples. Because of the
+FROMGOPROANDAQUA,ASUBSETOFTHEFIXEDNUMBEROFIMAGES
+AUV’stransecttypemotions,empirically,weobservecorrect
+WEREUSED.
+predictionsatacloserrangeforobjectsmiss-predictedwhen
+faraway.Therefore,thereisinconsistencybetweenthelabels
+of track of miss-predicted at frame f and predictions
+loc 0 IV. EXPERIMENTALRESULTS
+box at frame f . For such cases, we trust the labels of
+loc n
+box and relabel the corresponding track . Experiments were performed using two datasets: GoPro
+loc loc
+dataset and Aqua2 dataset [5]. We present the quantitative
+C. Training on the Combined Dataset
+results of detection on these two datasets as well as qualita-
+From the network training perspective, the learning pro- tive detection results on unlabelled data. We also present the
+cedure is similar for both expert-labeled datasete and soft- coral population density estimation of semantic 3D mapping
+labeled datasets. As the detection model did not recognize [6].
+the samples in dataset , it contains harder samples. We
+s
+intrinsically beneﬁt from the earlier usage of focal loss in A. Dataset Description
+our training process as focal loss prioritizes hard examples. GoPro Dataset: The dataset was created with underwater
+However,thedeteriorationoftheperformanceofthedetector videos of Barbados’ coral reef captured by GoPro cameras.
+on“easy”samplesfrom datasete isnotdesirable.Therefore, The dataset contains annotations for seven different kinds of
+wemanuallyputadown-scalingweightφ onlosscalculated corals(Brain,Maze,Mustard,Finger,Fire,Star,andStarlet).
+for datasete before calculating the total loss losstotal on the TherearetwotransectsfromtheGoProvideos:a)3minutes
+entire augmented dataset. 27 seconds over a length of 40.29 meters and b) 10 minutes
+over a trajectory of 315.39 meters. A scuba diver collected
+loss =loss(p )+φ·loss(p ) (2)
+total ke ks
+the3-minutelongtrajectory,andthe10-minutelongtransect
+where loss(pke) is the focal loss from Equation 1 from was captured by using a diver propulsion vehicle (DPV).
+datasete and loss(pks) from datasets. Aqua Dataset: The Aqua2 AUV was utilized to capture
+videosforaregionofBarbados’coralreef.TheAquadataset
+D. Outlier Rejection Network
+isalsoannotatedforthesamespeciesofcoralsastheGoPro
+It was observed that for backward tracked objects, the
+dataset. The Aqua2 dataset has a trajectory of 1 minute 17
+samples were mostly unclear, blurry, and less illuminated.
+seconds.
+Therefore, to ﬁlter out samples from dataset that are too
+s Soft-labeled Dataset: High conﬁdence predictions were
+noisy, a two-way classiﬁcation network is enough where the
+used to create soft-labels, denoted as Det in the dataset
+network only classiﬁes a sample as “useful” or “harmful” in
+description table I. We also collect soft-labels by tracking
+a coral class agnostic manner. We redesign the VGG16 [34]
+forward and backward the bounding box locations from the
+networktosuitthispurpose,asshowninFigure3.Thefully
+detections. The forward-tracked soft-labels are denoted as
+connected layers are replaced by an average pooling layer,
+track and the backward-tracked soft-labels astrack in
+and the softmax layer is modiﬁed to reﬂect our two classes. for back
+the dataset description table table I. It is worth noting that
+The dataset to train this classiﬁcation network is obtained
+in forward-tracking, if a tracked object is detected after n
+from the retraining level of our approach. The labels for the
+frames, the object is labeled as part of the Det dataset.
+samples in dataset are obtained by using the training loss
+s
+on datasets. For the loss, losssi for a sample si is over a B. Implementation Details
+threshold θ , the label y is calculated:
+s i In the experiments, 20% of the GoPro-GT and the Aqua-
+( GT datasets were held out for testing. Firstly, the detector
+1 if loss ≥ θ (discard)
+yi= , si s (3) modelwastrainedontheremaining80%oftheGTdatasets,
+0 otherwise (keep).
+, referred to as training-GT datasets afterward, following the
+We choose 0.7 for θ based on a few experiments. The training procedure described in Modasshir et al. [5]. After
+s
+model is optimized with cross-entropy loss and a learning the training process was completed, the training-GT datasets
+rate of 0.001 with a decay of 10−7 every 20 epochs. were then feed-forwarded through the entire system, shown
+1877
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. Fig. 4. Detection Results: Corals undetected with the earlier detector of [6], but detected with the proposed approach are marked with an additional
+orangesquare.TheﬁrstrowpresentsimagescollectedbyaGoProcamera,whilethesecondtworowspresentimagesfromanAqua2AUV.
+in Figure 2 and the conﬁdence scores of detections box , datasets correspondingly. We repeat the process of mining
+loc
+and tracked locations in images track were recorded. forsoft-labeledsamples,retraining,andoutlierrejection.We
+loc
+The high conﬁdence predictions (¿70%) were used as soft- were able to increase the AP of the GoPro dataset by 165
+.
+labels and incorporated into the training dataset. Finally, the and for the Aqua dataset by 114; see Table II.
+.
+training-GT datasets with expert labels and soft-labels are Figure4showsdetectionresultsontheevaluationdataset.
+used to retrain the detection model using the loss function Empirically, we observe the detections of previously unde-
+in Equation 2. After retraining is ﬁnished, the losses on tected coral objects. Utilizing the soft-labels also improved
+all samples of training-GT datasets were calculated, and the detection of coral species with relatively fewer samples,
+we created another dataset using Equation 3 for the outlier i.e., Fire coral.
+rejection network. This outlier rejection network learns to
+Dataset AP(mean±std)
+separate the learnable samples and “very hard” samples and
+GoPro-GT 24.1±0.54
+used to remove tough samples from the future retraining Aqua-GT 13.7±0.21
+processes. The outlier rejection network was used to ﬁlter GoPro-Aug 40.6±0.92
+Aqua-Aug 25.1±0.67
+out “very hard” or incorrect samples from the combined
+training set. The detection model was then trained again, TABLEII
+thus beginning the iterative process. About 100 epochs for DETECTIONRESULTSAREPRESENTEDINAVERAGEPRECISION(IOU
+iterative training are sufﬁcient for the classiﬁcation network 0.75)REPORTEDASMEANANDSTANDARDDEVIATIONOVER10
+to perform reasonably well. TRAININGITERATIONS.
+C. Evaluation of Detection D. Evaluation of Counting
+The results of the evaluation set are presented in table II. Table III shows the comparison of our network against
+On the ground truth data, we were able to achieve average earlier works by Modasshir et al. [5], [6]. We observe better
+precision (AP) of 246 and 139 on the GoPro and Aqua detection and quantiﬁcation of the coral population in the
+. .
+1878
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. Brain Mustard Star Starlet Maze Sponge
+3min[6] 31/37 0/2 5/7 37/43 11/15 17/17
+3min(proposedapproach) 35/37 1/2 7/7 41/43 14/15 17/17
+10min[6] 90/97 39/47 68/75 161/176 26/28 5/6
+10min(proposedapproach) 94/97 44/47 77/75 177/176 28/28 6/6
+TABLEIII
+CORALCOUNTINGFORTWODIFFERENTTRAJECTORIES.CNN-PREDICTION/HUMAN-ANNOTATED.WEPRESENTTHERESULTSBEFORETHE
+PROPOSEDAUGMENTATION;SEE[6],ANDTHEPROPOSEDAPPROACH.
+transects.Insomecases,thecountingbyCNNbasedsystem
+exceeded human-annotated numbers, i.e., star and starlet
+coral in 10-minute trajectory. Detection of hard instances by
+the network resulted in over-count. However, it was difﬁcult
+to assess whether the network predictions are correct, since
+revisiting the same coral reef in Barbados was not possible
+during experimentation. Other than these over-count, the
+system estimated the coral population fairly accurately.
+Fig.6. Acustom-madestereocamerasuiteandaGoProcameramounted
+onaDPVduringdatacollection.
+dataset of Caribbean corals. By utilizing the spatio-temporal
+cohesiveness of the data, as collected by an autonomous
+robot,wedemonstratedthatobjectconsistencycanmakethe
+identiﬁcation process more robust.
+Utilizing the proposed approach, autonomous coral reef
+mapping will be extended to cover longer trajectories and
+included currently underrepresented species. Future work
+Fig.5. 3Dsemanticmapofthe10minutetrajectory.Featuresfromdifferent
+coralsaredisplayedindifferentcolorsaccordingtoTableIV. will integrate the Acoustic, Visual, Inertial state estimation
+presented by Rahman et al. [35] utilizing loop closures
+for the robust estimation of the observing robot’s trajectory
+E. Evaluation of Mapping
+in conjunction with the navigation capabilities presented in
+Figure 5 shows the result of the 3D semantic mapping for Xanthidisetal. [36]fornavigatingclosetothecorals(higher
+the 10-minute trajectory. The reconstruction of coral species detectionrate)whilefollowingpre-speciﬁedtrajectories.Au-
+was denser and more precise owing to the better bounding tonomous operations of AUVs [9] will enable the collection
+boxpredictionoftheimproveddetector.Thecolor-codesfor ofcoralpopulationdatainasystematicmanner.Furthermore,
+each coral classes used in the reconstruction are given in a framework to combine point-annotated coral with box-
+Table IV. annotatedones,willprovidethemarinebiologistcommunity
+with a tool to analyze additional data.
+Coral: Brain Mustard Star Starlet Maze Sponge
+Color: Green Purple Teal Magenta Aqua Blue REFERENCES
+TABLEIV [1] C. Rogers, G. Garrison, R. Grober, Z. Hillis, and M. F.ie, “Coral
+COLORCODESUSEDINSEMANTICMAPPINGFORDIFFERENTCORALS. reefmonitoringmanualforthecaribbeanandwesternatlantic,”Virgin
+IslandsNationalPark,110p.Ilus.,1994.
+[2] O.Beijbom,P.J.Edmunds,D.I.Kline,B.G.Mitchell,andD.Krieg-
+V. CONCLUSIONS man, “Automated annotation of coral reef survey images,” in IEEE
+Conf. on Computer Vision and Pattern Recognition (CVPR), 2012,
+In this paper, we present a novel way to facilitate the pp.1170–1177.
+coral species annotation from visual data collected during [3] A. Mahmood et al., “Coral classiﬁcation with hybrid feature repre-
+sentations,”inIEEEInt.Conf.onImageProcessing(ICIP),2016,pp.
+autonomous operation over coral reefs. Extensive data col-
+519–523.
+lected using the Aqua2 AUV and a GoPro camera on a [4] M.Modasshir,A.QuattriniLi,andI.Rekleitis,“MDNet:Multi-Patch
+Diver Propulsion Vehicle (DPV), see Figure 6, have been DenseNetworkforCoralClassiﬁcation,”inOCEANS2018MTS/IEEE
+Charleston,Oct2018,pp.1–6.
+used to validate the proposed approach. Furthermore, the
+[5] M. Modasshir, S. Rahman, O. Youngquist, and I. Rekleitis, “Coral
+collected data have been re-annotated to produce a robust Identiﬁcation and Counting with an Autonomous Underwater Vehi-
+1879
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. cle,”inIEEEInternationalConferenceonRoboticsandBiomimetics [21] O. Chapelle, B. Scholkopf, and A. Zien, “Semi-supervised learning
+(ROBIO),KualaLumpur,Malaysia,Dec.2018,pp.524–529. (chapelle,o.etal.,eds.;2006)[bookreviews],”IEEETransactionson
+[6] M.Modasshir,S.Rahman,andI.Rekleitis,“Autonomous3DSemantic NeuralNetworks,vol.20,no.3,pp.542–542,2009.
+Mapping of Coral Reefs,” in 12th Conference on Field and Service [22] A. Blum and T. Mitchell, “Combining labeled and unlabeled data
+Robotics(FSR),Tokyo,Japan,Aug.2019,p.EasyChairPreprintno. with co-training,” in Proceedings of the eleventh annual conference
+1493. onComputationallearningtheory. Citeseer,1998,pp.92–100.
+[7] J.Engel,V.Koltun,andD.Cremers,“Directsparseodometry,”IEEE [23] J. Islam, “Towards ai-assisted disease diagnosis: learning deep fea-
+Trans.PatternAnal.Mach.Intell.,vol.40,no.3,pp.611–625,2018. ture representations for medical image analysis,” Ph.D. dissertation,
+[8] O.Beijbometal.,“Towardsautomatedannotationofbenthicsurvey GeorgiaStateUniversity,2019.
+images: Variability of human experts and operational modes of au-
+[24] D.-H. Lee, “Pseudo-label: The simple and efﬁcient semi-supervised
+tomation,”PloSone,vol.10,no.7,p.e0130312,2015.
+learningmethodfordeepneuralnetworks,”inWorkshoponChallenges
+[9] J. Sattar, G. Dudek, O. Chiu, I. Rekleitis, P. Giguere, A. Mills,
+inRepresentationLearning,ICML,vol.3,2013,p.2.
+N. Plamondon, C. Prahacs, Y. Girdhar, M. Nahon, and J.-P. Lo-
+[25] K.NigamandR.Ghani,“Analyzingtheeffectivenessandapplicability
+bos, “Enabling autonomous capabilities in underwater robotics,” in
+ofco-training,”inCikm,vol.5,2000,p.3.
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),Nice,France,2008,pp.3628–3634. [26] F. Muhlenbach, S. Lallich, and D. A. Zighed, “Identifying and
+[10] T. Manderson, J. Li, N. Dudek, D. Meger, and G. Dudek, “Robotic handling mislabelled instances,” Journal of Intelligent Information
+coralreefhealthassessmentusingautomatedimageanalysis,”Journal Systems,vol.22,no.1,pp.89–109,2004.
+of Field Robotics, vol. 34, no. 1, pp. 170–187, 2017. [Online]. [27] A. Shrivastava, A. Gupta, and R. Girshick, “Training region-based
+Available:http://dx.doi.org/10.1002/rob.21698 object detectors with online hard example mining,” in Proceedings
+[11] M. Modasshir, A. Q. Li, and I. Rekleitis, “Deep neural networks: of the IEEE conference on computer vision and pattern recognition,
+a comparison on different computing platforms,” in Conference on 2016,pp.761–769.
+Computer and Robot Vision, Toronto, ON, Canada, May 2018, pp. [29] S. Jin, A. RoyChowdhury, H. Jiang, A. Singh, A. Prasad,
+383–389. D.Chakraborty,andE.Learned-Miller,“Unsupervisedhardexample
+[12] T.-Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dolla´r, “Focal loss mining from videos for improved object detection,” in Proceedings
+fordenseobjectdetection,”inProceedingsoftheIEEEinternational of the European Conference on Computer Vision (ECCV), 2018, pp.
+conferenceoncomputervision,2017,pp.2980–2988. 307–324.
+[13] P.Li,D.Wang,L.Wang,andH.Lu,“Deepvisualtracking:Review [30] T.Taketomi,H.Uchiyama,andS.Ikeda,“Visualslamalgorithms:a
+andexperimentalcomparison,”PatternRecognition,vol.76,pp.323– survey from 2010 to 2016,” IPSJ Transactions on Computer Vision
+338,2018. andApplications,vol.9,no.1,p.16,2017.
+[14] J. F. Henriques, R. Caseiro, P. Martins, and J. Batista, “High-speed [31] A.RoyChowdhury,P.Chakrabarty,A.Singh,S.Jin,H.Jiang,L.Cao,
+tracking with kernelized correlation ﬁlters,” IEEE Transactions on and E. Learned-Miller, “Automatic adaptation of object detectors
+PatternAnalysisandMachineIntelligence,vol.37,no.3,pp.583–596, to new domains using self-training,” in Proceedings of the IEEE
+2015. Conference on Computer Vision and Pattern Recognition, 2019, pp.
+[15] C. Rosenberg, M. Hebert, and H. Schneiderman, “Semi-supervised 780–790.
+self-training of object detection models.” WACV/MOTION, vol. 2, [32] T.-Y. Lin, P. Dolla´r, R. B. Girshick, K. He, B. Hariharan, and S. J.
+2005. Belongie,“Featurepyramidnetworksforobjectdetection.”inCVPR,
+[16] R.Fergus,P.Perona,A.Zisserman,etal.,“Objectclassrecognitionby vol.1,no.2,2017,p.4.
+unsupervised scale-invariant learning,” in CVPR (2), 2003, pp. 264–
+[33] K.He,X.Zhang,S.Ren,andJ.Sun,“Deepresiduallearningforimage
+271.
+recognition,” in Proceedings of the IEEE conference on computer
+[17] A. Oliver, A. Odena, C. Raffel, E. D. Cubuk, and I. J. Goodfellow,
+visionandpatternrecognition,2016,pp.770–778.
+“Realisticevaluationofsemi-supervisedlearningalgorithms,”2018.
+[34] K. Simonyan and A. Zisserman, “Very deep convolutional networks
+[18] M. Weber, M. Welling, and P. Perona, “Unsupervised learning of
+forlarge-scaleimagerecognition,”CoRR,vol.abs/1409.1556,2014.
+modelsforrecognition,”inEuropeanconferenceoncomputervision.
+Springer,2000,pp.18–32. [35] S.Rahman,A.QuattriniLi,andI.Rekleitis,“AnUnderwaterSLAM
+[19] S.Baluja,“Probabilisticmodelingforfaceorientationdiscrimination: SystemusingSonar,Visual,Inertial,andDepthSensor,”inIEEE/RSJ
+Learning from labeled and unlabeled data,” in Advances in Neural International Conference on Intelligent Robots and Systems (IROS),
+InformationProcessingSystems,1999,pp.854–860. Macau,(IROSICROSBestApplicationPaperAward.Finalist),Nov.
+[20] A.Levin,P.A.Viola,andY.Freund,“Unsupervisedimprovementof 2019,pp.1861–1868.
+visualdetectorsusingco-training.”inICCV,vol.1,2003,p.2. [36] M. Xanthidis, N. Karapetyan, H. Damron, S. Rahman, J. Johnson,
+[28] I.Radosavovic,P.Dolla´r,R.Girshick,G.Gkioxari,andK.He,“Data A. O’Connell, J. O’Kane, and I. Rekleitis, “Navigation in the pres-
+distillation:Towardsomni-supervisedlearning,”inProceedingsofthe ence of obstacles for an agile autonomous underwater vehicle,” in
+IEEEConferenceonComputerVisionandPatternRecognition,2018, IEEEInternationalConferenceonRoboticsandAutomation,2020,p.
+pp.4119–4128. accepted.
+1880
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 06:20:44 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,539 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Accurate detection and 3D localization of humans using a novel
+YOLO-based RGB-D fusion approach and synthetic training data
+∗ ∗
+Timm Linder1,2 Kilian Y. Pfeiffer3 Narunas Vaskevicius1 Robert Schirmer1 Kai O. Arras1
+Abstract—While 2D object detection has made signiﬁcant
+progress,robustlylocalizingobjectsin3Dspaceunderpresence
+of occlusion is still an unresolved issue. Our focus in this work
+isonreal-timedetectionofhuman3DcentroidsinRGB-Ddata.
+We propose an image-based detection approach which extends
+theYOLOv3architecturewitha3Dcentroidlossandmid-level
+featurefusiontoexploitcomplementaryinformationfromboth
+modalities. We employ a transfer learning scheme which can
+beneﬁt from existing large-scale 2D object detection datasets,
+whileatthesametimelearningend-to-end3Dlocalizationfrom
+our highly randomized, diverse synthetic RGB-D dataset with
+precise 3D groundtruth. We further propose a geometrically
+more accurate depth-aware crop augmentation for training on
+RGB-D data, which helps to improve 3D localization accuracy.
+In experiments on our challenging intralogistics dataset, we
+achieve state-of-the-art performance even when learning 3D
+localization just from synthetic data.
+Fig. 1: Our method (green) localizes 3D person centroids much
+I. INTRODUCTION
+more robustly than a baseline (red) on our intralogistics dataset.
+Detection of persons and objects in 3D space is an im-
+portant capability for service, domestic and industrial robots localization, we extend the resulting RGB-D YOLOv3 de-
+that interact with their environment. In indoor scenarios, tector with a centroid regression output. Finally, we propose
+RGB-DsensorssuchastheKinectv2areoftenusedforthis adepth-aware,scale-preservingvariantofzoom-in/zoom-out
+purpose.However,whilerecentadvancesincomputervision training-timeaugmentation[1]foraccuratedepthregression.
+have mostly solved the unimodal 2D detection problem on As opposed to the existing methods we compare against
+RGB images, it is not yet fully understood what is the best [2]–[5], our end-to-end 3D regression can exploit comple-
+representationandstrategyforapproachingthe3Ddetection mentary RGB and depth information by fusing modalities
+task, especially on multimodal RGB-D data, where large- at the feature extractor stage, and does not rely on any 3D
+scale datasets are scarce and we want to beneﬁt as much as point cloud representation. It is therefore robust to missing
+possible from existing work on 2D detection. depth data and works well under partial occlusion.
+In this paper, we tackle the problem of learning to detect
+Our key contributions in this paper are:
+and accurately localize 3D centroids in RGB-D data in an
+1) We demonstrate that accurate 3D localization under
+end-to-end fashion, with an experimental focus on human
+partial occlusion is an unsolved issue, which is an
+detection in a challenging intralogistics context. We show
+important aspect e.g. for human detection in robotics.
+that 3D localization can, to a large part, be learned from a
+2) We are, to our best knowledge, the ﬁrst to propose
+diverseandhighlyrandomizedsyntheticRGB-Ddatasetwith
+an RGB-D fusion strategy for the fast YOLOv3 one-
+perfect 3D groundtruth, and that for successful ﬁne-tuning
+stagedetector,withanaccompanyingtransferlearning
+on real-world data, no manual 3D annotation is required.
+strategythatleveragesexistinglarge-scale2Ddatasets.
+Our proposed real-time approach uses a strong image-based
+3) Via heavy domain randomization, we are able to learn
+YOLOv3 single-stage detector as starting point, extends the
+end-to-end regression of 3D human centroids from a
+RGB feature extractor with a separate depth stream via
+synthetically rendered multi-person RGB-D dataset.
+mid-level fusion, and utilizes a hardwired transfer learning
+4) We ﬁnd that standard 2D crop/expansion augmenta-
+strategythatcanreuseexistingpretrainedweightsfromlarge-
+tions are unsuitable for depth data, and propose a
+scale2Dobjectdetectiondatasets.Thereby,incorporatingthe
+geometrically more accurate variant that accounts for
+depthchanneldoesnotrequiretrainingfromscratchandthus
+the resulting shift of focal length.
+does not lead to a loss in 2D detection performance. For 3D
+5) Onourchallengingreal-worldRGB-Ddatasetfromthe
+intralogisticsdomain,ourmethodoutperformsexisting
+1RobertBoschGmbH,CorporateResearch,Stuttgart,Germany.
+(cid:66)timm.linder@de.bosch.com baselines in 3D person detection without requiring
+2DepartmentofComputerScience,UniversityofFreiburg,Germany. additionalhand-annotated3Dgroundtruthfortraining.
+3RWTHAachenUniversity.ResearchconductedasaninternatBosch.
+∗ Thesecondandthirdauthorcontributedequallytothiswork. Ourapproachachievesreal-timespeedat25HzonaGPU.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1000
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. Method Modalities Detector Fusionstrategy Output Dataset
+→
+Munaroetal.,2014[6] RGB+D PCL+HOG-SVM 3Dproposals 2Dclassiﬁer 3Dboxes KTP
+Meesetal.,2016[7] RGB+D+Flow FastR-CNN 2Dlate(adaptivegating) 2Dboxes InOutDoor(IO)
+→
+Vasquezetal.,2017[2] RGB+D FastR-CNN 3Dproposals 2Ddetector 2.5Dcentroids MobilityAids,IO
+Guerryetal.,2017[8] RGB+D FasterR-CNN 2Dearly/mid/late 2Dboxes Onera,Mensa,IO
+Alietal.,2018[9] ProjectedLiDAR YOLOv2 – 3Dboxes+orient. KITTI
+Simonetal.,2018[10] ProjectedLiDAR YOLOv2 – 3Dboxes+orient. KITTI
+→
+Qietal.,2018[11] RGB+D/LiDAR FPN+FastR-CNN 2Dboxes 3Dfrustums 3Dboxes+orient. KITTI,SUN
+→
+Zimmermannetal.,2018[4] RGB+D OpenPose 2Djoints 3Dvoxelgrid 3Dbodyjoints MKV-t,CAP-t
+Lewandowskietal.,2019[12] D FPFH-SVM – 3Dboxes Supermarket
+Kollmitzetal.,2019[3] RGBorD FasterR-CNN – 3Dcentroids MobilityAids
+Ophoffetal.,2019[13] RGB+D YOLOv2 2Dmid-levelfeatures 2Dboxes KITTI,EPFL
+Ourapproach RGB+D YOLOv3 2Dmid-levelfeatures 3Dcentroids Intralogistics
+TABLE I: Qualitative comparison of related work on person detection in 3D and RGB-D
+II. RELATEDWORK principled fusion of the RGB+D modalities to exploit com-
+A. 3D person detection in RGB-D plementary information, utilizes synthetic training data to
+learn 3D localization, and incorporates a depth-aware crop
+There is a vast amount of literature on multi-modal [14]
+augmentation scheme that improves 3D localization. We
+and RGB-D-based [15] object recognition. In Table I we
+evaluate our method and baselines on a novel, challenging
+list recent works that were evaluated on human detection.
+intralogistics dataset.
+Some fuse color and depth information, but only output 2D
+boundingboxesanddonottackletheissueof3Dlocalization B. Learning from synthetic RGB-D data
+[7],[8],[13].Severalapproachesutilizeageometric3Dpoint Learning from simulation and transfer into the real world
+cloud representation [2], [4], [6], [11], [12], which comes are currently quickly evolving topics in computer vision
+withcertaindrawbacks.Forexample,themethodbyQietal. and robotics. Most work so far focuses on rigid objects.
+[11] suffers from three weaknesses towards which our pro- [20]exploredomainrandomizationforroboticmanipulation.
+posedmethodshouldbemorerobust:1.)Their3Dstagefails Using synthesized RGB images with random camera and
+to accurately localize objects in locally sparse point clouds. object positions, lighting, and textures, they learn accurate
+Here, our approach can leverage complementary RGB data 3D detectors for geometric primitives without pretraining on
+as it does not rely on a point cloud representation. 2.) When real images. [21] learn to estimate 3D orientation of objects
+multiple instances of a class share the same 3D frustum, using synthetic RGB images based upon CAD models with
+only a single instance is detected. This scenario is frequent domain randomization. [22] focus on category-agnostic 2D
+in our indoor environments, where humans often partially instancesegmentationusingsyntheticdepthalsofromCAD.
+occlude each other. 3.) Their RGB-based 2D detector fails Humansvarygreatlyinshapeandappearance,andarethus
+under difﬁcult lighting conditions, where our method can particularly challenging to simulate. The work by Shotton et
+exploitcomplementarydepthdataduetoourmid-levelfusion al. [23] on articulated human pose estimation focused on
+strategy. The methods by Munaro et al. [6] and Vasquez et single-person scenarios using synthetic depth images, with-
+al. [2], which we include as baselines in our experiments, out simulating any 3D background. This also applies to the
+suffer from similar conceptual limitations. SURREAL dataset [24], which however contains additional
+More recent works therefore often leverage a 2D image- modalitiessuchasRGB.[25]performsemanticsegmentation
+based representation [3], [7]–[10], [13] in order to exploit on KITTI [26] by training on synthetic RGB images and
+advancesin2Dobjectdetection.Theyarebaseduponsingle- groundtruth masks from a commercial computer game. In
+stage detectors like YOLOv2 [16] or the computationally contrasttotheseworks,oursyntheticdataset[27]focuseson
+more expensive two-stage R-CNN framework [17], [18]. multi-personhumandetectioninclutterandunderocclusion.
+Most closely related to our work are the methods by It contains up to several dozens of person instances per
+Ophoff et al. [13] and Kollmitz et al. [3]. With focus only frame, diverse 3D backgrounds and large amounts of fore-
+on 2D detection, [13] incorporates RGB+D fusion into the ground occluder objects with strong domain randomization
+earlier YOLOv2 architecture. It is not as deep, uses no (unlike [28]–[30]). It is composed of synchronized RGB-D
+shortcut connections and does not include a feature pyramid pairs, where we additionally model noise characteristics of
+compared to the YOLOv3 [19] architecture that our work is the Kinect v2 time-of-ﬂight sensor.
+based upon, which imposes extra constraints on where we
+III. METHOD
+canfusefeatures.Similartoourmethod,andcontrarytotheir
+earlierwork[2],Kollmitzetal.[3]donotemploya3Dpoint We now present our solution for robust detection and 3D
+cloud representation, and instead utilize an end-to-end 2D localizationofpersonsfromRGB-Ddata.Followingthedata
+detector with 3D centroid output. Their two-stage approach ﬂow, we ﬁrst describe our synthetic RGB-D dataset that we
+is evaluated in a multi-class hospital scenario including use to learn 3D human detection and localization. We then
+persons with walking aids. They provide separate models propose a depth-aware and scale-preserving augmentation
+for detection on either RGB or depth data. In contrast, our scheme for training 3D detectors on RGB-D data. Finally,
+method follows an efﬁcient one-stage approach, performs we present our modiﬁcations to the YOLOv3 detector [19]
+1001
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. Fig. 2: 3D groundtruth joint locations on our synthetic RGB-D and our real-world RGB-D datasets. The latter ones are derived from
+ofﬂine 3D human pose estimation [4], and only used for ﬁne-tuning on real-world data if desired. Our video shows further examples.
+tofuseRGBanddepthinformation,andregress3Dcentroids ‘centroid’ regression target, which is more stably attached
+in an end-to-end fashion along with a training scheme that to the human body under truncation or unsual poses (e.g.
+allows us to beneﬁt from existing 2D detection datasets. stretching out a single arm) and thus more suitable for
+3D human tracking [32] or 3D articulated pose estimation
+A. Synthetic RGB-D data for learning 3D localization applications. For the latter, top-down methods such as [33]
+Obtaining a sufﬁciently diverse RGB-D dataset with ac- oftenrequirethepelvisjoint,localizedbetweenthehipjoints,
+curate 3D groundtruth is difﬁcult and time-consuming in as body-centric root joint for input, which we adapt as 3D
+the real world. We therefore propose to learn 3D human regression target. However, in principle, our method can be
+localization from a synthetic RGB-D dataset that has been trainedonany(derived)bodyjoint,asshowninFig.2(right).
+rendered using a semi-photorealistic game engine (Unreal
+C. Depth-aware augmentation
+Engine 4). Our initial work in this direction [27] focused
+on 2D detection. We now extended our simulation to output The 2D data augmentation pipeline of our underlying
+sensor-centricgroundtruth3Dcoordinatesandvisibilityﬂags YOLOv3 implementation [34] involves random cropping
+for 23 human body joints (Fig. 2, left). We increased the andexpansionoftheimagewithcorrespondingadjustmentof
+number of rigged 3D human models by a factor of 4 and the bounding boxes, originally referred to as “zoom in” and
+doubled the amount of motion-capture animations to around “zoom out” [1]. This is followed by resizing to a ﬁxed-size
+100 each, now also including sitting, kneeing and lying square input image provided to our network during training.
+poses. Inspired by the success of 2D synthetic occlusion Directly applying crop or expansion augmentation and
+augmentation [31], we signiﬁcantly increased the number resizing to an RGB-D image can distort the understanding
+of 3D occluder objects to over 700 to enhance foreground of objects’ metric scale in the perceived environment, which
+diversity (some of which can be seen in Fig. 3, left). is essential for accurate 3D perception. Therefore, we pro-
+For each of the 6 scenes from [27], we initially generate pose a depth-aware variant of this augmentation that adapts
+5,000 RGB-D frames. In [27], we showed that appropriate groundtruthdepthlabelsandinputdepthtothecurrent“zoom
+ﬁltering of groundtruth bounding boxes is important for level” at training time, and preserves the metric scale and
+successful training: We therefore set ignore ﬂags on all aspectratiooftheoriginalimageforaphysicallymorewell-
+2D groundtruth person boxes with extremely low contrast, grounded representation.
+×
+with a groundtruth instance mask that covers less than 300 Our network has a square input resolution of d d
+n n
+square pixels, or where more than 80% of the essential pixelsduringtraining.Therefore,topreserveaspectratio,we
+body joints are either truncated or occluded after projecting constrain ourselves to random square crops of varying size
+×
+them onto the 2D instance mask. We then iterate over the d d .Undertheassumptionofasinglesensorwithknown
+c c
+5,000 frames per scene, remove all frames which have less camera matrix K, resizing of a crop to the input dimension
+×
+thantworemaining(non-ignore)boxes,followedbyrandom d d can be expressed as a zooming operation [35]
+n n
+subsamplingtoﬁnallyobtain2,500sufﬁcientlydenseframes with zoom factor s = d /d . Zooming is usually attributed
+n c
+per scene. Combining all six scenes, the resulting RGB-D to a change in focal length.Instead, to keep the intrinsic
+dataset thus consists of 15,000 training samples. parameters intact, we apply the scaling to the depth values:
+      
+B. Weak real-world labels from 3D human pose estimation u s x x
+1 1
+v =K s y =K y (1)
+[3] propose a relatively robust clustering-based heuris- z z
+1 1 z z s
+tic to derive groundtruth 3D centroid coordinates for their s
+training set, without requiring manual 3D annotation. This here (x,y,z) is a 3D point resolved in the RGB-D sensor
+approachcanfailifpersonsaretruncated,forexamplewhen frame and z/s is the new scaled depth at input pixel (u,v).
+only the head or an arm are visible. Unless such persons are While this operation is not physically well-grounded for
+skipped, which can prevent difﬁcult examples from ending arbitrary crops not centered at the principal point of the
+up in the training set, the centroid would be offset to the RGB-D sensor, this approximation already yields a signif-
+top or to the side. We therefore propose 1.) to use a more icant improvement, as shown later in our ablation studies.
+informed approach, by leveraging ofﬂine 3D human pose In addition to depth scaling used during training, we scale
+estimation[4]toderiveweakgroundtruthfrompredicted3D inputdepthmeasurements atinferencetimeaccording tothe
+body joints, 2.) to select a ﬁxed, central body joint as the resize transformation applied to the RGB-D image.
+1002
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. Synthetic training data
+Layer 1-9 Layer 10-26 RGB+D fusion 3 scales 2D
+boxes
+1x1 1x1 1x1 🚶
+R
+GB Layer 27-43 Layer 44-52
+A
+augmentationDepth-aware  lternative fusion Concat⨁ 1x1 ⨁ ⨁ cen3t+rDoids
+D  
+ep    Upsample
+th
+RGB-D image pairs Stage I Stage II DarkNet53
+Fig.3:Overviewofourproposedapproach,whichextendstheYOLOv3[19]detectorwithmid-levelRGB+Dfeaturefusion,depth-aware
+augmentation, and 3D centroid regression. We show that the latter can be learned from synthetic RGB-D images.
+D. Network architecture E. Transfer-learning strategy
+Our method is based upon the YOLOv3 network, which Our transfer learning strategy is inspired by Ophoff et
+we modiﬁed to also predict 3D centroids. First, to leverage al. [13], but without an extra step to ﬁrst train a depth-
+depthinformation,weextendtheDarknet-53backbonetoac- only detector. To beneﬁt from existing large-scale 2D object
+commodate the additional single-channel depth data. There- detection datasets, we ﬁrst initialize all layers from existing
+fore, we duplicate layers up until a fusion point resulting in YOLOv3 RGB detector weights pretrained on ImageNet
+an RGB and depth speciﬁc backbone (blue in Fig. 3). and MS COCO [37], [38]. While other transfer learning
+strategies,suchasproposedin[13],[39],couldalsobeused,
+We evaluate two different mid-level fusion points, which
+wealreadyobtainedgoodresultsusingthisapproach.Forthe
+are placed at the end of residual stages in the Darknet-53
+depth backbone, we duplicate RGB weights, but initialize
+architecture,inourcaseafterLayer9orLayer26.Mid-level
+the ﬁrst layer (that takes single-channel depth images) from
+fusion has shown to lead to good results [13], [36]. Further-
+scratch. As indicated by the coloring in Figure 3, the fusion
+more, we fuse the modalities before the pyramid structure
+block is initialized using a hardwired fusion scheme such
+of the network begins (see Fig. 3). The modalities are fused
+thatatthestartoftraining,theexistingRGBfeaturesarefor-
+byconcatenatingtheoutputfeaturesofbothbackbonesalong
+× wardedas-is.Inthe3outputlayersthatweextendedwith3D
+thechanneldimensionandusinga1 1convolutiontohalve
+centroid regression, we randomly initialize weights for the
+the number of channels to the original channel dimension.
+× newoutputs,whileleavingtheoriginal2Ddetectionweights
+The ﬁnal 1 1 convolutions of the three output stages
+unchanged. This initialization strategy, which is illustrated
+are extended to predict a centroid (c ,c ,c ) for each
+x y z further in our video, allows to maintain the pretrained 2D
+anchor box. c is regressed directly in metric scale. The c
+z x performancedespitethechangestothenetworkarchitecture.
+and c coordinate are ﬁrst predicted in image coordinates
+y
+(c ,c ) and then backprojected with help of c and the IV. EXPERIMENTALSETUP
+u v z
+camera matrix. This mirrors the unit system of our input.
+OurimplementationisbaseduponMxNetusingYOLOv3
+Furthermore, we formulate the regression targets tcu,tcv in from GluonCV [34]. We train for a total of 80 epochs using
+aconstraintmanner,relativetotheboundingboxcoordinates
+stochastic gradient descent. During a warmup phase of 20
+where(bu,bv)isthetop-leftcorneroftheboundingboxwith epochs,wegraduallyincreasethelearningrateto6e-4,after
+height bh and width bw in pixel coordinates: which the learning rate is reduced to 1e-6 over 50 epochs
+using cosine decay [40], [41]. Finally, the model is trained
+cu =bu+bwσ(tcu) foranother10epochsataconstantrateof1e-6.Fortraining,
+c =b +b σ(t ) (2) we use Volta V100 GPUs, and a Titan RTX for testing.
+v v h cv
+cz =tcz A. Real-world intralogistics RGB-D dataset
+Thislimitsthecentroidtolaywithinthepredictedbound- Ourapplicationuse-caseispersondetectionintheintralo-
+ingbox.The2DYOLOlossperanchorboxisthenextended gistics domain, with the goal of making autonomous guided
+(cid:88)
+by an additional term vehicles (AGVs) human-aware. Human detection in such
+professionalenvironmentsbringsupcertainchallenges,such
+L | − |
+= t tˆ + BCE(σ(t ),σ(tˆ )) (3) as people wearing special clothing; human forklift operators
+centroid cz cz ∈{ } ci ci standing on the footrests of their vehicles; narrow, cluttered
+i u,v
+spaces with signiﬁcant occlusion, which the robot observes
+where tˆ denotes the groundtruth label. While for c ,c from an ego-centric perspective; and the lack of publicly
+ci u v
+we keep the sigmoid binary cross-entropy loss used for 2D availabledatasets,especiallyforsensormodalitiescontaining
+bounding box centers in our YOLOv3 implementation, we sensitive information, such as RGB-D. To train and evaluate
+found that (cid:96) loss works best for centroid depth c . our method, we therefore recorded a diverse dataset using
+1 z
+1003
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. ↑
+two different AGV platforms equipped with a Kinect v2 Variant Modality 2DAP 3DAP RMSE
+↓
+VOC 0.25m 0.5m
+sensor at around 1.50m and 1.80m height. Data has been
+recorded over several weeks at four different locations (two COCOmodel RGB 71.0 – – –
+warehouses, a small food factory, and a robotics laboratory Afterﬁnetuning RGB 74.9 – – –
+withforkliftsandwarehouseshelves).Itincludessceneswith +Centroidregression RGB 72.5 17.5 48.2 56.9
++Depth-awareaugm. RGB 75.4 46.5 73.4 39.3
+very few people, as well as very crowded scenes with up to
+around20peoplethatfrequentlyoccludeeachotherandhave Afterﬁnetuning RGB+D 75.4 – – –
++Centroidregression RGB+D 73.4 47.6 74.5 34.7
+very similar appearance due to wearing protective clothing.
++Depth-awareaugm. RGB+D 76.6 60.6 81.5 30.8
+From these recordings, we selected around 3.1k diverse /FusionafterstageI RGB+D 76.5 58.9 80.4 31.8
+framesandsplitthemintoatrainingsetof1.5k,avalidation +Moresynth.data RGB+D 77.0 66.4 83.0 27.8
+set of 0.5k and a 2D test set of 1.1k real-world frames,
+TABLE II: Ablation studies on our synthetic validation set with
+with each split recorded at a different location or day. Each perfect3Dgroundtruth.RGB+DfusionafterstageIIunlessnoted.
+frame consists of a registered pair of RGB-D images, where
+we manually annotated 2D person bounding boxes. On the
+whileignoringtheheight.Forablationstudiesonourprecise,
+training set, we derive weak 3D groundtruth as described in
+synthetic 3D groundtruth, we also report root mean square
+SectionIII-B.For3Devaluation,welabeledacontinuous60-
+error (RMSE), as well as 2D bounding box AP according to
+second test set sequence from one of the environments with
+PASCAL VOC criteria [42] at 0.5 IoU.
+3Dcentroids,usingourtrajectory-basedannotationtool[32]
+which we extended for annotation of centroid heights over V. RESULTS
+ground.Inthesequence,personsarehighlydynamic,assume A. Quantitative evaluation
+different poses, and some push carts around. For evaluation,
+Table II shows results of ablation studies on our synthetic
+we mark all centroids with ignore ﬂags that are too heavily
+validationset(2extrascenes,5kdiverseframes)withprecise
+occludedinthepointcloud,oroutsideoftheKinectv2depth
+groundtruth. We used half of the synthetic training set (7.5k
+camera’s ﬁeld of view (with 8m range limit), in order not to
+frames) for training. It can be seen that our depth-aware
+penalize baseline methods which rely on the availability of
+augmentation scheme boosts accuracy in both 2D and 3D
+depth data.
+signiﬁcantly, compared to when using standard rectangular
+B. Baselines crop augmentation and resizing without scaling groundtruth
+We compare our approach with 5 different RGB-D base- labels and input depth appropriately. With the full synthetic
+lines. Besides [2]–[4], [6] (see Table I), we also include an trainingset,especially3Dlocalizationatthesmallerdistance
+RGB-only YOLOv3 baseline that na¨ıvely lifts 2D centroids threshold improves. Incorporating RGB+D fusion leads to
+into3Dbycomputingmediandepth[5].The2Ddetectorfor signiﬁcantly higher 3D accuracy, and improves 2D slightly.
+thismethodwastrainedonMSCOCO;withna¨ıveliftinginto In Table III and the corresponding precision/recall curves,
+3D, we saw no improvement in 3D performance when ﬁne- we compare variants of our method to other baselines on
+tuning on our dataset. For [6], the HOG-SVM was trained a 60-second hand-annotated sequence (1.8k frames) from
+on a person dataset recorded in an airport environment [32]. our real-world intralogistics test set. It can be seen that
+Weﬁne-tuned[3]onourreal-worldtrainingset,astheRGB our RGB-D method ﬁne-tuned only on our real-world data
+(cid:4)
+variantinitiallydidnotperformwellinourscenario.Forboth ( ) does not achieve a better peak-F1 score than our na¨ıve
+(cid:4)
+[2]and[3],weshowthebettervariantofRGBordepth,and YOLOv3 baseline trained on MS COCO ( ) under the
+obtainedbestresultswhenconsideringonlydetectionsforthe 3D metric with d=0.5m, and performs especially bad at
+person class; we do not use tracking. For the other methods, d=0.25m.Thiscouldindicatethatourreal-worldtrainingset
+(cid:4)
+weusetheoriginal,trainedmodelfromthepubliclyavailable is too small. Training only on synthetic images ( ), where
+implementations.[4]isnotfastenoughforouruse-case(1-2 throughdomainrandomizationwecangenerateanunlimited
+Hz), but we still decided to include it as we were interested amount of frames and here thus have 10x more data with
+in how a radically different, bottom-up 3D pose estimation precise 3D groundtruth, improves performance drastically at
+approachwouldperformonthe3Dpersondetectiontask.For both thresholds. Adding real to the synthetic training data
+(cid:4)
+evaluation, we derive 3D centroids from hip joint positions ( )furtherimprovesperformance.ThecorrespondingRGB-
+(cid:4)
+as described in Sec. III-B; if hips are not detected, we fall only model ( ) is similarly strong at d=0.5m. However,
+backtothemedianofessentialbodyjoints(excludingeyes). at d=0.25m, the combination of both modalities is around
++9% better in peak-F1, which shows that our network can
+C. Evaluation metrics
+exploit depth information for more accurate 3D localization.
+For3Devaluationonourreal-worldtestsequence,weuse Yet, as we also observe qualitatively, our approach degrades
+a modiﬁed variant of COCO metrics [38], where instead of gracefully when only RGB data is available.
+bounding box IoU we apply a metric distance threshold and By combining 3D clustering-based region proposals with
+compute3Daverageprecision(AP)aswellaspeak-F1score. a modern deep learning-based 2D detector, Vasquez et al.
+(cid:4)
+For methods that do not output robust estimates of centroid ( ) achieve very good localization accuracy and outperform
+height [2], [3], we are more lenient and perform detection- our method in peak-F1 at d=0.25m. Here, our method
+to-groundtruth association only on ground plane coordinates might be at slight disadvantage because we train on pelvis
+1004
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. Precision-Recall Curve for Person Class
+1.0
+0.9
+0.8
+0.7
+0.6
+n
+o
+cisi0.5
+e
+pr
+0.4
+0.3
+0.2
+0.1
+0.0
+0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0
+recall
+↑ ↑
+Method 3DAP Peak-F1
+0.25m 0.5m 0.25m 0.5m
+Fig.4:Qualitative3Ddetectionresultsatpeak-F1fromasceneof
+(cid:4)Munaroetal [6](RGB+D) 56.0 77.9 62.7 76.1 our RGB-D dataset. Colors from Table III; grey is groundtruth.
+(cid:4)Vasquezetal [2](RGB+D,RGB) 66.3 73.1 79.7 84.2
+(cid:4)Kollmitzetal [3](RGB,VGG-M) 37.9 72.5 56.8 79.3
+(cid:4)Zimmermannetal [4](RGB+D) 55.8 67.3 69.1 79.9
+(cid:4)
+Na¨ıveYOLOv3(RGB+D) 58.1 79.8 72.8 86.6
+(cid:4)
+Ours(RGB,S+R) 57.5 95.2 69.8 93.8
+(cid:4)
+Ours(RGB+D,R) 39.0 82.1 56.7 87.3
+(cid:4)
+Ours(RGB+D,S) 59.9 93.7 72.5 93.5
+(cid:4)Ours(RGB+D,S+R) 68.7 96.5 78.6 95.3
+TABLE III: Precision-recall curves for 3D centroids on a 60-sec
+sequence of our real-world test set. Solid lines correspond to an
+evaluation radius of 0.5m, dashed 0.25m. Crosses are at peak-F1.
+Fig. 5: Results on two further, more cluttered scenes.
+For our method, S stands for synthetic, R for real training data.
+joints, whereas our test sequence has been annotated with even place centroids onto the scene background (such as
+3D centroids to be fair to the baseline methods. shelves, pallets or walls). Furthermore, all baselines except
+Methods which use a geometric 3D point cloud repre- for the RGB variant of [3] are strongly affected by missing
+sentation [2], [4], [6] ((cid:4),(cid:4),(cid:4)) are more limited in recall depth data at the image boundaries, or at far distances. Our
+compared to our proposed approach, which uses an image- proposed RGB+D method is more robust in both regards.
+based representation and exploits complementary RGB+D
+VI. CONCLUSION
+information through feature fusion. If we extend our evalua-
+Inthispaper,wepresentedareal-timeapproachtothe3D
+tion to the (wider) RGB sensor FOV, our method makes the
+human detection task, based upon the YOLOv3 architecture
+most out of the available data, and our peak-F1 margin over
+that we extended with an efﬁcient RGB+D fusion scheme,
+the na¨ıve baseline increases to around +13% at d=0.5m.
+3D centroid regression, and depth-aware augmentation. Our
+B. Qualitative results learningstrategybeneﬁtsfrombothsyntheticandreal-world
+training data. We demonstrated that it is possible to learn
+In initial 2D detection experiments, we observed that
+very precise 3D localization from our diverse, synthetic
+almost no misdetections occur when using a pretrained,
+dataset, and showed on a subset of our challenging real-
+RGB-only COCO model, despite the unusual appearance of
+world intralogistics dataset that our method achieves higher
+persons in our scenario. Sometimes, however, 2D bounding
+detection accuracy than state-of-the-art baselines.
+boxesgetsplitintwowhenforegroundoccluderobjects,such
+Our approach easily extends to other RGB(-D) sensors
+asthehandlebargripofourrobotplatformorahumanarm,
+with different intrinsics, as regenerating our entire synthetic
+protrude into the camera FOV. This shows that exploiting
+datasetwithadifferentsensorsetuponlytakesaround5min-
+depth information is important as it may help in segmenting
+utesofmanualeffort,whileobtainingreal-world3Dtraining
+foregroundfrombackground.Italsoshowsthat2Dbounding
+labels for ﬁne-tuning requires no manual 3D annotation.
+boxes are not an optimal representation, which provided our
+motivation for regressing 3D centroids end-to-end without ACKNOWLEDGMENT
+relying on such an intermediate representation. This work has received funding from the European Union’s Horizon
+Qualitative 3D detection results are shown in Figures 1, 4 2020researchandinnovationprogrammeundergrantagreementNo.732737
+(ILIAD).WewouldliketothankDennisGrießer,MichaelHernandezand
+and 5. As in 2D, many baseline methods have problems in
+SarahAghaiefortheirhelpwithinitialexperimentsand3Dmodels,aswell
+localizing persons under partial occlusion, and sometimes astheILIADconsortiumforhelpwithrecordingofthereal-worlddataset.
+1005
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [23] J. Shotton, A. Fitzgibbon, A. Blake, A. Kipman, M. Finocchio,
+B.Moore,andT.Sharp,“Real-timehumanposerecognitioninparts
+[1] W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. Reed, C.-Y. Fu, and fromasingledepthimage,”inProc.IEEEConferenceonComputer
+A.C.Berg,“SSD:Singleshotmultiboxdetector,”inProc.European VisionandPatternRecognition(CVPR),2011.
+ConferenceonComputerVision(ECCV),2016. [24] G.Varol,J.Romero,X.Martin,N.Mahmood,M.J.Black,I.Laptev,
+[2] A.Vasquez,M.Kollmitz,A.Eitel,andW.Burgard,“Deepdetectionof and C. Schmid, “Learning from synthetic humans,” in Proc. IEEE
+peopleandtheirmobilityaidsforahospitalrobot,”inProc.European Conference on Computer Vision and Pattern Recognition (CVPR),
+ConferenceonMobileRobotics(ECMR),2017. 2017.
+[3] M. Kollmitz, A. Eitel, A. Vasquez, and W. Burgard, “Deep 3D per- [25] S. R. Richter, V. Vineet, S. Roth, and V. Koltun, “Playing for data:
+ceptionofpeopleandtheirmobilityaids,”RoboticsandAutonomous Ground truth from computer games,” in Proc. European Conference
+Systems,vol.114,pp.29–40,2019. on Computer Vision (ECCV), ser. LNCS, vol. 9906. Springer
+[4] C. Zimmermann, T. Welschehold, C. Dornhege, W. Burgard, and InternationalPublishing,2016,pp.102–118.
+T. Brox, “3D human pose estimation in RGBD images for robotic [26] A. Geiger, P. Lenz, and R. Urtasun, “Are we ready for autonomous
+task learning,” in Proc. IEEE International Conference on Robotics driving?TheKITTIvisionbenchmarksuite,”inProc.IEEEConfer-
+andAutomation(ICRA),2018. enceonComputerVisionandPatternRecognition(CVPR),2012.
+[5] T. Linder, D. Griesser, N. Vaskevicius, and K. Arras, “Towards [27] T. Linder, M. J. Hernandez Leon, N. Vaskevicius, and K. O. Arras,
+accurate3DpersondetectionandlocalizationfromRGB-Dincluttered “Towards training person detectors for mobile robots using syn-
+environments,” in IEEE/RSJ International Conference on Intelligent thetically generated RGB-D data,” in Computer Vision and Pattern
+RobotsandSystems(IROS’18)–WorkshoponRoboticsforLogistics Recognition(CVPR)2019Workshopon3DSceneGeneration,2019.
+inWarehousesandEnvironmentsSharedwithHumans,2018. [28] A. Gaidon, Q. Wang, Y. Cabon, and E. Vig, “Virtual worlds as
+[6] M.MunaroandE.Menegatti,“FastRGB-Dpeopletrackingforservice proxy for multi-object tracking analysis,” in Proc. IEEE Conference
+robots,” Autonomous Robots (AURO), vol. 37, no. 3, pp. 227–242, onComputerVisionandPatternRecognition(CVPR),2016.
+2014. [29] G.Ros,L.Sellart,J.Materzynska,D.Vazquez,andA.Lopez,“The
+[7] O. Mees, A. Eitel, and W. Burgard, “Choosing smartly: Adaptive SYNTHIAdataset:Alargecollectionofsyntheticimagesforsemantic
+multimodalfusionforobjectdetectioninchangingenvironments,”in segmentationofurbanscenes,”inProc.IEEEConferenceonComputer
+Proc. IEEE/RSJ International Conference on Intelligent Robots and VisionandPatternRecognition(CVPR),2016.
+Systems(IROS),2016,pp.151–156. [30] M. Fabbri, F. Lanzi, S. Calderara, A. Palazzi, R. Vezzani, and
+[8] J.Guerry,B.L.Saux,andD.Filliat,“”Lookatthisone”:Detection R.Cucchiara,“Learningtodetectandtrackvisibleandoccludedbody
+sharing between modality-independent classiﬁers for robotic discov- jointsinavirtualworld,”inProc.EuropeanConferenceonComputer
+ery of people,” in Proc. European Conference on Mobile Robotics Vision(ECCV),2018.
+(ECMR),2017,pp.1–6. [31] I. Sa´ra´ndi, T. Linder, K. O. Arras, and B. Leibe, “Synthetic occlu-
+[9] W. Ali, S. Abdelkarim, M. Zidan, M. Zahran, and A. E. Sallab, sion augmentation for 3D human pose estimation with volumetric
+“YOLO3D: End-to-end real-time 3D oriented object bounding box heatmaps,” in European Conference on Computer Vision (ECCV)
+detection from LiDAR point cloud.” in European Conference on Workshops,2018.
+ComputerVision(ECCV)Workshops,2018. [32] T. Linder, S. Breuers, B. Leibe, and K. O. Arras, “On multi-modal
+[10] M. Simon, S. Milz, K. Amende, and H. Gross. (2018) Complex- peopletrackingfrommobileplatformsinverycrowdedanddynamic
+YOLO:Real-time3Dobjectdetectiononpointclouds. environments,” in Proc. IEEE International Conference on Robotics
+[11] C.R.Qi,W.Liu,C.Wu,H.Su,andL.J.Guibas,“FrustumPointNets andAutomation(ICRA),2016,pp.5512–5519.
+for3DobjectdetectionfromRGB-Ddata,”inProc.IEEEConference [33] I. Sa´ra´ndi, T. Linder, K. O. Arras, and B. Leibe, “Metric-scale
+onComputerVisionandPatternRecognition(CVPR),2018. truncation-robust heatmaps for 3D human pose estimation,” in Proc.
+[12] B.Lewandowski,J.Liebner,T.Wengefeld,S.Mu¨ller,andH.Gross, IEEEInternationalConferenceonAutomaticFaceandGestureRecog-
+“Fastandrobust3Dpersondetectorandpostureestimatorformobile nition(FG),2020.
+robotic applications,” in Proc. IEEE International Conference on [34] J. Guo, H. He, T. He, L. Lausen, M. Li, H. Lin, X. Shi, C. Wang,
+RoboticsandAutomation(ICRA),2019,pp.4869–4875. J. Xie, S. Zha, A. Zhang, H. Zhang, Z. Zhang, Z. Zhang, S. Zheng,
+[13] T. Ophoff, K. Van Beeck, and T. Goedem, “Exploring RGB+Depth and Y. Zhu, “GluonCV and GluonNLP: Deep learning in computer
+fusionforreal-timeobjectdetection,”Sensors,vol.19,no.4,2019. visionandnaturallanguageprocessing,”JournalofMachineLearning
+[14] D.Feng,C.Haase-Schuetz,L.Rosenbaum,H.Hertlein,F.Duffhauss, Research,vol.21,no.23,pp.1–7,2020.
+C. Glaser, W. Wiesbeck, and K. Dietmayer, “Deep multi-modal [35] R. Hartley and A. Zisserman, Multiple View Geometry in Computer
+object detection and semantic segmentation for autonomous driving: Vision,2nded. CambridgeUniversityPress,2003.
+Datasets,methods,andchallenges,”arXiv:1902.07830,2019. [36] C.Hazirbas,L.Ma,C.Domokos,andD.Cremers,“FuseNet:Incorpo-
+[15] M. Gao, J. Jiang, G. Zou, V. John, and Z. Liu, “RGB-D-based ratingdepthintosemanticsegmentationviafusion-basedCNNarchi-
+object recognition using multimodal convolutional neural networks: tecture,”inAsianConferenceonComputerVision(ACCV). Springer,
+Asurvey,”IEEEAccess,vol.7,pp.43110–43136,2019. 2016,pp.213–228.
+[16] J. Redmon and A. Farhadi, “YOLO9000: better, faster, stronger,” in [37] O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S. Ma,
+Proc.IEEEConferenceonComputerVisionandPatternRecognition Z. Huang, A. Karpathy, A. Khosla, M. Bernstein, A. C. Berg, and
+(CVPR),2017,pp.6517–6525. L. Fei-Fei, “ImageNet Large Scale Visual Recognition Challenge,”
+[17] R. Girshick, “Fast R-CNN,” in Proc. IEEE International Conference InternationalJournalofComputerVision(IJCV),vol.115,no.3,pp.
+onComputerVision(ICCV),2015. 211–252,2015.
+[18] S. Ren, K. He, R. Girshick, and J. Sun, “Faster R-CNN: Towards [38] T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan,
+real-time object detection with region proposal networks,” IEEE P.Dolla´r,andC.L.Zitnick,“MicrosoftCOCO:CommonObjectsin
+Transactions on Pattern Analysis and Machine Intelligence (PAMI), Context,”inProc.EuropeanConferenceonComputerVision(ECCV),
+vol.39,no.6,pp.1137–1149,2017. 2014,pp.740–755.
+[19] J.RedmonandA.Farhadi,“YOLOv3:Anincrementalimprovement,” [39] S. Gupta, J. Hoffman, and J. Malik, “Cross modal distillation for
+2018,arXiv:1804.02767. supervision transfer,” in Proc. IEEE Conference on Computer Vision
+andPatternRecognition(CVPR),2016.
+[20] J.Tobin,R.Fong,A.Ray,J.Schneider,W.Zaremba,andP.Abbeel,
+[40] I. Loshchilov and F. Hutter, “SGDR: Stochastic gradient descent
+“Domain randomization for transferring deep neural networks from
+with warm restarts,” in Proc. International Conference on Learning
+simulation to the real world,” in Proc. IEEE/RSJ International Con-
+Representations(ICLR),2017.
+ferenceonIntelligentRobotsandSystems(IROS),2017,pp.23–30.
+[41] Z.Zhang,T.He,H.Zhang,Z.Zhang,J.Xie,andM.Li,“Bagoffree-
+[21] M. Sundermeyer, Z.-C. Marton, M. Durner, M. Brucker, and
+biesfortrainingobjectdetectionneuralnetworks,”arXiv:1902.04103,
+R. Triebel, “Implicit 3D orientation learning for 6D object detection
+2019.
+fromRGBimages,”inProc.EuropeanConferenceonComputerVision
+[42] M.Everingham,L.VanGool,C.K.Williams,J.Winn,andA.Zisser-
+(ECCV),2018.
+man,“ThePASCALvisualobjectclasses(VOC)challenge,”Int.Jour-
+[22] M. Danielczuk, M. Matl, S. Gupta, A. Li, A. Lee, J. Mahler, and
+nalofComputerVision,vol.88,no.2,2010.
+K. Goldberg, “Segmenting unknown 3D objects from real depth
+imagesusingMaskR-CNNtrainedonsyntheticdata,”inProc.IEEE
+InternationalConferenceonRoboticsandAutomation(ICRA),2019.
+1006
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:24:24 UTC from IEEE Xplore.  Restrictions apply. 
