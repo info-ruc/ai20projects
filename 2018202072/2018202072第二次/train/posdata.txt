@@ -1,0 +1,25 @@
+posdata/1.jpg 1 0 0 40 40
+posdata/10.jpg 1 0 0 40 40
+posdata/11.jpg 1 0 0 40 40
+posdata/12.jpg 1 0 0 40 40
+posdata/13.jpg 1 0 0 40 40
+posdata/14.jpg 1 0 0 40 40
+posdata/15.jpg 1 0 0 40 40
+posdata/16.jpg 1 0 0 40 40
+posdata/17.jpg 1 0 0 40 40
+posdata/18.jpg 1 0 0 40 40
+posdata/19.jpg 1 0 0 40 40
+posdata/2.jpg 1 0 0 40 40
+posdata/20.jpg 1 0 0 40 40
+posdata/21.jpg 1 0 0 40 40
+posdata/22.jpg 1 0 0 40 40
+posdata/23.jpg 1 0 0 40 40
+posdata/24.jpg 1 0 0 40 40
+posdata/3.jpg 1 0 0 40 40
+posdata/4.jpg 1 0 0 40 40
+posdata/5.jpg 1 0 0 40 40
+posdata/6.jpg 1 0 0 40 40
+posdata/7.jpg 1 0 0 40 40
+posdata/8.jpg 1 0 0 40 40
+posdata/9.jpg 1 0 0 40 40
+

@@ -1,0 +1,1 @@
+C:\opencv\build\x64\vc14\bin\opencv_createsamples.exe -vec C:\Users\10725\Documents\train\posdata.vec -info C:\Users\10725\Documents\train\posdata\posdata.dat -num 24 -w 40 -h 40
