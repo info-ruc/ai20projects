@@ -1,0 +1,476 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Minimal Work: A Grasp Quality Metric for Deformable Hollow Objects
+Jingyi Xu1,2, Michael Danielczuk1, Jeffrey Ichnowski1, Jeffrey Mahler1, Eckehard Steinbach2, Ken Goldberg1
+Abstract—Robotgraspingofdeformablehollowobjectssuch
+as plastic bottles and cups is challenging, as the grasp should
+resist disturbances while minimally deforming the object so
+as not to damage it or dislodge liquids. We propose minimal
+work as a novel grasp quality metric that combines wrench
+resistance and object deformation. We introduce an efﬁcient
+algorithm to compute the work required to resist an external
+wrench for a manipulation task by solving a linear program.
+Thealgorithmﬁrstcomputestheminimumrequiredgraspforce
+and an estimation of the gripper jaw displacements based on
+the object’s empirical stiffness at different locations. The work
+done by the jaws is the product of the grasp force and the Fig. 1: Plastic cup example. Left: stiffness of cup, blue
+displacements. Grasps requiring minimal work are considered indicates high stiffness and red indicates low stiffness. Intu-
+to be of high quality. We collect 460 physical grasps with a
+itively, the cup is stiffer near the rim and bottom, where the
+UR5 robot and a Robotiq gripper. We consider a grasp to be
+shape provides reinforcement. Middle: three planned grasps,
+successful if it completes the task without damaging the object
+ordislodgingthecontent.Physicalexperimentssuggestthatthe shownascylindersrepresentingthegraspaxisforaparallel-
+minimalworkqualitymetricreaches74.2%balancedaccuracy, jaw gripper, where green indicates high quality and red
+a metric that is the raw accuracy normalized by the number indicates low quality according to the minimal work metric.
+of successful and failed real-world grasps, and is up to 24.2%
+Right: execution of the highest quality grasp according to
+higher than classical wrench-based quality metrics.
+the minimal work grasp metric with a Robotiq gripper.
+I. INTRODUCTION
+Forrigidobjects,wrench-basedqualitymetrics[8,16]are
+rigid. We use the Robust Efﬁcient Area Contact Hypothesis
+widely used to optimize grasp placements and to estimate
+(REACH) model [6] to estimate the contact area and the
+grasp success [11, 25], since they quantify grasps and are
+pressure distribution and model the friction wrenches of
+suitable for both general and task-oriented grasps. However,
+the non-planar area contacts with a 6D ellipsoidal limit
+grasping deformable objects is more challenging. In addi-
+surface[33].Weformulateanoptimizationproblemtosolve
+tion to resisting external disturbances, grasps should also
+for the minimum grasp force subject to the contact friction
+minimize the deformation of the object to avoid damage or
+wrench constraints. The jaws’ displacements are approxi-
+dislodging liquids, for instance, when grasping plastic cups
+mated as the object’s deformation when using the computed
+and bottles. Existing grasp planning for deformable objects
+minimalgraspforce.Theproductofthesedisplacementsand
+focuses on either holding planar deformable objects [9, 12,
+the minimum grasp force is the minimal work necessary to
+26] or lifting 3D objects with a pre-selected grasp place-
+resist the external wrench.
+ment [18, 34]. The former papers do not consider gravity, as
+This paper provides the following contributions:
+theyoperateintheplane,whilethelatterdonotincorporatea
+quality metric for comparison to other grasp placements and 1) A novel minimal work grasp quality metric for 3D
+cannot be applied to other tasks besides lifting the object. deformable hollow objects that considers both grasp
+We propose the minimal work quality metric, a novel wrench resistance and object deformation.
+quality metric that considers both task-speciﬁc wrench re- 2) An efﬁcient algorithm to compute the minimal work
+sistance and object deformation. Figure 1 shows an example quality metric for a task-speciﬁc 6D external wrench
+ofplannedgraspsforaplasticcupwiththeproposedmetric. by solving a linear program.
+To compute the quality of a grasp, we decouple the wrench 3) Physical experiments that suggest predicting grasp
+analysis and object deformation computation so that the success with the minimal work quality metric leads
+grasp quality can be efﬁciently computed without using to74.2%balancedaccuracy,24.2%and12.7%higher
+Finite Element Method (FEM) simulation or repeatedly de- than when predicting with the grasp wrench resistance
+termining wrench resistance. We ﬁrst estimate the minimum metric and the minimal force metric, respectively.
+grasp force required to resist a speciﬁed external wrench
+without considering deformation by assuming the object is II. RELATEDWORK
+Wesummarizerelatedworkinwrench-basedgraspquality
+1The AUTOLAB at UC Berkeley, CA, USA. 2Technical University of
+metrics for rigid objects and grasp planning for deformable
+Munich,ChairofMediaTechnology,Germany.Email:{jingyixu,mdaniel-
+czuk,jefﬁ,jmahler,goldberg}@berkeley.edu,eckehard.steinbach@tum.de objects.Excellentsurveysforcontactmodelingcanbefound
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1546
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. in [2, 13, 27, 31], for grasp quality metrics in [28], and for the gravity is not considered and a point contact model is
+deformable object manipulation in [29]. used for friction analysis. Lin et al. [17, 18] addressed the
+problem of lifting a deformable object based on an object
+A. Grasping Rigid Objects
+mesh model and jaw positions. An FEM formulation com-
+A common grasp quality metric, force closure [24], eval- putestheobjectdeformationbasedonthejawdisplacements.
+uates a grasp by whether it can resist any external 6D The object will be lifted if the majority of the contact
+disturbancewrenchwithanarbitrarilylargegraspforce.The points are sticking. Similarly, Zaidi et al. [34] used FEM
+volume of the grasp wrench space (GWS) [16] and the ǫ- simulations to manipulate objects with large deformations,
+metric [8] are also widely used to quantify grasp quality. such as objects made of foam or rubber. Alt et al. [1]
+While the volume reﬂects the quality of the entire grasp, also used FEM simulations and heuristics to plan grasps for
+the ǫ-metric identiﬁes the weakest point of a grasp, as ǫ is deformable hollow objects.
+the shortest distance between the origin and any facet of Inspired by [9] and [12], the proposed minimal work
+the GWS. The GWS used to evaluate grasps is typically quality metric optimizes grasp placements to manipulate
+constructed with a bounded sum-magnitude of grasp forces 3D deformable hollow objects. Furthermore, the metric is
+for computational efﬁciency. Krug et al. [14] suggest that suitable for tasks that can be modeled as target wrenches to
+such a construction is over-conservative for fully actuated be resisted.
+grippers, as the force of each jaw is limited independently.
+Task-orientedgraspqualitymetricsarewell-suitedforspe- III. PROBLEMSTATEMENT
+ciﬁc tasks with known external disturbances. A task wrench
+We consider the problem of grasp planning and grasp
+space (TWS) describes expected disturbance wrenches dur-
+success prediction for 3D deformable hollow objects with
+ing the manipulation and is typically modeled as the set
+compliant jaw pads based on the ability of a grasp to resist
+of all possible wrenches that will be imposed on an object
+target wrenches and the deformability of the object at the
+during a task [3, 25], or a 6D ellipsoid [16]. The quality
+grasp location.
+of a grasp is the maximum scale of the TWS such that it
+remains within the GWS [16]. In contrast, the grasp quality
+A. Assumptions
+can also be measured with the minimal force required for a
+task [10] or minimal coefﬁcient of friction [11]. Boyd and We make the following assumptions:
+Wegbreit[4]efﬁcientlycomputedtheminimalgraspforceby 1) Quasi-static analysis and Coulomb friction with a
+formulating a semideﬁnite programming problem. Lin and known coefﬁcient of friction.
+Yu [19] observed that some disturbance wrenches happen 2) The geometry and the stiffness are known for the
+more often than others during task execution and selected objects to be grasped.
+the grasp whose corresponding GWS covers most frequent 3) Alinearelasticmodel(linearstiffness)ofsoftjawpads
+disturbances. They extend their analysis to select the grasp and objects.
+which additionally minimizes the required motion effort of 4) Object’s local deformation is small such that the con-
+the end effector to fulﬁll a certain task [20]. tact proﬁle remains unchanged during the grasp.
+B. Grasping Deformable Objects
+B. Notation
+Manipulating deformable objects has been an active area,
+with applications such as food handling [21], fabric manip- • w ∈ R6: a contact wrench, consisting of a 3D force
+and a 3D torque.
+ulation [15, 30], and elastic rod manipulation [5]. When
+a frictionless grasp immobilizes a rigid object, it is de- • Ci: the constraint set that limits the maximum possible
+frictionwrenchandthewrenchimpressedbythenormal
+ﬁned as form closure. Gopalakrishnan and Goldberg [9]
+pressure of the i-th contact.
+generalized this concept to holding deformable objects with
+frictionless contacts, where a grasp is deﬁned as deform • W: the work performed by the gripper jaws
+closure when positive work is required to release the object. • t∈R6: a target wrench to be resisted by a grasp
+Wakamatsu et al. [32] introduced the bounded force closure
+C. Metrics
+metrictograspdeformableobjects,whichguaranteesaforce
+closure grasp under a maximal allowable external force. We consider a grasp to be successful if it completes the
+Delgado et al. [7] reduced object deformation for a holding manipulationtaskwithoutdamagingtheobjectordislodging
+taskbycomputingthemaximumallowedforcetobeexerted contents and to be failed otherwise. The predicted grasp
+on an object. Jia et al. [12] proposed a grasping strategy to success is binary and evaluates to 1 if the metric is higher
+squeezedeformableplanarobjectsbasedonworkperformed than a threshold. We use balanced accuracy to evaluate the
+by the jaws. When two jaws squeeze and immobilize an predictions made by a given metric by comparing them with
+object,andathirdjawtriestobreakthegraspbypushingthe real-worldgraspsuccesslabels.Balancedaccuracyissuitable
+object,thestrategyselectsthetranslationsofthetwopushing for imbalanced datasets and is computed by weighting each
+jaws that minimize the required work to balance the object. sample with the inverse prevalence of its true class when
+Since the metric targets planar objects, the 3D geometry or ﬁnding accuracy.
+1547
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. IV. MINIMALWORKGRASPQUALITYMETRIC
+To evaluate a grasp candidate, we compute the minimal
+workofthegripperjawsrequiredtocompleteamanipulation
+task. We ﬁrst model the frictional contacts and compute the
+minimal grasp force by solving a linear program (LP). We
+then estimate the object deformation based on the force and
+object stiffness at the contact locations. The work of each
+gripper jaw is the product of the grasp force and the jaw
+displacement. The sum of the work of each jaw forms the
+work of the grasp.
+Theproposedalgorithmtocomputetheminimalworkcan Fig. 2: Contact proﬁle with an enlarged view obtained by
+use different contact models and object stiffness acquisition the Robust Efﬁcient Area Contact Hypothesis (REACH)
+methods.WeusetheREACHmodel[6]toobtainthecontact model [6]. The contact area consists of triangles and the
+proﬁle and a 6D ellipsoidal limit surface [33] to model the redder colors represent higher pressure due to larger defor-
+maximal friction wrench thatcan be applied at each contact. mation of the soft jaw pad at that point.
+Thestiffnessiscollectedempiricallybygraspingeachobject
+at a set of locations with a physical robot. Details can be
+found in Sections V and VI-A. A. REACH: Contact Proﬁle
+For a grasp with N contacts, we denote G ∈ R6×6N as
+Danielczuk et al. [6] proposed the Robust Efﬁcient Area
+the grasp matrix, w ∈R6 as the wrench applied at the i-th
+i
+contact, and F =[F ,...,F ]T as a vector of grasp forces, Contact Hypothesis (REACH) model for contact proﬁle
+1 N
+estimation between soft jaw pads and rigid objects. Given
+where F is the grasp force at the i-th contact. The minimal
+i
+an object’s geometry modeled as a triangular mesh, the
+required grasp force to resist a target wrench t is:
+contact area is computed as the constructive solid geometry
+min F •1N intersection of the extruded polygon of the jaw with the
+F,w1,...,wN
+object. The intersection estimates the deformation of the
+ 
+w
+1 soft pad around the object at each point on the contact
+subject to G ... =−t, (1) and the pressure distribution linearly scales with the gripper
+  pad deformation. The REACH model thus provides the
+w
+N
+contactarea,consistingofatriangularmesh,andthepressure
+w ∈C ,∀i∈{1,...,N}.
+i i distribution over each triangle of the contact area mesh, as
+Denoting di as the displacement of the i-th jaw and si illustrated in Figure 2.
+as the object stiffness at the i-th contact, the work W is We use the REACH model to estimate the proﬁle for
+computed based on Hooke’s law: contact between compliant jaw pads and deformable hollow
+N objects due to its computational efﬁciency compared to the
+F
+W =XFi•di, with di = si +ǫ, (2) Finite Element Method. We note that the obtained contact
+i=1 i proﬁles may not be accurate for objects with low stiffness
+whereǫisasmallpositivenumber,whichallowstheminimal since the model assumes that the deformation is small such
+work quality metric to also apply to rigid objects or objects that the contact proﬁle remains constant during the grasp.
+containing a rigid part. In this case, the displacement d is
+i
+B. 6D Ellipsoidal Limit Surface
+equaltoǫandtheminimalworkgraspqualitymetricreduces
+to the minimal force metric. Grasps with compliant jaws may result in a non-planar
+Denoting W as the maximal work, we compute the contactarea,wherethefrictionwrenchappliedatthecontact
+max
+minimal work grasp quality qw with: is six-dimensional (6D). This work uses the 6D ellipsoid
+W proposed in [33] as the limit surface model to represent the
+q =1− . (3)
+w W constraintsonthefrictionwrenchthatcanbeappliedateach
+max
+contact. Note that other friction models are applicable to the
+W is for normalization and is selected based on the
+max
+proposed work computation algorithm as well.
+collected data.
+We brieﬂy summarize the algorithm to determine the 6D
+V. ALGORITHM ellipsoid and the friction constraints. For a given contact
+To compute the minimal required grasp force, classical area and pressure distribution, possible friction wrenches
+wrench-based grasp analysis algorithms ﬁrst model the pos- are obtained by sampling the instantaneous relative motion,
+sible friction and normal wrenches for each contact and deﬁned as body twist in screw theory [23]. The direction of
+then estimate the total wrench that a grasp can exert on an frictional force of each triangle is obtained by projecting the
+object [4]. This wrench estimation highly depends on the velocity onto the triangle plane, while the magnitude is the
+contact proﬁles. We ﬁrst describe the method used in this product of the coefﬁcient of friction and the normal force
+work to estimate contact area and pressure distribution. applied at the triangle. The frictional torque is computed
+1548
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. with respect to the friction-weighted center of pressure. By
+summing up the friction contributions of each triangle, we
+obtain a friction wrench of the contact for each sampled
+twist.
+Wethenﬁtthesampledfrictionwrenchestoa6Dellipsoid
+by solving a convex optimization problem. Given the ellip-
+soid matrix A ∈ R6×6, possible friction wrenches w ∈ R6
+of the contact are constrained by:
+wTAw ≤1. (4)
+Fig. 3: Robotiq gripper repeatability test. The repeatability
+For computational efﬁciency, we determine the linearized is high at poses 4 and 5, where the object is rigid and wide,
+constraintsC ofthei-thcontactbyevenlysamplingthesur- but lower at poses 1-3, where the object is more deformable
+i
+face of the corresponding ellipsoid at M points p∈R6×M. and narrower.
+Each point and its outward normal form a hyperplane.
+Denoting w⊥ ∈R6 as the wrench impressed by the normal
+i
+pressure and n as the normals of the ellipsoid represented An object with an open lid is grasped at ﬁve locations,
+i
+byA atthepointsp ,thefrictionwrenchofthei-thcontact each with different stiffness. Figure 3 shows the mean and
+i i
+is constrained to the interior of the M hyperplanes: standard deviation of the gripper opening at each grasp
+location with different closing speeds ranging from 0 to
+Ci ={wi ∈R6 | ni•(cid:0)wi−w⊥i (cid:1)≤ni•pi}, (5) 255, where 0 is the lowest speed. Although the absolute
+with n =A p .
+i i i gripperopeningandthecollectedobject’sstiffnessmeasure-
+We compute the minimal grasp force required to resist the ments may not be highly accurate, the relative stiffness is
+target wrench t by substituting Equation (5) into (1). reasonable, allowing for accurate comparison between grasp
+qualities when computing optimal grasp placements.
+VI. EXPERIMENTSANDRESULTS
+B. Baseline Metrics
+We describe the object’s stiffness acquisition required to
+computework.Wefurthershowplannedgraspsinsimulation We compare the proposed minimal work grasp quality
+and physicalgrasp predictionresults with theproposed min- metric with two baseline metrics.
+imal work quality metric compared to two baseline metrics. 1) Graspreliabilitymetric qr: Wedeﬁne abinaryreward
+R that describes the predicted grasp success. R = 1 if the
+A. Acquisition of Object Stiffness grasp is able to resist the target wrench t ∈ R6 without
+We estimate the object’s stiffness using its 3D mesh exceeding the maximum closing force and R=0 otherwise.
+and physical experiments. One can use the Finite Element The metric addresses uncertainties in actuation by using
+Analysis to compute the object’s deformation with a closing Monte-Carlo sampling over the grasp pose similar to Dex-
+forceofthegripper.However,thestiffnessofhollowobjects Net 1.0 [22]. More speciﬁcally, we add isotropic Gaussian
+such as plastic bottles and cups highly depends on the wall uncertainty in gripper translation and rotation, resulting in
+thickness,thegeometry,andmaterialoftheobject,whichare K perturbations for each grasp pose. The grasp quality q
+r
+non-trivialtosimulate.Therefore,weuseaphysicalrobotto of the pose is the average reward over the K perturbations:
+collect object’s stiffness at different locations in this work.
+K
+1
+We estimate the object’s stiffness based on 1) a known q = XR .
+gripper closing force F , 2) the gripper opening L when r K k
+c s k=1
+it ﬁrst makes contact with the object, and 3) the gripper
+2) Minimal force metric q : The grasp quality is the
+opening L when F is reached. We ﬁrst plan antipodal f
+e c averaged minimal required grasp force F to resist t given
+grasps in simulation for each object. The minimal distance
+the maximal force limit F :
+between the 3D object mesh and the gripper jaw along the max
+grasp axis provides an estimation of L . F
+s q =1− ,
+Ateachplannedgrasplocation,theRobotiq2F-85gripper f Fmax
+closeswithaminimalpossibleforceFc =20N.Theobject’s where Fmax is determined experimentally.
+stiffness s at the location i, the intersection point of the
+i
+grasp axis and the object surface is s = F /(L −L ). C. Grasp Planning in Simulation
+i c s,i e,i
+We repeat each grasp 5 times and select the median of the We plan grasps on ﬁve objects based on their 3D meshes
+collected gripper opening after reaching F as L . and the interpolated stiffness maps, as shown in Figure 4(a)
+c e,i
+We note that the actual grasp force of the Robotiq gripper and (b), where two objects are 3D printed using NinjaFlex
+depends on the object’s material and the gripper closing TPU ﬂexible ﬁlament to provide diversity in object shape
+speed, so we measure the repeatability of the deformation and material. Note that some inaccuracies of the measured
+measurements by varying the gripper closing speed for a set stiffness exist, such as the rigid cap of the object 1 and the
+of grasps. neck of object 2.
+1549
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. soft hard Reliability Min. Force Min. Work Reliability Min. Force Min. Work
+1
+2
+3
+4
+5
+(a) (b) (c) A lifting task  (d) A lifting and rotation task 
+Fig.4:Plannedgraspsforﬁvephysicalobjectswiththreemetrics:graspreliability,minimalforce,andtheproposedminimal
+work. Objects 2 and 4 are 3D printed using NinjaFlex TPU ﬂexible ﬁlament. (a) The ﬁve objects used in simulated and
+physicalexperiments.(b)Theinterpolatedstiffnessmapforeachobject,whereredislowstiffnessandblueishighstiffness.
+(c-d) The planned grasps for a lifting task and a lifting and 90◦ rotation task, respectively. Each colored line represents a
+graspaxisfortheparallel-jawgripper,andthecolorindicatesqualityaccordingtothegivenmetric.Redindicateslowquality,
+while green is high quality. While the grasp reliability and the minimal force metrics only consider wrench resistance, the
+proposed minimal work metric computes grasps that resist gravitational disturbances without causing large deformations.
+We sample antipodal grasp candidates and compute grasp among all object poses is selected as the value for each
+quality for 1) vertical lifting and 2) lifting and 90◦ rotation metric. The colored lines represent the grasp axes; green
+tasks. Three quality metrics are compared: grasp reliability, indicates high quality under the given metric, while red
+minimal force, and the proposed minimal work, as shown indicates low quality. Figure 4 suggests that the planned
+in Figure 4(c) and (d). We model the two tasks with a 6D graspsusingtheproposedminimalworkqualitymetricavoid
+gravity wrench to be resisted under one and three object causing large deformations of the object while resisting the
+poses obtained by discretizing the manipulation trajectory, gravitational disturbances of the manipulation tasks.
+respectively, since the gravity wrench remains the same for
+the vertical lifting task. The lowest quality value of a grasp
+1550
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. True Positive True Negative False Positive False Negative TABLE I: Balanced accuracy of three quality metrics: grasp
+reliability q , minimal force q , and the proposed minimal
+r f
+work q .
+w
+Verticallifting Liftingand90◦ rotation
+Object
+qr qf qw qr qf qw
+1 0.500 0.767 0.833 0.575 0.785 0.875
+3 0.500 0.687 0.851 0.516 0.714 0.813
+5 0.500 0.392 0.542 0.680 0.630 0.450
+All 0.500 0.615 0.742 0.590 0.710 0.713
+Fig. 5: Examples of grasp quality predictions with the mini-
+mal work quality metric. A grasp is considered successful
+VII. DISCUSSIONANDFUTUREWORK
+if the manipulation task succeeded while the content is
+not dislodged and the object returns to its original shape Thispaperproposesaminimalworkqualitymetrictoplan
+after grasping. An inﬂated balloon suggests liquids in the grasps for 3D deformable hollow objects. We evaluate the
+container might have been dislodged. proposed metric with real-world grasps for a vertical lifting
+and for a lifting and 90◦ rotation task. Physical experiments
+suggest that 74.2% and 71.3% balanced accuracy can be
+D. Physical Experiments achieved for the two tasks, respectively, up to 24.2% higher
+than classical wrench-based quality metrics.
+We evaluate the planned grasps for three representative
+objects(objects1,3,and5)withphysicalexperimentsforthe A. Limitations
+twomanipulationtasks.Weselect46graspposesintotalfor
+We note that the proposed method may not perform well
+the three objects that cover different regions of each object.
+for objects having large deformations due to the linear
+Each grasp is repeated ﬁve times for each task, resulting in
+stiffness assumption and the simpliﬁed model to acquire
+460 total grasps. We consider a grasp to be successful if 1)
+contactproﬁles.Toaddressthis,onecansimulatethecontact
+the task is completed, 2) the object returns to its original
+with the Finite Element Method and ﬁt a strain-stress curve
+shape when the grasp force is released, and 3) the content is
+for each grasp location by applying different loads. The
+not dislodged during the grasp.
+algorithms then use the obtained pressure distribution and
+Weﬁlledtheobjectswithwettowelstosimulatethemass
+the deformed object shape to compute the grasp quality.
+of the object ﬁlled with liquid without changing the object’s
+Furthermore, one reason for predicted false positives is
+stiffness or damaging the electrical devices. Object 1 and 3
+that the actual minimal grasp force of the Robotiq gripper is
+are sealed with a balloon to infer the content spillage. By
+higher than speciﬁed in the planned grasps. This issue can
+measuring the balloon’s inﬂation before and after the grasp,
+be addressed by mounting force sensors on the gripper to
+the content is considered spilled if the inﬂation difference is
+execute grasps with the desired grasp force.
+larger than a threshold.
+We use balanced accuracy, or the accuracy weighted by B. Future Work
+the number of successful and failed grasps in the collected Wenotethattheminimalworkgraspqualitymetricisalso
+data,toevaluatethepredictionaccuracy.Eachmetric’sgrasp applicable to grasps on rigid objects with compliant gripper
+quality prediction is binarized by thresholding the quality at jaws. We intend to further investigate this duality and plan
+a threshold σ = 0.5. Table I shows the balanced accuracy grasps for both rigid and deformable objects.
+of the three grasp quality metrics for the two manipulation
+tasks and Figure 5 shows examples of correct and incorrect VIII. ACKNOWLEDGMENTS
+predictions for the planned minimal work grasps. The pro- ThisresearchwasperformedattheAUTOLABatUCBerkeleyinafﬁlia-
+tionwiththeBerkeleyAIResearch(BAIR)Lab.Theauthorsweresupported
+posed metric reaches 74.2% and 71.3% balanced accuracy,
+in part by the NSF National Robotics Initiative Award 1734633, National
+respectively, for the two tasks, up to 24.2% higher than the Science Foundation Graduate Research Fellowship Program under Grant
+graspreliabilityandtheminimalforcemetrics.However,we No.1752814,andbydonationsfromGoogle,Siemens,AmazonRobotics,
+Toyota Research Institute, Autodesk, ABB, Samsung, Knapp, Loccioni,
+notethatthebalancedaccuracyfortheminimalworkquality
+Honda, Intel, Comcast, Cisco, Hewlett-Packard and by equipment grants
+metricisrelativelylowforobject5(aplasticcup)compared from PhotoNeo and NVIDIA. Any opinions, ﬁndings, and conclusions
+to other objects. This suggests that the proposed algorithm or recommendations expressed in this material are those of the author(s)
+and do not necessarily reﬂect the views of the Sponsors. We thank our
+for minimal work computation may not perform well for
+colleaguesProf.GraceGuandKahramanDemirfor3Dprinting,andwho
+objects with large deformations. Furthermore, the minimum helped with experiments and provided helpful feedback and suggestions,
+graspforcewiththeRobotiqGrippercanbemuchlargerthan especially William Wong, Priya Sundaresan, Harry Zhang, Jackson Chui,
+KateSanders.
+the planned force and can cause large object deformations
+and false positives.
+1551
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [24] V.-D. Nguyen, “Constructing force-closure grasps”, Int. Journal of
+[1] N. Alt, J. Xu, and E. Steinbach, “Grasp planning for thin-walled RoboticsResearch(IJRR),vol.7,no.3,pp.3–16,1988.
+deformableobjects”,inRoboticHands,Grasping,andManipulation [25] N.S.Pollard,“Parallelmethodsforsynthesizingwhole-handgrasps
+(ICRAWorkshop),2015. fromgeneralizedprototypes”,MassachusettsInstitutionofTechnol-
+[2] A.BicchiandV.Kumar,“Roboticgraspingandcontact:Areview”, ogy,CambridgeArtiﬁcialIntelligenceLab,Tech.Rep.,1994.
+in Proc. IEEE Int. Conf. Robotics and Automation (ICRA), vol. 1, [26] I.G.Ramirez-Alpizar,M.Higashimori,M.Kaneko,C.-H.D.Tsai,
+2000,pp.348–353. andI.Kao,“Dynamicnonprehensilemanipulationforrotatingathin
+[3] C. Borst, M. Fischer, and G. Hirzinger, “Grasp planning: How to deformableobject:Ananalogytobipedalgaits”,IEEETransactions
+choose a suitable task wrench space”, in Proc. IEEE Int. Conf. onRobotics,vol.28,no.3,pp.607–618,2012.
+RoboticsandAutomation(ICRA),vol.1,2004,pp.319–325. [27] E. Rimon and J. Burdick, The Mechanics of Robot Grasping.
+[4] S. P. Boyd and B. Wegbreit, “Fast computation of optimal contact CambridgeUniversityPress,2019.
+forces”, IEEE Transactions on Robotics, vol. 23, no. 6, pp. 1117– [28] M. A. Roa and R. Sua´rez, “Grasp quality measures: Review and
+1132,Dec.2007. performance”,Autonomousrobots,vol.38,no.1,pp.65–88,2015.
+[5] T.BretlandZ.McCarthy,“Quasi-staticmanipulationofakirchhoff [29] J. Sanchez, J.-A. Corrales, B.-C. Bouzgarrou, and Y. Mezouar,
+elastic rod based on a geometric analysis of equilibrium conﬁgu- “Roboticmanipulationandsensingofdeformableobjectsindomes-
+rations”, Int. Journal of Robotics Research (IJRR), vol. 33, no. 1, tic and industrial applications: A survey”, Int. Journal of Robotics
+pp.48–68,2014. Research(IJRR),vol.37,no.7,pp.688–716,2018.
+[6] M. Danielczuk, J. Xu, J. Mahler, M. Matl, N. Chentanez, and K. [30] D. Seita, N. Jamali, M. Laskey, R. Berenstein, A. K. Tanwani,
+Goldberg,“Reach:Reducingfalsenegativesinrobotgraspplanning P. Baskaran, S. Iba, J. Canny, and K. Goldberg, “Deep Transfer
+with a robust efﬁcient area contact hypothesis model”, in Int. S. Learning of Pick Points on Fabric for Robot Bed-Making”, in
+RoboticsResearch(ISRR),2019. InternationalSymposiumonRoboticsResearch(ISRR),2019.
+[7] A. Delgado, C. A. Jara, D. Mira, and F. Torres, “A tactile- [31] B.SicilianoandO.Khatib,Springerhandbookofrobotics.Springer,
+based grasping strategy for deformable objects’ manipulation and 2016.
+deformability estimation”, in IEEE International Conference on [32] H.Wakamatsu,S.Hirai,andK.Iwata,“Staticanalysisofdeformable
+InformaticsinControl,AutomationandRobotics(ICINCO),vol.2, objectgraspingbasedonboundedforceclosure”,inProc.IEEEInt.
+2015,pp.369–374. Conf.RoboticsandAutomation(ICRA),vol.4,1996,pp.3324–3329.
+[8] C.FerrariandJ.Canny,“Planningoptimalgrasps”,inProc.IEEE [33] J. Xu, T. Aykut, D. Ma, and E. Steinbach, “6dls: Modeling non-
+Int.Conf.RoboticsandAutomation(ICRA),1992. planar frictional surface contacts for grasping using 6d limit sur-
+[9] K.GopalakrishnanandK.Goldberg,“D-spaceanddeformclosure faces”, in https://arxiv.org/pdf/1909.06885.pdf,
+grasps of deformable parts”, Int. Journal of Robotics Research UnderReview,2018.
+(IJRR),vol.24,no.11,pp.899–910,2005. [34] L. Zaidi, J. A. Corrales, B. C. Bouzgarrou, Y. Mezouar, and L.
+[10] A.M.HowardandG.A.Bekey,“Intelligentlearningfordeformable Sabourin,“Model-basedstrategyforgrasping3ddeformableobjects
+objectmanipulation”,AutonomousRobots,vol.9,no.1,pp.51–58, using a multi-ﬁngered robotic hand”, Robotics and Autonomous
+2000. Systems,vol.95,pp.196–206,2017.
+[11] J.Jameson,“Analytictechniquesforautomatedgrasps”,PhDthesis,
+1985.
+[12] Y.-B.Jia,F.Guo,andH.Lin,“Graspingdeformableplanarobjects:
+Squeeze, stick/slip analysis, and energy-based optimalities”, Int.
+Journal of Robotics Research (IJRR), vol. 33, no. 6, pp. 866–897,
+2014.
+[13] I. Kao, K. Lynch, and J. W. Burdick, “Contact modeling and
+manipulation”,inSpringerHandbookofRobotics,Springer,2008.
+[14] R. Krug, Y. Bekiroglu, and M. A. Roa, “Grasp quality evaluation
+doneright:Howassumedcontactforceboundsaffectwrench-based
+qualitymetrics”,inProc.IEEEInt.Conf.RoboticsandAutomation
+(ICRA),2017,pp.1595–1600.
+[15] Y. Li, Y. Yue, D. Xu, E. Grinspun, and P. K. Allen, “Folding
+deformable objects using predictive simulation and trajectory op-
+timization”,inProc.IEEE/RSJInt.Conf.onIntelligentRobotsand
+Systems(IROS),2015,pp.6000–6006.
+[16] Z. Li and S. S. Sastry, “Task-oriented optimal grasping by multi-
+ﬁngered robot hands”, IEEE Journal on Robotics and Automation,
+vol.4,no.1,pp.32–44,1988.
+[17] H.Lin,F.Guo,F.Wang,andY.-B.Jia,“Pickingupsoft3dobjects
+withtwoﬁngers”,inProc.IEEEInt.Conf.RoboticsandAutomation
+(ICRA),2014,pp.3656–3661.
+[18] ——,“Pickingupasoft3dobjectby“feeling”thegrip”,Int.Journal
+ofRoboticsResearch(IJRR),vol.34,no.11,pp.1361–1384,2015.
+[19] Y.LinandY.Sun,“Graspplanningtomaximizetaskcoverage”,Int.
+JournalofRoboticsResearch(IJRR),vol.34,no.9,pp.1195–1210,
+2015.
+[20] ——, “Task-based grasp quality measures for grasp synthesis”, in
+Proc.IEEE/RSJInt.Conf.onIntelligentRobotsandSystems(IROS),
+2015,pp.485–490.
+[21] P.Long,W.Khalil,andP.Martinet,“Force/visioncontrolforrobotic
+cuttingofsoftmaterials”,inProc.IEEE/RSJInt.Conf.onIntelligent
+RobotsandSystems(IROS),2014,pp.4716–4721.
+[22] J. Mahler, F. T. Pokorny, B. Hou, M. Roderick, M. Laskey, M.
+Aubry,K.Kohlhoff,T.Kro¨ger,J.Kuffner,andK.Goldberg,“Dex-
+net 1.0: A cloud-based network of 3d objects for robust grasp
+planningusingamulti-armedbanditmodelwithcorrelatedrewards”,
+inProc.IEEEInt.Conf.RoboticsandAutomation(ICRA),2016.
+[23] R.M.Murray,Z.Li,andS.S.Sastry,Amathematicalintroduction
+toroboticmanipulation.CRCpress.
+1552
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:09 UTC from IEEE Xplore.  Restrictions apply. 

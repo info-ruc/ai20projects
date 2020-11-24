@@ -1,0 +1,482 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Human Interface for Teleoperated Object Manipulation
+with a Soft Growing Robot
+Fabio Stroppa, Ming Luo, Kyle Yoshida, Margaret M. Coad,
+Laura H. Blumenschein, and Allison M. Okamura
+Abstract—Soft growing robots are proposed for use in
+applications such as complex manipulation tasks or navigation
+in disaster scenarios. Safe interaction and ease of production
+promote the usage of this technology, but soft robots can
+be challenging to teleoperate due to their unique degrees of
+freedom.Inthispaper,weproposeahuman-centeredinterface
+thatallowsuserstoteleoperateasoftgrowingrobotformanip-
+ulation tasks using arm movements. A study was conducted to
+assesstheintuitivenessoftheinterfaceandtheperformanceof
+our soft robot, involving a pick-and-place manipulation task.
+The results show that users were able to complete the task
+97% of the time and achieve placement errors below 2 cm on
+average. These results demonstrate that our body-movement-
+based interface is an effective method for control of a soft
+growing robot manipulator.
+Fig. 1. An operator controlling the soft growing robot with the gesture-
+I. INTRODUCTION basedBodyInterface.Heretheoperatorisshownphysicallyneartherobot,
+whichissafeduetotherobot’slowinertiaandsoftexterior,whileinour
+Soft and continuum robots have useful features that are experimentalstudytheoperatorscontrolledtherobotfromaslightlyfarther
+distance.
+advantageous in applications requiring delicate interaction,
+e.g. object manipulation [1]–[3], or adaptation to unknown
+environments, e.g. navigation and exploration [4], [5]. A Studies have used devices such as 3D mice [9], joysticks
+subset of soft and continuum robots have an additional and gamepads for gaming [9]–[11], haptic interfaces [9],
+featurethatmakesoperationinconﬁnedenvironmentseasier: [12],rigid-linkmanipulators[13],andevenﬂexiblejoysticks
+the ability to extend or grow as an additional degree of free- speciallydesignedforsoftrobots[14].Inparticular,thework
+dom [4]–[7]. By extending and shortening in length, these of El-Hussieny et al. [14] was speciﬁcally designed for soft
+systems can move their tip through cluttered environments growing robots and proved to be intuitive and easy to use.
+without being restricted by body parts that may collide with However,alltheseinterfacesrelyonphysicaldevices,which
+obstacles, such as the “elbows” on a typical rigid serial- maynotbethemostintuitivewayforhumanstocontrol(and
+chain robot arm. For this reason, growth can be especially learn to control) the robot. Here we remove the physical
+beneﬁcial in manipulation tasks. interface and use the human body to control the robot.
+While the growth degree of freedom has beneﬁts in In this work, we propose an interface that allows human
+cluttered environments, designing control to leverage those operators to control the robot simply by using their arm.
+beneﬁts is challenging. In general, there do not exist well- The gestures of the operator, tracked by a motion capture
+deﬁned kinematic models for soft robots, so often control system,aremappedtothekinematicsoftherobotforaneasy
+of soft robots happens in joint space instead of task space and intuitive teleoperation. This interface, called the “Body
+[8]. Even when approximate kinematic models exist, the Interface” (Fig. 1), was used in an experimental study to
+output shape or behavior of the robot can be difﬁcult to assessitseffectivenessinthecontrolofasoftgrowingrobot
+measure, and therefore hard to close a loop around. Thus, inateleoperatedmanipulationtask.Twelveparticipantswere
+one strategy to control soft robotic systems is to use the abletosuccessfullyteleoperatetherobottoreach,grasp,and
+human to close the loop on position and account for errors move objects in the workspace.
+causedbyinaccuratemodelsandlackofsensingandclosed- The rest of the paper is organized as follows: Sec. II
+loop control. However, dissimilarity between the degrees of discusses the interface, Sec. III describes the design and
+freedomoftherobotandthehumanmakesitdifﬁculttoﬁnd control of the soft growing robot, Sec. IV discusses the
+appropriate control interfaces. experimentsetupandresults,and,ﬁnally,Sec.Vsummarizes
+the work and presents possible future research.
+ToyotaResearchInstitute(TRI)providedfundstoassisttheauthorswith
+theirresearchbutthisarticlesolelyreﬂectstheopinionsandconclusionsof II. BODYINTERFACE
+itsauthorsandnotTRIoranyotherToyotaentity.
+The interface for teleoperating the robot, the Body Inter-
+TheauthorsarewiththeMechanicalEngineeringDepartment,Stanford
+University,Stanford,CA94305,USAfstroppa@stanford.edu face, is based on a Motion Capture Tracking system and a
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 726
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. y
+y
+OP
+RETRACT
+db
+CH1 u z
+OP
+CH2 x
+OP
+z
+ABD x yMC
+EL1 STEER
+‹x ,z ›
+EL2 WR WR
+θ
+dbl P xMC
+WR1
+WR2
+GROW
+z
+MC
+(a) (b) (c)
+Fig.2. (a)Motioncapturemarkerlayoutontheoperator’supperbody.(b)Commandsusedtocontroltherobotbasedondirectionofmovement.(c)The
+originalreferencesystemistransformedtobealignedwiththeplanewherethemarkersCH1,CH2,andABDlie,withoriginatCH1.
+Gesture Interpreter Tool. The interface tracks the operator’s thetransverseplanearemappedassteeringmovements(fore-
+gestures,mapsthemtothekinematicsoftherobot,andsends arm back and forth and medial/lateral rotation, respectively
+the commands. backwards/forwards and left/right); ﬁnally, pronosupination
+deﬁnes the end effector rotation.
+A. Motion Capture Tracking
+1) Calibration and Command Mapping: The location of
+We used the PhaseSpace Impulse X2E (phasespace.com)
+the wrist deﬁnes the sent commands. Since the interface
+system to track the operator’s movements. This accurate
+is based on body movements, the system needs an initial
+optical tracking mechanism was used in order to test the
+calibration to account for the operator’s reach workspace.
+effectivenessoftheinterfacewhileavoidingtheperformance
+The steering commands are mapped to the x and z coor-
+limitations of other types of sensors. In practice, other
+dinates of the wrist. The wrist location WR (the centroid of
+tracking systems could be employed.
+WR1andWR2)isprojectedtotheoperator’stransverseplane
+Our motion capture setup includes six lightweight-linear- (cid:104) (cid:105)
+detector cameras monitoring seven active LED markers togivethecoordinates xWR,zWR .Duringthecalibration,the
+system stores the limits of the operator’s reach in the four
+placed on the forearm and the chest of the operator. The
+directions (left/right/backwards/forwards), which will then
+gestures are tracked in real time at 270 Hz. As shown in
+correspond to the limits of the robot’s workspace.
+Fig. 2(a), the Body Interface exploits four markers on the
+The command of growth/retraction is triggered when the
+operator’sforearmforgesturerecognition(twoontheelbow
+operator’s hand exceeds a certain threshold of y . During
+EL1 and EL2, two on the wrist WR1 and WR2), and three WR
+on the operator’s chest to create a body centered reference calibration,theoperatordeﬁnesadeadband([dbl,dbu])along
+the y axis: if the y coordinate of WR falls within this region,
+system (CH1, CH2, and ABD).
+therobotkeepsitslengthﬁxed;otherwise,itgrowsorretracts
+B. Gesture Interpreter Tool ataﬁxedspeed,basedonthepositionoftheoperator’shand.
+In this case, the calibration of the deadband is deﬁned by
+The operator’s gestures are mapped to the kinematics of
+half of the operator’s reachable limits, to allow the operator
+therobotthroughourcustomGestureInterpreterTool(GIT).
+to easily steer and change length simultaneously.
+The GIT recognizes three types of commands: grow/retract,
+steer left/right/backwards/forwards, and rotate the end effec- Finally, the angle θP deﬁnes the rotation of the end−effec-
+tor.Onecommandofeachtypecanbegivensimultaneously. tor. This is the angle between the two segments WR1 WR2
+−
+The communication with the robot’s microcontroller is real- and EL1 EL2 when their projection lies on the operator’s
+ized via a serial port at 66 Hz. coronal plane. During calibration, the offset between θP and
+Thespeciﬁcmappingbetweenthegesturesandcommands the starting orientation of the end effector is stored to assure
+can be customized based on the application. Fig. 2(b) shows the operator’s comfort during the teleoperation.
+one proposed mapping, used to control a soft robot hanging 2) Reference System Alignment: In order to properly
+fromtheceilingandgrowinginthedirectionofgravity.Mov- retrieve the data, the GIT needs to deﬁne a body centered
+ing the forearm above and below the operator’s transverse reference system. The three chest markers allow the oper-
+plane (forearm ﬂexion/extension) will make the robot retract ator to be aligned to the motion capture reference system,
+andgrow,respectively;whereasallthemovementsparallelto resulting in an interface that is independent of the operator’s
+727
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. off the one presented in [15], allowing for the completion of
+grasping and manipulation tasks.
+B. Control
+With reference to the parameters described in Sec. II, the
+Body Interface controls the following robot parameters:
+• the end effector position (in meters), given by
+(cid:104) (cid:105)
+xWR,zWR , these are the two coordinates of the tip of
+the robot given a certain length of the body1;
+• the orientation of the gripper (in radians), given by the
+angle θ ; and
+P
+• the direction of length change, either growing, retract-
+ing, or static, given by y relative to the growth
+WR
+deadband [dbl,dbu]. When the deadband is exceeded,
+the robot is commanded to grow or retract at a constant
+(a) (b)
+rate (in radians per second)2.
+Fig.3. (a)Thesoftgrowingrobotwithitscomponents,andtheproposed Because the robot tip does not have tracking sensors, the
+task scenario with the orientation of the operator’s reference system. (b)
+controllerreliesonthehumanoperatortoclosetheloopand
+The soft robot during the manipulation task, moving a block to a speciﬁc
+target. achieve the desired end effector position. Control strategies
+matchwithwhatisgenerallyusedforcontinuumrobots,and
+arebasedontheconstantcurvaturemodel[16];moredetails
+pose in space. As shown in Fig. 2(c), the frame deﬁned by can be found in our previous work [4]
+(cid:104)
+the (cid:105)calibration of the Motion Capture system xMC, yMC, For the experiment described in Section IV, the operator
+z(cid:104)MC istransfo(cid:105)rmedintothereferencesystemoftheoperator opens and closes the gripper with a verbal command to the
+xOP,yOP,zOP ,suchthatthecoordinatesofthemarkersare investigator.
+expressed with reference to the latter. In particular, CH1,
+CH2, and ABD deﬁne a plane, which the GIT transforms to IV. EXPERIMENTALSTUDY
+belyingonthexOP-yOP plane,withCH1placedattheorigin The Body Interface was tested on a pick-and-place task
+of the new reference system. The operator can therefore to evaluate its usability in terms of accuracy, timing, and
+controltherobotinwhateverbodyposeismostcomfortable. workload.
+III. SOFT-GROWINGROBOT A. Participants
+Webuiltasoftgrowingrobotspeciﬁcallyformanipulation Twelve participants took part in the experiment (seven
+± ±
+tasks.Thissectiondescribesitsdesignandcontrolstrategies. males, 26 3 yrs old; and ﬁve females, 22 3 yrs old). All
+participantswererighthandedandhadnoknownimpairment
+A. Design
+affectingtheirupperlimb.Theprotocolwasapprovedbythe
+The soft growing manipulator can grow, retract, and steer Stanford University Institutional Review Board, and written
+in three dimensions while carrying a payload, as shown in informed consent was obtained from each participant.
+Fig.3.Thedevicegrowsandretractsfromaportable,sealed
+B. Task and Scenario
+container. The soft growing manipulator everts, adding new
+material at the tip, when pressurized, and the DC motor Figures 1 and 3 show the scenario of the experiment.
+inside the container pulls at the tip to invert the material for The participants were asked to pick up a block placed on
+retraction. The details of the fabrication of the soft growing a starting pillar underneath the robot’s base and then move
+manipulator and the design of the manipulator’s container the block onto a designated target. There were three targets
+are described in [4]. The robot is made of a heat-sealable placed over three different pillars, and all the participants
+thermoplasticpolyurethanefabricsheetandcangrowtoupto repeated the task ﬁve times for each target, for a total of
+1.5m,withadiameterof10cm.Unlikein[4],thecontinuum ﬁfteenrepetitions.Theexperimentwasdesignedsuchthatthe
+robot is steered using a a cable-driven system. The steering participantswererandomlyandequallydividedtoexploreall
+system consists of three cables evenly spaced around the the six combinations of target ordering.
+robot circumference, driven by three gearmotors mounted at The setup details are as follows:
+the robot container (Pololu 131:1 37DX73LM). To steer, the • the Block, size 3.4×3.4 cm, placed at the center of the
+cables shorten, causing the robot to bend in the direction of workspace on a pillar 30 cm tall;
+the cable. A gripper is positioned at the distal end of the
+manipulator. The gripper is driven by two servo motors, one 1Thecoordinatealongthedirectionofgrowthmayvarywhenthelength
+forrotationandtheotherforgrasping.Thegripper(Standard oftherobotisﬁxed,asaresultofsteering.
+2Sincegrowthisdrivenbyinternalpressureinadditiontothecontainer
+Gripper Kit-Rollpaw, SunFounder) connects to and moves
+motor,theactualrobotgrowthisnotconstantbutisupperboundedbythe
+along the tip of the robot with a magnetic attachment based commandedmotorspeed.
+728
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. • Target 1, placed 25 cm to the left of the block, on a parameterinto:(i)theoveralltimeofthetrial,fromstart
+pillar 20 cm tall; to end; (ii) the time of each phase within a single trial;
+• Target 2, placed 25 cm to the right of the block, on a and (iii) the time spent performing the actual grasp or
+pillar 17 cm tall; placement, excluding the time spent in reaching either
+• Target 3, placed 25 cm in front of the block, on a pillar the block or the target.
+9 cm tall; and • Failure Rate (FR): the number of trials in which the
+• the Robot’s Base, placed over the block, a distance of blockdidnotreachthetarget,whichwerethenrepeated.
+1 m from the ground and 70 cm from the block. • Standard NASA Task Load Index (NASA-TLX): a sub-
+Theblockstartinglocationandthetargetswereplacedinthe jective standard assessment rating perceived workload
+×
+center of support surfaces with an area of 12 12 cm, and while performing a task [17]; participants were asked
+the robot started each trial from an initial length of 50 cm questions about mental load, temporal load, effort, and
+measured from gripper to container. The participants were frustration scale for each session, and the weighted
+asked to face the robot as shown by the reference system average of these was used to calculate the overall
+in Fig. 3. This was not a necessary constraint, as the GIT workload.
+ﬁxes the reference system based on the operator’s position,
+butitwasusefultonormalizethepositionoftheparticipants D. Results and Discussion
+among all the trials and assure consistency in the results.
+Fig. 4 shows the histogram of the Target Placement Error
+All the participants performed the experiment after a ﬁve-
+over all trials, considering all the participants and all the
+minute training phase, in which they were familiarized with
+targets: most of the trials resulted in errors lower than 2 cm,
+the robot and the interface. They were instructed to move
+and in particular, three of them presented a minimum of
+the robot, learn how fast the commands could be performed,
+0.2 cm, showing that our system can achieve accurate per-
+explore the workspace (including testing the response of
+formanceinamanipulationtaskwhenoperatedbytheBody
+small and large hand movements), and grasp the block.
+Interface. The histogram also shows the Failure Rate: only
+During the training, the investigator illustrated strategies to
+5 trials were discarded against 180 successful performances,
+getagoodgraspandretractwithoutbucklingtherobotbody.
+which translates to a 3% FR and 97% of successful placing.
+During the experiment, a trial was considered a failure
+Since both the Body Interface and the robot were new to
+if the block fell to the table surface, which might be due
+the participants at the start of the experiment, we veriﬁed
+to bad grasping, or hitting the pillar or the block itself. This
+if the control was intuitive enough to learn during the short
+mostoftenoccurredafterovershootingonthegrowthlength.
+training period, or if additional learning took place over the
+Participants were asked to repeat any failed trials, such that
+course of the trials. We plotted how performance metrics
+each of them performed a total of ﬁfteen good trials.
+for both phases of the experiment, Grasping and Placing,
+After the training session, the participants started the real
+changedthroughthe15trials(Fig.5).NotethatFig.5shows
+task, changing the target every ﬁve trials based on their
+performance over time during the experiment, not organized
+designed ordering. A single trial was divided into:
+by target, since the target order was randomized for each
+• Grasping phase, where the operator is asked to reach
+participant. For Grasping, we measured performance using
+the block and grasp it; and
+the time it took to grasp the block. Fig. 5(a) shows the
+• Placing phase, where the operator is asked to move
+Grasping results for all participants and the average across
+the block from the starting position and place it in the
+participants, with steady performance during the experiment
+designed target.
+andonlyasmallaverageimprovement:thissuggeststhatthe
+These phases were executed sequentially without a break
+in the participant’s control of the robot, and both of them
+involved activities such as growing towards the targets,
+orienting the gripper for a proper grasp, avoiding the pillars,
+and retracting when needed (especially after grasping the
+cubetoavoiddraggingitonthesupportsurface).Aftereach
+trial,therobotwasautomaticallyresettoitsstartingposition
+and the block was manually replaced on the initial pillar by
+the investigator.
+C. Evaluation Metrics
+The task performance was evaluated based on:
+• Target Placement Error (TPE): the distance, measured
+in centimeters, between the center of block and the tar-
+get once the task is ﬁnished, representing the accuracy
+of the placement. Fig. 4. Histogram of the Target Placement Error (TPE) over the all 180
+trials(15trialseachfor12participants),includingallthesuccessfulblock
+• Task Completion Time (TCT): the time required to
+placementsoftheparticipants(inblue),comparedtothenumberoffailures
+complete a trial, measured in seconds. We broke this thatwerediscarded(inred).
+729
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. S
+u
+b
+je
+c
+t n
+u
+m
+b
+e
+r
+5 5 5 5
+(a) (b)
+Fig. 5. Performance of the manipulation task throughout the experimental study. Dots show individual participants’ performance (color corresponds to
+participant).Averageperformanceacrossparticipants(blackline)isconsistentovertheexperiment.(a)Graspingphaseperformanceasmeasuredbytime
+tosuccessfullygrasptheobject.(b)PlacingphaseperformanceasmeasuredbyTargetPlacementError(TPE).
+0
+0
+0 -100
+-100 -100 -200
+y
+y
+y -200 -300
+-200
+-300 -300 -400
+300 20z0 100 -100 -20x0 -300 -400 300 20z0 100 -100 -20x0 -300 -400 400 300 2z00 100 0 -100x-200 -300
+0 5 10 15 20 0 5 10 15 20 25 0 5 10 15 20 25 30
+(a) (b) (c)
+Fig.6. Pathsfollowedbytheoperator’shandduringobjectmanipulationtrials,depictingtheparticipantwhocompletedthetaskintheshortesttimefor
+(cid:73) (cid:4)
+eachtarget.Eachplotindicatesthestarting( )andendingpoint( ),aswellasthemomentwhenthegraspwasperformed().Theplanesoutlinedin
+reddashedlinesrepresentthedeadband[dbl,dbu],indicatingwherethegrow/retractioncommandsweretriggered.
+participants were able to achieve the maximum performance and then performed the grasp (); subsequently, during the
+allowed by the dynamics of the robot. Placingphase,theyretractedtherobottoavoidanycollision
+To understand the participants’ performance of the task with the pillar, and then moved towards the target while
+beyondtheseperformancemetrics,weexaminedhowpartic- steering and growing, ultimately tuning the position for the
+ipants commanded the robot to reach all three targets. Fig. 6 best placement. This strategy was due to the difference
+shows three examples of the path performed by the partici- between the kinematics of the robot and the human arm:
+pantswhileexecutingthetask,oneforeachtarget.Eachplot in particular, the sharp upwards increase in Fig. 6 does not
+illustrates the best performance in terms of timing for the indicate a sudden movement in the robot since the growth
+respective target, and shows the path within the workspace and retraction were rate controlled with the deadband.
+oftheparticipantbasedontheBodyInterfacecalibration(the We can focus on the results shown in Fig. 6 in two ways:
+valuesoftheaxesareexpressedinmillimeters).Furthermore, in the breakdown in Task Completion Time, and in the
+the deadband [dbl,dbu] is also shown to delineate where location of block placement in the users’ command space.
+the growth and retraction commands were triggered. These AssuggestedbyFig.7(a),thePlacingphasetookmoretime
+plots indicate that the strategy followed by the participants than the Grasping one; this is true especially for Target 3
+wasmostlyconsistentfromtargettotarget,andfollowedthe (see also Fig. 6(c)), which was the furthest from the starting
+instructions provided during the training phase. During the heightofthecubeandrequiredmoregrowingtime.However,
+Graspingphase,participantsstartedthetrialgrowingtowards as shown by Fig. 7(b), if we do not consider the time
+the block, tuned the position of the gripper by steering spent during eversion (growth and retraction), there are no
+730
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. e [s] Target 1 Target 2
+m
+Ti
+n e
+og
+pletivera
+mA
+o
+C
+k 
+s
+a
+T
+Target 3
+(a)
+s]
+e [
+m Fig. 8. Locations of placement command in users’ calibrated wrist
+mpletion Tiering Only cthoeorTdairngaetetsPflaocretmheentthrEererVotar..rgCetsO.CNoClorLoUfSthIeOplNacementlocationindicates
+e
+CoSt In this paper, we presented an intuitive interface to tele-
+k  operate a soft growing robot with arm gestures. We demon-
+s
+a
+T strated that this interface can be used to perform a pick-
+and-place task by users with no previous training, achieving
+placementerrorsbelow2cmonaverage.Thisworkshowsa
+promisingﬁrststepforcreatinginterfacesthatallowhumans
+(b)
+to control soft robots more intuitively and close the loop
+Fig. 7. Task Completion Time data for each target and each phase, around the nonlinearities between joint and task space.
+includingmedian,interquartilerangewithoutliers,andmax/minacrossall Inthefuture,wewouldliketoimprovetheperformanceof
+participants. In (a) is reported the overall time from start to end; in (b) is
+thesoftrobotforteleoperatedmanipulation.Speciﬁcally,the
+reportedthetimespentsteeringandtuningtheﬁnalposition.
+participants consistently indicated that the Grasping phase
+was the hardest part of the task. We believe that the primary
+noticeable differences between Grasping and Placing. This reasonisthetwo-ﬁngergripperdesignused,andtheneedto
+indicates that steering was equally easy at all lengths when align it precisely to the block surface. A possible solution is
+using the Body Interface. to integrate a more compliant and adaptable gripper, like a
+Looking at the locations in the command space where four-ﬁngered soft gripper [18]; such a device would ensure
+participants placed the block, we can see clear clusters a reliable grasp, and remove the need to accurately position
+indicating each of the three target locations (Fig. 8). The the gripper in the pronosupination degree of freedom.
+color of the dots indicate the Target Placement Error for Another important extension of this study would be to
+that trial. We can see two interesting features in the data: compare the Body Interface with previous proposed control
+some high error placements occurred close to the center of interfaces, speciﬁcally the ﬂexible joystick proposed in [14].
+the clusters, and some low error placements occurred well Finally, the last extension of the work will be to develop
+outside. The high error dots can be explained by the quality sharedautonomyprotocolstoimprovetheinteractionduring
+ofthegraspforthattrial,sincesomegraspswouldcausethe teleoperation. The results of this work have shown that,
+block to roll or move signiﬁcantly after being released. On althoughtheBodyInterfacecanachievegoodperformancein
+the other hand, even though participants were instructed to termsofaccuracyandtiming,thereisstillroomforimprove-
+place the block on the target, the low error dots outside the ment. By allowing the robot to participate in the execution
+clustersshowwhereparticipantsdidnotgrowtherobotasfar ofthetask,theroleofthehumanoperatorwillbesimpliﬁed
+anddroppedtheblockfromaheight.Thisstrategyrequireda and the different strengths of the human and the robot can
+largersteeringcommandtoreachthesamelocationvertically be exploited. Different strategies that could be examined
+over the target, putting those trials outside the cluster. include: (i) haptic feedback through a holdable device [19],
+Lastly, the results of the NASA-TLX showed an average allowing the robot to provide guidance information to the
+±
+workload value of 68 11% among all the participants, operatorandsuggestthecorrectpathtoreachthetargets;and
+which indicates that the task was challenging but not overly (ii) artiﬁcial-intelligence algorithms mimicking the assist-
+demanding. The participants indicated that the Grasping as-needed paradigm used in robot-based rehabilitation [20],
+phase was slightly more difﬁcult than the Placing: it was where the robot will move autonomously towards the target
+easy to hit the block with the gripper when trying to align only when the operator needs help to ﬁnalize the movement
+the robot well, especially after overshooting in growth. and only of a limited magnitude.
+731
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[1] D.Trivedi,C.D.Rahn,W.M.Kier,andI.D.Walker,“Softrobotics:
+Biological inspiration, state of the art, and future research,” Applied
+BionicsandBiomechanics,vol.5,no.3,pp.99–117,2008.
+[2] E. Brown, N. Rodenberg, J. Amend, A. Mozeika, E. Steltz, M. R.
+Zakin,H.Lipson,andH.M.Jaeger,“Universalroboticgripperbased
+on the jamming of granular material,” Proceedings of the National
+AcademyofSciences,vol.107,no.44,pp.18809–18814,2010.
+[3] M.Cianchetti,T.Ranzani,G.Gerboni,T.Nanayakkara,K.Althoefer,
+P.Dasgupta,andA.Menciassi,“Softroboticstechnologiestoaddress
+shortcomingsintoday’sminimallyinvasivesurgery:theSTIFF-FLOP
+approach,”Softrobotics,vol.1,no.2,pp.122–131,2014.
+[4] M.M.Coad,L.H.Blumenschein,S.Cutler,J.A.R.Zepeda,N.D.
+Naclerio, H. El-Hussieny, U. Mehmood, J.-H. Ryu, E. W. Hawkes,
+andA.M.Okamura,“Vinerobots:Design,teleoperation,anddeploy-
+mentfornavigationandexploration,”IEEERoboticsandAutomation
+Magazine,2019,accepted.(preprintonarXiv:1903.00069).
+[5] M. Wooten, C. Frazelle, I. D. Walker, A. Kapadia, and J. H. Lee,
+“Explorationandinspectionwithvine-inspiredcontinuumrobots,”in
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+2018,pp.1–5.
+[6] E.W.Hawkes,L.H.Blumenschein,J.D.Greer,andA.M.Okamura,
+“Asoftrobotthatnavigatesitsenvironmentthroughgrowth,”Science
+Robotics,vol.2,no.8,p.eaan3028,2017.
+[7] H.B.Gilbert,D.C.Rucker,andR.J.WebsterIII,“Concentrictube
+robots:Thestateoftheartandfuturedirections,”inRoboticsResearch.
+Springer,2016,pp.253–269.
+[8] D. Rus and M. T. Tolley, “Design, fabrication and control of soft
+robots,”Nature,vol.521,no.7553,p.467,2015.
+[9] C. Fellmann, D. Kashi, and J. Burgner-Kahrs, “Evaluation of input
+devices for teleoperation of concentric tube continuum robots for
+surgicaltasks,”inMedicalImaging2015:Image-GuidedProcedures,
+RoboticInterventions,andModeling,vol.9415. InternationalSociety
+forOpticsandPhotonics,2015,p.94151O.
+[10] M.Csencsits,B.A.Jones,W.McMahan,V.Iyengar,andI.D.Walker,
+“Userinterfacesforcontinuumrobotarms,”inIEEE/RSJInternational
+ConferenceonIntelligentRobotsandSystems,2005,pp.3123–3130.
+[11] M. D. Grissom, V. Chitrakaran, D. Dienno, M. Csencits, M. Pritts,
+B.Jones,W.McMahan,D.Dawson,C.Rahn,andI.Walker,“Design
+and experimental testing of the octarm soft robot manipulator,” in
+UnmannedSystemsTechnologyVIII,vol.6230. InternationalSociety
+forOpticsandPhotonics,2006,p.62301F.
+[12] A. Majewicz and A. M. Okamura, “Cartesian and joint space tele-
+operation for nonholonomic steerable needles,” in World Haptics
+Conference(WHC),2013,pp.395–400.
+[13] C.G.Frazelle,A.D.Kapadia,K.E.Fry,andI.D.Walker,“Teleop-
+erationmappingsfromrigidlinkrobotstotheirextensiblecontinuum
+counterparts,” in IEEE International Conference on Robotics and
+Automation(ICRA),2016,pp.4093–4100.
+[14] H. El-Hussieny, U. Mehmood, Z. Mehdi, S.-G. Jeong, M. Usman,
+E. W. Hawkes, A. M. Okamura, and J.-H. Ryu, “Development and
+evaluation of an intuitive ﬂexible interface for teleoperating soft
+growingrobots,”inIEEE/RSJInternationalConferenceonIntelligent
+RobotsandSystems(IROS),2018,pp.4995–5002.
+[15] J.Luong,P.Glick,A.Ong,M.S.deVries,S.Sandin,E.W.Hawkes,
+andM.T.Tolley,“Eversionandretractionofasoftrobottowardsthe
+explorationofcoralreefs,”inIEEEInternationalConferenceonSoft
+Robotics(RoboSoft),2019,pp.801–807.
+[16] R. J. Webster III and B. A. Jones, “Design and kinematic modeling
+ofconstantcurvaturecontinuumrobots:Areview,”TheInternational
+JournalofRoboticsResearch,vol.29,no.13,pp.1661–1683,2010.
+[17] S.G.HartandL.E.Staveland,“Developmentofnasa-tlx(taskload
+index):Resultsofempiricalandtheoreticalresearch,”inAdvancesin
+psychology. Elsevier,1988,vol.52,pp.139–183.
+[18] F.Ilievski,A.D.Mazzeo,R.F.Shepherd,X.Chen,andG.M.White-
+sides,“Softroboticsforchemists,”AngewandteChemieInternational
+Edition,vol.50,no.8,pp.1890–1895,2011.
+[19] J.M.Walker,N.Zemiti,P.Poignet,andA.M.Okamura,“Holdable
+haptic device for 4-dof motion guidance,” in IEEE World Haptics
+Conference(WHC),inpress,2019.
+[20] F. Stroppa, C. Loconsole, S. Marcheschi, N. Mastronicola, and
+A. Frisoli, “An improved adaptive robotic assistance methodology
+forupper-limbrehabilitation,”inInternationalConferenceonHuman
+HapticSensingandTouchEnabledComputerApplications. Springer,
+2018,pp.513–525.
+732
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:36:48 UTC from IEEE Xplore.  Restrictions apply. 

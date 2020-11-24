@@ -1,0 +1,496 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Shared Control Templates for Assistive Robotics
+Gabriel Quere, Annette Hagengruber, Maged Iskandar, Samuel Bustamante,
+Daniel Leidner, Freek Stulp and Jo¨rn Vogel
+Abstract—Light-weight robotic manipulators can be used to
+restore the manipulation capability of people with a motor
+disability. However, manipulating the environment poses a
+complex task, especially when the control interface is of low
+bandwidth, as may be the case for users with impairments.
+Therefore,weproposeaconstraint-basedsharedcontrolscheme
+to deﬁne skills which provide support during task execution.
+Thisisachievedbyrepresentingaskillasasequenceofstates,
+with speciﬁc user command mappings and different sets of
+constraints being applied in each state. New skills are deﬁned
+by combining different types of constraints and conditions for
+statetransitions,inahuman-readableformat.Wedemonstrate
+itsversatilityinapilotexperimentwiththreeactivitiesofdaily
+living. Results show that even complex, high-dimensional tasks
+can be performed with a low-dimensional interface using our
+shared control approach.
+I. INTRODUCTION Fig.1:a)TheDLRassistiveroboticsystemEDAN.b)TheskillPourliquid
+is divided into multiple phases each with different motion constraints and
+Theaimofassistiveroboticarmsistorestoremanipulation input mappings. The user is able to convey commands using a 3D signal
+fromeitherasEMG-basedorajoystick-basedinterface.
+capabilitiesofpeoplewithdisabilities,therebyenablingthem
+On the other end of the spectrum, there has been sub-
+to perform tasks of daily living. An example is EDAN
+stantial work aimed at achieving full robot autonomy. When
+(EMG-controlledDailyAssistaNt),whichconsistsofaDLR
+given some prior knowledge, robots are able to perceive and
+Light-Weight Robot III with a DLR-HIT hand, mounted
+reason, allowing planning and execution of a task desired
+on a power-wheelchair, see Fig. 1.a. Since goal-directed
+by the user. Autonomy can, in principle, enable activities of
+physical manipulation of the environment is often complex
+daily living to be achieved, but in practice there are several
+andintricate,controllingtheroboticarmcanbedifﬁcult,and
+limitations. First, it is frustrating when the robot fails to
+may lead to a high cognitive workload. This is especially
+accomplishataskbecauseofmodelingerrors,e.g.failingat
+the case for mobile manipulation systems such as EDAN, as
+grasping a door handle due to a decalibrated vision system.
+they have many degrees of freedom (DoFs) which all need
+Second, it has been shown that users prefer to be in control
+tobecontrolledappropriatelytoachieveatask.Forinstance,
+oftheroboticarm,evenwhenthisimpliesahigherworkload
+opening and going through a door poses a real challenge, as
+for them [3].
+graspingthehandleisintricate,andopeningthedoorrequires
+With this in mind, we propose a shared control method
+thecoordinationofbotharmandwheelchairmovements[1].
+that allows the user to intuitively control the end-effector
+Commercial systems typically make use of manual con-
+along task-relevant dimensions. This provides empowerment
+trol methods, where user commands are mapped either
+and the ability to solve complex tasks. Our contributions are
+to wheelchair motion or to subsets of robot motion (e.g.
+twofold. First, we design a Shared Control Template (SCT)
+translational, rotational or gripper aperture), depending on
+for action representation. It deﬁnes task-speciﬁc skills as
+the selected control mode. While already in use [2], manual
+Finite State Machines in which each phase speciﬁes task-
+control can vary in usability from bothersome to difﬁcult,
+relevant input mappings and active constraints (cf Fig. 1.b).
+dependingonthenumberofDoFsthathavetobecontrolled
+The SCT automatically coordinate all DoFs with the whole-
+in tandem to achieve the required task. This becomes even
+body controlled robotic system to achieve the task. Second,
+more crucial when controlling assistive devices with inter-
+weevaluateourconceptinapilotstudywiththreescenarios
+faces based on bio-signals, which often results in noisier
+involving activities of daily living.
+commands and low-throughput.
+This paper is structured as follows: Section II presents re-
+latedwork.SectionIIIdescribestheSharedControlTemplate
+All authors are with the Institute of Robotics and Mechatron-
+ics, German Aerospace Center (DLR), Wessling, Germany. Email: andthedeﬁnitionofskills.SectionIVdescribestheassistive
+gabriel.quere@dlr.de. This work is partly supported by the robot EDAN and the components integration. In Section V,
+Bavarian Ministry of Economic Affairs, Regional Development and En-
+we presenta pilot studywith a3-DoF joystick anda surface
+ergy, within the project ”SMiLE” (LABAY97) and ”SMiLE2gether”
+(LABAY102). Electromyography (sEMG) interface [4].
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1956
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK of the Shared Control Template is an end-effector target
+In shared control, both user and assistive system control pose Htar, which depends on user inputs x and respects the
+motion constraints during the different phases of the skill.
+thestatevariablestogether,whiletheuserdecideswhichtask
+to perform [5]. Teleoperating a robot requires an external This target pose is sent to a pose interpolator [24], which
+device to control the robot and has been applied with shared outputs the desired end-effector pose Hipol for a whole-
+control in various domains. Examples of interfaces with body impedance controller, which coordinates all DoFs of
+forcefeedbackareasecondroboticarm[6],[7],speciﬁcally the mobile system to achieve the task [1].
+designed controllers [8], [9] or joysticks [10].
+Joysticks are also commonly used as interfaces without
+feedback. For example, Herlant et al. present in [11] au-
+tomatic mode switching under some optimality conditions.
+Various interfaces adapted to disabilities investigate how to
+bestmapalow-dimensional,low-throughputsignaltocontrol
+a robotic arm. Broad et al. use a sip-and-puff interface to
+control a hierarchical FSM in [12]. With Body-Machine Fig. 2: System architecture. User commands are processed by an Input
+Mapping (IM) to apply a displacement on the precedent local target end-
+Interfaces [13], Jain et al. propose using piecewise virtual
+effector pose and obtain a new pose Him. Active Constraints (AC) then
+guiding ﬁxtures. Vogel et al. in [14] use virtual ﬁxtures for applyconstraintstoobtainanewend-effectorposeHtar.
+grasping known objects. Muelling et al. in [15] implement
+intent inference and capture envelopes with Brain Computer A. Input Mapping
+Interfaces. Blending of the user input and the assistive An Input Mapping is a set of transformations (IM )
+n=1:N
+command can also be adaptive, for example in [16] where it that maps user inputs to end-effector (EE) displacements.
+depends on the robot estimate of its own conﬁdence w.r.t It takes as input the target EE pose from the previous
+the user goal and is associated with customizable input time step H , consecutively applies the different IM ,
+retargeting. In [17] if no commands are given the assistance and outputstaanrt−in1termediate target EE pose H . A simpnle
+im
+progressivelytakesoverandﬁnishesthemovementbyitself. mapping, for instance from a 3-DoF input, is x , x , x
+1 2 3
+In [18] constraints are both learned and applied online. mapped to the x, y, z translations of the end-effector. This
+Finally,fullautonomyapproacheshavealsobeensuccess- is used in ‘Translational Control’ in Fig. 1.b, which allows
+ful for many tasks, ranging from feeding [19] to cleaning the user to move the bottle to a desired position. On the
+[20] and pancake ﬂipping [21]. This latter work, as well as other hand, a more convenient input mapping for pouring
+some of the above examples, uses active constraints. Also water (Fig. 1.b, ‘Pour’) is to map the x input to a vertical
+3
+called virtual ﬁxtures, they are high-level control algorithms translation, but the x , x inputs to a rotation around a
+1 2
+implementing virtual constraints on the robot - as opposed coordinate frame of interest: the thermos tip. Such phase-
+to mechanical ones. They are usually used to guide the user speciﬁc mappings facilitate the execution of the task. The
+alongatask-speciﬁcpath,adapttherobotstiffnesstothetask procedure is illustrated in Algorithm 1 and Fig. 3:
+or restrict the workspace for safety or efﬁciency reasons [9],
+[22]. In particular, an action representation based on active Algorithm 1 Input Mapping
+constraintscanbefoundintheiTaSCframework,whichuses
+a systematic constraint-based approach to specify complex Input: User input x, precedent EE target pose Htart−1,
+Input Mapping IM
+skills [23]. Bartels et al. use it to solve pancake ﬂipping
+Output: Unconstrained target end-effector pose H
+im
+by deﬁning geometric constraints with differentiable feature
+functions [21]. We derive a similar description language for 1: Him ←Htart−1
+2: for each input mapping in IM do
+constraints, however while they extract a control law from
+3: // Compute reference frame from IM
+closed-loop kinematic constraints, we apply user inputs to
+4: F ← input mapping.reference frame
+a geometrically constrained target end-effector pose, tracked
+5: // Compute static transform from
+with impedance control.
+6: // target EE pose to reference frame.
+III. METHOD:SHAREDCONTROLTEMPLATES 7: TFHim ←F−1∗Him
+Fig. 2 provides an overview of our approach. A Shared 8: // Compute displacement of the reference frame
+Control Template (SCT) is a Finite State Machine (FSM) 9: Fd ←input mapping.map(F,x)
+thatmodelsthedifferentphasesofaskill,e.g.‘Translational 10: // Update target EE pose from reference frame
+control’, ‘Tilt towards goal’, ‘Pour’ as in Fig. 1.b to solve 11: Him ←Fd∗TFHim
+the task Pour water. Each phase in the FSM contains input 12: end for
+mappings and active constraints. An Input Mapping (IM) 13: return Him
+maps the low-dimensional user inputs to task-relevant dis-
+placementsofanend-effectortargetpose.ActiveConstraints IM, as well as ACs and the overall SCT, are speciﬁed in
+(ACs) additionally constrain the target end-effector pose, to human-readable YAML ﬁles. This makes it easy to develop
+assistwithsuccessfultaskexecution.Insummary,theoutput andeditskills,withouthavingtomodify(orhaveknowledge
+1957
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. The IM can be adapted to the desired amount of autonomy
+and the expected quality of the user input. It can range
+fromone-dimensionalvirtualguidefollowingtoﬁne-grained
+multi-DoFs control.
+B. Active Constraints
+After computing a new target EE pose H from user
+im
+inputs, various constraints deﬁned in the YAML skill ﬁle
+can be computed. As with IM, ACs can be applied on any
+frame of interest F, whether they are related to the EE or
+to a grasped object. Additionally, these frames of interest
+can themselves be deﬁned w.r.t. a static world frame, the
+Fig. 3: The two input mappingsfor the ‘Pour’ phase. Note that H poses wheelchair or a task’s target pose: as an example when
+areposesoftheend-effector(notshown),notthebottle. openingadrawer,theorientationoftheend-effectordepends
+on the drawer orientation. The Active Constraints procedure
+of)thesystemorcontrolsoftware.Thetemplateisanobject- is described in Algorithm 2:
+centric task representation and its main components are
+transforms, used for example to encode a pose or a frame Algorithm 2 Active Constraint
+of reference. In the YAML ﬁles, any coordinate frame of
+Input: Commanded end-effector target pose H , Active
+im
+interest F can be speciﬁed, e.g. the end-effector position,
+Constraints ACs
+the tip frame of a grasped object oriented towards the goal
+Output: New target end-effector pose H
+tar
+or the grasp frame of a target. Those frames are computed
+1: Htar ←Him
+fromanobjectdatabasewithpropertyinheritance,cfSection
+2: for each active constraint in ACs do
+IV-A.
+3: F ← active constraint.reference frame
+LisTtihnegY1A.MCLoosrndiipnpaetet fforarmthese arurenndiensgcreibxeadmpalse[isoblijsteecdti,n 4: TFHtar ←F−1∗Htar
+5: // Apply constraints on the reference frame
+frame]. frame:[wheelchair, origin] indicates
+6: Fc ←active constraint.constrain(F)
+thattheframeofinterestisstaticw.r.t.theusersittinginthe
+7: // Update target EE pose from reference frame
+wEuhleeerlcahnagilre.sW: [ex,uyse,za] f6orDpooFssitipoons,e,[αd,eβﬁ,nγin]gfoorrioerniteanttiaotnioans, 8: Htar ←Fc∗TFHtar
+9: end for
+concatenated as a Euler pose [x,y,z,α,β,γ]. This comes
+10: return Htar
+with known problems (non-unique solutions and Gimbal
+lock)butisneverthelessthemostintuitivewaytodeﬁnelocal
+rotationconstraints.mapping:[0,0,x 3,0,0,0]means Our template provides three types of constraints: ﬁxed
+thattheuserinputx ismappedtothez axisofthereference values, function values and manifolds. A ﬁxed value of one
+3
+frame. scaling represents an additional scaling factor to of the end-effector DoFs allows for example to keep the
+weight the user inputs depending on the tasks most relevant EE at a speciﬁc height. For more ﬂexibility, functions can
+motion directions. The second input mapping (Lines 5-12) be used instead of ﬁxed values: inequalities, polynomials,
+uses the tip of the bottle as frame of interest. An auxiliary additions, scalings, dot products and hand-crafted functions.
+function bottle rotation (L7-12) maps the user inputs Inputs to those functions are distances and transforms, e.g.
+x and x to a rotation of the bottle at its tip (ﬁfth element Fig. 4, Left, where α is a function of the distance.
+1 2
+in mapping L6, which represents a pitch in the frame of
+reference of the bottle tip). Hence, instead of moving in the
+xy plane, the x and x commands rotate the target position
+1 2
+of the bottle.
+1 input_mapping:
+2 - frame: [wheelchair, origin]
+3 mapping: [0,0,x_3,0,0,0]
+4 scaling: [0,0,1,0,0,0]
+5 - frame: [bottle, tip_goal]
+6 mapping: [0,0,0,0,bottle_rotation,0]
+7 auxiliary_functions:
+8 bottle_rotation:
+9 function: normalized_scalar
+10 target_frame: [bottle, tip, X]
+11 mapping: [x_1,x_2,0,0,0,0] Fig.4: Left:Constraintforphase‘Tilttowardsgoal’.Right:Constraintfor
+12 scaling: [2,2,0,0,0,0] phase‘Staywithincone’.
+Listing1:InputMappingforphase‘Pour’oftheskillPourliquid. Another option for constraints is to use manifolds. A
+complete deﬁnition is out of the scope of this paper. The
+1958
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. currentmanifoldsareheuristicallydeﬁnedfortheconsidered externalforcesandputsthesysteminamaximallycompliant
+tasks, e.g. a cone pointing towards a target frame (Fig. 4, control mode, in which only gravity compensation is active.
+Right) or a cylinder for opening a door. Future work will As a result, the arm cannot exert force or torque to the
+integrate a more general representations of manifolds. environment, providing safety to the users as well as to the
+A simple implementation example is the phase ‘Pour’ in hardware.
+Fig. 1, where the thermos should not tilt too far to avoid Finally, we use a Whole-Body Controller (WBC) that
+spillage. A limit on the maximum tilt angle of the thermos expands the workspace of the robot arm, to allow for tasks
+is deﬁned in Listing 2: necessitating a large range of motion, e.g. opening a door.
+The WBC is implemented as a low-level controller (Fig. 2)
+1 active_constraints:
+whichrealizescomplextasksrequiringcontinuouscoordina-
+2 - frame: [object, tip_goal]
+3 mapping: [x,x,x,x,tilt_angle_limit,x] tion between the robotic arm and the wheelchair. As such,
+4 auxiliary_functions: the wheelchair follows the EE to maintain manipulability
+5 tilt_angle_limit:
+of the arm as soon as the EE crosses geometric boundaries,
+6 function: stay_within_range
+7 reference: [object, tip_goal] whichcanbedeﬁnedasskillparameters.Forexample,when
+8 scaling : [0,0,0,0,1,0] opening the door, the wheelchair follows when the arm gets
+9 range: [-inf, 0.4]
+out of reach so that there is no need to switch to wheelchair
+Listing 2: Constraint for the phase ‘Pour’. It deﬁnes an inequality: the control. Similarly, the wheelchair moves back when the arm
+computedanglehastostaybelow0.4rad.WelimittheEuleranglespitfalls
+gets too close to the user when opening a drawer. With this
+byusingappropriateframeofinterestforeachconstraint.
+approach, the user can focus on controlling the end-effector
+with shared control guidance, while the local commands to
+C. Finite State Machine
+the robotic arm and the wheelchair are generated from the
+A SCT deﬁnes a FSM, which models the different phases WBC, reducing the users workload. More details about this
+of a skill and the transitions between them, e.g. indicated feature are provided in [1].
+in Fig. 1.b. Transitions between the phases can depend on
+different metrics that relate two frames in space, typically IV. SYSTEMINTEGRATION
+distances between the EE and an object frame. Any number Our concept is integrated into the EDAN system, which
+ofDoFscanbeusedtocomputethedistances,ineitherposi- consists of a commercially available wheelchair on which a
+tion or orientation, and if necessary weighted. For example, DLR Light-Weight Robot III is mounted, equipped with a
+consider again Pour water from Fig. 1.b: a transition occurs dexterous torque controlled ﬁve-ﬁngered DLR-HIT hand for
+when the distance between the grasped object (the thermos) grasping and manipulating. It is being used as a research
+and a target object (the mug) reaches a certain threshold. platform for rehabilitation robotics on topics such as human
+Transitions can also depend on the external forces applied robotcontrolinterfaces[4],assistivecontrol[14]andwhole-
+totheend-effector(estimatedviathejointtorquesensors)in body control [1].
+directions of interest.
+A. World Representation and Object Database
+A transition can point to any phase and is often deﬁned
+with inequalities or a range of values. It is also possible to For the concept of object-centric action representation,
+combine transitions with OR / AND operators. The current we use the implementation described in [25]. Skills are
+phaseisestimatedrecursively,whichcouldbeprompttohys- deﬁned for object classes in a database while a centralized
+teresis and unrequited inﬁnite loops, hence requiring careful worldrepresentationhandlesinstancesofobjects.Theworld
+design. The different states and transitions are described in representation describes the robot belief of the current state
+the same YAML ﬁle as the IM and ACs, so that the SCT for of the world. Object classes are subject to inheritance: a
+a skill is contained in one YAML ﬁle. thermos derives from the virtual class bottle, which derives
+from container, and skills can be deﬁned for any of them.
+D. Controller Parameterization
+For each experiment, the available instances (i.e. the
+While the SCT and its modules are robot-agnostic, a objects that the robot can interact with) are localized with
+successfulrealizationwillalsorequirethedeﬁnitionofrobot- EDAN’s vision system, using a online bounding box object
+speciﬁc parameters. In our approach, these parameters are detector and depth localization, cf [1] for details.
+alsospeciﬁedwithintheYAML ﬁleoftheskillandtherefore
+B. User Interface
+can be phase dependent. For the EDAN system, several
+options are available. For one, the Cartesian Impedance EDAN’s high-level user interface is displayed on a tablet
+Controller allows adjustment of the end-effector stiffness mounted on the wheelchair. Users have two options to
+and a deﬁnition of a null-space attractor in terms of a convey their intention: the ﬁrst is a head-switch, used to
+virtual spring attracting the elbow of the LWR. Secondly, switch between controllable devices: the robotic arm, the
+thejointconﬁgurationandstiffnessofanysingleDoFofthe wheelchair or the tablet. The second – used by the Shared
+torquecontrolledhandcanbespeciﬁed.Furthermore,EDAN Control Templates – is a continuous 3D velocity interface.
+has a built-in safety mechanism, which reacts – if needed WeprovideaspacemouseorsEMG-basedinterfacesasinput
+withaphase-dependentactivationthreshold–onunexpected modalities [4]. An additional trigger signal (button click
+1959
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. A B C D
+E F G H
+Fig.5:PhotoseriesofthedifferentphasesoftheskillOpendoorandgothroughwithoneofoursubject:approachandalignmenttothedoor(A),open
+thedoor(B-F)anddrivethrough(G-H),executedbymeansofsharedcontrolandwhole-bodyimpedancecontrolontheEDANsystem.
+Task: Users Expert user: Author
+on the spacemouse or grasp signal with the sEMG-based
+Pour water (Test average) (average of 10 trials)
+interface)automaticallyﬁnishesagrasporreleasesanobject.
+Shared Control 37s 30s
+In tablet mode, it serves to select an action. The tablet
+Manual Control 95s 67s
+displaysmeasuredcontrolsignals,thecurrenttaskstatusand
+perception module feedback, as well as a list of available TABLEI:TaskPourwaterresults.
+tasks, inferred from the world state.
+V. PILOTSTUDY
+To test our method, users were asked to perform activities
+of daily living. We use those tests to illustrate the effect of
+our approach on the end-effector trajectories.
+A. Study Design
+Three common daily life tasks were considered for this
+pilot study: Open drawer, Pour water and Open and go
+through door. Three users tested those tasks, with two
+Fig.6:SkillOpendrawer.Sideviewofthetrajectoriesresultingfromthe
+continuous3DoFsinterfaces:spacemouseandsEMG-based.
+end-effectorcommandedandmeasuredposesduringausertesttrialwithan
+Users are able-bodied and have various levels of system sEMG-based interface. The measured end-effector pose follows a parallel
+experience: User A belongs to the author list, User B has trajectory to the commanded pose due to the impedance control and the
+forceappliedonthedrawerhandle.
+sEMG-based interface experience but no system nor method
+knowledgeanduserChasneither.Userstriedtoaccomplish
+difference during execution of the skill is the need to switch
+eachtaskfourtimes,ﬁrstwiththespacemouse,thenwiththe
+control mode (translational, rotational and ﬁngers), which
+sEMG-basedinterface.Foreachtask,weusedthreetrialsfor
+happened on average 6.7 times for the expert trials. As the
+training and the last one – with no live advice given – for
+rotation happens around the Tool Center Point of the end-
+testing.Toconcludetheexperiment,userstriedOpendrawer
+effector and not around the tip of the grasped object, there
+and Pour liquid with manual control.
+is often a need to switch the mode to correct the position of
+B. Results the tip to be able to pour properly, even when one has task
+To begin with, test trials with the spacemouse interface experience.
+were successful for the three users. Using the sEMG-based Users failed at the task Open drawer in manual mode
+interface, user A successfully completed all testing tasks, by crossing the torque safety threshold. Open door and go
+userBopenedthedrawerandwentthroughthedoormultiple through is too complex to solve in a reasonable time with
+times, while user C did not succeed any trial. This hints that manual mode, especially with sEMG, as it demands precise
+in this case the interface experience may be more relevant commands and synchronization of the wheelchair and arm
+than the control method itself. movements. An adapted manipulator would make the task
+Time completion for the task Pour water for users test easier, but decrease manipulation capabilities.
+trials as well as expert user results, with both shared control
+C. Framework Effect
+andmanualcontrol,usingaspacemouse,areshowninTable
+I. For both users and expert, shared control is faster than We present user A test trials results with the sEMG-based
+manual control. Users additionally reported preference for interface to illustrate the effects of our method.
+the shared control. We note that manual control is time- 1) Open drawer: The easiest task – according to users
+consuming for non-experienced users, partly because of the evaluation – was the drawer opening, shown in Fig. 6. The
+non-intuitive rotational control. Additionally, the practical commands are mapped to a translational displacement for
+1960
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. Fig.7:Time-lineoftaskPourwaterduringausertesttrialwithansEMG-
+basedinterface.
+all phases, with phase dependent scaling. During the phase
+‘Horizontal motion’, no downward motion is possible and
+lateral motion are scaled down, making a clean trajectory
+possible, even with noisy commands.
+2) Pour water: A time-line of the task ‘Pour water’ is
+shown in Fig. 7. Starting with an automatic upward motion
+after grasping, the phase ‘Tilt towards target’ constrains the
+Fig. 8: Skill Open door and go through. Top-down and side view of the
+tiltangleofthegraspedobjectw.r.t.thedistancetothegoal.
+trajectoriesresultingfromtheend-effectorcommandedposeandmeasured
+The end-effector is additionally constrained to be oriented positionduringausertesttrialwithansEMG-basedinterface.
+perpendiculartothetarget,tomakethe‘Pour’motionmostly
+depend on the wrist joint, increasing the workspace of this x and x mapped to horizontal motion while x is mapped
+1 2 3
+speciﬁc task. Once above the bottle, phase ‘Pour’ maps the to rotation around the tip of the grasped object. This doesn’t
+userinputtoallowrotationaroundthetipofthethermos.All rely on the object pose estimation as much, but as a result
+this creates a smooth bottle orientation trajectory, conveying requires a more precise user input. Alternatively we plan to
+thesharedcontrolintenttotheuser(bypointingtowardsthe investigatecorrectingmodeswherewecouldlearnfromuser
+estimated target) while lowering requirements on the user correctionsusingappropriatelymappedcommandstoreduce
+commands. model errors.
+3) Open door and go through: Shown as a photo series
+From a scalability standpoint, constraints generalize by
+in Fig. 5, the skill execution is detailed in Fig. 8, which
+using an object description hierarchy, but their descriptions
+shows the smooth constraints applied on the end-effector.
+tend to become long for complex skills (200 lines for
+Phase ‘Within cone’ keeps the EE within a cone pointing
+Open door and go through). This could be alleviated with
+towards the door handle grasp frame (cf Fig. 4, Right) as
+a modular hierarchical constraints description. Task time
+well as sets an adapted EE orientation for the task. Phase
+completion can only provide a partial evaluation, as full
+‘Push door’ constrains the EE in a cylindric motion, with
+autonomy could in principle execute the task faster, but the
+a minimum height. The input mapping and the whole-body
+user may prefer control authority over speed. Those results
+controlallowtheusertoperformthiscomplextaskefﬁciently
+motivate a larger user study in the near future, to evaluate
+usingmostlyforwardarmcommands.Whenpassingthedoor
+user preferences, method acceptance and input mapping
+withonly11cmofmargin,anabsoluteorientationcontroller
+personalization. Visualization and legibility of the FSM that
+is acting to keep the wheelchair orientation ﬁxed, normal
+represents the skills are important points for transparency
+to the door [1]. Starting from the phase ‘Push door’, the
+and acceptability, and will also be investigated.
+user can give at any moment backwards inputs instead and
+close the door, with the wheelchair following backwards VI. CONCLUSION
+accordingly.
+In this paper, we have presented a new human-in-the-loop
+D. Discussion action representation called Shared Control Templates, and
+These applications show the beneﬁts of using shared have successfully tested it with multiple users on activities
+control with whole-body control for tasks requiring a wide ofdailyliving.Describingsharedcontrolskillsusinghuman
+range of motions and whole-body coordination. Implement- readable YAML ﬁles, SCTs deﬁne input mappings and high-
+ing and testing our method in a realistic setting revealed level geometric constraints within phases of a ﬁnite state
+somechallenges.Forexamplesomeofthetrialsfailedwhen machine,andtheiroutputiscombinedwithlow-levelwhole-
+crossing the safety torque threshold. bodyimpedancecontroltoenableroboticsystemswithmany
+The IM in tasks Open drawer and Open door allows DoFs to be intuitively controlled. As a result, this provides
+experienced users to correct for target pose estimation er- a safe, intuitive way of reducing the workload of the user
+rors, while the Pour water skill implementation is more and can be used with low-throughput interfaces. A future
+constrained. For the latter, the more complex input mapping wheelchair-mounted robotic arm system should not only
+creates a workspace manifold (the poses available to the EE provideasharedcontrolmethod,butarangeofoptionswith
+according to the IM and ACs) not overlapping well with different degrees of user control, from manual mode to full
+the space of model errors (such as the bottle position in the autonomy.Task-dependentcontrolbasedonuserpreferences
+horizontal plane). One option is using a different IM, with should increase system utility.
+1961
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [13] S. Jain, A. Farshchiansadegh, A. Broad, F. Abdollahi, F. Mussa-
+Ivaldi,andB.Argall,“Assistiveroboticmanipulationthroughshared
+[1] M. Iskandar, G. Quere, A. Hagengruber, A. Dietrich, and J. Vogel,
+autonomyandabody-machineinterface,”in2015IEEEinternational
+“Employing Whole-Body Control in Assistive Robotics,” in Proc. of
+conferenceonrehabilitationrobotics(ICORR). IEEE,2015,pp.526–
+the 2019 IEEE International Conference on Intelligent Robots and
+531.
+Systems. IEEE,2019.
+[14] J.Vogel,K.Hertkorn,R.U.Menon,andM.A.Roa,“Flexible,semi-
+[2] A. Blom and H. Stuyt, “Assistive robotic manipulators,” in Robotic
+Assistive Technologies: Principles and Practice, P. Encarnac¸a˜o and autonomous grasping for assistive robotics,” in 2016 IEEE Interna-
+A.Cook,Eds. BocaRaton,Fl:CRCPress,2017,ch.3,pp.71–97. tionalConferenceonRoboticsandAutomation(ICRA). IEEE,2016,
+pp.4872–4879.
+[3] D.-J.Kim,R.Hazlett-Knudsen,H.Culver-Godfrey,G.Rucks,T.Cun-
+ningham, D. Portee, J. Bricout, Z. Wang, and A. Behal, “How [15] K. Muelling, A. Venkatraman, J.-S. Valois, J. E. Downey, J. Weiss,
+autonomyimpactsperformanceandsatisfaction:Resultsfromastudy S. Javdani, M. Hebert, A. B. Schwartz, J. L. Collinger, and J. A.
+with spinal cord injured subjects using an assistive robot,” IEEE Bagnell, “Autonomy infused teleoperation with application to brain
+TransactionsonSystems,Man,andCybernetics-PartA:Systemsand computer interface controlled manipulation,” Autonomous Robots,
+Humans,vol.42,no.1,pp.2–14,2011. vol.41,no.6,p.1401–1422,2017.
+[4] J.VogelandA.Hagengruber,“AnsEMG-basedInterfacetogivePeo- [16] A. D. Dragan, S. S. Srinivasa, and K. C. T. Lee, “Teleoperation
+plewithSevereMuscularAtrophycontroloverAssistiveDevices,”in withintelligentandcustomizableinterfaces,”JournalofHuman-Robot
+201840thAnnualInternationalConferenceoftheIEEEEngineering Interaction,vol.2,no.2,pp.33–57,2013.
+in Medicine and Biology Society (EMBC). IEEE, 2018, pp. 2136–
+[17] S. Javdani, H. Admoni, S. Pellegrinelli, S. S. Srinivasa, and J. A.
+2141.
+Bagnell, “Shared autonomy via hindsight optimization for teleopera-
+[5] M.R.Endsley,“Levelofautomationeffectsonperformance,situation
+tion and teaming,” The International Journal of Robotics Research,
+awareness and workload in a dynamic control task,” Ergonomics,
+vol.37,no.7,pp.717–742,2018.
+vol.42,no.3,pp.462–492,1999.
+[6] M. J. A. Zeestraten, I. Havoutis, and S. Calinon, “Programming by [18] N. Mehr, R. Horowitz, and A. D. Dragan, “Inferring and assisting
+demonstrationforsharedcontrolwithanapplicationinteleoperation,” withconstraintsinsharedautonomy,”in2016IEEE55thConference
+IEEERoboticsandAutomationLetters,vol.3,no.3,pp.1848–1855, onDecisionandControl(CDC). IEEE,2016,pp.6689–6696.
+2018. forroboticfeeding,”in201914thACM/IEEEInternationalConference
+[7] K. Hertkorn, Shared grasping: A combination of telepresence and onHuman-RobotInteraction(HRI). IEEE,2019,pp.267–276.
+graspplanning. KITScientiﬁcPublishing,2016. [20] D.S.Leidner,Cognitivereasoningforcompliantrobotmanipulation.
+[8] C. J. Pe´rez-del-Pulgar, J. Smisek, I. Rivas-Blanco, A. Schiele, and Springer,2019.
+V.F.Mun˜oz,“Usinggaussianmixturemodelsforgesturerecognition
+[21] G. Bartels, I. Kresse, and M. Beetz, “Constraint-based movement
+duringhapticallyguidedtelemanipulation,”Electronics,vol.8,no.7,
+representation grounded in geometric features,” in 2013 13th IEEE-
+p.772,2019.
+RAS International Conference on Humanoid Robots (Humanoids).
+[9] G. D. Hager, A. M. Okamura, P. Kazanzides, L. L. Whitcomb,
+IEEE,2013,pp.547–554.
+G.Fichtinger,andR.H.Taylor,“Surgicalandinterventionalrobotics:
+part iii [tutorial],” IEEE robotics & automation magazine, vol. 15, [22] G.Raiola,S.S.Restrepo,P.Chevalier,P.Rodriguez-Ayerbe,X.Lamy,
+no.4,pp.84–93,2008. S. Tliba, and F. Stulp, “Co-manipulation with a library of virtual
+[10] J. Artigas, R. Balachandran, C. Riecke, M. Stelzer, B. Weber, J.-H. guidingﬁxtures,”AutonomousRobots,vol.42,no.5,pp.1037–1051,
+Ryu,andA.Albu-Schaeffer,“Kontur-2:force-feedbackteleoperation 2018.
+from the international space station,” in 2016 IEEE International [23] R. Smits, T. De Laet, K. Claes, H. Bruyninckx, and J. De Schutter,
+Conference on Robotics and Automation (ICRA). IEEE, 2016, pp. “itasc: A tool for multi-sensor integration in robot manipulation,”
+1166–1173. in 2008 IEEE International Conference on Multisensor Fusion and
+[11] L.V.Herlant,R.M.Holladay,andS.S.Srinivasa,“Assistiveteleop- IntegrationforIntelligentSystems. IEEE,2008,pp.426–433.
+erationofrobotarmsviaautomatictime-optimalmodeswitching,”in
+[24] R.Weitschat,A.Dietrich,andJ.Vogel,“Onlinemotiongenerationfor
+The Eleventh ACM/IEEE International Conference on Human Robot
+mirroringhumanarmmotion,”in2016IEEEInternationalConference
+Interaction. IEEEPress,2016,pp.35–42.
+onRoboticsandAutomation(ICRA). IEEE,2016,pp.4245–4250.
+[12] A. Broad and B. Argall, “Path planning under interface-based con-
+straints for assistive robotics,” in Twenty-Sixth International Confer- [25] D.Leidner,C.Borst,andG.Hirzinger,“Thingsaremadeforwhatthey
+enceonAutomatedPlanningandScheduling,2016. are:Solvingmanipulationtasksbyusingfunctionalobjectclasses,”in
+[19] D. Gallenberger, T. Bhattacharjee, Y. Kim, and S. S. Srinivasa, 201212thIEEE-RASInternationalConferenceonHumanoidRobots
+“Transfer depends on acquisition: Analyzing manipulation strategies (Humanoids2012). IEEE,2012,pp.429–435.
+1962
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:05:06 UTC from IEEE Xplore.  Restrictions apply. 

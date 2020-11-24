@@ -1,0 +1,554 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Active Depth Estimation: Stability Analysis and its Applications
+Roˆmulo T. Rodrigues1, Pedro Miraldo2, Dimos V. Dimarogonas2, and A. Pedro Aguiar1
+Abstract—Recovering the 3D structure of the surround- Incremental strategies focus on efﬁcient computation and
+ing environment is an essential task in any vision-controlled take advantage of the small continuous motions of the
+Structure-from-Motion (SfM) scheme. This paper focuses on
+camera (small displacements). Besides, incremental-based
+thetheoreticalpropertiesoftheSfM,knownastheincremental
+techniques aim at getting a robust estimation of the model
+active depth estimation. The term incremental stands for
+estimating the 3D structure of the scene over a chronological uncertainties.
+sequence of image frames. Active means that the camera The works mentioned in the previous paragraph are pas-
+actuation is such that it improves estimation performance. sive, i.e., the camera motion is not used to the goal of map-
+Starting from a known depth estimation ﬁlter, this paper
+ping the 3D environment. In the last decade, some authors
+presents the stability analysis of the ﬁlter in terms of the
+have been studying the use of active vision techniques to
+control inputs of the camera. By analyzing the convergence
+of the estimator using the Lyapunov theory, we relax the assistthestructure-from-motionmodules.Theauthorsin[13]
+constraintsontheprojectionofthe3Dpointintheimageplane propose the use of 3D reconstruction goals in the control
+when compared to previous results. Nonetheless, our method loop. They use the proposed method in the reconstruction
+is capable of dealing with the cameras’ limited ﬁeld-of-view
+of 3D points, cylinders, straight lines, and spheres. In [14],
+constraints.Themainresultsarevalidatedthroughexperiments
+theauthorsaddressanactivestrategyfortuningthetransient
+with simulated data.
+response of a particular class of nonlinear observers that are
+I. INTRODUCTION wellsuitedforactiveSfMproblems.Thetechniqueisapplied
+to a 3D point active SfM scheme. The framework was later
+Structure-from-Motion (SfM) aims at recovering the 3D
+used for the cases of cylinder, spheres (see [15]), 3D planes
+structureoftheenvironmentfromamovingcamera.Itisused
+(in[16]),and3Dstraightlines(see[17],[18]).Therearealso
+when the motion of the camera and its intrinsic parameters
+works on high level controllers based on SfM. For example,
+are known. This is one of the more important modules
+[19] presents a method to actively ensure the presence of
+in applications such as: autonomous navigation [1], UAV
+good features in a structure-from-motion module, and [20]
+ﬂightcontrol[2],robothand-eyecalibration[3],topographic
+proposesanoptimalpathplanningframeworkthatmaximizes
+surveying [4], and multi-robot relative pose estimation [5].
+the visual information during navigation.
+TheSfMproblemhasbeenstudiedforthelastthreedecades
+In this paper, we study the stability analysis for an
+by the roboticists and computer vision researchers. Below,
+incremental active SfM using point features. The goal is to
+wecategorizeavailablesolutionsasgeometric/ﬁlteringbased
+understand under what conditions it is possible to obtain an
+methods and passive/active techniques.
+online estimation of the unknown depth of a point feature,
+Geometric-based techniques [6], [7], [8] often apply tri-
+fromanyinitialcondition.Weresorttotheknowledgeofthe
+angulation for estimating the depth of the points from two
+motion of the camera and the 2D image plane coordinates
+or more different viewpoints. The frames do not need to
+of the projected 3D point. Our work builds on top of the
+be consecutive, and this method is usually followed by
+incremental depth estimator addressed in [14], [15], where
+an ofﬂine non-linear reﬁnement such as bundle adjustment
+some guarantees for its stability and how to maximize
+[9].Geometric-based techniquesprovideaccurate resultsbut
+its convergence speed were studied. However, for a point
+suffer from small baseline camera displacements. On the
+feature,theasymptoticstabilityresultin[14],[15]onlyholds
+otherhand,ﬁlterorincremental-basedmethods,suchas[10],
+if 1) the camera motion drives the projection of the point to
+[11], [12], explicitly consider the dynamics of projected 3D
+the origin of the image frame, and 2) the depth (unknown
+points into a sequence of continuously acquired images.
+parameter being estimated) is constant after a transient. As
+a consequence, some issues arise in practical applications.
+*This work was supported by PDMA-NORTE-08-5369-FSE-000061,
+UIDB/00147/2020 SYSTEC through the FCT/MCTES (PIDDAC); FCT For example, in [21], the results of [14] are applied to the
+projects POCI-01-0145-FEDER-031823; IMPROVE, POCI-01-0145- coupled depth estimation and visual servo control problem.
+FEDER-031411-HARMONY; STRIDE NORTE-01-0145-FEDER-000033;
+The strategy strives to increase the convergence speed, but
+LARSyS - FCT Plurianual funding 2020-2023; the Swedish research
+council (VR); Swedish Foundation for Strategic Research (SSF); and the theconvergencepropertiesarenotmet.Thisresultsfromthe
+KnutochAliceWallenbergFoundation(KAW). requirement of translating the projection of a point to the
+1R. T. Rodrigues and A. P. Aguiar are with the Research Center for
+origin of the image frame, which conﬂicts with the visual
+Systems and Technologies (SYSTEC), Faculty of Engineering, University
+ofPorto,Porto,Portugal. servoing goal.
+E-Mail:rtr@fc.up.ptandpedro.aguiar@fe.up.pt. In our work, we take a step back to ﬁrst analyze the
+2P.MiraldoandD.V.DimarogonasarewiththeDivisionofDecisionand
+camera actuation policies that provide asymptotic stability
+ControlSystems,KTHRoyalInstituteofTechnology,Stockholm,Sweden.
+{ }
+E-Mail: miraldo,dimos @kth.se. guarantees on the depth estimation of a single feature. In
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 2002
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. ∈R
+contrast to previous works with similar stability properties, where(cid:40)k ,k + are the control gains. The corresponding
+s χ
+we do not require the tracked feature to lie in (or visit) the estimation error dynamics is
+origin of the image frame. Moreover, the unknown depth is −
+not necessarily constant throughout the estimation process. ˜s˙ =Jvvχ˜ ks˜s − . (5)
+The next section presents the notations and background χ˜˙ =χ˜(J v(χ+χˆ)+J w) k (J v)T˜s
+q l χ v
+work. Section III presents the stability analysis of the active
+III. CONVERGENCEOFTHEESTIMATOR
+ﬁlter. Then, Sec. IV discusses its use in a single 3D point
+Inthissectionweprovidethestabilityanalysisofthedepth
+mappingapplication.SimulationresultsareshowninSec.V,
+estimation ﬁlter. The goal is to provide guarantees for the
+and Sec. VI concludes the paper.
+convergence of the unmeasurable depth for recovering the
+II. PRELIMINARIES 3D structure of the world given by p=[s,1]/χ.
+This section presents notations and background work that
+Assumption1. Theobserved3Dpointcannotliebehindthe
+support the remainder of this document.
+camera.Consequently,werestrictouranalysistothedomain
+≥ ∀
+A. Notation where χ is positive, that is, we assume χ 0, t.
+Scalars are written in lower case letters and column Thisassumptionhasanexplicitphysicalmeaning.Infact,
+vectors typed in bold symbol lower case letters. A vector cameras are not able to observe 3D points that are behind
+can be split into smaller pieces using the notation v := them. This would require a negative depth.
+(i:j)
+[v ,v ,...,v ]T. Matrices are printed in upper case letter,
+i i+1 j Theorem1. Considertheestimator (4)forthedynamicsys-
+as well as the coordinates of a 3D Point.
+tem (2) under Assumption 1. The equilibrium point (˜s,χ˜)=
+B. Background 0 is stable and the estimation error converges to zero as
+{ } →∞ ∀ ≥
+Consider a camera moving freely in space and let C be t (cid:40) provided that t t0 the following constraints hold
+thecoordinateframeattachedtotheoriginofthesensor.The simultaneously:
+{ } ≤
+camera observes a static 3D point described in C as p:= 1) J w 0;
+∈ R ∈ R l ≤
+[X,Y,Z]T 3. Let s := [x,y]T = [X/Z,Y/Z]T 2 be J v 0 , if χˆ>0
+2) q ;
+theprojectionofpintothecamera’snormalizedimageplane J v=0 , otherwise
+and consider the change of variable χ=1/Z. Applying the 3) σ2 =q (xv −v )2+(yv −v )2 >0;
+newvariables in the well-known optical ﬂow equation [22] z x z y
+(cid:20) (cid:21) where v, w, and their time-derivatives are bounded signals.
+gives
+   
+− −
+x˙ χ 0 xχ xy (1+x2) y
+− − − v Proof. Consider the Lyapunov function candidate
+y˙ = 0 χ yχ 1+y2 xy x ,
+− w
+χ˙ 0 0 χ2 yχ xχ 0 V(˜s,χ˜)= 1(cid:107)˜s(cid:107)2+ 1 χ˜2, (6)
+(1) 2 2k
+∈ R ∈ χ
+where v := [v ,v ,v ]T 3 and w := [w ,w ,w ]T
+R3 are the camxera(cid:40)ylinezar and angular velocitiexs deyscribzed in with kχ >0, and its time-derivative
+{ }
+C . The dynamics of the system can be stated in compact V˙ =˜sT˜s˙ + 1 χ˜χ˜˙ (7)
+form k
+χ
+s˙ =Jvvχ+Jww , (2) Substituting (5) in the previous equation:
+where (cid:34)(cid:34)−1χ˙ 0=Jxq(cid:35)vχ2+Jlwχ(cid:35) V˙ =˜sT+(Jkv1vχχ˜˜(−Jqkvs(˜sχ)++χˆ)χ˜+Jlwχ˜−kχ(Jvv)Ts˜) (8)
+χ
+J = −
+Jv =(cid:104) 0xy 1(cid:105)−y(1−+x2) (cid:104)−y (cid:105) . (3) =−˜sTks˜s+ k1χχ˜Jqv(χ+χˆ)χ˜+ k1χχ˜Jlwχ˜. (9)
+w 1+y2 xy x BycombiningAssumption1andtheinputconstraintsstated
+− in Theorem 1, we have that the three terms in the right-
+Jq = 0 0 1 , Jl = y x 0 hand side of (9) are non-positive. Hence, V˙ ≤ 0 and the
+Given s,v, and w, we want to estimate the unknown equilib≤riumpoint(˜s,χ˜)=0isstable.Wealsoconcludethat
+depth described by χ (also denoted as unmeasurable vari- V(t) V(t0), and therefore, that the signals ˜s and χ˜ are
+able).Forthat,considerthefollowingnotations.Theestima- bounded.
+tion variables are ˆs and χˆ. The respective estimation errors The critical case that precludes asserting asymptotically
+− −
+are ˜s=s(cid:40)ˆs and χ˜=χ χˆ. The state estimation problem stability from (9) occ−urs when Jqv =· 0 and Jlw = 0, and
+addressed here uses an observer similar to [14]: consequentially,V˙ = ˜sTk ˜s.LetN()denotethenullspace
+s
+of a matrix, then J w=J v=0 either because the feature
+ˆs˙ =Jvvχˆ+Jww+ks˜s , (4) lie∈sintheoriginof∈ltheimaqgeplane(s=[0,0]T),orbecause
+χˆ˙ =Jqvχˆ2+Jlwχˆ+kχ(Jvv)T˜s v N(Jq)andw N(Jl)simultaneously.ForJqv=0and
+2003
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. J w = 0, the second derivative of the Lyapunov candidate The signal s is chosen such that the feature remains
+l des
+function is within the ﬁeld of view of the camera during the depth
+− − − estimation process. Assume that the feedback control law
+V¨ = 2˜sTks˜s˙ = 2˜sTks(Jvvχ˜ ks˜s). (10) π(t,s,s ) drives the tracking error to the origin1, i.e.,
+∀des≥ ⇒ → → ∞
+As˜s,χ˜,andv(bydeﬁnition)arebounded,thefunctionV¨ s˙ = π, t t0 = e 0 as t . From inspection of
+is also bounded. Thus, V˙ is uniformly continuous and from (2), in addition to the camera’s linear and angular velocities,
+Barbalat’s Lemma [23], we have that ˜s → 0 as t → ∞. s˙ dependsontheunknowndepthχ.Thus,itisonlypossible
+Now, for the asymptotic behaviour of χ˜ when J v=0 and to shape the dynamics of s˙ up to an estimation error. That
+J w=0, from (5) we have, as t→∞, q being said, the goal is to design a control law for (v,w)
+l
+such that s˙(χˆ,v,w) tracks the signal π(t,s,s ), while:
+ des
+l→im∞˜s˙ = l→im∞Jvvχ˜ (i) imposingtheconstraintsstatedinTheorem1,toassure
+t t . (11)
+limχ˜˙ =0 that the stability property holds;
+→∞
+t (ii) improving the performance of the estimator, by maxi-
+The second equation states that the depth estimation error mizing σ2 as deﬁned in (16); and
+becomes a constant, but not necessarily zero. To show that (iii) accounting for the kinodynamics constraints of the
+(cid:107) (cid:107) ≤ (cid:107) (cid:107) ≤
+indeed it will converge to zero, we ﬁrst show that ˜s˙ is camera described by v v and w w ,
+max max
+uniformly bounded because its time derivative given by where v and w are the maximum linear and
+max max
+− angular speed of the camera, respectively.
+¨˜s=J˙ vχ˜+J v˙χ˜+J vχ˜˙ k ˜s˙ (12)
+v v − v s − Since constraints are most commonly not addressed when
+=J˙ vχ˜+J v˙χ˜ k J v(J v)T˜s k J vχ˜+k2˜s
+v v χ v v s v s designing a control law to track the reference signal s ,
+(13) des
+simultaneously tracking π and respecting all the foremen-
+is a function of bounded signals. Thus, since ˜s converges tioned constraints can lead to an infeasible problem. A
+∈
+to the origin and ˜s˙ is uniformly bounded, we conclude that workaround is proposed by introducing a scale factor λ
+→ →∞ π
+˜s˙ 0 as t . Consequently, we have that [0,1] such that s˙(χˆ,v,w) is required to track the reference
+λ π.Asthedepthconverges,trackingthescaledvectorλ π
+l→im∞˜s˙ = l→im∞Jvvl→im∞χ˜=0. (14) –πratherthanminimizinganormerror–ensuresthatthepπath
+t t t
+→ → of the feature in the image frame follows the assignment
+It must be the case that either χ˜ 0 or J v 0. If the
+v speciﬁedbyπ.Thisallowsustodesignapathforthefeature
+function J v is persistently exciting through all time, then
+v thatdoesnotvisittheoriginoftheimageframe.Theproblem
+thedepthestimatione(cid:90)rrorconvergestozero.ThesignalJ v
+v is formulated next:
+is persistently exciting if the integral
+maximize λ
+t π
+(J v)TJ vdτ (15) v,w,λπ
+v v subject to J χˆv+J w=λ π
+∀t0 ≥ v≤ ≤w π . (18)
+is positive deﬁnite t t0. Hence, the persistency of 0 λπ 1
+excitation (PE) condition holds if constraints (i), (ii), and (iii)
+σ2 =(J v)TJ v>0, (16) This problem is addressed in two conﬁgurations. The esti-
+v v
+mationstrategyproposedinSectionIV-Adoesnotimplicitly
+which is the case from condition (3) in Theorem 1.
+impose the unknown depth to be constant. In contrast,
+Thus, one can now conclude that the equilibrium point
+Sec. IV-B addresses the particular case that requires null
+(˜sT,χ˜)=0 is asymptotically stable.
+depth rate. Both cases take advantage of the following
+IV. CONSTRAINEDACTIVEDEPTHESTIMATION Theorem:
+Any vision-based control scheme has to consider an Theorem 2. Consider the non-convex problem:
+important limitation of image sensors, its limited ﬁeld of
+view. While tracking the projected 3D point (related to the maximize λ1
+unknowndepthtobeestimated),oneneedstomakesurethe λ1,λ2,vr
+subject to λ v +λ v =rv
+pwreojheacvtieontodionecslundoetcloenavsteratihnetsimonagtheespmaoctei.onToofacthheiecvaemtheraat,. (cid:107)v1r(cid:107)1=12 2 r, (19)
+≤ ≤
+This section explores the theoretical stability guarantees 0 λ 1
+1
+− ≤ ≤
+derivedinSec.IIIforactivedepthestimation,whileensuring
+b λ b
+2
+the tracked projected point does not leave the image space.
+∈ R ∈ R (cid:107) (cid:107) (cid:107) (cid:107)
+To address the constraints on the camera motion, we where r,b +,v ,v n, v > 0, and v = 1.
+1 2 1≤ 2
+introduce the continuous and smooth desired signal s (t) The problem is always feasible if r b.
+des
+and deﬁne the tracking error
+e(t)=s(t)−sdes(t). (17) −k1pF(osr−insstdaensc)e,,wifhsedreeskpis∈coRns+tanent,suthreenstthheedpersoipreodrtiboenhaalvcioounrt.roller π =
+2004
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. ∈ R
+Due to the lack of space, the reader is referred to [24] for can be written as v = v [vT,0]T, where v 2 is a
+max r r
+the proof of Theorem 2 and a closed form solution for the unit vector. For the angular v(cid:40)elocity, re-write the constraint
+≤
+problem in (19), which is employed here. The solution does Jlw 0 using the slack variable λs⊥, such that
+not impose restrictions on the feature coordinates, except
+the origin of the image frame, i.e., s = [0,0]T, which is J w≤0 =⇒ Jlw =≤λs⊥ . (26)
+a singularity. l λs⊥ 0
+(cid:54) ∀ ≥ −
+A. Case: s=0, t t0 From Jlw = λs⊥ one concludes that wy = (y/x)wx
+In this ﬁrst scenario, Jqv=0 and Jww≤0. This allows (1/x)λs⊥. Applying this result into Jww:
+us to to take advantage of Theorem 2, while still respecting
+w
+trhemer1eq.uTihreemPeEnctsonfodritaiosnymofpt(o1t6ic)sciomnpvleirﬁgeesntcoeσst2at=edvi2n+Tvh2eo=- Jww=J(cid:20)w (y/x)wx(cid:21)−(cid:20)x(1(cid:21)/x)λ(cid:20)s⊥ (cid:21) (27)
+(cid:107)v (cid:107)2 anditsmaximumattainablevalueislimitexdbyythe − wz
+(1:2) y/x y w (1/x+x)
+kinodynamic constraint of the camera, σm2ax =vmax. Under = 1 −x wx + y λs⊥. (28)
+this scenario, the problem in (18) can be formulated as z
+Thecolumnspaceoftheﬁrstmatrixontherighthandsideof
+maximize λ
+π the previous equation has dimension 1 and, consequentially,
+v,w,λπ
+subject to s˙(χˆ,v,w)=λππ it can be generated assuming wz = 0. Thus, the following
+0<λ ≤1 , (20) equivalence holds:
+π
+≤ ⇒ −
+Jqv=0, Jlw 0 Jlw=λs⊥ = sT⊥w(1:2) =λs⊥, (29)
+(cid:107) (cid:107) (cid:107) (cid:107)≤
+v =vmax, w wmax where s⊥ = [−y,x]T. For w = 0, we conclude that any
+z
+and solved with the following proposition: feasible angular velocity can be described as
+(cid:20) (cid:21) (cid:20) (cid:21)
+Proposition 1. Let the camera control inpu(cid:107)t b(cid:107)e w(1:2) =−(cid:107)ss⊥(cid:104)⊥(cid:107)2λs⊥ + (cid:107)ss(cid:107)(cid:105)2(cid:20)λs (cid:21) (30)
+v Sλ / s
+v=vmax 0r and w= s0 , (21) = (cid:107)1(cid:107) −(cid:107)s⊥(cid:107) (cid:107)s(cid:107) λs⊥ (31)
+ (cid:104) (cid:105) s s⊥ s λs
+and S, Jw¯, and λs b−(cid:34)e deﬁned as follows:(cid:35) = (cid:107)1s(cid:107)Sλs, (32)
+S = (cid:107)s⊥(cid:107) (cid:107)s(cid:107)
+Jw¯ =(cid:104)1s+x⊥yy2 (cid:105)s−(1−+xyx2) , (22) wt(cid:107)hλhee(cid:107)krei≤nSo,d(cid:107)ysλ(cid:107)nswa,manicds:λcsoanrsetraasindte(cid:107)ﬁwne(cid:107)d≤i(cid:113)nw(2m2)a.xWisitheiqnuitvhaislesnettutpo
+s max
+T
+λs = λs⊥ λs (cid:107)w(cid:107)=(cid:107)w (cid:107)= (cid:107)1(cid:107) λTSTSλ (33)
+∈ R ∈ R − (1:2) s s s
+where (cid:40)λs⊥ +, λs , and s⊥ = [ y,x]T is a vector (cid:107)λ (cid:107) ≤
+perpendicular to s. In particular, deﬁne λ as = (cid:107) s(cid:107) w . (34)
+s s max
+(cid:107) (cid:107) − (cid:107) (cid:107) (cid:107) (cid:107)−
+λ = λw(cid:107)s(cid:107)(Jw¯S) 1π/ π , if ( π χˆvmax)sTπ<0 . This concludes the proof of (21) and (22).
+s λ s [0,1]T, otherwise
+w Applyingthecontrolinputsintotheﬁrstconstraintof(20)
+(23)
+and re-organizing th(cid:20)e terms yi(cid:21)elds: (cid:20) (cid:21)
+A sub-optimal solution for the problem in (20) can be
+obtained by casting it in the shape of the problem in (19), (cid:107) (cid:107)
+where the−(cid:40)input variables are written as λπ(−π)+Jw Sλs0/ s =−χˆvmaxJv v0r (35)
+v = π
+ 1 π/(cid:107)π(cid:107), if ((cid:107)π(cid:107)−χˆv )sTπ <0 λ (−π)+ (cid:107)1(cid:107)J Sλ =χˆv v . (36)
+v = (cid:107) (cid:107) max , (24) π s w¯ s max r
+2 s⊥/ s⊥ , otherwise
+(cid:107) (cid:107) (cid:107) (cid:107)
+r =χˆv , b=w Let ν = (1/ s )Jw¯Sλs and notice that if π > χ(cid:107)ˆvm(cid:107)ax,
+max (cid:40) max λ must be such that πTν > 0. On the contrary, if π <
+s −
+and the outputs mapped into χˆv , then one has to ensure ( π)Tν > 0. Maximizing
+max
+∗ ∗ the dot product in both cases requires that ν and π to be
+λ =λ , λ =λ ;
+π ∗1 w 2 . (25) parallel. Both vectors are aligned if
+v =v
+r r ∝ −
+λ (J S) 1π, (37)
+Proof. First, we show that the control inputs are described s w¯
+∝
+as in (21). The constraint J v = 0 implies that v = 0. where the symbol denotes the relationship holds up to
+(cid:107) (cid:107) q z
+Combining with v = v , the linear velocity vector a scale factor. The matrix S is orthogonal and, therefore,
+max
+2005
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. (cid:54) ∀ ≥
+full rank. The matrix J is also full rank since det(J ) = B. Case: s=0 and χ˙ =0, t t
+(cid:54) w¯ w¯ 0
+1+x2+y2 =0.FromtheSylvesterrankinequality,wehave Now, consider the speciﬁc scenario where the depth must
+− ≤ be kept constant throughout the entire estimation process.
+rank(S)+rank(J ) 2 rank(J S). (38)
+w¯ w¯ For an unknown χ in (2), setting J v = 0 and J w = 0
+q l
+×
+Since both S and J are 2 2 full rank matrices, one guarantees that χ˙ = 0. Both aforementioned constraints are
+w¯
+concludesthattheirproductisalsofullrank(andinvertible). inaccordancewithTheorem1.Theproblem,whichisstated
+For feasibility, the ﬁrst component of λ – corresponding next:
+s maximize λ
+to λs⊥ – must be n(cid:40)on-positive. Solving the right hand side v,w,λπ π
+of (37), λs⊥ can be described as subject to s˙(χˆ,v,w)=λππ
+∝ sTπ, if (cid:107)π(cid:107)>χˆv 0≤λπ ≤1 , (46)
+λs,⊥ −sTπ, if (cid:107)π(cid:107)≤χˆmvax . (39) Jqv=0, Jlw=0
+max (cid:107) (cid:107) (cid:107) (cid:107)≤
+v =v , w w
+max max
+If λs,⊥ is positive in either cases, it means that λs⊥ = 0 is is a particular case of problem (20). According to the
+the lar(cid:40)gest feasible value that maximizes the projection of ν
+− following corollary, an optimal solution can be obtained
+into π or ( π). Using a compact notation:
+using Theorem 2.
+(cid:107) (cid:107) − (cid:107) (cid:107)− (cid:20) (cid:21) (cid:20) (cid:21)
+λ = λw(cid:107)s(cid:107)(Jw¯S) 1(cid:107)ππ(cid:107), if ( π χˆvmax)sTπ <0 , Corollary 1. Let the camera control input be described as
+s λ s [0,1]T, otherwise (cid:107) (cid:107)
+w
+where λ ∈ R. For the maximum feasible value of (λ40), v=vmax v0r and w=λw s/0s . (47)
+w w (cid:40)
+compute the norm of the previous equation and compare Then,theproblemin(46)isequivalenttotheproblemin(19),
+(cid:107) (cid:107)−
+with (34). When ( π χˆv )sTπ >0, we have where
+max − (cid:107) (cid:107)
+(cid:107) (cid:107)(cid:107) (cid:107) v = π, v =s⊥/ s⊥
+(cid:107)λs(cid:107)= λ(cid:107)wπ(cid:107)s (cid:107)(Jw¯S)−1π(cid:107)≤(cid:107)s(cid:107)wmax. (41) r1(cid:40)=χˆvmax, b2=wmax ; (48)
+− and the outputs are mapped as:
+The singular values of (J S) 1 are 1 and 1/(1+x2+y2).
+w¯
+Since the maximum singular value is 1, the upper bound ∗ ∗
+(cid:107)(J S)−1π(cid:107)≤(cid:107)π(cid:107) holds and λπ =λ∗1, λw =λ2 . (49)
+w¯ v =v
+(cid:107) (cid:107)≤(cid:107) (cid:107)(cid:107) (cid:107)≤(cid:107) (cid:107) r r
+λs λw s s wmax, (42) The proof is similar to the one presented in Sec. IV-A
+(cid:107) (cid:107)≤ (cid:2) (cid:3)
+λw wmax. (43) by imposing λs⊥ = 0, that is, no slackness. In this case,
+the solution is optimal because the shear mapping is not
+(cid:107) (cid:107)
+The same(cid:2)boun(cid:3)d is obtained when λs = λw s 0 1 T involved.
+in (40):
+V. EXPERIMENTS
+(cid:107) (cid:107) (cid:107) (cid:107)≤(cid:107) (cid:107) ⇒(cid:107) (cid:107)≤
+λw s 0 1 T s wmax λw wmax. (44) The theoretical results derived in this work are validated
+(cid:40) using a numerical simulator. The following ﬁxed parameters
+Finally, substituting (40) in (36):
+were employed: v = 0.1 m/s, w = 0.15 rad/s,
+max max
+χˆvmaxvr = λλππ((−−ππ))++λλww(cid:107)(cid:107)ππss⊥⊥(cid:107)(cid:107),,ifot(h(cid:107)eπrw(cid:107)i−seχˆvmax)sTπ>0(45), kspirsmopu=olastei1do0ni,sniaSsned0c..0kI5Vχ-mA=s.anInd25SF0ei0gc... 1ITV,h-weBeswacimothmpltpihnaergeonttihemepemreoestefhnottheddes
+which allows us to obtain a sub-optimal solution for the in [14], [15]. For asymptotic stability, the strategy described
+problem in (46) in the shape of the problem in (19) using in [14], [15] (continuous red line) and denoted here as
+the substitutions described by (48) and (49). Spica et al. (2014), requires the projection of the tracked
+3D point to lie in the origin of the image plane and its
+The sub-optimality comes from the fact that the solution corresponding depth to be constant, i.e., s = [0,0]T and
+(cid:107) (cid:107)− des
+consistsinprojectingλ intoπ when( π χˆv )sTπ < χ˙ = 0. The method presented in Sec. IV-A (dashed green
+s max
+0.TheprojectionisdoneviathemappingJ S.Thesingular line) relaxes both requirements. The strategy described in
+w¯ (cid:54)
+valuesofJ S are1and1+x2+y2.Therefore,ifs=[0,0]T, Sec. IV-B (continuous blue line) is a particular case of the
+w¯
+there can exist a λ that is not projected into π, but the previous method which keeps the unknown depth constant
+s
+shear transformation performed by J S allows for a higher throughout the trajectory of the camera. Aiming at a fair
+w¯ ≈
+value of λ . Since in practical applications 1+x2+y2 1, comparison, the initial visual servoing error and the inverse
+π
+the solution obtained is not far from the optimal solution. depth estimation error are the same in the three cases. The
+(cid:107) (cid:107)
+The main advantage in our approach is that it is possible to initial conﬁgurations are: e(t ) = 0.2 m and χ˜(t ) =
+− − 0 − 0
+compute a direction for λ in a closed-form. 0.9 m 1 (with χ(t )=1 m 1 and χˆ(t )=0.1 m 1).
+s 0 0
+2006
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. Fig. 1. Comparison of the estimation strategies described in [15] (Spica
+etal.14),Sec.IV-A(χ˙ =0relaxed),andSec.IV-B(χ˙ =0).Theinitial
+−
+inversedepthestimationerrorisχ˜=0.9m 1andtheinitialtrackingerror
+(cid:107) (cid:107)
+is e =0.2m.Fromtoptobottom,itisshowntheresultsof(a)theinverse
+depthestimationerror,(b)thetrackingerror,(c)thepersistenceofexcitation
+measurementσ2,and(d)theconstraintJwdescribedinTheorem1.
+l
+Fig. 3. Assessing the performance of the proposed depth estimation
+frameworkwhenthedesiredfeaturecoordinates(s (t))istime-varying.
+des
+(a)showsthedepthestimationerror,(b)showsthedesiredandthecurrent
+projectionofthe3Dpointintheimageplane,(c)illustratesthetrajectory
+ofthecamerainablackline,thez–axisinabluearrow,andthe3Dpoint
+Fig. 2. True depth (z = 1/χ) and its estimation (zˆ = 1/χˆ) using the inblack,and(d)thetwoprevioussignalsovertimeperaxis.
+strategydescribedinSec.IV-AandthesamesetupasinFig.1
+The behaviour of the depth estimation error is almost the 0.1[cos(2π/10t),sin(2π/10t)]T. As shown in Fig. 3(a), the
+speed of convergence of the depth estimation error does not
+same for the three methods - see Fig. 1(a). In fact, as shown
+in Fig. 1(c), the three strategies continuously fulﬁll the PE change when compared to the previous case (constant sdes).
+Finally,Fig.3(b)and(c)showthatwhilethedepthestimation
+condition, given by σ2, at its maximum value. Figure 1(b)
+converges, the proposed control law is able to follow the
+showsthatthefeaturetrackingerrorconvergesslowerforthe
+methoddescribedinSec.IV-B.Thisisbecausetheconstraint time-varying signal sdes.
+J w = 0 imposes severe limitations on the the angular
+l
+velocity vector. Spica et al. (2014) guarantees asymptotic VI. CONCLUSIONS
+stability by driving the feature to the origin of the image
+frame,whilethestrategiesproposedinthispaperensurethat In this paper we analyze the required conditions for
+the constraints described in Theorem 1 hold throughout the asymptotic stability of a class of depth estimation observers
+entireestimationprocessregardlessofthefeaturecoordinate. whenthecontrolinputsofthecameracanbecomputedinan
+In particular, the constraint associated to J w can be seen in activemanner.Weappliedtheresultsforthedepthestimation
+l
+Fig. 1(d). For the method in Sec. IV-A, J w is smaller or of a single 3D point. In contrast to previous works, our
+l
+equal to zero. For the method in Sec. IV-B, the constraint is framework guarantees asymptotic stability when the feature
+always zero. coordinate does not converge to the origin of the image
+For the same scenario, Fig. 2 shows the ground truth frame,noritsdepthwithrespecttothecameraisnecessarily
+and the depth estimation using the method in Sec. IV-A. In constant. We believe that relaxing the feature coordinates
+contrasttoothercontinuousestimationstrategiespresentedin within the image frame while still providing asymptotic
+theliterature(namely[15]),themethodproposedinSec.IV- stability guarantees is paramount to apply incremental depth
+A ensures the depth estimation error converges to zero even estimation in multiple point scenarios. Despite the relaxed
+thought the depth of the point with respect to the camera is constraintsthatallowalargersetofmotionswiththeoretical
+not constant throughout the entire estimation process. guarantees for depth estimation, the numerical simulations
+In our formulation, the desired feature coordinate s showsthattheproposedstrategyperformssimilarlytorelated
+des
+can be time-varying. Figure 3 shows a scenario where the literature methods. In future work, we will extend our
+goal is to have the projection of the feature moving in framework to multiple point and performs tests with a real
+a circular pattern. More speciﬁcally, we deﬁne s = robot/camera setup.
+des
+2007
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. REFERENCES c2sr.fe.up.pt/TechReports/ReportICRA20.pdf,”UniversidadedoPorto,
+Tech.Rep.,092019.
+[1] C. F. Olson, L. H. Matthies, M. Schoppers, and M. W. Maimone,
+“Rovernavigationusingstereoego-motion,”RoboticsandAutonomous
+Systems(RAS),vol.43,no.4,pp.215–229,2003.
+[2] N. H. M. Li and H. H. T. Liu, “Formation uav ﬂight control using
+virtual structure and motion synchronization,” in American Control
+Conf.(ACC),2008,pp.1782–1787.
+[3] N. Andreff, R. Horaud, and B. Espiau, “Robot hand-eye calibration
+using structure-from-motion,” The International Journal of Robotics
+Research(IJRR),vol.20,no.3,pp.228–248,2001.
+[4] F.Clapuyt,V.Vanacker,andK.V.Oost,“Reproducibilityofuav-based
+earth topography reconstructions based on structure-from-motion al-
+gorithms,”Geomorphology,vol.260,pp.4–15,2016.
+[5] R.T.Rodrigues,P.Miraldo,D.V.Dimarogonas,andA.P.Aguiar,“A
+framework for depth estimation and relative localization of ground
+robots using computer vision,” in IEEE/RSJ Int’l Conf. Intelligent
+RobotsandSystems(IROS),2019.
+[6] J.J.KoenderinkandA.J.vanDoorn,“Afﬁnestructurefrommotion,”
+J.Opt.Soc.Am.A,vol.8,no.2,pp.377–385,1991.
+[7] A. Bartoli and P. Sturm, “Structure-from-motion using lines: Repre-
+sentation,triangulation,andbundleadjustment,”ComputerVisionand
+ImageUnderstanding(CVIU),vol.100,no.3,pp.416–441,2005.
+[8] J.L.SchnbergerandJ.-M.Frahm,“Structure-from-motionrevisited,”
+in IEEE Conf. Computer Vision and Pattern Recognition (CVPR),
+2016,pp.4104–4113.
+[9] B. Triggs, P. F. McLauchlan, R. I. Hartley, and A. W. Fitzgibbon,
+“Bundle adjustment — a modern synthesis,” in Vision Algorithms:
+TheoryandPractice,2000,pp.298–372.
+[10] J. Civera, A. J. Davison, and J. M. M. Montiel, “Inverse depth
+parametrizationformonocularSLAM,”IEEETrans.Robotics(T-RO),
+vol.24,no.5,pp.932–945,2008.
+[11] A. D. Luca, G. Oriolo, and P. R. Giordano, “Feature depth observa-
+tion for image-based visual servoing: Theory and experiments,” The
+International Journal of Robotics Research (IJRR), vol. 27, no. 10,
+pp.1093–1116,2008.
+[12] A.Martinelli,“Visionandimudatafusion:Closed-formsolutionsfor
+attitude, speed, absolute scale, and bias determination,” IEEE Trans.
+Robotics(T-RO),vol.28,no.1,pp.44–60,2012.
+[13] F. Chaumette, S. Boukir, P. Bouthemy, , and D. Juvin, “Structure
+fromcontrolledmotion,”IEEETrans.PatternAnalysisandMachine
+Intelligence(T-PAMI),vol.18,no.5,pp.492–504,1996.
+[14] R.SpicaandP.RobuffoGiordano,“Aframeworkforactiveestimation:
+Application to structure from motion,” in IEEE Conf. Decision and
+Control(CDC),2013,pp.7647–7653.
+[15] R. Spica, P. Robuffo Giordano, and F. Chaumette, “Active structure
+frommotion:Applicationtopoint,sphere,andcylinder,”IEEETrans.
+Robotics(T-RO),vol.30,no.6,pp.1499–1513,2014.
+[16] ——,“Planeestimationbyactivevisionfrompointfeaturesandimage
+moments,”inIEEEInt’lConf.RoboticsandAutomation(ICRA),2015,
+pp.6003–6010.
+[17] A. Mateus, O. Tahri, and P. Miraldo, “Active structure-from-motion
+for3dstraightlines,”inIEEE/RSJInt’lConf.IntelligentRobotsand
+Systems(IROS),2018,pp.5819–5825.
+[18] ——, “Active estimation of 3d lines in spherical coordinates,” in
+AmericanControlConf.(ACC),2019,toappear.
+[19] R. T. Rodrigues, M. Basiri, A. P. Aguiar, and P. Miraldo, “Low-
+level active visual navigation: Increasing robustness of vision-based
+localization using potential ﬁelds,” IEEE Robotis and Automation
+Letters(RA-L),vol.3,no.3,pp.2079–2086,2018.
+[20] G. Costante, J. Delmerico, M. Werlberger, P. Valigi, and D. Scara-
+muzza, Exploiting Photometric Information for Planning Under Un-
+certainty. Springer,2018,vol.1,pp.107–124.
+[21] R. Spica, P. R. Giordano, and F. Chaumette, “Coupling active depth
+estimation and visual servoing via a large projection operator,” The
+InternationalJournalofRoboticsResearch,vol.36,no.11,pp.1177–
+1194,2017.
+[22] R. Hartley and A. Zisserman, Multiple View Geometry in Computer
+Vision, 2nd ed. New York, NY, USA: Cambridge University Press,
+2003.
+[23] J.-J.E.SlotineandW.Li,Appliednonlinearcontrol. Prentice-Hall,
+1991.
+[24] R.T.Rodrigues,P.Miraldo,D.V.Dimarogonas,andA.P.Aguiar,“On
+theGuaranteesofIncrementalDepthEstimationanditsApplications
+in Visual Servoing (Proof of Theorem 2) – available here: https://
+2008
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:08:57 UTC from IEEE Xplore.  Restrictions apply. 

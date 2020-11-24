@@ -1,0 +1,575 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Closed-Loop Benchmarking of Stereo Visual-Inertial SLAM Systems:
+Understanding the Impact of Drift and Latency on Tracking Accuracy
+Yipu Zhao1, Justin S. Smith1, Sambhu H. Karumanchi1, and Patricio A. Vela1
+Abstract—Visual-inertial SLAM is essential for robot navi- Quadratic accumulation of IMU bias Correction from vision data
+gation in GPS-denied environments, e.g. indoor, underground.
+Conventionally, the performance of visual-inertial SLAM is High-latency  1st visual est. 2nd visual est.
+eloevnvaeltluhaeotfeidmSLpwAoirtMthanoscypesetnoe-fmlovso.ipsuInaalntaehlsiytsismips,aaptwieoirnt,hwlaaetefnroacciyusesintohncelotqsheuede-sdltoriooifnpt Real-time State Est. Error visual est.
+navigation tasks, such as accurate trajectory tracking. To 1st vision  2nd vision  3rd vision  Time
+data capture data capture data capture
+understand the impact of both drift and latency on visual-
+iitensrxaetcjeroentncisatdiolvurSecylLtyeuAdseM,ivnawglshuyteahsrtteieenfmeagesd,rtohbabeacoclttkorsaifesrjdeocc-moltomoovrmpiysuabtnareladn-cecinkdheimnrtotgairafpkloeielnlrsofgtwoimrsimamataduinoelncaseit.riBoeondyf Real-time State Est. Error Lvioswua-ll aetsetn.cy  1st visual est. 2nd visual est.
+representativestate-of-the-artvisual-inertialSLAMsystems,we 1dast tvai csiaopntu re 2dandt av icsaiopntu re 3dardt av icsaiopntu re Time
+reveal the importance of latency reduction in visual estimation
+Fig. 1. Impact of visual processing latency in VI-SLAM (best viewed
+module of these systems. The ﬁndings suggest directions of
+in color). Assuming 100% correct visual estimation and purely-random
+future improvements for visual-inertial SLAM.
+IMU noise, the only source of error in visual-inertial state estimation is
+accumulatedIMUbias(quadraticintime).Top: trendofvisual-inertialstate
+I. INTRODUCTION estimationerrorwhenvisualestimationtakes75%ofthevisualprocessing
+budget.Bottom: sameerrortrendwhenvisualestimationtakes50%ofthe
+Vision-based state estimation techniques, such as Visual
+budget.Reducedlatencyyieldsareducedstateestimationerror.
+Odometry (VO) and Visual Simultaneous Localization and
+Mapping(VSLAM),areessentialforrobotstoautonomously open-loopevaluationfailstofullyaddressthecoupledimpact
+navigate through unmapped scenes. VO often forgets the of navigation and VI-SLAM estimation during closed-loop
+sensed world structure, while VSLAM retains a long-term operation. For targeted closed-loop navigation, it is hard to
+map of the traversed world. In the absence of absolute po- gaininsightsonVI-SLAMfrompublishedopen-loopbench-
+sition signals such as from GPS, VO/VSLAM complements mark scores. To address this benchmarking gap, we present
+   
+traditional wheel/inertial-based odometry. an open-source [1], reproducible benchmarking simulation
+Compared with VO/VSLAM that relies on vision sen- forclosed-loopVI-SLAMevaluation,andtheoutcomesfrom
+sor only, visual-inertial SLAM (VI-SLAM) uses the two evaluatingseveralVI-SLAMmethodsusingit.Reproducible,
+complementary data streams to achieve better accuracy and closed-loop benchmarking should serve to guide future VI-
+robustness, and higher frequency, of state estimation. The SLAM research for mobile robotics.
+visual sensor provides accurate, yet sparse and delayed Though VI-SLAM drift is a critical factor inﬂuencing
+measurements of absolute landmarks in the environment. closed-loop navigation performance, the latency of visual
+Estimation drift is mitigated by observing and matching estimation may also play an important role when in closed-
+landmarks with a long but potentially intermittent measure- loop. As illustrated in Fig. 1, latency-reduction on the
+ment history. The inertial sensor provides high-rate, almost- visual processing sub-system could improve the accuracy
+instantaneous, yet drifting measurements of robot motion. of fused visual-inertial state estimate due to the quadratic
+Inertial measurements compensate for short duration visual (in time) nature of accumulated IMU bias. Therefore, this
+featureloss(e.g.intexturepoorsettings).Theposeestimates paper studies the impact of both drift and visual estima-
+of a VI-SLAM system can be sent to a controller as a high- tion latency of VI-SLAM with closed-loop benchmarking
+quality feedback signal in support of trajectory tracking as simulation, by implementing and testing several published
+the mobile robot navigates through an environment. VI-SLAM systems with different run-time properties. The
+While the ultimate use case of VI-SLAM in robotics closed-loop benchmarking outcomes suggest that VI-SLAM
+is closed-loop navigation, traditional benchmarking of VI- systems must balance drift and latency.
+SLAM employs open-loop analysis, i.e., the SLAM output
+II. RELATEDWORKS
+doesn’taffectactualrobotactuationandfuturesensoryinput.
+This section ﬁrst reviews existing works on visual-inertial
+Though reﬂecting the estimation drift level of VI-SLAM,
+state estimation for closed-loop navigation. The term VI-
+1Y. Zhao, J.S. Smith, S.H Karumanchi, and P.A. Vela are with SLAMwillbeusedtoindicatebothvisual-inertialodometry
+the School of Electrical and Computer{Engineering, Georgia Institute (VIO)andvisual-inertialSLAM.After,itreviewsevaluation
+of Technology, Atlanta, Georgia, USA. yipu.zhao, jssmith,
+} methods for VI-SLAM with a discussion of benchmarking
+skarumanchi3, pvela @gatech.edu. This work was sup-
+portedbytheNationalScienceFoundation(Award#1816138). for closed-loop trajectory tracking.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1105
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. navigation tasks, however, is investigated less. On-board
+evaluation tends to be reported for individual implementa-
+tions [4], [30]. One challenge of closed-loop evaluation is
+that closed-loop navigation is not just a software problem;
+the performance of the full system is affected by sensor
+choice,computationalresources,systemdynamics,andtarget
+environment. All these factors need to be experimentally
+controlled to comprehensively evaluate the performance of
+Fig.2. Distributionsoffeaturematchingbaselinesfor3commonlyused closed-loop navigation using VI-SLAM.
+imageprocessingfront-endsascomputedfortheEuRoCMAVbenchmark
+Onewaytoconductcomprehensiveandrepeatableclosed-
+[21]:featuredescriptorsinORB-SLAM(ORB)[22],KLTinMSCKF[7],
+anddirectSVO[17].Foreachfeature/patch,thebaselineisassessedbythe loopevaluationisviasimulation.Severalexistingsimulators
+length of life: from the ﬁrst-measured frame to the last-measured frame. are commonly used in the robotics community. Gazebo [31]
+The feature-based front-end (ORB) extracts more long-baseline feature
+isoneofthemostpopularsimulators,withMAV-speciﬁcex-
+matchingsthantheKLTanddirectmethods.
+tensions such as RotorS [32]. AirSim [33] is another choice,
+A. VI-SLAM in Closed-Loop Navigation
+with photorealistic renderings of visual data via Unreal
+There is a long history of using ﬁlters in visual-inertial Engine. A more recent development incorporates hardware
+state estimation for mobile robots (e.g., EKF [2]; MSCKF in the loop [34]. The approach captures the trajectory of
+[3]; [4]). The combination of sparse optical ﬂow (e.g., KLT the actual robot on the ﬂy, while rendering virtual visual
+[5]) and MSCKF has been recognized as an efﬁcient VI- data on a remote workstation to collect actual data under
+SLAM solution [6]–[8]. A downside of most ﬁlter-based realphysicsandvirtualdatafromaneasy-to-extendrenderer.
+methodsisthelowmappingquality,whichaffectslong-term However,groundtruthacquisitionreliesonaMoCapdevice,
+navigation with location revisits. which is hard to scale beyond room-sized environment. To
+VI-SLAM running Bundle Adjustment (BA) retains an properlybenchmarkingVI-SLAMinclosed-loopnavigation,
+explicitmap,whichpromoteshigheraccuracyandlong-term the benchmarking framework needs to be re-conﬁgurable to
+robustness of state estimation. To bound the cubic computa- cover a variety of factors, such as sensor conﬁgurations,
+tionalcostofBA,BA-basedVI-SLAMtypicallyworkswith computational & robot platforms, and target environments.
+asubsetofhistoricalinformation(keyframesandlandmarks) Furthermore, ground truth coverage is required over the
+sub-selected using a sliding window [9] or a covisibility entire course of navigation. This work aims to ﬁll a existing
+graph [10]. Representative BA-based VI-SLAM includes gapbypresentinganopen-source,closed-loopbenchmarking
+feature-based OKVIS [11], KLT-based VINS-Fusion [12] framework that supports the above requirements, and serves
+and Kimera [13]. Closed-loop navigation with OKVIS has to provide performance insights on representative VI-SLAM
+been demonstrated on both ground [14] and aerial robots systems based on the closed-loop evaluation results.
+[15]. Full navigation has been demonstrated with VINS-
+Fusion on a micro-air vehicle (MAV) [16]. Kimera [13] III. CLOSED-LOOPSYSTEMOVERVIEW
+estimates 3D mesh on-the-ﬂy, which beneﬁts navigation. Theclosed-looptrajectorytrackingsystemconsistsoftwo
+Recently direct VI-SLAM systems have been derived; major subsystems, illustrated in Fig. 3 and described as: 1)
+they do not require explicit feature extraction and matching. a VI-SLAM system taking vision & inertial data to generate
+Directsystemsjointlysolvedataassociationandstateestima- high-rate state estimates and low-rate map updates; and 2)
+tion by optimizing an objective functional using raw image a controller using high-rate output from the pose track-
+readings. Direct VI-SLAM systems such as SVO [17] and ing module of VI-SLAM to generate actuator commands.
+ROVIO[18]havebeenintegratedintoclosed-loopnavigation Though this paper covers only stereo-inertial sensory inputs,
+systems[19],[20].WhilebothKLTanddirectVI-SLAMare the system supports other common visual sensors such as
+computationally cheaper than feature-based VI-SLAM, they monocular and RGB-D cameras.
+are more sensitive to navigation-based conditions: e.g. they Whilebothmappingandloopclosingareessentialforac-
+require accurate pose prediction (from inertial) and minimal curateandrobuststateestimation,thesetwomodulesrequire
+light condition changes. Furthermore, both KLT and direct high computation, and typically operate at a much lower
+methods are mostly characterized by short-baseline feature rate than pose tracking (usually by an order of magnitude).
+matches.Featuredescriptormatching,ontheotherhand,can Thereforethehigh-rateposeestimationrequiredinfeedback
+ﬁndreliablelong-baselinefeaturematchesforimprovedstate control is collected by the pose tracking module. This study
+estimation (see Fig. 2). explores the efﬁciency and accuracy of the pose tracking
+module when used for feedback. A variety of VI-SLAM
+B. Evaluation of Closed-Loop Trajectory Tracking
+systems are integrated into the closed-loop system, covering
+Open-loop evaluation of different VI-SLAM methods has representativedesignoptionssuchasloosely/tightly-coupled
+been extensively conducted in the literature, e.g. on multiple visual-inertial fusion, direct/feature-based data association,
+datasets [23], [24], on multiple computation devices [25]– and ﬁlter/BA-based back-end.
+[27], and for multiple synthetic environments [28], [29]. The focus of this study is the trajectory tracking perfor-
+Closed-loop evaluation of different VI-SLAM methods in mance of VI-SLAM systems when used in the closed-loop.
+1106
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. Simulator Example Sensory Inputs Visual-Inertial SLAM estimation process.
+World CImamag 0e  30Hz Pose Tracking t<yp 1ic0a Hllyz  Mapping 3) SVO: SVO [17] + MSF. An efﬁcient, loosely-coupled
+VIO system that consists of direct SVO and MSF fu-
+Sensors CImamag 1e  30Hz 100Hz Loop  sion. No loop closing module. SVO has the lowest pose
+Estimated  Closing
+IMU  Pose tracking latency of the methods listed.
+Reading 100Hz
+C 4) ORB: ORB-SLAM [22] + MSF. ORB-SLAM has a
+Robot 100Hz True Pose O Desired  feature-based front-end and BA-based back-end. Due to
+Controller
+Actuator  once Trajectory thecomputational-costlyfeatureextractionandmatching,
+Actual Trajectory Command 100Hz
+ORB-SLAMhasalargevisualestimationlatency.Similar
+Fig.3. Overviewoftheclosed-looptrajectorytrackingsystem.TheGazebo
+simulator sends out sensory data to VI-SLAM. The pose-tracking module with MSC and SVO, MSF is integrated into ORB to
+of VI-SLAM processes the data, and outputs high-rate pose estimation. generate a high-rate estimation signal.
+In closed-loop benchmarking (red switch at “C”), the pose estimation is
+5) GF: Lazy-GF-ORB-SLAM [24] + MSF. A loosely-
+taken by the controller to generate high-rate actuator command, which is
+sent back to the simulated robot in Gazebo. Performance is quantiﬁed by coupled modiﬁed version of ORB with two efﬁciency
+comparing desired and actual trajectories (solid underlined text). In open- modiﬁcations: good feature and lazy stereo. Good fea-
+loopbenchmarking(redswitchat“O”),thecontrollergeneratescommands
+ture matching performs targeted map-to-frame matching
+based on the true pose, available from the simulator. Performance is
+quantiﬁedbycomparingtrueandestimatedposes(dashedunderlinedtext). underanupperboundedmatchingbudget.Thelazystereo
+modiﬁcation partitions the stereo ORB-SLAM computa-
+   
+The tracking performance can be reﬂected by computing
+tions into those necessary for immediate pose estimation
+the pose error between the desired and actual trajectories,
+versus those that assist future pose estimation compu-
+accumulated over the entire course of navigation. Here we
+tations. The former is prioritized to run ﬁrst, therefore
+report the root mean square of the translation error between
+enabling more rapidly output of pose estimation. These
+the desired and actual trajectories, dubbed tracking RMSE,
+two modiﬁcations lower the latency without signiﬁcant
+as the performance metric. Tracking RMSE matches the
+impact on the accuracy of pose estimation.
+formulation of ATE [35], commonly used in open-loop
+If no initialization approach is described, then the default
+evaluation, but works with actual robot trajectory. It directly
+is to keep the robot static for 10 seconds before starting a
+measures the end performance of the trajectory tracking
+closed-loop/open-loop run.
+system, thereby capturing the joint effect of pose tracking
+drift and latency. Additional metrics that capture orientation B. Feedback Control
+error are reported online (see [1]). The desired trajectory d∗(t) ∈ R2 is constructed from
+The mobile robot used in the simulation is the differential a series of speciﬁed waypoints using splines. An exponen-
+drive TurtleBot2. Mounted to the robot are a 30fps stereo tiallystabilizingtrajectorytrackingcontrollerforHilare-style
+camera with an 11cm baseline, and an IMU placed at its robots [37] generates a kinematically feasible trajectory for
+base. Data streams from both the stereo camera and IMU the robot to follow. In the following discussion, constraints
+are input to the VI-SLAM system, which outputs SE(3) onaccelerationsandvelocitiesareomittedforclarity,though
+state estimates. The trajectory tracking controller uses the they exist within the actual implementation.
+∈
+SE(2) subspace of the SE(3) estimate to track the target The robot pose as afunction of time g(t) SE(2) obeys
+trajectory. The next subsections describe the implemented follows the control equations:
+ 
+VI-SLAMsystems,thetrajectorytrackingcontroller,andthe
+ν
+simulation setup in Gazebo/ROS. · ν˙ =u1
+g˙ =g 0 and (1)
+ω˙ =u2
+A. Visual-Inertial SLAM Systems ω
+Several publicly available stereo(-inertial) SLAM imple- whereν istheforwardvelocityandω istheangularvelocity,
+mentationswereselectedforintegrationintotheclosed-loop bothinthebodyframe.Thesignalu=(u1,u2)T coordinates
+are the forward and angular acceleration (in body frame).
+benchmarking system. The ﬁve implementations are:
+Thecontrollerusedreliesonthedifferentialﬂatnessofthe
+1) MSC: MSCKF-VIO [7] + MSF [36]. MSCKF-VIO is
+robotmotiontoachieveexponentialstabilizationofavirtual
+a tightly-coupled VIO system, with KLT-based front-
+point in front of the robot (by a distance(cid:20)λ) [37]. Deﬁ(cid:21)ne the
+end and MSCKF back-end. EKF-based sensor fusion,
+λ-adjusted rotation matrix and angular velocity matrix,
+MSF [36], densiﬁes the low-rate estimation output from
+−
+MSCKF-VIO, before sending it to controller. No loop · 0 λω
+R =R diag(1,λ) and ωˆ(λ,λ˙)= , (2)
+closing is included. λ 1ω λ˙
+λ λ
+2) VINS: VINS-Fusion [12] is a tightly-coupled VI-SLAM
+where R is the rotation matrix given by the orientation in
+with KLT-based front-end and BA-based back-end. VINS
+g. For e the unit body xˆ-vector in t(cid:16)he world fram(cid:17)e, the
+has a large latency due to the BA. It does provide a low- 1
+trajectory tracking control law is
+latency, high-rate IMU propagation signal, which is sent
+− ∗− − ∗ − ∗−
+to controller. VINS comes with loop closing, which is u=c R 1(d d λ Re )+c R 1d˙ V
+p λ 1 d λ
+preferredinlong-termrevisitscenarios.Acircularmotion − − − −
+is executed to initialize VINS prior to starting the SLAM cdλ˙e1 ωˆ(λ,λ˙)V (ωˆ(λ,λ˙) cλI)λ˙e1, (3)
+1107
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. Fig. 4. The virtual ofﬁce world. Left: Top-down view. The robot starts
+(cid:2) (cid:3)
+at the top-left corner, facing the long corridor. Right: Example images
+capturedbyon-boardstereocamera(leftcamera).
+|
+where c ,c ,c are feedback gains and V = ν ω T. The
+p d λ Fig. 5. All 6 desired trajectories used in closed-loop navigation experi-
+additional offset dynamics are ments.Eachdesiredtrajectoryiscolor-codedtoshowthedirectionoftravel.
+− −
+λ˙ = cλ(λ ), where λ(0)>>0, cλ >0. (4) IV. EXPERIMENTALRESULTS
+The dynamical system represented by Eqs 1-4 yields a This section describes the outcomes of two main experi-
+∗
+reference trajectory of robot poses g (t) and body velocity ments. The ﬁrst involves open-loop evaluation of the stereo
+∗ ∗
+components V (t) for tracking the desired trajectory d (t). VI-SLAMmethods,wherethecontrollertakestrueposesin-
+∗
+The offset variable λ (t) can be ignored. steadofVI-SLAMestimations(red“O”inFig.3).Theopen-
+The real time trajectory controller drives the robot to loop evaluation serves two purposes: 1) it demonstrates that
+track the reference trajectory based on feedback of the therelative rankingofthemethods inthesimulated worldis
+robot’sestimatedstate(anSE(2)substateoftheSE(3)state roughly preserved when compared to video-recorded open-
+(cid:101)
+estimate). These control commands are: loopbenchmarkssuchasEuRoC[21],and2)itcharacterizes
+∗(cid:101) ∗ (cid:101) thefunctionaldomainofthesimulationenvironmentrelative
+ν =k x+ν
+(cid:101) (cid:101) (cid:101) cmd(cid:101) x∗ ∗ ∗ (5) to the benchmarks. The second experiment performs closed-
+w =k θ+k y+ω
+cmd θ y loop trajectory tracking tests, where the controller is fed
+where [x,y,θ]T (cid:39) g = g−1g∗ is the relative pose error withVI-SLAMestimation(red“C”inFig.3).Theobjective
+between the current state g and the desired state g∗ in body of closed-loop benchmarking is to identify the VI-SLAM
+frame. In the absence of error, the control signal is V∗(t). properties (i.e., drift, latency) that have impact on trajectory
+tracking performance.
+C. Simulation Setup
+All 5 VI-SLAM systems parameter conﬁgurations were
+This section describes the Gazebo-simulated environment found via parameter sweep. For each test conﬁguration (de-
+for testing closed-loop trajectory tracking with VI-SLAM sired trajectory, desired linear velocity, VI-SLAM method,
+systems. The scene created for robot navigation is a virtual and IMU), the benchmarking run is repeated ﬁve times,
+ofﬁce world (Fig. 4). The world is based on the ﬂoor- so that random factors such as multi-threading and random
+plan of an actual ofﬁce, with texture-mapped surfaces. The sensory noise are properly reﬂected. Two commonly-used
+walls are placed 1m above the ground plane since collision IMUs are simulated: a high-end ADIS16448 and a low-
+checkingandpathplanningisoutsidethescopeofthispaper. end MPU6000. Open-loop benchmarking was performed on
+Introducing collision avoidance would add another coupling an i7-4770 (single thread Passmark score: 2228). Closed-
+factor to the closed-loop system, which would introduce loop benchmarking was performed on a dual Intel Xeon E5-
+unneededdifﬁcultyinidentifyingthesourceoftrackingerror 2680 workstation (single thread Passmark score: 1661). For
+(i.e., was it to avoid a collision or due to poor estimation?). reference, most published closed-loop navigation systems
+Six test trajectories were created for the closed-loop [4], [7], [8], [15], [16], [20], [38] employ an Intel NUC
+navigation experiments, each with different characteristics whose CPUs score between 1900-2300 (single thread). The
+∼
+(Fig. 5). The ﬁrst two are relatively short ( 50m), with full stack, including the simulator, integrated VI-SLAM
+few to no revisits. The 3rd and 4th trajectories are both systems and trajectory tracking controller, are released [1].
+∼
+of medium length ( 120m). The 3rd has many revisits
+A. Open-Loop Outcomes and Analysis
+as it retraces the trajectory once, whereas the 4th crosses
+earlier trajectory segments facing the opposite direction or Given that simulation and recorded open-loop benchmark
+∼
+transversetothem.Thelast2trajectoriesarelong( 240m). data may not align, this section conducts a comparison for
+The 5th retraces trajectory segments, while the 6th does veriﬁcationofthedomainofapplicabilityforthesimulation.
+so facing in the opposite direction. All trajectories have The comparison shows that simulated scenes have some
+the same start point for the robot, the origin of the world. overlap with existing benchmarks though they do not span
+Threedesiredlinearvelocitiesaretested:0.5m/s,1.0m/s,and the entire domain. Based on the similarity, closed-loop im-
+1.5m/s. Based on these velocities, the navigation course in plementationsshouldhavepredictivepowerwhentheclosed-
+simulation lasted from 30 seconds up to 480 seconds. loop system is deployed in equivalent real-world settings.
+1108
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. TABLEI trajectories reﬂects an average of the 5-run repeats. Cases
+CHARACTERIZATIONOFBENCHMARKS with average RMSE over 10m are considered navigation
+Seq. Duration Motion Revisit Feats. failures and omitted (dashes). The average latency of visual
+MH03med medium medium high 235 estimation in each VI-SLAM is reported in the bottom row
+MH04diff short high high 235
+of each table (algorithms sorted to be in ascending order).
+VR101easy medium medium high 227
+VR202med short medium high 246 According to Tables IV and V, both VINS and ORB
+MH05diff short high high 240
+fail under multiple conﬁgurations. Compared to ORB, the
+s1 short low-high low 131
+s2 short low-high low 126 success rate and RMS of GF are signiﬁcantly improved.
+m1 short low-high high 122 The reduction of visual estimation latency contributes to the
+m2 medium low-high low 115
+improvement,sincetheopen-loopoutcomesofORBandGF
+l1 medium low-high high 121
+l2 medium low-high med 114 aresimilarintermsofdrift,butarequitedifferentintermsof
+latency. The outcomes suggest that meeting standard frame-
+∼
+A subset of the EuRoC sequences and the simulated rate latency levels ( 30ms) is best, and quite possibly es-
+open-loop sequences are characterized in Table I, using the sentialforgoodclosed-looptrajectorytrackingperformance.
+benchmark properties evaluated in [39]. The duration proﬁle The ﬁlter-based MSC is signiﬁcantly affected by the IMU
+is deﬁned with medium describing an interval of [2,10] dataquality,asitfailstonavigateformultiplelow-endIMU
+minutes.Themotionproﬁleiscategorizedfromlow(0.5m/s) cases and higher velocity. The outcomes suggest an over-
+to medium (1.0 m/s) to high (1.5 m/s). The revisit frequency reliance on the IMU for pose estimation, which is supported
+is a function of the trajectory followed and how often there by Fig. 2 where MSC has poor long-term data association
+isco-visibilityoffeaturesacrosstrajectorysegmentsthatare fordetectedfeatures.Beingabletore-associatetolosttracks
+temporally distant. One additional statistic captured is the improves performance by linking against a known static
+average number of features tracked per frame using ORB pointintheworldandimprovingabsolutepositionestimates.
+(lastcolumn).Simulationsequencesexhibitlesstexturethan Otherwise,systemssuchasMSCrelyonintegratedestimates
+EuRoC ones. There is sufﬁcient overlap in the characteris- which have poor observability properties.
+tics of the two benchmarks, with the simulation reﬂecting
+The last two approaches to review are SVO and GF,
+slightly more diverse scenarios. Qualitatively, the simulation
+which both successfully track the camera pose for all but
+sequences are comparable or harder benchmarking cases
+one sequence, each. These are the two strongest performing
+relative to the EuRoC sequences.
+methods. Interestingly they have different run-time proper-
+To compare further, we ran open-loop benchmarking
+ties. For both the open-loop and closed-loop evaluations,
+against ground truth to get a sense for the pose estimation
+SVOhasthelowestlatencybutthehighestdrift,whileGF is
+properties of the VI-SLAM algorithms and whether the two
+the opposite. Their relative performance remained the same
+benchmark sets agree in terms of relative ordering. The
+from open-loop to closed-loop, modulo a small fraction of
+results averaged from 5-run repeats of the medium motion
+sequences.Itappearsthatlowlatenciesaretoleranttohigher
+proﬁle are summarized in Tables II and III, where the track
+drift, whereas lower drift permits higher latency. Overall,
+loss cases are omitted (dashes). According to the tables,
+however, it appears that once the latency is low enough,
+the ATE between VI-SLAM estimation and ground truth is
+it is better to target accuracy enhancements over latency
+usually lower for EuRoC sequences. Both SVO and VINS
+enhancementsforclosed-looptrajectorytracking(forground
+exhibit outliers in EuRoC relative to the prevailing values
+vehicles in mostly static, feature sufﬁcient, environments).
+across all methods, with SVO having one and VINS having
+ComparingSVOandGF acrossthetwoIMUtypesindicates
+three. They occur for the MH sequences, suggesting that
+that high-end IMUs provide the best error scaling to ground
+these might be more problematic in general for VINS and
+speed,withGFbeingmoreconsistentasthespeedincreased.
+SVO. However, SVO and VINS also have one track failure
+forthesimulatedcases.Overall,theoutcomesalignwiththe These quantitative outcomes can be seen qualitatively in
+previousclaimthatthesimulationsequencesarecomparable Fig. 6 and 7, which trace the closed-loop robot trajectories
+to or harder than EuRoC. If track failure is added as a for the different VI-SLAM methods. VINS goes out of
+penalty to the simulation performance outcomes, then the bounds for many runs. Focusing on the traces of SVO and
+rank ordering of the algorithms agree between EuRoC and GF, it is clear that SVO has a higher estimation variance
+simulation. GF typically has the lowest ATE, while VINS across the runs for a given sequence, while GF trajectories
+has the highest ATE. Furthermore, the relative orders of are more closely clustered. The properties hold irrespective
+latencies for different VI-SLAM agree: SVO is lowest, and of the IMU type. Overall, GF appears to be the strongst
+VINS is highest (MSC is unique in that is has mismatch). performer.AsamodiﬁcationofORB,itseekstoreducepose
+ThecomparisonssupportusingsimulationtobenchmarkVI- estimation latency while preserving the beneﬁcial properties
+SLAM, with validity for speciﬁc deployment conditions. of ORB. The ﬁndings of this paper imply that prioritizing
+accuracywhilestrivingtoachievesufﬁcientlysmalllatencies
+B. Closed-Loop Outcomes and Analysis
+is an effective means to identifying a high performing VI-
+TrajectorytrackingperformanceisquantiﬁedinTablesIV SLAM for autonomous, mobile robot applications. Some
+and V. The tracking RMSE between the desired and actual work is still needed to resolve the outlier cases for GF.
+1109
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. TABLEII TABLEIII
+OPEN-LOOPOUTCOMESONEUROC(ATEINM;LATENCYINMS) OPEN-LOOPSIMULATIONOUTCOMES(ATEINM;LATENCYINMS)
+Seq. SVO MSC GF ORB VINS Seq. SVO MSC GF ORB VINS
+MH03med 0.31 0.24 0.07 0.05 1.50 s1 0.15 0.21 0.12 0.14 0.14
+MH04diff 2.78 0.28 0.10 0.15 2.24 s2 0.12 0.14 0.11 0.38 0.13
+VR101easy 0.05 0.12 0.10 0.04 0.35 m1 0.33 0.32 0.19 0.16 –
+VR202med 0.19 0.22 0.04 0.09 0.35 m2 0.45 0.29 0.19 0.20 0.33
+MH05diff 0.47 0.28 0.04 0.20 2.32 l1 0.42 0.57 0.25 0.09 0.57
+l2 - 0.51 0.29 0.38 0.47
+Avg.ATE 0.76 0.23 0.07 0.11 1.35 Avg.ATE 0.29 0.34 0.19 0.23 0.32
+Avg.Latency 16.4 28.3 20.7 38.5 93.5 Avg.Latency 9.3 14.2 26.2 47.5 62.0
+TABLEIV
+CLOSED-LOOPOUTCOMESWITHHIGH-ENDIMUADIS16448(TRACKINGRMSEINM;LATENCYINMS)
+0.5m/s 1.0m/s 1.5m/s
+Seq. SVO MSC GF ORB VINS SVO MSC GF ORB VINS SVO MSC GF ORB VINS
+s1 0.23 0.65 0.11 0.24 – 0.56 0.26 0.12 0.28 1.36 0.49 0.22 0.14 0.23 0.37
+s2 0.18 0.46 0.09 0.43 – 1.13 0.38 0.08 – – 1.21 0.33 0.09 3.26 –
+m1 0.92 1.54 0.12 0.31 – – 1.01 0.10 0.23 – 1.26 0.81 0.11 2.10 –
+m2 0.36 2.23 0.14 – – 0.86 1.53 0.12 – – 1.87 0.68 0.14 – –
+l1 2.12 2.73 – – – 1.79 6.67 0.15 – – 1.22 2.13 0.22 – –
+l2 0.87 2.62 0.36 0.24 – 1.27 3.25 0.35 0.31 – 2.78 2.66 0.35 0.37 –
+Avg. RMS 0.78 1.70 0.16 0.30 – 1.12 2.18 0.15 0.27 1.36 1.47 1.14 0.18 1.49 0.37
+Avg. Latency 8.9 17.7 32.8 52.4 55.0 8.9 16.9 32.4 51.7 73.9 8.9 16.7 32.0 50.6 64.1
+TABLEV
+CLOSED-LOOPOUTCOMESWITHLOW-ENDIMUMPU6000(TRACKINGRMSEINM;LATENCYINMS)
+0.5m/s 1.0m/s 1.5m/s
+Seq. SVO MSC GF ORB VINS SVO MSC GF ORB VINS SVO MSC GF ORB VINS
+s1 0.68 0.29 0.13 0.05 0.52 1.21 0.35 0.16 0.25 0.89 2.30 – 0.41 0.46 –
+s2 0.62 0.40 5.00 0.96 – 0.96 0.35 0.10 – – 2.68 – 0.21 – –
+m1 1.53 0.68 0.26 0.19 8.24 3.21 – 0.28 1.21 – 3.95 – 0.36 – –
+m2 2.13 1.60 0.43 – – 2.33 – 0.53 – – 4.21 – 0.39 – –
+l1 0.18 4.60 3.24 1.62 – 2.19 – 0.37 – – 2.46 1.87 3.41 – –
+l2 0.21 3.74 0.36 – – 2.46 5.67 0.35 – – 1.86 1.92 0.32 – –
+Avg. RMS 0.89 1.88 1.57 0.71 4.38 2.06 2.12 0.30 0.73 0.89 2.91 1.90 0.85 0.46 –
+Avg. Latency 10.1 17.4 28.9 53.2 62.3 10.0 16.9 31.5 53.0 65.4 10.0 16.5 31.8 52.8 58.8
+Fig. 6. Actual trajectories the robot traveled for each desired trajectory, Fig. 7. Actual trajectories the robot traveled for each desired trajectory,
+color-codedbymethod.Desiredvelocityis1.0m/sandIMUishigh-end. color-codedbymethod.Desiredvelocityis1.0m/sandIMUislow-end.
+V. CONCLUSION trajectory tracking outcomes, which is consistent with its
+open-loop performance. Other methods were less consistent;
+This paper investigated several stereo VI-SLAM methods
+SVO has high performance in closed-loop but poor per-
+to understand their closed-loop trajectory tracking proper-
+formance in open-loop, and ORB vice-versa. Future work
+ties. The study was supported with a simulated Gazebo
+will extend the benchmarking environments with additional
+environment shown to be representative of a speciﬁc set
+mobile robots, rendering options, and visual environments
+of benchmark conditions. Analysis of the outcomes showed
+or settings. Importantly, integration with actual collision-
+that both latency and drift play important roles in achieving
+avoidancesystemsandtheimpactofenvironmentalobstacles
+accurate trajectory tracking. A VI-SLAM system built upon
+on SLAM will improve the task-realism of the benchmark.
+ORB-SLAM, denoted by GF, provides the most accurate
+1110
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. REFERENCES The International Journal of Robotics Research, vol. 35, no. 10, pp.
+1157–1163,2016.
+[1] Y. Zhao, J. Smith, S. Karumanchi, and P. Vela, “ClosedLoop-
+[22] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardos, “ORB-SLAM: a
+Bench:MetapackageforIVALab’sclosed-loopSLAMbenchmarking
+versatileandaccuratemonocularSLAMsystem,”IEEETransactions
+in Gazebo/ROS,” https://github.com/ivalab/metaClosedLoopBench,
+onRobotics,vol.31,no.5,pp.1147–1163,2015.
+2020.
+[23] B. Bodin, H. Wagstaff, S. Saecdi, L. Nardi, E. Vespa, J. Mawer,
+[2] A.Howard,“Real-timestereovisualodometryforautonomousground
+A.Nisbet,M.Luja´n,S.Furber,A.J.Davisonetal.,“SLAMBench2:
+vehicles,”inIEEE/RSJInternationalConferenceonIntelligentRobots
+Multi-objective head-to-head benchmarking for visual SLAM,” in
+andSystems,2008,pp.3946–3952.
+IEEE International Conference on Robotics and Automation, 2018,
+[3] A.I.MourikisandS.I.Roumeliotis,“Amulti-stateconstraintKalman
+pp.1–8.
+ﬁlterforvision-aidedinertialnavigation,”inIEEEInternationalCon-
+[24] Y. Zhao and P. A. Vela, “Good feature matching: Towards accurate,
+ferenceonRoboticsandAutomation,2007,pp.3565–3572.
+robustVO/VSLAMwithlowlatency,”IEEETransactionsonRobotics,
+[4] I.Cvisˇic´,J.C´esic´,I.Markovic´,andI.Petrovic´,“Soft-SLAM:Compu-
+2020.
+tationallyefﬁcientstereovisualsimultaneouslocalizationandmapping
+[25] M.Bujanca,P.Gafton,S.Saeedi,A.Nisbet,B.Bodin,M.O’Boyle,
+forautonomousunmannedaerialvehicles,”JournalofFieldRobotics,
+A.Davison,P.Kelly,G.Riley,B.Lennox,M.Lujan,andS.Furber,
+vol.35,no.4,pp.578–595,2018.
+“SLAMBench 3.0: systematic automated reproducible evaluation of
+[5] J. Shi and C. Tomasi, “Good features to track,” in IEEE Conference
+SLAMsystemsforrobotvisionchallengesandsceneunderstanding,”
+onComputerVisionandPatternRecognition,1994,pp.593–600.
+inICRAWorkshoponDatasetGenerationandBenchmarkingofSLAM
+[6] G. Loianno, C. Brunner, G. McGrath, and V. Kumar, “Estimation,
+AlgorithmsforRoboticsandVR/AR,2019.
+control,andplanningforaggressiveﬂightwithasmallquadrotorwith
+[26] J. Delmerico and D. Scaramuzza, “A benchmark comparison of
+a single camera and IMU,” IEEE Robotics and Automation Letters,
+monocularvisual-inertialodometryalgorithmsforﬂyingrobots,”IEEE
+vol.2,no.2,pp.404–411,2017.
+InternationalConferenceonRoboticsandAutomation,vol.10,p.20,
+[7] K.Sun,K.Mohta,B.Pfrommer,M.Watterson,S.Liu,Y.Mulgaonkar,
+2018.
+C. J. Taylor, and V. Kumar, “Robust stereo visual inertial odometry
+[27] S. Saeedi, B. Bodin, H. Wagstaff, A. Nisbet, L. Nardi, J. Mawer,
+for fast autonomous ﬂight,” IEEE Robotics and Automation Letters,
+N. Melot, O. Palomar, E. Vespa, T. Spink et al., “Navigating the
+vol.3,no.2,pp.965–972,2018.
+landscape for real-time localization and mapping for robotics and
+[8] S. Paschall and J. Rose, “Fast, lightweight autonomy through an
+virtualandaugmentedreality,”ProceedingsoftheIEEE,no.99,pp.
+unknown cluttered environment,” in IEEE Aerospace Conference,
+1–20,2018.
+2017,pp.1–8.
+[28] A.Antonini,W.Guerra,V.Murali,T.Sayre-McCord,andS.Karaman,
+[9] G.Sibley,L.Matthies,andG.Sukhatme,“Slidingwindowﬁlterwith
+“The blackbird dataset: A large-scale dataset for UAV perception
+application to planetary landing,” Journal of Field Robotics, vol. 27,
+in aggressive ﬂight,” in International Symposium on Experimental
+no.5,pp.587–608,2010.
+Robotics,2018.
+[10] H. Strasdat, A. J. Davison, J. M. Montiel, and K. Konolige, “Dou-
+[29] W. Li, S. Saeedi, J. McCormac, R. Clark, D. Tzoumanikas, Q. Ye,
+ble window optimisation for constant time visual SLAM,” in IEEE
+Y. Huang, R. Tang, and S. Leutenegger, “InteriorNet: Mega-scale
+InternationalConferenceonComputerVision,2011,pp.2352–2359.
+multi-sensorphoto-realisticindoorscenesdataset,”inBritishMachine
+[11] S. Leutenegger, S. Lynen, M. Bosse, R. Siegwart, and P. Furgale,
+VisionConference,2018.
+“Keyframe-based visual–inertial odometry using nonlinear optimiza-
+[30] A. Weinstein, A. Cho, G. Loianno, and V. Kumar, “Visual inertial
+tion,”TheInternationalJournalofRoboticsResearch,vol.34,no.3,
+odometryswarm:Anautonomousswarmofvision-basedquadrotors,”
+pp.314–334,2015.
+IEEERoboticsandAutomationLetters,vol.3,no.3,pp.1801–1807,
+[12] T. Qin, J. Pan, S. Cao, and S. Shen, “A general optimization-based
+2018.
+frameworkforlocalodometryestimationwithmultiplesensors,”arXiv
+[31] N. Koenig and A. Howard, “Design and use paradigms for Gazebo,
+preprintarXiv:1901.03638,2019.
+an open-source multi-robot simulator,” in IEEE/RSJ International
+[13] A.Rosinol,M.Abate,Y.Chang,andL.Carlone,“Kimera:anopen-
+ConferenceonIntelligentRobotsandSystems,vol.3,2004,pp.2149–
+sourcelibraryforreal-timemetric-semanticlocalizationandmapping,”
+2154.
+inIEEEInternationalConferenceonRoboticsandAutomation,2020.
+[32] F.Furrer,M.Burri,M.Achtelik,andR.Siegwart,“RotorS:Amodular
+[14] F.Blochliger,M.Fehr,M.Dymczyk,T.Schneider,andR.Siegwart,
+Gazebo MAV simulator framework,” in Robot Operating System.
+“Topomap: Topological mapping and navigation based on visual
+Springer,2016,pp.595–625.
+SLAM maps,” in IEEE International Conference on Robotics and
+[33] S. Shah, D. Dey, C. Lovett, and A. Kapoor, “AirSim: High-ﬁdelity
+Automation,2018,pp.1–9.
+visualandphysicalsimulationforautonomousvehicles,”inFieldand
+[15] M.Burri,H.Oleynikova,M.W.Achtelik,andR.Siegwart,“Real-time
+ServiceRobotics. Springer,2018,pp.621–635.
+visual-inertial mapping, re-localization and planning onboard MAVs
+[34] T. Sayre-McCord, W. Guerra, A. Antonini, J. Arneberg, A. Brown,
+inunknownenvironments,”inIEEE/RSJInternationalConferenceon
+G. Cavalheiro, Y. Fang, A. Gorodetsky, D. McCoy, S. Quilter et al.,
+IntelligentRobotsandSystems,2015,pp.1872–1878.
+“Visual-inertialnavigationalgorithmdevelopmentusingphotorealistic
+[16] Y. Lin, F. Gao, T. Qin, W. Gao, T. Liu, W. Wu, Z. Yang, and
+camerasimulationintheloop,”inIEEEInternationalConferenceon
+S. Shen, “Autonomous aerial navigation using monocular visual-
+RoboticsandAutomation,2018,pp.2566–2573.
+inertialfusion,”JournalofFieldRobotics,vol.35,no.1,pp.23–51,
+[35] J. Sturm, W. Burgard, and D. Cremers, “Evaluating egomotion and
+2018.
+structure-from-motion approaches using the TUM RGB-D bench-
+[17] C.Forster,Z.Zhang,M.Gassner,M.Werlberger,andD.Scaramuzza,
+mark,” in Workshop on Color-Depth Camera Fusion in Robotics at
+“SVO: Semidirect visual odometry for monocular and multicamera
+theIEEE/RJSInternationalConferenceonIntelligentRobotSystems,
+systems,” IEEE Transactions on Robotics, vol. 33, no. 2, pp. 249–
+2012.
+265,2017.
+[36] S. Lynen, M. W. Achtelik, S. Weiss, M. Chli, and R. Siegwart, “A
+[18] M. Bloesch, M. Burri, S. Omari, M. Hutter, and R. Siegwart, “It-
+robustandmodularmulti-sensorfusionapproachappliedtoMAVnav-
+erated extended Kalman ﬁlter based visual-inertial odometry using
+igation,”inIEEE/RSJInternationalConferenceonIntelligentRobots
+direct photometric feedback,” The International Journal of Robotics
+andSystems,2013,pp.3923–3929.
+Research,vol.36,no.10,pp.1053–1072,2017.
+[37] R.Olfati-Saber,“Near-identitydiffeomorphismsandexponentialepsi-
+[19] C.Papachristos,S.Khattak,andK.Alexis,“Autonomousexploration
+trackingandepsi-stabilizationofﬁrst-ordernonholonomicSE(2)vehi-
+ofvisually-degradedenvironmentsusingaerialrobots,”inIEEEInter-
+cles,”inIEEEAmericanControlConference,vol.6,2002,pp.4690–
+national Conference on Unmanned Aircraft Systems, 2017, pp. 775–
+4695.
+780.
+[38] D. Scaramuzza, M. C. Achtelik, L. Doitsidis, F. Friedrich,
+[20] H. Oleynikova, Z. Taylor, A. Millane, R. Siegwart, and J. Ni-
+E. Kosmatopoulos, A. Martinelli, M. W. Achtelik, M. Chli,
+eto, “A complete system for vision-based micro-aerial vehicle map-
+S. Chatzichristoﬁs, L. Kneip et al., “Vision-controlled micro ﬂying
+ping, planning, and ﬂight in cluttered environments,” arXiv preprint
+robots:fromsystemdesigntoautonomousnavigationandmappingin
+arXiv:1812.03892,2018.
+GPS-denied environments,” IEEE Robotics & Automation Magazine,
+[21] M.Burri,J.Nikolic,P.Gohl,T.Schneider,J.Rehder,S.Omari,M.W.
+vol.21,no.3,pp.26–40,2014.
+Achtelik,andR.Siegwart,“TheEuRoCmicroaerialvehicledatasets,”
+1111
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. [39] W. Ye, Y. Zhao, and P. A. Vela, “Characterizing SLAM benchmarks and VR/AR at the IEEE International Conference on Robotics and
+and methods for the robust perception age,” Workshop on Dataset Automation,2019.
+Generation and Benchmarking of SLAM Algorithms for Robotics
+1112
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:23:32 UTC from IEEE Xplore.  Restrictions apply. 

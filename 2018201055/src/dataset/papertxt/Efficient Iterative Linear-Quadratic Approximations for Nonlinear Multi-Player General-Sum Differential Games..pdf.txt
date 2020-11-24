@@ -1,0 +1,536 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Optimal Sequential Task Assignment and Path Finding
+for Multi-Agent Robotic Assembly Planning
+Kyle Brown Oriana Peltzer Martin A. Sehr Mac Schwager Mykel J. Kochenderfer
+Abstract—We study the problem of sequential task assign- the “cross-schedule dependencies” that arise from the inter-
+ment and collision-free routing for large teams of robots in taskprecedenceconstraints[2].Astheratiooftaskstoagents
+applications with inter-task precedence constraints (e.g., task
+increases, the sequential assignment problem approaches a
+A and task B must both be completed before task C may
+traveling salesman problem. As the breadth of the task de-
+begin). Such problems commonly occur in assembly planning
+forroboticmanufacturingapplications,inwhichsub-assemblies pendencygraph(i.e.,thedegreetowhichitisparallelizable)
+mustbecompletedbeforetheycanbecombinedtoformtheﬁ- increases, the route-planning problem becomes increasingly
+nalproduct.Weproposeahierarchicalalgorithmforcomputing congested and potentially ill-matched with optimistic task
+makespan-optimal solutions to the problem. The algorithm is
+assignment. However, PC-TAPF problems often exhibit use-
+evaluated on a set of randomly generated problem instances
+ful structure that can be exploited to efﬁciently ﬁnd optimal
+where robots must transport objects between stations in a
+“factory”gridworldenvironment.Inaddition,wedemonstrate solutions.
+inhigh-ﬁdelitysimulationthattheoutputofouralgorithmcan Variousmethodshavebeenproposedforsolvingproblems
+beusedtogeneratecollision-freetrajectoriesfornon-holonomic that are mathematically similar to PC-TAPF. Some perform
+differential-drive robots.
+joint task assignment and collision-free route-planning, but
+I. INTRODUCTION do not handle dependencies between tasks [3]–[7]. Others
+handle tasks with temporal dependencies, but ignore the
+Considerafactoryenvironmentwithanarrayofmanufac-
+routing problem or assume that agents will never collide
+turingstations andaﬂeet ofautonomousmobile robots.The
+[8]–[10]. To the best of our knowledge, no solver has been
+project consists of an initial set of objects and a prescribed
+proposed to optimally solve the combined sequential task
+setofmanufacturingoperationsthatwillincrementallytrans-
+assignment and routing problems with inter-task precedence
+form those initial objects into a ﬁnal object. The goal is
+constraints and collision-free constraints.
+to assign and route robots to transport objects between
+In this article, we propose a hierarchical algorithm for
+stationssothattheprojectmakespan—thetimefromstartto
+optimallysolvingPC-TAPFproblems.Theﬁrstlevelassigns
+completion—isminimized.Wecallthisproblemprecedence-
+taskstorobotsbysolvingarelaxedproblemthatignoresnon-
+constrained multi-agent task assignment and path-ﬁnding
+collision constraints. The task assignments are passed down
+(PC-TAPF).
+toaConﬂict-BasedSearch(CBS)level,whichsearchesover
+PC-TAPFgeneralizesthemultiagentpathﬁnding(MAPF)
+a constraint tree for an optimal collision-free set of paths
+problem with task assignment, sometimes called the anony-
+[11]. At each node of the constraint tree, CBS calls a lower
+mous MAPF [1]. Whereas anonymous MAPF involves a
+level routine that incrementally constructs a joint route plan
+one off task assignment problem (each robot performs no
+by iterating over a dependency graph and repeatedly calling
+more than one task) in which all tasks are independent,
+a modiﬁed version of A(cid:63) [12]. We evaluate the runtime
+PC-TAPF involves sequential task assignment (each robot
+of the algorithm and its component parts on a suite of
+may be assigned to a sequence of tasks) and incorporates
+problem instances that vary in size and structure, and show
+temporal precedence constraints between tasks (e.g., task A
+that even large problem instances (i.e. 40 robots, 60 tasks)
+and task B must both be completed before task C may
+can be efﬁciently solved to optimality in most cases. We
+begin). Both problems involve collision-free routing, but the
+also demonstrate our solver with a ﬂeet of non-holonomic
+PC-TAPF routing problem is affected by the same prece-
+differential-drive robots in high-ﬁdelity simulation.
+denceconstraintsthatarepresentintheassignmentproblem.
+Although minimum-makespan anonymous MAPF problems II. BACKGROUND
+with homogeneous agents can be solved in polynomial time
+Many variants of multi-agent pathﬁnding (MAPF) [13]
+[1],thePC-TAPFproblemisNP-hard.Thedifferenceliesin
+problems exist in the literature. Related problems include
+MAPF with Deadlines (MAPF-DL) [7], multi-agent pick-up
+*This work was supported by Siemens and the National Science Foun-
+dation. and delivery (MAPD) [14], and combined target-assignment
+1Kyle Brown and Oriana Peltzer are with {the Stanford andpath-ﬁnding(TAPF)withteamsofheterogeneousagents
+University Department of Mechanical Engineering, kjbrown7,
+} [5],[15].Optimalsolversforpath-ﬁndingproblemsareoften
+peltzer @stanford.edu.
+2Martin A. Sehr is with Corporate Technology, Siemens Corporation, based on Conﬂict-Based Search (CBS) [11], Network ﬂow
+Berkeley,CA94704,USA,martin.sehr@siemens.com. [15]orsubdimensionalexpansion[4].Conﬂict-BasedSearch
+3MacSchwagerandMykelKochenderferare{withtheStanfordUniver- with Task Assignment (CBS-TA) addresses heterogeneous
+sityDepartmentofAeronauticsandAstronautics, mykel, schwager
+}
+@stanford.edu. anonymous MAPF problems [3]. CBS-TA searches over a
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 441
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Notation
+V E
+n numberofrobots G=( , ) operatingschedule
+∈V
+m numberofobjects v schedulevertex
+→ (cid:48) ∈E
+x stateofroboti (v v) scheduleedge
+i
+o stateofobjectj v.t0 vertexstarttime
+j
+pi=x0i:t trajectoryofagenti v.∆t vertexduration
+v.tF vertexendtime
+one or more input objects and produces (except in the case
+of the no-output terminal operation) a single output object.
+Precedence constraints arise whenever the output of one
+operation is required as an input to another operation. The
+Fig. 1: The factory environment. Dark gray regions repre- project speciﬁcation also deﬁnes the pick-up and drop-off
+sent obstacles (manufacturing stations). Blue disks represent locationsofallassociatedobjects.Figure2adepictsasimple
+robots, and smaller black disks represent objects. project speciﬁcation. The project makespan is deﬁned as
+the time from start (t = 0) to completion of the terminal
+forest of CBS constraint trees, where each tree in the search
+operation.
+forestcorrespondstoadifferenttaskassignmentmatrix.Our
+algorithm is similar, in the sense that it solves a relaxed A. Operating Schedules and Route Plans
+“assignment” problem at the top level and queries a lower- V E
+The operating schedule G = ( , ) is a directed acyclic
+levelroute-planner,iteratingthroughallpossibleassignments ∈V
+graph(DAG).Eachvertexv ofthegraphcorrespondsto
+in best-ﬁrst order until there is zero gap between the lower
+one of the following discrete high-level events or activities:
+bound from the assignment problem and the best route plan.
+initial object condition OBJECT AT, initial robot condition
+Several types of vehicle routing and scheduling problems
+ROBOT AT, manufacturing operation OPERATION, and the
+(VRSPs)incorporatetemporaldependencies—suchasprece-
+robot actions GO, COLLECT, CARRY and DEPOSIT. An edge
+dence, synchronization, and time-windowing constraints— → (cid:48) ∈ E
+(v v ) denotes a precedence constraint, meaning
+between tasks. Bredstro¨m and Ro¨nnqvist introduce a travel- (cid:48)
+that the activity associated with v may not begin until
+ing repairman VRSP with precedence and synchronization
+the activity associated with v has been completed. The
+constraints [10]. Dohn, Rasmussen, and Larsen introduce
+required topological structure of the schedule is intuitive:
+a formulation for modeling general temporal dependencies
+In order to perform a transport task, a robot must go to
+between tasks [8]. Exact methods for VRSPs with temporal
+the appropriate pick-up location, collect an object, carry it
+dependencies usually involve solving a mixed integer linear
+through the factory, and ﬁnally deposit it at the drop-off
+program (MILP) [8]. We do the same at the top level of
+location. A manufacturing operation may only begin once
+our hierarchical algorithm. Because such solution methods
+all input objects have been deposited at the prescribed drop-
+are often intractable for large problem instances, many
+offpoints.Anoutputobjectbecomesavailableforcollection
+decentralized approaches accept a degree of suboptimality
+only once the associated operation has been completed. An
+in exchange for savings in computation time. These include
+example operating schedule is shown in ﬁg. 2b.
+algorithmslikeM+,whereinrobotsnegotiatewitheachother
+Each vertex v has a start time v.t0 and completion time
+in a “task market [16].
+v.tF. For root nodes only (i.e., ROBOT AT vertices and
+the initial OBJECT AT vertices), start times are ﬁxed. The
+III. PROBLEMSTATEMENT
+completion time of every vertex is equal to v.t0 + v.∆t,
+Thefactoryenvironmentismodeledasatwo-dimensional where ∆t is the duration of the activity. For ROBOT AT and
+grid world. Manufacturing stations are regularly spaced OBJECT AT nodes, ∆t = 0 by deﬁnition. Each COLLECT,
+throughout the environment, and each station is surrounded DEPOSIT and OPERATION node may have a ﬁxed positive
+by an array of pick-up and drop-off zones, at which objects ∆t. For navigation nodes (GO and CARRY), ∆t is a variable
+may be collected and deposited, respectively. The discrete thatdependsonhowquicklytherobottravelsfromthenode’s
+state xt of robot i at time t corresponds to a grid cell start location to its destination location.
+i
+in the environment. At each time step, each robot may An operating schedule is valid if and only if (a) all
+remain in place or move in any of the compass directions vertices have the correct number of incoming and outgoing
+to arrive in an adjacent grid cell at the next time step. Cells edges to the appropriate neighbor vertices and (b) there
+correspondingtomanufacturingstationsmaynotbeentered. are no cycles in the graph. An example of a cycle would
+robot i may collect object j if they occupy the same grid be if robot i were assigned to ﬁrst deliver object j and
+cell (i.e., xt = ot, where ot denotes the object state), and then deliver one of object j’s prerequisites, which would
+i j j
+the object moves with the robot until the robot deposits it. requiretravelingbackwardthroughtime.Constructingavalid
+The environment is shown in ﬁg. 1. schedulecorrespondstosolvingasequentialtaskassignment
+A project speciﬁcation S deﬁnes the set of manufacturing problem.
+operation that must be performed. Each operation consumes A route plan is denoted by P = (p ,...,p ), where
+1 n
+442
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. O1 GO
+COLLECT CARRY DEPOSIT
+O1 R1 GO
+OP1 O3 COLLECT CARRY DEPOSIT OP2
+OP1 O3 OP2 O2
+COLLECT CARRY DEPOSIT
+O2 R2 GO GO
+(a) (b)
+Fig. 2: (a) An example project speciﬁcation and (b) a possible corresponding schedule graph with n=2 robots. robot 1 is
+assigned to deliver object 1, and robot 2 is assigned to ﬁrst deliver object 2 and then deliver object 3 once Operation 1 is
+complete.
+p = (x0,x1,...,xt) = x0:t is the trajectory of agent i makespan than the best route plan found by CBS up to that
+i i i i i
+from time 0 to t. A route plan is consistent if and only point. NBS is summarized in algorithm 1.
+if it satisﬁes all environment constraints in addition to the The relaxed problem is formulated as a mixed integer
+constraints associated with the operating schedule (i.e., each linearprogram(MILP).Were-castthesequentialassignment
+robot must be at the relevant pick-up and drop-off locations problem as a one-off assignment problem by introducing m
+at the time steps speciﬁed by the operating schedule). These “dummy robots”, where the jth dummy robot is shorthand
+latter constraints may be understood as boundary conditions for “the robot that just delivered object j.” We encode the
+that partition an individual robots trajectory into disjoint discrete decision variable as an binary assignment matrix
+∈ ×
+segments. A route plan is valid if and only if it is consistent A B(n+m) m, where A = 1 indicates that robot
+ij
+and it contains no conﬂicts between trajectories. A state- i is assigned to transport object j. The ﬁrst n rows of
+conﬂict between agents i and j is said to occur at time t if A correspond to the real robots, and the ﬁnal m rows
+∧
+xt =xt. An action conﬂict occurs if (xt =xt+1) (xt+1 = correspond to the dummy robots. Hence, if A = 1 and
+i j i j i ij
+xt),wherethetwoagentsswitchplacesinasingletimestep A =1, then robot i is assigned to deliver object j and
+j j+n,k
+(which would require that they pass through each other). then to deliver object k. Because the jth dummy robot is
+A solution consists of a operating schedule and corre- a placeholder for the robot that already delivered object j,
+sponding route plan. A solution is valid if and only if the constraints must be added so that dummy robot j cannot be
+schedule and the route plan are both valid. A valid solution assignedtoobjectj oranyofitsprerequisites(asthiswould
+is optimal if and only if no other valid solution has a lower lead to a cyclic schedule graph).
+makespan. The project makespan T is deﬁned as the total To simplify notation, we deﬁne t0, τ0, and τF as the start
+i j j
+number of timesteps from the beginning of a project (t=0) time of robot i, the pickup time of object j, and the delivery
+until the terminal operation is completed. timeofobjectj,respectively.TheMILPformulationisgiven
+by
+IV. METHODS
+Weproposeafour-levelhierarchicalplanningalgorithmto minimize τ(cid:80)F (1)
+m ∈{ } ∈ ∈
+optimally solve PC-TAPF problems. Each of the four levels A(cid:80) 0,1 i 1:n+m,j 1:m (2)
+ij
+∈
+is described in this section. A graphical summary of the n+mA =1, j 1:m (3)
+algorithm is given in ﬁg. 3. i=1 ij≤ ∈
+m A 1, i 1:n+m (4)
+j=1 ij ∈ ∈
+A. Level 1: Sequential Next-Best Assignment Search A =0, j 1:m, k PRED(j) (5)
+j+n,k ∈
+SequentialNext-BestAssignmentSearch(NBS)computes t0i =0, i 1:n (6)
+∈
+a valid operating schedule by solving a sequential task t0 =τF, j 1:m (7)
+j+≥n j ∈
+assignment problem. The assignment problem is a relax- τ0 0, j 1:m (8)
+ation of the full PC-TAPF problem, because it ignores the j ≥ ∈
+τ0 τF +OP.∆t, OP S.operations,
+constraint that robots must not collide. The solution to the j ∈ k ∈
+j OP.inputs, k OP.outputs (9)
+assignment problem is an optimistic operating schedule,
+≥
+and its makespan is a lower bound on the makespan of τjF τj0+COLLECTj.∆∈t+d(sj,gj)
+the optimal solution to the full PC-TAPF problem. The +DEPOSIT .∆t, j 1:m (10)
+− j ≥− −
+optimisticscheduleispassedtoLevel2,CBS,whichreturns τ0 (t0+d(x0,s )) M(1 A ),
+j ∈i i j∈ ij
+a corresponding minimum-makespan valid route plan. The i 1:n, j 1:m, (11)
+makespan of this route plan (which may be higher than
+the lower bound, since CBS must respect the collision-free where (1) deﬁnes the project makespan, (2) constrains the
+constraints) constitutes an upper bound on the makespan of elements of the assignment matrix to be binary, (3) ensures
+theoptimalvalidsolution.NBStriesallpossibleassignments that each task is assigned to exactly one robot, (4) ensures
+in best-ﬁrst order until no assignments remain with better that each robot (including dummies) is assigned to no more
+443
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. problem instance solution constraintsofitsparentsearchnode.CBScallsISPSforeach
+Level 1: NBS
+child search node to recompute a new solution that respects
+optimistic schedule valid route plan
+Level 2: CBS theaddedconstraint,thenaddseachsearchnodetoapriority
+routing constraints consistent route plan queue with priority deﬁned by its makespan. CBS continues
+Level 3: ISPS
+until (1) a valid solution is obtained, (2) the cost of the best
+partial route plan path segment
+Level 4: A(cid:63) node in the queue exceeds the upper bound on the optimal
+SC
+solution, or (3) the priority queue is exhausted. In the latter
+two cases, CBS returns no solution.
+Fig. 3: A schematic overview of our algorithm.
+C. Level 3: Incremental Slack-Prioritized Search
+than one task, (5) prevents each dummy robot j from being
+∈
+assignedtoanytaskk PRED(j)amongthepredecessorsof Algorithm 2 Incremental Slack-Prioritized Search (ISPS)
+its parent task, (7) constrains the start time of each dummy
+rdtaholelabﬁttonantesokstootphbrmejeecascetttcadchretannttchimebeeeccscooonfmlsolterprcalaetilentlidtonsbnotenhft-aiodmtrueaemrtiimosmefyefirtrtoso=mbpoa0ttrhs,e,e(n(9to8)p)teaeensrnfakost,iuroc(rne6esss) 1234567::::::: procPCQwehd←←←iuvplere←∅←Q(IN[IxSI(cid:54)=DAT01PEQ](cid:63)S,∅QU(.UGE.(EU.,PU,Ec,E[(ovx(GnQ,0ns,c])tCo)rn)asitnrtasi)nts) (cid:46)(cid:46)popplavn(cid:46)e(cid:46)rptpeairnxtihio(cid:46)tfrrsircoetoylmguomtsqeequedunepeutlsaueepnet
+iatdninrmodtpeh-etpoaplsfufkrsoljcotehoccemattsmpioplienentscii,ompn(ul5um)tsoctotbhrnaeesvtedsrlaeeiptpniaomsrsateihtteebdteitmtibwmeye,eeaabntnetdtlhweea(e1sept1ni)cctkoua-lssulkeepscstatitaonhrndet 11189012::::: vPCGQ.t←←F←←←A{UISvDNPC}DpIDT.∪AQPtATFUCTEEHSU(CEPH(,EGpD,U)CL)E(G) (cid:46)upda(cid:46)(cid:46)teuuvppeddraatteteexrcﬁolnuoatseledtpimlsaenet
+13: returnP
+big M method to constrain the start time of task j to be at
+ltoerbaajvseetcltthtpiemicsekta-urdtp(xtil0imo,cegajto)iofnftrh.oeTmhasetshiMegnIreLodPborcotabinontibtipeallussololtvcheaedtiomwniinttihomautnhmye 11114567:::: procfoerdufvorre∈vvU.T(cid:48)tPO0∈DPA←OPTLREOESmGDCaI(HCvxEA)(DLvU.StLO0E,R(GvT((cid:48)).GT))
+off-the-shelf solver. We use Gurobi in our experiments [17]. 18: v.tF ←max(v.t0+v.∆t,v.tF)
+Algorithm 1 Sequential Next-Best Assignment Search (NBS) 122901::: forfvor∈vv.R(cid:48)SE∈LVAESCRUKSCE←C(TvOm)PiOnL(OvG.SICLAALCKS,OvR(cid:48)T.t(0G+) v(cid:48).SLACK−v.tF)
+22: v.tF ←max(v.t0+v.∆t,v.tF)
+12345678:::::::: proc(TwMeShIdL←(cid:63)iuGilPf,erT,e←T0TS(cid:63)NT(cid:63)(cid:63),)FB>>O←←TSR(TTMP←S(CUOn-LLToCVAAtBTEhPE(SFiM)n(MPIgLCI,LP-∞PT)(AP)PCF-,TGAP)F) (cid:46)(cid:46)(cid:46)bCloeawsltlesrLobelvuoetuilonnd2 222222345678:::::: procrfroeeerttduuuivrrfrnnev∈QGQI∈/NV←IECTRQT∧EUICNPEEQRUSUEE(DE(GGU()vE,)(CQ⊆),vC→v.SLACK)
+190:: ifT(<S(cid:63)T,T(cid:63)(cid:63))←(S,T)
+11: MILP.constraints←(G(cid:54)=S.G) The Incremental Slack-Prioritized Search (ISPS) module
+12: returnS(cid:63),T(cid:63) receives a operating schedule and a set of constraints from
+CBS. ISPS incrementally constructs a consistent plan by
+traversingtheschedulegraphintopologicalorderandcalling
+B. Level 2: Conﬂict-Based Search
+A(cid:63) to compute a path segment for each vertex. The key
+SC
+CBS is a general framework for multi agent path ﬁnding idea behind ISPS is that it takes advantage of slack in the
+[11]. It operates by best-ﬁrst search over a binary constraint operating schedule. Slack denotes the amount of room for
+tree, where each node of the constraint tree contains a set delayinavertex’sﬁnaltimev.T beforethemakespanwould
+of constraints (the root node constraint set is empty). A increase.Verticeswithhighslackcanaffordsigniﬁcantdelay
+state constraint c = (i,x,t) speciﬁes that robot i may without affecting the project completion time. Vertices with
+S
+not occupy position x at time t, and an action constraint zero slack are on the critical path. If they are delayed by
+(cid:48)
+c = (i,x,x,t) speciﬁes that robot i may not move from even a single timestep, the entire project will be delayed.
+A (cid:48)
+position x to position x at time t. ISPS begins by adding all root vertices (vertices with no
+When CBS receives a operating schedule from NBS, it predecessors) of the schedule graph to a priority queue Q
+initializes the root node of the binary constraint tree. Begin- where they are prioritized by their slack. The lowest slack
+ning at the root node, CBS passes the operating schedule vertex is popped from the queue, and A(cid:63) is called to plan
+SC
+and the current node’s constraint set down to the next level a path segment corresponding to that vertex. When planning
+of planner. ISPS returns a consistent route plan that also is complete for that vertex, it is placed in the closed set
+C
+respects all constraints passed in by CBS, or an infeasible . The path segment is added to the partial route plan, and
+ﬂagifnoconsistentrouteplancanbefound.Iftherouteplan ISPScallsasubroutinetoupdatetheoperatingscheduleand
+is invalid (i.e., it has at least one conﬂict), CBS branches recompute the slack of all vertices.When all of a vertex’s
+by generating a pair of mutually exclusive constraints and predecessorsareintheclosedset,thatvertexisaddedtothe
+adding each to a new search node that also inherits all the priority queue.
+444
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. Only GO and CARRY nodes require actual path-planning Algorithm 3: GET HEURISTIC COSTSubroutineofA(cid:63)
+from an initial location to a target location.1 All other nodes SC
+in the operating schedule serve only as checkpoints, and 12:: proched←ured(GsE,Tv.HgEoUaRlISsTtaICteC)OST(p,P,v) (cid:46)“cost-to-go”heuristic
+cTnaoondeabsveoaiandudtsoCcmOheaLdtLiucElaCilnlTygnceolxdopeselsi,dctihtaeswpsaoliaotninnngearspetexhrteieoynddbssecbthoeemtwpeelaeanncntiiGvneOg. 3456:::: cccc1234←←←←mphCO.alUexNn(T0g,tChpO.+NtFFLh+ICThS(−p,(Pv.)tF +v.S(cid:46)L(cid:46)(cid:46)AlomCwnKiuen)mri)mbbuoemrunodrfecmtooatnaiﬂnliitcnr(cid:46)tagsvdtearellaolvdaneyigsltcatpoinamsctthee
+horizon of each GO node to the time step at which the 7: returnc
+assigned object become available. ISPS terminates when “broken”solutionbyiteratingthroughtheoperatingschedule
+either(1)allschedulenodesareclosed,(2)A(cid:63) failstoﬁnd a second time. The difference the second time through is
+SC
+a feasible path, or (3) the cost of the route plan exceeds the that a full route plan (as opposed to a partial route plan) is
+upper bound cost maintained by NBS. ISPS is summarized availabletopopulatetheconﬂicttablewhichisusedinA(cid:63)
+in algorithm 2. for computing the conﬂict cost COUNT CONFLICTS(p,PSC).
+This allows paths that are planned early in the topological
+D. Level 4: Slack-and-Collision-aware Tie-breaking A(cid:63)
+orderingtobeadjustedtoavoidpotentialconﬂictswithplans
+Slack-and-Collision-aware Tie-breaking A(cid:63) (A(cid:63) ) com-
+that are planned later in the ISPS procedure.
+SC
+bines a custom cascading search heuristic with the well-
+known A(cid:63) graph-search algorithm [12]. As in regular space- F. Theoretical Properties
+time A(cid:63), A(cid:63) maintains a priority queue of search states, It can be shown that NBS will search the full space
+SC
+where each search state corresponds to a path p. At every of possible valid project schedules in best-ﬁrst order. If
+iteration, A(cid:63) pops the lowest-cost search state from the the combination of CBS, ISPS, and A(cid:63) is optimal and
+queue and eSxCpands it by trying all possible one-step actions complete, the full algorithm can also beSgCuaranteed to ﬁnd
+beginning from the terminal state of the corresponding path. theoptimalsolutioniftheproblemisfeasible.Sharon,Stern,
+Whenasearchstatesatisﬁestheterminationcriteria(i.e.,the Felner, et al. have already shown that CBS is optimal and
+path reaches the goal location), it is returned to A(cid:63) . complete under the assumption that the lower level path
+SC
+For brevity, we do not include the pseudocode of the planner is also optimal and complete [11].
+entire A(cid:63) algorithm. However, algorithm 3 shows the However, our lower level path planner (ISPS combined
+SC
+pseudocode of GET HEURISTIC COST(P,p,v), a subroutine with A(cid:63) ) is incomplete because it is possible for A(cid:63)
+that computes the four element heuristic cost c ∈ R4 of a to premSaCturely consume slack in one vertex such thatSCa
++
+path p. This custom heuristic cost determines the order in downstream vertex is forced to unnecessarily delay the
+which A(cid:63) will expand search states within the algorithm. project. Completeness could be ensured by removing the
+SC
+Ties are broken in cascading fashion. This cascaded tie- slack term from line 3 of algorithm 3, but this would negate
+breaking behavior is the key to the efﬁciency of our path- the planner’s key advantage: its ability to avoid conﬂicts by
+planner in computing make-span optimal route plans while consumingslack.WearepreparinganextensionofISPSand
+simultaneously avoiding conﬂicts. A(cid:63) thatwillincrementallyannealtheslackcosttermwhen
+The ﬁrst element c of the cost tuple is the delay cost. It neScCessary, thus achieving completeness without ruining the
+1
+measures the amount by which a path is guaranteed to delay planner’s efﬁciency.
+the entire project, which is 0 until the slack disappears. The
+second cost element c counts the number of times that a V. EXPERIMENTS
+2
+pathconﬂictswiththeglobalrouteplanP.Thethirdelement We evaluate our solver on a set of 384 randomly gen-
+c is equal to the path length plus the remaining distance to erated PC-TAPF problem instances—16 instances for every
+3 ∈ { }
+the goal location, and the fourth element c4 is simply the combination of number∈of{robots n 10,20,}30,40 and
+distance to the goal location. Hence, the default behavior number of objects m 10,20,30,40,50,60 . The grid
+(based on c and c ) of A(cid:63) is to move to the goal location world environment is shown in ﬁg. 1. Initial robot locations
+3 4 SC
+as quickly, but it will avoid conﬂicts at the expense of path are selected at random. The initial and destination locations
+length until the slack runs out, at which time path length of all objects are selected at random from the designated
+againbecomethedominantcriterionforoptimality.Theonly pick-up and drop-off zones surrounding each manufacturing
+way that A(cid:63) will return a path that creates conﬂicts is if station. For each problem instance, we evaluate the runtime
+SC
+it runs out of slack and there is no other path of equal or of(a)thefullalgorithm,(b)theNBSMILPsolveralone,and
+shorter length with fewer conﬂicts. (c) a single iteration of ISPS. The results are summarized in
+ﬁgs. 4a to 4c.
+E. Repairing Route Plans
+Figure 4a shows that the PC-TAPF solver runs very fast
+WhenISPShasﬁnishedcomputingaconsistentrouteplan for most problem instances, even when m and n are large.
+for the entire operating schedule, the solution is checked However, NBS struggles when the ratio of tasks to robots
+for conﬂicts. If there are conﬂicts, ISPS tries to repair the becomeshigh.Thisisunsurprising,astheMILPapproaches
+(cid:29)
+a traveling salesman problem when m n. The NBS
+1GO and CARRY are functionally equivalent–the path-planning process MILP solver timed out (at 100 seconds) on 40 of the
+forthemisidentical.Wesimplycallthemdifferentthingstoacknowledge
+thattheagentisactuallytransportinganobjectduringtheCARRYphase. problem instances (including all instances with m = 60,
+445
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. n = 10) before ﬁnding an optimal solution. In these cases, 100
+the suboptimal MILP solution was still passed to CBS. n=10
+n=20
+ISPS (as demonstrated by ﬁg. 4c) scales gracefully with ns 75 n=30
+problem size. The route planner’s efﬁciency is largely due iteratio 50 n=40
+to the ability of ISPS and A(cid:63) to exploit slack in the S
+SC CB
+operatingschedule,therebyremovingtheburdenofconﬂict- max 25
+resolution from CBS. Figure 5 shows that only nine of the
+384 problem instances required any CBS branching at all. 0
+On two problem instances, the solver reached our arbitrary m=10 m=20 m=30 m=40 m=50 m=60
+limit of 100 branching operations in a single CBS iteration. Fig.5:BoxplotssummarizingthemaximumnumberofCBS
+Despite the incompleteness of ISPS and A(cid:63) , only three iterations in any full iteration of the PC-TAPF solver. Plots
+SC
+probleminstances(besidesthoseonwhichthesolverreached are organized as in ﬁgs. 4a to 4c. Only nine of the 384
+a time or iteration limit) were not solved optimally. problem instances required any CBS branching.
+route plan into dynamically feasible trajectories that allow
+100.0
+n=10 eachrobottopassinandoutofeachgridcellintheplanned
+n=20
+10.0 n=30 sequence at precise intervals. To stabilize each robot about
+n=40 its reference trajectory, we implement a hybrid nonlinear
+me(s) 1.0 feedback control policy that switches between control laws
+ti (including the tracking control law of Lee, Song, Lee, et
+0.1
+al. [18]) depending on the current stage of the reference
+trajectory.OursimulatorisbuiltonWebots(http://www.
+m=10 m=20 m=30 m=40 m=50 m=60 cyberbotics.com).
+(a) Runtime statistics for the full PC-TAPF solver.
+VI. CONCLUSIONS
+100.0 We introduced the PC-TAPF formulation and presented a
+n=10
+n=20 hierarchical algorithm that takes advantage of slack in the
+10.0 n=30
+operating schedule to efﬁciently and optimally solve many
+n=40
+(s) 1.0 PC-TAPFprobleminstances.Thoughthealgorithmperforms
+me well empirically, there are several weaknesses that need to
+ti
+0.1 be addressed. ISPS (and hence, the entire algorithm) is not
+complete. We are preparing an extension of ISPS that will
+makethefullalgorithmoptimalandcomplete.Moreover,we
+m=10 m=20 m=30 m=40 m=50 m=60
+have observed that the computational cost of NBS can grow
+(b) Runtime statistics for the task assignment MILP solver.
+intractably large for certain classes of problems. This makes
+100.0 itattractivetodevelopbounded-suboptimalPC-TAPFsolvers
+n=10 with better runtime guarantees.
+n=20
+10.0 n=30 Realmanufacturingapplicationsarelikelytoincludelarge
+n=40
+(s) 1.0 sub-assemblies that are too big to be transported by a
+me single robot. We are currently extending our approach to
+ti “collaborative transport” scenarios, in which some transport
+0.1
+tasksmustbehandledbyteamsofrobots.Anotherinteresting
+avenue of future work would be to extend our work to a
+m=10 m=20 m=30 m=40 m=50 m=60 heterogeneousrobotﬂeets,whereinrobotsmightvaryinsize,
+(c) Runtime statistics for ISPS. shape, speed, and ability to service certain tasks.
+We are extending our algorithm to a paradigm where
+Fig. 4: Box plots summarizing the computation time for the
+projects arrive at the factory continuously, and wherein
+full PC-TAPF solver, the NBS MILP Solver and ISPS. Each
+betterperformance maybe attainedby partialre-planning of
+individual plot represents 16 trials with the indicated values
+the operating schedule and route plan to optimally balance
+of m (labeled along the x-axis) and n (increasing from left-
+multiple projects simultaneously. A related theme in our
+to-right and labeled by color). Runtime is plotted on a log
+ongoing work is robustness to uncertainty. We are interested
+scale, and all three ﬁgures are plotted on the same scale.
+inincorporatingopen-looprobustnesstopotentialfailureand
+delay, as well as closed-loop robustness during execution
+Inadditiontotheexperimentsabove,weincludeavideoto
+of the PC-TAPF solution. Our algorithm currently assumes
+demonstrate our solver’s performance in a high-ﬁdelity sim-
+a deterministic environment, but several efforts from the
+ulator with multiple non-holonomic differential drive robots.
+MAPF and TAPF literature offer a promising starting point
+AftersolvingthePC-TAPFproblem,weusegeometricpath-
+for incorporating robustness to uncertainty [19], [20].
+planning and convex optimization to convert the optimal
+446
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[19] W. Honig, S. Kiesel, A. Tinka, J. W. Durham, and N.
+[1] J. Yu and S. M. LaValle, “Multi-agent path planning and Ayanian,“Persistentandrobustexecutionofmapfschedules
+network ﬂow,” in Algorithmic Foundations of Robotics X, inwarehouses,”IEEERoboticsandAutomationLetters,vol.
+2013, pp. 157–173. 4, no. 2, pp. 1125–1131, 2019.
+[2] G.A.Korsah,A.Stentz,andM.B.Dias,“Acomprehensive [20] H. Ma, W. Ho¨nig, L. Cohen, T. Uras, H. Xu, T. K. Ku-
+taxonomyformulti-robottaskallocation,”TheInternational mar, N. Ayanian, and S. Koenig, “Overview: a hierarchical
+Journal of Robotics Research, vol. 32, no. 12, pp. 1495– framework for plan generation and execution in multirobot
+1512, 2013. systems,”IEEEIntelligentSystems,vol.32,no.6,pp.6–12,
+[3] W. Ho¨nig, S. Kiesel, A. Tinka, J. W. Durham, and N. Aya- 2017.
+nian,“Conﬂict-basedsearchwithoptimaltaskassignment,”
+in International Conference on Autonomous Agents and
+Multiagent Systems (AAMAS), 2018.
+[4] G. Wagner, H. Choset, and N. Ayanian, “Subdimensional
+expansion and optimal task reassignment,” Symposium on
+Combinatorial Search, pp. 177–178, 2012.
+[5] H.MaandS.Koenig,“Optimaltargetassignmentandpath
+ﬁnding for teams of agents,” in International Conference
+on Autonomous Agents and Multiagent Systems (AAMAS),
+2016.
+[6] J.YuandS.M.LaValle,“Optimalmulti-robotpathplanning
+on graphs: structure and computational complexity,” ArXiv,
+2015.
+[7] H. Ma, G. Wagner, A. Felner, J. Li, T. K. Satish Kumar,
+and S. Koenig, “Multi-agent path ﬁnding with deadlines,”
+in International Joint Conference on Artiﬁcial Intelligence
+(IJCAI), vol. July, 2018, pp. 417–423.
+[8] A. Dohn, M. S. Rasmussen, and J. Larsen, “The vehicle
+routing problem with time windows and temporal depen-
+dencies,” Networks, vol. 58, no. 4, pp. 273–289, 2011.
+[9] D. Bredstrom and M. Ronnqvist, “A branch and price
+algorithm for the combined vehicle routing and scheduling
+problemwithsynchronizationconstraints,”SSRNElectronic
+Journal, pp. 1–21, 2011.
+[10] D. Bredstro¨m and M. Ro¨nnqvist, “Combined vehicle rout-
+ing and scheduling with temporal precedence and syn-
+chronization constraints,” European Journal of Operational
+Research, vol. 191, no. 1, pp. 19–31, 2008.
+[11] G.Sharon,R.Stern,A.Felner,andN.Sturtevant,“Conﬂict-
+basedsearchforoptimalmulti-agentpathﬁnding,”inAAAI
+Conference on Artiﬁcial Intelligence (AAAI), 2012.
+[12] P.E.Hart,N.J.Nilsson,andB.Raphael,“Aformalbasisfor
+the heuristic determination of minimum cost paths,” IEEE
+Transactions on Systems Science and Cybernetics, vol. 4,
+no. 2, pp. 100–107, 1968.
+[13] D. Silver, “Cooperative pathnding.pdf,” Proceedings of the
+First AAAI Conference on Artiﬁcial Intelligence and Inter-
+active Digital Entertainment, pp. 117–122, 2005.
+[14] H.Ma,T.K.Kumar,J.Li,andS.Koenig,“Lifelongmulti-
+agent path ﬁnding for online pickup and delivery tasks,”
+in Proceedings of the International Joint Conference on
+AutonomousAgentsandMultiagentSystems,AAMAS,vol.2,
+2017, pp. 837–845.
+[15] J.YuandS.M.LaValle,“Optimalmultirobotpathplanning
+on graphs: complete algorithms and effective heuristics,”
+IEEE Transactions on Robotics, vol. 32, no. 5, pp. 1163–
+1177, 2016.
+[16] S.BotelhoandR.Alami,“Multi-robotcooperationthrough
+negotiated task allocation and achievement,” IEEE Interna-
+tional Conference on Robotics and Automation (ICRA), no.
+May, pp. 1234–1239, 1999.
+[17] L. L. C. Gurobi Optimization, Gurobi optimizer reference
+manual, 2019.
+[18] T.C.Lee,K.T.Song,C.H.Lee,andC.C.Teng,“Tracking
+controlofunicycle-modeledmobilerobotsusingasaturation
+feedbackcontroller,”IEEETransactionsonControlSystems
+Technology, vol. 9, no. 2, pp. 305–318, 2001.
+447
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:49:38 UTC from IEEE Xplore.  Restrictions apply. 

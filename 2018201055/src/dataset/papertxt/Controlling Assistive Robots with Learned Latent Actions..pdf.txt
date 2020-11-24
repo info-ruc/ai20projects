@@ -1,0 +1,599 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Contact-Aware Controller Design for Complementarity Systems
+Alp Aydinoglu1, Victor M. Preciado1, Michael Posa1
+Abstract—While many robotic tasks, like manipulation and policies[4],itdoesnotincorporatetactilesensing.However,
+locomotion, are fundamentally based in making and breaking thereareclearstructurallimitstosmooth,state-basedcontrol.
+contact with the environment, state-of-the-art control policies
+Here, we focus on ofﬂine synthesis of a stabilizing feedback
+struggletodealwiththehybridnatureofmulti-contactmotion.
+policy,eliminatingtheneedforintensiveonlinecalculations.
+Such controllers often rely heavily upon heuristics or, due to
+the combinatoric structure in the dynamics, are unsuitable
+The need for contact-aware control is driven, in part, by
+for real-time control. Principled deployment of tactile sensors
+recent advances in tactile sensing (e.g [5], [6], [7], [8], [9]
+offersapromisingmechanismforstableandrobustcontrol,but
+modernapproachesoftenusethisdatainanadhocmanner,for and others). Given these advances, there has been ongoing
+instancetoguideguardedmoves.Inthiswork,byexploitingthe research to design control policies using tactile feedback for
+complementarity structure of contact dynamics, we propose a tasks that require making and breaking contact. However,
+controlframeworkwhichcanclosethelooponrich,tactilesen-
+these approaches are largely based on static assumptions,
+sors. Critically, this framework is non-combinatoric, enabling
+forinstancewithguardedmoves[10],orrelyuponswitching
+optimization algorithms to automatically synthesize provably
+stable control policies. We demonstrate this approach on three controllers(e.g.[11],[12]).Otherrecentmethodsincorporate
+different underactuated, multi-contact robotics problems. tactilesensorswithindeeplearningframeworks,thoughoffer
+no guarantees on performance or stability [13], [14].
+I. INTRODUCTION
+Inthiswork,wepresentanoptimization-basednumericalap-
+In recent years, robotic automation has excelled in dealing
+proachfordesigningcontrolpoliciesthatusefeedbackbased
+with repetitive tasks in static and structured environments.
+on the contact forces. The control policy combines regular
+On the other hand, to achieve the promise of the ﬁeld,
+statefeedbackwithtactilefeedbackinordertoprovablysta-
+robots must perform efﬁciently in complex, unstructured
+bilize the system. Our controller design is non-combinatoric
+environmentswhichinvolvephysicalinteractionbetweenthe
+in nature and avoids enumerating the exponential number
+robot and the environment itself. Furthermore, as compared
+of potential hybrid modes that might arise from contact.
+with traditional motion planning problems, tasks like dex-
+Moreprecisely,wedesignapiecewiseafﬁnecontrollerwhere
+terous manipulation and legged locomotion fundamentally
+the contributions of each contact are additive (rather than
+require intentionally initiating contact with the environment
+combinatoric) in nature. Inspired by both prior work [4] and
+to achieve a positive result. To enable stable and robust mo-
+[15], we synthesize and verify a corresponding non-smooth,
+tion,itiscriticallyimportanttodesignpoliciesthatexplicitly
+piecewise quadratic Lyapunov function. Furthermore, we
+consider the interaction between robot and environment.
+also consider scenarios where full state information might
+Contact,however,ishybridormulti-modalinnature,captur- be lacking, such as when vision of an object is occluded
+ingtheeffectofstick-sliptransitionsormakingandbreaking but tactile information is available. To address this, we
+contact. Standard approaches to control often match the synthesize output feedback controllers, here expressed via
+hybriddynamicswithahybridorswitchingcontroller,where speciﬁc sparsity patterns in the state feedback matrix.
+one policy is associated with each mode. However, precise
+The primary contribution of this paper is an algorithm
+identiﬁcation of the hybrid events is difﬁcult in practice,
+for synthesis of a control policy, utilizing state and force
+and switching controllers can be brittle, particularly local
+feedback, which is provably stabilizing even during contact
+to the switching surface, or require signiﬁcant hand-tuning.
+mode transitions. We choose a structure for controller and
+Model predictive control, closely related to this work, is one
+Lyapunov function designed speciﬁcally to leverage the
+approach that has been regularly applied to control through
+complementarity structure of contact, enabling scaling to
+contact, with notable successes. Due to the computational
+multi-contactcontrol.Thisproblemisformulatedandsolved
+complexity of hybrid model predictive control, these ap-
+as a bilinear matrix inequality (BMI).
+proaches must either approximate the hybrid dynamics (e.g.
+[1]), limit online control to a known mode sequence [2], or
+II. BACKGROUND
+are unable to perform in real-time [3]. While prior work has
+We now introduce the notation that is used throughout this
+explored computational synthesis of non-switching feedback
+work. The directional derivative of a function z(x) in the
+∈R
+*This work was supported by the National Science Foundation under direction d n is given as follows,
+GrantNo.CMMI-1830218. −
+1Alp Aydinoglu and Victor M. Preciado are with the Department of (cid:48) z(x+τd) z(x)
+z (x;d)=lim .
+Electrical and Systems Engineering, and Michael Posa is with the Gen- ↓
+τ 0 τ
+eral Robotics, Automation, Sensing and Perception (GRASP) Laboratory,
+{
+University of Pennsylv}ania, Philadelphia, PA 19104, USA. alpayd, { }
+preciado, posa @seas.upenn.edu Forapositiveintegerl,¯l denotestheset 1,2,...,l .Given
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1525
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. a matrix M ∈ Rk×l and two subsets I ⊆ k¯ and J ⊆ ¯l, we components of the dynamics (M(q),C(q,v),J(q),φ(q,λ),
+deﬁne M = (m )∈ ∈ . For the case where J = ¯l, we etc.) are linearized, but the LCS maintains the non-smooth
+IJ ij i I,j J ∈ R
+use the shorthand notation M •. For two vectors a m nature of the original dynamics. An LCS is a compact
+∈ R I ≤ ⊥ ≥
+and b m, we use the notation 0 a b 0 to denote representation, as the variables and constraints scale linearly
+≥ ≥
+that a 0, b 0, aTb=0. with m, rather than with the 2m hybrid modes [15], [26].
+A. Linear Complementarity Systems Remark 1: Intheexamplesofthispaper,duetothestructure
+A standard approach to modeling robotic systems is through of M(q), J(q), and φ(q,λ), the function that describes
+the dynamics in the linear complementarity model (3) is a
+theframeworkofrigid-bodysystemswithcontacts.Thecon-
+piecewise linear approximation of the piecewise nonlinear
+tinuous time dynamics can be modeled by the manipulator
+function in (1) around the linearization point. In general,
+equations
+we note that the LCS might require additional variables to
+M(q)v˙ +C(q,v)=Bu+J(q)Tλ, (1) capture this piecewise linearization.
+∈R ∈R
+whereq p representsthegeneralized∈coRordinates,v p B. Linear Complementarity Problem
+represents the generalized velocities, λ m represents the
+Here, we recall some deﬁnitions and results from the theory
+contactforces,M(q)istheinertiamatrix,C(q,v)represents
+of linear complementarity problems [18].
+the combined Coriolis and gravitational terms, B maps the
+control inputs u into joint coordinates and J(q) is the Deﬁnition 2: (Linear Complementarity Problem) Given
+projection matrix. F ∈Rm×mandavectorw ∈Rm,theLCP(w,F)describes
+the following mathematical program:
+The model (1) is a hybrid dynamical system [16], [17]
+with 2m modes that arise from distinct combinations of ﬁnd λ∈Rm
+contacts. One approach to contact dynamics describes the
+≤ ⊥ ≥
+forces using the complementarity framework where the gen- subject to 0 λ Fλ+w 0. (4)
+eralized coordinates q and contact forces λ satisfy a set of For a given F and w, the LCP may have multiple solutions
+complementarity constraints [18]:
+ornoneatall.Hence,wedenotethesolutionsetofthelinear
+≥ ≥
+λ 0, φ(q,λ) 0, φ(q,λ)Tλ=0, (2) complementarity problem LCP(w,F) as SOL(w,F):
+where the function φ : Rp × Rm → Rm is a gap func- SOL(w,F)={λ:0≤λ⊥Fλ+w ≥0}.
+tion which relates the distance between robot and object
+We will restrict ourselves to a particular class of LCPs that
+with the contact force. This complementarity framework is
+are guaranteed to have unique solutions. Note that without
+widespread within the robotics community and has been
+thisrestriction,contactdynamicsareknowntogeneratenon-
+commonly used to simulate contact dynamics [19], [20],
+unique solutions [27], [28].
+quasi-statics [21], leveraged in trajectory optimization [22],
+stability [23] and control [4] of rigid-body systems with Deﬁnition 3: (P-Matrix)AmatrixF ∈Rm×m isaP-matrix,
+contacts. Additionally, linear complementarity systems [24] if the determinant of all of its principal sub-matrices are
+⊆{ }
+[25] capture the local behavior of (1) with the constraints positive; that is, det(F )>0 for all α 1,...,m .
+αα
+(2).Alinearcomplementaritysystemischaracterizedbythe
+∈R × ∈R × ∈R × If F is a P-matrix, then the solution set SOL(w,F) is a
+fol∈lowRing×ﬁvematric∈esR:A× n n,B n k,D n m, singleton for any w ∈ Rm [29]. If we denote the unique
+E m n, and F m m in the following way:
+element of SOL(w,F) as ψ(w), then ψ(w) is a piecewise
+Deﬁnition 1: (LinearComplementaritySystem)AnLCSde- linear function in w ∈ Rm, hence is Lipschitz continuous
+∈ R
+scribes the evolution of the state trajectory x = x(t) n and directionally differentiable [29].
+∈ R
+that are dependent on the contact forces λ = λ(t) m
+We can describe the contact forces in (3) as the solution to
+such that
+x˙ =Ax+Bu+Dλ, the LCP(Ex+c,F), and denote λ(x) as the unique element
+≤ ⊥ ≥ (3) of SOL(Ex+c,F). Therefore, λ(x) is globally Lipschitz
+0 λ Ex+Fλ+c 0,
+continuous and directionally differentiable [30]. We denote
+∈ R (cid:48)
+where u k is the input vector, A determines the the directional derivative of λ in the direction d as λ(x;d).
+autonomous dynamics of the state vector x, B models the Wenowdeﬁnethefollowingsetsthatwillbeusedthroughout
+linear effect of the input on the state, D describes the linear the work.
+effect of the contact forces on the state.
+{ ∈ }
+ΓSOL(E,F,c)= (x,λ):λ SOL(Ex+c,F) ,
+Note that the contact forces λ are always non-negative. (3)
+implies that either λ=0 or Ex+Fλ+c=0, encoding the describes the graph of λ(x).
+(cid:18) (cid:19)
+multi-modaldynamicsofcontact.Inmanyroboticscenarios, (cid:48) { (cid:48) ∈ }
+Γ (E,F,c,d)= (x,λ,λ(x;d)):λ SOL(Ex+c,F) ,
+the hybrid, nonlinear dynamics of (1) can be locally approx- SOL
+imated as a piecewise linear dynamical system, where each λ(x)
+describes the graph of Ψ(x)= (cid:48) .
+piececorrespondstoahybridmode.Wenotethatthesmooth λ(x;d)
+1526
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. In the special case where c = 0, we can describe λ(x) and We now construct conditions fo(cid:20)r guaran(cid:21)te(cid:20)ed(cid:21)stabilization.
+(cid:48) (cid:2) (cid:3)
+λ(x;d) more precisely. We ﬁrst deﬁne three index sets First, we consider the Lyapunov function introduced in [30],
+{ }
+α(x)= i:λi(x)>0=(Ex+Fλ(x))i , V(x,λ)= xT λT P Q x , (8)
+{ } QT R λ
+β(x)= i:λi(x)=0=(Ex+Fλ(x))i , ∈ R × ∈ R × ∈ R ×
+where P n n, Q n m, and R m m. Observe
+{ }
+γ(x)= i:λ (x)=0<(Ex+Fλ(x)) , that the Lyapunov function (8) is quadratic in terms of the
+i i
+pair (x,λ), and piecewise quadratic in the state variable x
+where α indicates active contacts, γ inactive contacts, and β
+since the contact forces are a function of x (i.e., λ=λ(x)).
+contacts that are inactive, but on the constraint boundary.
+More precisely, V is a piecewise quadratic Lyapunov func-
+Using these index sets, it follows that the contact force
+∈R tion in x where the function switches based on which
+λ m is equivalent to,
+contacts are active. For example, if all of the contact forces
+− −
+λ (x)= (F ) 1E •x, λ (x)=0, (5) are inactive, λ=0, then V(x)=xTPx.
+α αα α αˆ
+whereα=α(x)andαˆ =β(x)∪γ(x).Similarly,thereexists In Lyapunov based analysis and synthesis methods, one
+asubsetβ ⊆β(x)suchthatthedirectionalderivativeofthe desires to search over a wide class of functions. Since
+contact fodrce λ(cid:48)(x;d) in the direction d is given by [30] V(x,λ) is a piecewise quadratic Lyapunov function, it is
+more expressive than a Lyapunov function common to all
+(cid:48) − − (cid:48)
+λ (x;d)= (F ) 1E •d, λ (x)=0, (6) modes(aswasusedin[4]),whichmakesitamorepowerful
+αd αdαd αd αˆd
+∪ \ choicethanasinglequadraticLyapunovfunction[32].Addi-
+whereα =α(x) β andαˆ =m¯ α .Notetheinclusionof
+d d d d tionally,observethattheλ=λ(x)isapiecewisecontinuous
+elements from β(x) in the directional derivative, as contacts
+function of the state vector x, and the function V in (8) is
+in β(x) might instantaneously become active.
+non-smooth.
+UndertheassumptionthatF isaP-matrix,wenowrepresent
+Since both the function V in (8) and the contact force λ
+an LCS in a more compact manner. The linear complemen-
+are non-smooth, we work with directional derivatives in the
+tarity system in (3) is equivalent to the dynamical system
+direction x˙ where x˙ = Ax+Bu+Dλ. For simplicity, we
+(cid:48)
+x˙ =Ax+Bu+Dλ(x), (7) denote λ(x;x˙) = λ¯(x). Now, we are ready to construct
+conditions for certiﬁably stabilizing gains K and L.
+whereλ(x)correspondstotheuniqueelementofSOL(Ex+
+c,F) for every state vector x. Notice that (7) is only a more Theorem 1: Consider the linear complem≥entarity system in
+compactrepresentationof(3)andstillhasthesamestructure (3). Assume that F is a P-matrix and c 0, then the input
+as the LCS. u(x,λ) = Kx+Lλ is a continuous function of x and the
+LCS in (3) is Lipschitz continuous. Furthermore, consider
+(cid:20) (cid:21)
+III. CONDITIONSFORSTABILIZATION the matrices
+ 
+In this section, we use the complementarity formulation of
+N N Q
+contact in order to construct conditions for stability in the M = P Q , N = N1T1 N12 R ,
+sense of Lyapunov and propose controller design methods QT R Q1T2 R22 0
+based on these conditions. Unlike the common approach
+∈R × ∈R × ∈R ×
+of designing controllers only using state feedback (i.e., where P n n, Q n m, R m m, and,
+u=u(x)), we consider controllers of the form u=u(x,λ) N =ATP +PA+KTBTP +PBK,
+where the feedback is dependent both on the state x and 11
+the contact force λ. Additionally, we exploit the structure of N =PBL+PD+ATQ+KTBTQ,
+12
+the complementarity system so our controller design avoids
+combinatorial mode enumeration. N =LTBTQ+DTQ+QTD+QTBL.
+22
+D ⊆ R
+To achieve this, we consider the input vector u(x,λ) = If there exists K, L, P, Q, R and a domain n such
+Kx+Lλ, where K ∈ Rk×n and L ∈ Rk×m are feedback that V(x,λ)>0 for (x,λ)∈ΓSOL(E,F,c), x∈D, then
+gainmatricesonstateandforce,respectively.Notethatboth (cid:48) ≤
+the controller u(x,λ) = Kx+Lλ and the linear comple- 1) xe =0 is∈Ly(cid:48)apunov stable if Vˆ∈(Dx;x˙) 0 for
+mentaritysystem(3)aregloballyLipschitzcontinuousunder (x,λ,λ¯) ΓSOL(E,F,c,x˙), x , (cid:48)
+the P-matrix assumption. Since the LCS in (3) is Lipschitz 2) xe = 0 i∈s as(cid:48)ymptotically stab∈leDif Vˆ (x;x˙) < 0 for
+continuous, it has unique solutions for any initial condition (x,λ,λ¯) ΓSOL(E,F,c,x˙), x ,
+[31].
+where z = [x λ λ¯]T, g = [x λ]T, x˙ = Ax+Bu+Dλ,
+(cid:48)
+Given that solutions are unique, we can adopt standard V(x,λ)=gTMg, and Vˆ (x;x˙)=zTNz.
+notionsofstabilityfordifferentialequationswheretheright-
+Proof: Consider the Lyapunov function in (8),
+hand side is Lipschitz continuous, though possibly non-
+smooth [30], [31]. V(x,λ)=xTPx+2xTQλ+λTRλ.
+1527
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. ≤
+Then the composite function V¯(x) is locally Lipschitz con- Proposition 1: [35] The c(cid:20)onstraint σ(cid:21)max(A) Θ can be
+tinuous and directionally differentiable, written as a convex linear matrix inequality. Let
+V¯(x)=xTPx+2xTQλ(x)+λ(x)TRλ(x). { ΘI A (cid:23) }
+CΘ = A: 0 .
+AT ΘI
+The directional derivative of V¯ in the direction x˙ can be
+∈ ⇔ (cid:22) ⇔ ≤
+shown as follows, Then, A CΘ ATA Θ2I σmax(A) Θ.
+(cid:48) || ||
+Vˆ (x;x˙)=2xTPx˙+2x˙TQλ(x)+2xTQλ¯(x) Using Proposition 1 with the equality A 2 =σmax(A), and
++2λ(x)TRλ¯(x), g||iven boun|d|s on K|| and L, w||e can obtain upper bounds on
+A+BK and D+BL . However, we note that this
+2 2
+where x˙ = (A + BK)x + (D + BL)λ. After algebraic approach, while practically useful, requires enumerating all
+manipulation, ofthemodes.Hence,weproposeasecondapproachthatboth
+(cid:48)
+Vˆ (x;x˙)=zTNz, avoids enumeration and addresses cases where the constant
+term is strictly positive (c>0).
+and (a) and (b) follows.
+Proposition 2: Assume that F is a P-matrix. If λ >0, then
+WehaveestablishedsufﬁcientconditionstostabilizetheLCS i
+ETx˙+FTλ¯ =0foralli.Furthermore,usingaslackvariable
+in (3). Furthermore, observe that V is a piecewise quadratic i∈R i
+ρ m, this relation is captured by the constraints,
+function, u is a piecewise afﬁne function and both of them
+switchbasedonactivecontacts.Moreprecisely,V anduen- λ ρ =0 for alli∈m¯, (10)
+codethenon-smoothnessoftheproblemstructure,mirroring i i
+thestructure oftheLCS, andallowtactile feedback,without Ex˙ +Fλ¯+ρ=0. (11)
+exponentialenumeration.Thisisanappealingmiddleground
+between the common Lyapunov function of our prior work Proof: Observe that if λ >0, then
+i
+[4], and purely hybrid approaches [33], [34]. We can assign
+ETx+FTλ+c=0.
+a different Lyapunov function and a control policy for each i i
+mode but avoid mode enumeration so that the approach can ETx˙+FTλ¯ =0 follows after differentiation with respect to
+scale to large number of contacts (m). timi e on bioth sides of the equation. If λ > 0, then ρ = 0
+i i
+The sufﬁcient conditions in Theorem 1 are matrix inequal- from (10), and (11) is equal to EiTx˙ +FiTλ¯ =0. If λi =0,
+ities over the sets ΓSOL(E,F,c) and Γ(cid:48)SOL(E,F,c,x˙). The then (11) holds trivially since ρi is a free variable.
+challenge,thenistoﬁndrepresentationsofthesesetssuitable
+We deﬁne the following set based on Proposition 2:
+forcontrolsynthesis,withoutexponentialenumerationofthe
+(cid:48) { ∈
+hybridmodes.ThesetΓSOL(E,F,c)canbeexplicitlywritten ΓSOL(2)(E,F,c,x˙)= (x,λ,λ¯):λ SOL(Ex+c,F),
+as: ∀ ∈ }
+Ex˙ +Fλ¯+ρ=0, λ ρ =0 i m¯ . (12)
+i i
+{ ≤ ⊥ ≥ }
+ΓSOL(E,F,c)= (x,λ):0 λ Ex+c+Fλ 0 . Notice that Γ(cid:48) (E,F,c,x˙)⊆Γ(cid:48) (E,F,c,x˙). Since we
+FreoprretsheentsaettioΓns(cid:48)S.OTL(hEe,cFha,lcl,exn˙g),ewinerepprroepsoesnetintwgoΓ(cid:48)ccoonmseersvfartoivme hfoarvei=de1ﬁ,n2e,dwStOehLecasnetfsorΓmSOuLla(tEe,thFSe,OcfL)e(2a)asnibdiliΓty(cid:48)SOpLr(oi)b(Ele,mF:,c,x˙)
+properlyboundingthedirectionalderivativeofforce,λ¯ with-
+ﬁnd V(x,λ),K,L (13)
+out explicitly computing it (which would be combinatoric).
+First, we consider the case where the constant term is set to subject to V(0,0)=0,
+zero (c=0) and deﬁne the set V(x,λ)>0, for(x,λ)∈A,x∈D,
+(cid:48) { ≤ ⊥ ≥ (cid:48) ≤ ∈B ∈D
+ΓSOL(1)(E,F,0,x˙)= (x,λ,λ¯):0 Fλ+Ex λ 0, Vˆ (x;x˙) 0, for(x,λ,λ¯) ,x ,
+|| || ≤ || || || || ≤ || || }
+λ γ x , λ¯ κ x , (9) A B (cid:48)
+2 2 2 2 where = ΓSOL(E,F,c), = ΓSOL(i)(E,F,c,x˙) with
+where γ and κ are system-speciﬁc bounds on λ and λ¯, such i either 1 or 2, with the functions V(x,λ) and Vˆ(cid:48)(x;x˙)
+(cid:48) ⊆ (cid:48) (cid:48) ≤
+that Γ (E,F,0,x˙) Γ (E,F,0,x˙). The parameter γ as in Theorem 1. Notice that Vˆ (x;x˙) 0 is a bilinear
+SOL SOL(1)
+can be computed from (5): matrixinequalitybecauseofthebilineartermsPBK,PBL,
+||− − || KTBTQ and QTBL. Therefore, we have formulated the
+γ =max (F ) 1E • .
+αα α 2 problem of designing a control policy as ﬁnding a feasi-
+α
+ble solution for a set of bilinear matrix inequalities. The
+Similarly, we can compute κ using (6), A B
+(cid:0) (cid:1) conditions that deﬁne and are incorporated via the S-
+|| || ≤ || || ≤ || ||
+λ¯ γ x˙ κ x , procedure [36].
+2 2 2
+|| || || ||
+withκ=γ A+BK +γ D+BL .Inordertoobtain Even though the problem is a BMI, we can eliminate some
+|| || 2 || || 2
+boundson A+BK and D+BL ,withoutyetknowing of the bilinear constraints. Observe that the gain matrices K
+2 2
+K and L, we use the following proposition: and L appear in the constraint Ex˙ +Fλ¯ +ρ = 0 in (12).
+1528
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. This is undesirable in practice, as it will lead to bilinear S-
+procedure terms. To avoid this, we relax Ex˙ +Fλ¯+ρ=0
+and bound λ¯ with the inequality
+|| || ≤|| || || || || || || || ≤
+q EBK x +σ EBL λ b, (14)
+2 2 2 2 2
+where q =EAx+EDλ+Fλ¯+ρ. We can generate bounds
+|| || || ||
+on EBK and EBL using Proposition 1. In order to
+2 2
+compute the ﬁnal bound, b, we solve the following convex
+optimization problem,
+minimize σ,d
+(cid:112)
+≤ ∈
+subject to λTλ σxTx+d, for(x,λ) ΓSOL(E,F,c),
+Fig. 1. Benchmark problem: Regulation of the cart-pole system to the
+|| || || ||
+and compute b= EBK ω+ EBL γω2+d consid- originwithsoftwalls.
+D 2{ || || ≤2}
+eringthecompactset = x: x ω .Noticethat(14)
+2
+helps us avoid bilinear S-procedure terms, but does not turn
+represents where the walls are. For this model, we solve
+the feasibility problem (13) into a convex problem.
+the feasibility problem (13) and ﬁnd a controller of the form
+IV. EXAMPLES u(x,λ) = Kx+Lλ that regulates the model to the origin.
+The algorithm succeeded in ﬁnding a feasible controller
+In this paper, we use the YALMIP [37] toolbox with
+in 0.72 seconds. As a comparison, we also designed an
+PENBMI [38] to formulate and solve bilinear matrix in-
+LQR controller with penalty on the state Q = 10I and
+equalities. SeDuMi [39] is used for solving the semideﬁnite
+penalty on the input R = 1. We tested both contact-aware
+programs (SDPs). PATH [40] has been used to to solve the
+and LQR controllers on the nonlinear plant for 100 initial
+linear complementarity problems when performing simula-
+tions. Three examples that are generated using MATLAB1 conditions where x2(0) = 0, and x1(0),x3(∼0),x4−(0) are
+are provided with a video depiction 2. uniformly distributed (10x1(0),x3(0),x4(0) U[ 1,1]).
+Despite the fact that the walls are not particularly stiff, LQR
+A. Cart-Pole with Soft Walls was successful only 71% of the time, whereas our contact-
+aware policy was always successful.
+Weconsiderthecart-polesystemwherethegoalistobalance
+the pole and regulate the cart to the center, where there
+B. Partial State Feedback
+are walls (modeled via spring contacts) on both sides. This
+We consider a model that consists of three carts that are
+problem, or a slight variation of it, has been used as a
+standing on a frictionless surface as in Figure 2. The cart on
+benchmark in control through contact [34], [41], [3] and the
+thelefthasapoleattachedtoitandthecartinthemiddlehas
+model is shown in Figure 1.
+twospringsattachedtoitthatrepresentssoftcontacts.Inthis
+Inourmodel,thex isthepositionofthecart,x istheangle model, a spring only becomes active if the distance between
+1 2
+ofthepole,andx ,x aretheirtimederivativesrespectively. theouterblockandtheblockinthemiddleislessthansome
+3 4
+We can control the cart with the input u1 and model the threshold.Here,x1,x2,x3 representthepositionsofthecarts
+contact forces of the walls as λ1 and λ2, leading to the LCS and x4 is the angle of the pole. The corresponding LCS is
+x˙1 =x3, x¨ = gmpx + 1 u − 1 λ ,
+1 m 4 m 1 m 1
+x˙ =x , 1 1 1
+2 4
+λ − λ
+x˙3 = gmmpx2+ m1 u1, x¨2 = m12 m22,
+c c λ u
+x˙4 = g(mlcm+mp)x2+ lm1 u1+ lm1 λ1− lm1 λ2, x¨3 = m23 + m23,
+c c p p g(m +m ) u − 1
+≤ ⊥ − 1 ≥ x¨ = 1 p x + 1 λ ,
+0 λ1 lx2 x1+ k λ1+d 0, 4 m1l 4 m1l m1l 1
+1 ≤ ⊥ − 1 ≥
+≤ ⊥ − 1 ≥ 0 λ x x + λ 0,
+0 λ2 x1 lx2+ k λ2+d 0, 1 2 1 k1 1
+2 ≤ ⊥ − 1 ≥
+where k1 = k2 = 10 are stiffness parameters of the soft 0 λ2 x3 x2+ k2λ2 0,
+walls, g = 9.81 is the gravitational acceleration, m = 0.1
+p where the masses of the carts are m =m =m =1, g =
+is the mass of the pole, m = 1 is the mass of the 1 2 3
+c 9.81isthegravitationalacceleration,m =1.5isthemassof
+cart, l = 0.5 is the length of the pole, and d = 0.1 p
+thepole,l=0.5isthelengthofthepole,andk =k =100
+1 2
+arestiffnessparametersofthesprings.Observethatwehave
+1https://github.com/AlpAydinoglu/cdesign
+2https://www.youtube.com/watch?v=WS4nMXtCxcQ control over the outer blocks, but do not have any control
+1529
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. Fig. 2. Regulation of carts to their respective origins without any state
+observationsonthemiddlecart.
+over the block in the middle. Additionally, we assume that
+we can not observe the middle block, and can only observe
+the outer blocks and the contact forces. For this example,
+we can solve the feasibility problem (13) in 9.3 seconds and
+Fig.3. Acrobotwithsoftjointlimits.
+ﬁndacontrolleroftheformu(x,λ)=Kx+Lλ.Weenforce
+sparsityonthecontrollerK tonotuseanyfeedbackfromthe
+state x or its derivative x˙ . This example demonstrates that V. CONCLUSION
+2 2
+tactile feedback can be used in scenarios where full state
+Inthiswork,wehaveproposedanalgorithmforsynthesizing
+information is lacking. More precisely, we cannot observe
+control policies that utilize both state and force feedback.
+the position and velocity of the cart in the middle, but we
+We have shown that pure local, linear analysis was entirely
+can design a controller that leverages tactile feedback and
+insufﬁcient and utilizing contact in the control design is
+stabilize the system.
+critical to achieve high performance. Furthermore, the pro-
+posed algorithm exploits the complementarity structure of
+C. Acrobot with Soft Joint Limits
+the system and avoids enumerating the exponential number
+As a third example, we consider the classical underactuated
+ofpotentialmodes,enablingefﬁcientdesignofmulti-contact
+acrobot, a double pendulum with a single actuator at the
+control policies. In addition to incorporating tactile sensing
+elbow (see [42] for the details of the acrobot dynamics).
+into dynamic feedback, we provide stability guarantees for
+Additionally, we add soft joint limits to the model. Hence
+our design method.
+we consider the model in Figure 3:
+The algorithm requires solving feasibility problems that in-
+(cid:20) (cid:21) x˙ =(cid:20)Ax+B(cid:21)u+Dλ, cludebilinearmatrixinequalitiesandwehaveusedPENBMI
+[38] in this work. For the examples that are presented
+where x = (θ ,θ ,θ˙ ,θ˙ ), λ = (λ ,λ ), and D =
+1 2 1− 2 1 2 here, the runtime of the algorithm was short and we found
+0 × 1 1
+−2 2 withJT = .Forthismodel,themasses solutions to the problems relatively quickly. On the other
+M 1JT 0 0
+hand,itisimportanttonotethatforsomeparameterchoices
+of the rods are m = 0.5, m = 1, the lengths of the rods
+1 2 and initializations, the solver was unable to produce feasible
+are l = 0.5, l = 1, and the gravitational acceleration is
+1 2 solutions.
+g =9.81. We model the soft joint limits using the following
+complementarity constraints: The current framework requires the contact forces to be
+≤ − 1 ⊥ ≥ continuous, and thus is limited to soft contact models. In
+0 d θ1+ kλ1 λ1 0, future work, we will extend our results to include impulsive
+≤ 1 ⊥ ≥ impacts in the dynamics alongside continuous forces and
+0 θ1+d+ kλ2 λ2 0, tactilefeedback.Wewillalsoconsiderextensionstosystems
+wherethereisadirectrelationbetweenthecontactforceand
+where k = 1 is the stiffness parameter and d = 0.2 is the
+the input (e.g., quasi-static models that consider the friction
+angle that represents the joint limits in terms of the angle
+forces). For example, quasistatic pushing and grasping can
+θ . For this example, we solve the feasibility problem (13)
+1 be modeled as an LCS where the input u also appears
+and obtain a controller of the form u(x,λ) = Kx + Lλ
+in the complementarity constraints [21]. These systems,
+in 1.18 seconds. For comparison, we also designed an LQR
+when combined with our control policies, would create an
+controller for the linear system where the penalty on the
+algebraic loop that must be broken via introduction of delay
+state is Q = 100I and the penalty on the input is R =
+or ﬁltering (modeling sensor dynamics).
+1. We ran 100 trials on the nonlinear plant where initial
+conditions were s∼ampl−ed according to x1(0) = x2(0) = 0 REFERENCES
+and x (0),x (0) U[ 0.05,0.05]. Out of these 100 trials,
+3 4 [1] Y. Tassa and E. Todorov, “Stochastic Complementarity for Local
+LQR was successful only 49% of the time whereas our
+Control of Discontinuous Dynamics,” in Proceedings of Robotics:
+design was successful 87% of the time. ScienceandSystems(RSS),Citeseer,2010.
+1530
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. [2] F.R.Hogan,E.R.Grau,andA.Rodriguez,“ReactivePlanarManip- [21] M. Halm and M. Posa, “A Quasi-static Model and Simulation
+ulationwithConvexHybridMPC,”Oct2017. Approach for Pushing, Grasping, and Jamming,” arXiv preprint
+arXiv:1902.03487,2019.
+[3] T. Marcucci, R. Deits, M. Gabiccini, A. Bicchi, and R. Tedrake,
+“ApproximateHybridModelPredictiveControlforMulti-contactPush [22] M.Posa,C.Cantu,andR.Tedrake,“ADirectMethodforTrajectory
+RecoveryinComplexEnvironments,”in2017IEEE-RAS17thInter- Optimization of Rigid Bodies Through Contact,” The International
+nationalConferenceonHumanoidRobotics(Humanoids),pp.31–38, JournalofRoboticsResearch,vol.33,no.1,pp.69–81,2014.
+IEEE,2017.
+[23] M. Haas-Heger, G. Iyengar, and M. Ciocarlie, “On the Distinction
+[4] M.Posa,M.Tobenkin,andR.Tedrake,“StabilityAnalysisandControl BetweenActiveandPassiveReactioninGraspStabilityAnalysis,”in
+ofRigid-bodySystemswithImpactsandFriction,”IEEETransactions WorkshopontheAlgorithmicFoundationofRobotics(WAFR),2016.
+onAutomaticControl,vol.61,no.6,pp.1423–1437,2015.
+[24] W.Heemels,J.M.Schumacher,andS.Weiland,“LinearComplemen-
+[5] N. Wettels, J. Fishel, Z. Su, C. Lin, and G. Loeb, “Multi-modal taritySystems,”SIAMJournalonAppliedMathematics,vol.60,no.4,
+SynergisticTactileSensing,”inTactileSensinginHumanoids-Tactile pp.1234–1269,2000.
+Sensors and Beyond Workshop, 9th IEEE-RAS International Confer-
+[25] D.Q.Mayne,“ControlofConstrainedDynamicSystems,”European
+enceonHumanoidRobots,2009.
+JournalofControl,vol.7,no.2-3,pp.87–99,2001.
+[6] J.W.Guggenheim,L.P.Jentoft,Y.Tenzer,andR.D.Howe,“Robust
+[26] H. Lin and P. J. Antsaklis, “Stability and Stabilizability of Switched
+andInexpensiveSix-axisForce–torqueSensorsUsingMEMSBarom-
+LinearSystems:ASurveyofRecentResults,”IEEETransactionson
+eters,” IEEE/ASME Transactions on Mechatronics, vol. 22, no. 2,
+AutomaticControl,vol.54,no.2,pp.308–322,2009.
+pp.838–844,2017.
+[27] D.E.Stewart,Rigid-BodyDynamicswithFrictionandImpact,vol.42.
+[7] W.Yuan,R.Li,M.A.Srinivasan,andE.H.Adelson,“Measurementof
+Jan2000.
+ShearandSlipwithaGelSightTactileSensor,”in2015IEEEInterna-
+tionalConferenceonRoboticsandAutomation(ICRA),pp.304–311, [28] M. Halm and M. Posa, “Modeling and Analysis of Non-unique
+IEEE,2015. Behaviors in Multiple Frictional Impacts,” in Robotics: Science and
+Systems,2019.
+[8] V.Kumar,E.Todorov,andS.Levine,“OptimalControlwithLearned
+Local Models: Application to Dexterous Manipulation,” in 2016 [29] J. Shen and J.-S. Pang, “Linear Complementarity Systems: Zeno
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA), States,” SIAM Journal on Control and Optimization, vol. 44, no. 3,
+pp.378–383,IEEE,2016. pp.1040–1066,2005.
+[9] E. Donlon, S. Dong, M. Liu, J. Li, E. Adelson, and A. Rodriguez, [30] M.K.Camlibel,J.-S.Pang,andJ.Shen,“Lyapunovstabilityofcom-
+“GelSlim: A High-Resolution, Compact, Robust, and Calibrated plementarity and extended systems,” SIAM Journal on Optimization,
+Tactile-sensing Finger,” in 2018 IEEE/RSJ International Conference vol.17,no.4,pp.1056–1101,2006.
+onIntelligentRobotsandSystems(IROS),pp.1927–1934,IEEE,2018.
+[31] H.K.Khalil,“NonlinearSystems,”UpperSaddleRiver,2002.
+[10] R.D.Howe,“TactileSensingandControlofRoboticManipulation,”
+AdvancedRobotics,vol.8,no.3,pp.245–261,1993. [32] M. Johansson and A. Rantzer, “Computation of Piecewise Quadratic
+LyapunovFunctionsforHybridSystems,”in1997EuropeanControl
+[11] J.M.Romano,K.Hsiao,G.Niemeyer,S.Chitta,andK.J.Kuchen- Conference(ECC),pp.2005–2010,IEEE,1997.
+becker,“Human-inspiredRoboticGraspControlwithTactileSensing,”
+IEEETransactionsonRobotics,vol.27,no.6,pp.1067–1079,2011. [33] A. Papachristodoulou and S. Prajna, “Robust Stability Analysis of
+NonlinearHybridSystems,”IEEETransactionsonAutomaticControl,
+[12] A. Yamaguchi and C. G. Atkeson, “Combining Finger Vision and vol.54,pp.1035–1041,May2009.
+OpticalTactileSensing:ReducingandHandlingErrorsWhileCutting
+[34] T.MarcucciandR.Tedrake,“WarmStartofMixed-IntegerPrograms
+Vegetables,” in 2016 IEEE-RAS 16th International Conference on
+forModelPredictiveControlofHybridSystems,”2019.
+HumanoidRobots(Humanoids),pp.1045–1051,IEEE,2016.
+[35] S. Boyd and L. Vandenberghe, Convex Optimization. Cambridge
+[13] H. Merzic, M. Bogdanovic, D. Kappler, L. Righetti, and J. Bohg,
+UniversityPress,2004.
+“Leveraging Contact Forces for Learning to Grasp,” arXiv preprint
+arXiv:1809.07004,2018. [36] S.Boyd,L.ElGhaoui,E.Feron,andV.Balakrishnan,LinearMatrix
+InequalitiesinSystemandControlTheory,vol.15. SIAM,1994.
+[14] S.Tian,F.Ebert,D.Jayaraman,M.Mudigonda,C.Finn,R.Calandra,
+andS.Levine,“ManipulationbyFeel:Touch-basedControlwithDeep [37] J. Lo¨fberg, “YALMIP : A Toolbox for Modeling and Optimization
+PredictiveModels,”arXivpreprintarXiv:1903.04128,2019. inMATLAB,”inInProceedingsoftheCACSDConference,(Taipei,
+Taiwan),2004.
+[15] M. Camlibel et al., “Complementarity Methods in the Analysis of
+PiecewiseLinearDynamicalSystems,”tech.rep.,TilburgUniversity, [38] M.KocˇvaraandM.Stingl,“PENNON:ACodeforConvexNonlinear
+SchoolofEconomicsandManagement,2001. andSemideﬁniteProgramming,”OptimizationMethodsandSoftware,
+vol.18,no.3,pp.317–333,2003.
+[16] R.Alur,T.A.Henzinger,G.Lafferriere,andG.J.Pappas,“Discrete
+Abstractions of Hybrid Systems,” Proceedings of the IEEE, vol. 88, [39] J. F. Sturm, “Using SeDuMi 1.02, A MATLAB Toolbox for Opti-
+no.7,pp.971–984,2000. mizationoverSymmetricCones,”OptimizationMethodsandSoftware,
+vol.11,no.1-4,pp.625–653,1999.
+[17] M.S.Branicky,V.S.Borkar,andS.K.Mitter,“AUniﬁedFramework
+for Hybrid Control: Model and Optimal Control Theory,” IEEE [40] S.P.DirkseandM.C.Ferris,“ThePATHSolver:ANon-monotone
+TransactionsonAutomaticControl,vol.43,no.1,pp.31–45,1998. Stabilization Scheme for Mixed Complementarity Problems,” Opti-
+mizationMethodsandSoftware,vol.5,no.2,pp.123–156,1995.
+[18] R.W.Cottle,LinearComplementarityProblem. Springer,2009.
+[41] R. Deits, T. Koolen, and R. Tedrake, “LVIS: Learning From Value
+[19] M.AnitescuandF.A.Potra,“FormulatingDynamicMulti-rigid-body
+FunctionIntervalsforContact-awareRobotControllers,”in2019In-
+Contact Problems with Friction as Solvable Linear Complementarity
+ternationalConferenceonRoboticsandAutomation(ICRA),pp.7762–
+Problems,”NonlinearDynamics,vol.14,no.3,pp.231–247,1997.
+7768,IEEE,2019.
+[20] D. Stewart and J. C. Trinkle, “An Implicit Time-stepping Scheme [42] R. M. Murray and J. E. Hauser, A Case Study in Approximate
+for Rigid Body Dynamics with Coulomb Friction,” in Proceedings Linearization:TheAcrobatExample. 1991.
+2000 ICRA. Millennium Conference. IEEE International Confer-
+ence on Robotics and Automation. Symposia Proceedings (Cat. No.
+00CH37065),vol.1,pp.162–169,IEEE,2000.
+1531
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:03:08 UTC from IEEE Xplore.  Restrictions apply. 

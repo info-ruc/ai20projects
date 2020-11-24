@@ -1,0 +1,555 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+TRASS: Time Reversal as Self-Supervision
+Suraj Nair, Mohammad Babaeizadeh, Chelsea Finn, Sergey Levine, Vikash Kumar
+f g
+nairsuraj,mbz,chelseaf,slevine,vikashplus @google.com
+Robotics at Google
+Abstract(cid:151)A longstanding challenge in robot learning for Original Video  Time Reversal  Training  Initial State  Control 
+ 
+manipulationtaskshasbeentheabilitytogeneralizetovarying  
+ 
+initial conditions, diverse objects, and changing objectives.  
+Learning based approaches have shown promise in producing  
+ 
+robustpolicies,butrequireheavysupervisionandlargenumber  
+ 
+of environment interactions, especially from visual inputs. We  
+propose a novel self-supervision technique that uses time-  
+ 
+reversal to provide high level supervision to reach goals. In me   Prediction    
+particular, we introduce the time-reversal model (TRM), a Ti  
+self-supervised model which explores outward from a set of    Time Reversal    
+Model  
+goal states and learns to predict these trajectories in reverse.  
+ 
+This provides a high level plan towards goals, allowing us to  
+learn complex manipulation tasks with no demonstrations or  
+ 
+exploration at test time. We test our method on the domain of  
+ 
+assembly, speci(cid:2)cally the mating of tetris-style block pairs. Us-  
+ingourmethodoperatingatopvisualmodelpredictivecontrol,  
+ 
+we are able to assemble tetris blocks on a KuKa IIWA-7 using
+onlyuncalibratedRGBcamerainput,andgeneralizetounseen Fig. 1. Time Reversal as Self-Supervision: Our method (1) collects
+block pairs. Project’s-page: https://sites.google.com/ trajectoriesexploringoutwardfromasetofgoalstatesandreversesthem.
+view/time-reversal It then (2) trains a supervised model, the time reversal model (TRM), to
+predict these reversed trajectories. (3) It uses the trained TRM to predict
+I. INTRODUCTION
+thetrajectoryofstatesleadingtothegoalstateforanewscene.(4)Control
+Learning general policies for complex manipulation tasks isexecutedtofollowthetrajectorypredictedbyTRM.
+often requires being robust to unseen objects and noisy
+scenes. However, learning complex tasks, in particular from context is non-trivial. Consider the task of putting a cap on
+visual inputs, present a number of challenges: (1) ef(cid:2)ciently a pen.Successful taskcompletion isdependent onboth con-
+exploring the state space, (2) acquiring the suitable visual centricalignmentofaxisandaparticularapproachdirection.
+representation for the task, and (3) learning to execute (cid:2)ne Thus we argue that learning the schematic understanding of
+control from dense input. To combat these issues, many objects and their relationships for manipulation requires (1)
+methods rely heavily on some form of supervision, either as contextual understanding, (2) high level reasoning, and (3)
+demonstrations, shaped rewards, or privileged state informa- precise control. However, uncapping the pen is a relatively
+tion.However,acquiringsuchsupervisioncanbeverycostly. simpler task, requiring less exploration and (cid:2)ne control
+Shaped rewards often require signi(cid:2)cant tuning, demonstra- to achieve. Yet, by uncapping the pen, one can learn the
+tionsrequireexpertstocompletethetaskmanytimesaswell contextual understanding and high level reasoning needed
+ascomplexrecordinginfrastructure,andacquiringprivileged to re-cap it. This is the key principle behind our time-
+state information often makes strong assumptions about the reversalmethod.TRMmodelstrainedonreverseduncapping
+environment.Asanalternativetorelyingonoutsidesupervi- trajectories could provide strong supervision about coaxial
+sion,weaskthequestion:(cid:147)Cananautonomousagentacquire alignment and approach direction. TRM’s supervision can
+this supervision on its own?(cid:148) In attempting to answer this then be consumed by any local planner for execution.
+question, our critical insight is that for many manipulation The time-reversal method works by (cid:2)rst collecting data
+tasks, solving the task directly is dif(cid:2)cult, while inverting by initializing to some set of goal states, applying random
+it (changing the scene from solved to un-solved) is easy. forces to disrupt the scene, and recording the subsequent
+To that end, we propose a novel method for gaining self- states. We consider this self supervised, as the policy which
+supervisionthat operatesbyexploring outwardfroma setof disrupts the scene can just be random motion as it is in
+goal states, and reversing the trajectories. We train a time- our setting, and thus does not require human input. We then
+reversalmodel(TRM)topredictthesereversedtrajectories, train the TRM to predict these trajectories in reverse. At test
+thereby creating a source of supervision leading to the goal time (when the goal states are unknown), the trained model
+state. can take the current state as input and provide supervision
+Most manipulation tasks that one would want to solve towards the goal, in the form of a guiding trajectory of
+requiresomeunderstandingofobjectsandhowtheyinteract. frames leading from current state towards the goal (See
+Howeverunderstandingobjectrelationshipsinataskspeci(cid:2)c Figure 1). This guiding trajectory can be used as indirect
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 115
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. supervision to generate a low level control policy via any impressive results in the problems of simple manipulation
+model based or model-free techniques. Additionally, the and grasping [13](cid:150)[18] by learning task speci(cid:2)c policies.
+time-reversal method can operate in any state domain, such Whiletheseapproachesaregenerallysuccessfulintheirtask,
+as robot joint states, latent states, or raw images. Note that they have not been demonstrated on more complex tasks,
+the time-reversal model does not use or predict actions, particularlythosewhichrequirebothhigh-levelplanningand
+purely state trajectories. This circumvents the issue of many precisecontrol.Thesemethodshavealsobeenshowntowork
+actions being irreversible, and decouples high level task well when trained in simulation with domain randomization
+reasoning from low level control, each of which can be andtransferredtoaphysicalrobot[3],[19],[20],astrategy
+learned separately. This decoupling of high level planning which we use in our method.
+and low level control should make each low level control Modelbasedapproachestorobotcontrolhavetraditionally
+step less planning intensive, thus enabling more complex, been most effective in tasks with low-dimensional states,
+multi-stage tasks. such as helicopter control [21] and robotic cutting [22],
+We test our method on the task of Tetris block mating however recent methods have found success in learning a
+and attempt to learn the semantic understanding necessary dynamics model in image space [23](cid:150)[25]. These models
+to solve the problem from raw visual inputs. Tetris (or have been shown to be effective in planning [26], and have
+Lego) block mating, owing to its close resemblance with even been extended to operate in 3D point cloud space [27].
+industrial assembly applications, has been studied in the While these approaches work well on simple tasks, they
+past [1] as it nicely casts the challenges of assembly in require additional information during evaluation in the form
+a set up that can be closely studied. These tasks require of either goal images or demonstrations, exactly what our
+high level reasoning of how pieces must (cid:2)t together, as method circumvents.
+well as (cid:2)ne control necessary to actually (cid:2)t them together, At the same time, exploration of visual domains remains
+making them especially challenging for existing methods. a signi(cid:2)cant challenge. A number of recent works have
+Experimental results show that TRM can reliably provide tried to tackle this problem in low dimensional spaces by
+supervision towards the goal con(cid:2)guration entirely in visual training goal-conditioned policies, and reformulating seen
+space, and by using TRM with visual model predictive statesasgoalsasself-supervision,yieldingimprovedsample
+control (MPC), we achieve a success rate more than double ef(cid:2)ciency [28], [29]. A similar idea has been extended to
+that of the more heavily supervised visual MPC baseline, physical robots and images by Nair and Pong et al [30],
+while achieving comparable performance to using ground whopracticereachingimaginedgoals.Thismethodhowever
+truth full supervision. still requires goal images at test-time, and tests on a simpler
+In addition, we show that using TRM trained with data puck-pushing tasks.
+generated in a MuJoCo simulation [2] with domain random- Another approach to self-supervised exploration involves
+ization[3],weareabletoperformsim-to-realtransfer,weare resetting to goal states and exploring states around the goal
+abletoachievea75%successrateofblockpairmatingona state [31](cid:150)[33]. While these methods are most similar to
+real robot setup using a KUKA IIWA and only uncalibrated our approach, they still rely on supervision in the form of
+RGB camera input (No information between camera frame rewards from the environment. As a result these methods
+and robot frame is provided). stillneedexplorationunlikeourmethodwhichneedsneither
+Summary of Contributions: (1) Our primary contribu- goal speci(cid:2)cation nor exploration at evaluation time. These
+tion is a novel method for self-supervision that uses time- approachesalsohavenotbeenshownonphysicalrobotswith
+reversal to predict guiding trajectories towards goals. (2) We image input.
+demonstratethatthismethodcanbeusedinconjunctionwith
+III. PRELIMINARIES
+a control policy to execute tasks, with higher success rates
+thanmoreheavilysupervisedmethods.(3)Weshowthatthis We formulate the space of problems in which our method
+method can enable completion of tasks on real robots using can be applied as (cid:2)nite-horizon, Markov decision processes
+training in simulation with domain randomization. with sparse rewards. At each timestep t, the agent receives
+2 2
+a state s S and chooses an action a A based on
+II. RELATEDWORK a stochasttic policy a (cid:24) (cid:25)(s ). After takitng an action the
+t t
+Methods for robot control from visual inputs have been environmentreturnsthestochasticnextstates andreward
+f 2 g t+1
+demonstrated on problems ranging from driving [4] to soc- r(s ;a ) = 1 s S where S is a subset of S
+t t t+1 g g
+cer [5]. One approach has been visual servoing, which consisting of all goal states.
+directly performs closed loop control on image features [6](cid:150) Our method is well suited when: (1) During a training
+0 2
+[8]. While some visual servoing methods work with uncal- phase we can reset to some subset of goal states S S ,
+g g
+ibrated camera inputs [9], [10], the general hand crafted selectedatrandom.(2)TheMarkovchainproducedbytaking
+2 0
+nature of visual servoing limits the complexity of visual uniformly random actions from any goal state s S has
+2g g
+inputs and tasks where it can be applied. Other works a non-zero probability of reaching all states s S. (3) If
+haveemphasizedlearningbasedapproaches,inparticularthe there exists transitions from states s to s , then there exists
+(cid:3) i j
+use of deep neural networks to learn visuo-motor control some set of actions A which can traverse from s to s .
+j i
+from images [4], [5], [11], [12]. These methods have shown Assumption 1 enables us to reset to goal states during the
+116
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. training phase. However, it does not provide any general
+speci(cid:2)cation of goal states nor any information about how
+to reach them. Furthermore, assumption 2 simply ensures
+2
+that all states s S can be reached from the goal, a
+condition satis(cid:2)ed in many robotics problems, including
+manipulation. Assumption 3 ensures that it is feasible to
+followreversedtrajectories.Ourformulationdoesnotassume
+that at evaluation time the objective is to reach a speci(cid:2)c
+2
+state s , but rather to reach any state s S , where
+g g g
+no speci(cid:2)cation of the goal is provided. Thus a successful
+method must be able to (1) reason about what the goal state
+is given the current state and (2) execute control to reach it.
+Below we list some of the tasks where TRASS can be
+applied, and some where it cannot, with justi(cid:2)cation. In Fig. 2. One step of TRASS: A new image is provided and is fed
+through the time reversal model to produce a trajectory toward the goal
+principle TRASS can be applied to:
+state.Simultaneously,weuseCEMtooptimizeactionswiththecostofan
+2D assembly: as demonstrated in our results. actionde(cid:2)nedbyitspredictednextstatesimilaritytotheTRMtrajectory.
+3D assembly: consider the task of block tower stacking
+then the time-reversal trajectory will simply show the object
+[34], [35]. Exploration of the robot from the goal state
+moving up, which can provide a useful cost signal for the
+will knock the blocks down. In our results we observe
+task, and can feasibly be followed by a policy. One way
+that the time-reversal model (TRM) predicts the blocks
+to avoid having the gripper in the state space is to use a
+(cid:3)oating through the air and reforming a tower given a new
+high level action space, for example pick-place locations, or
+initialization. Note that while these videos are not perfect,
+start-end push locations. There are some cases where even
+i.e. they have multiple blocks moving simultaneously, this
+when the gripper is in the state, the dynamics are reversible
+still provides a dense cost function which corresponds to
+and TRASS can be applied, for example turning a knob or
+task progress.
+closing a drawer.
+Tabletop/Desk Organization: For example - turning on a
+Irreversible Object Deformations: In cases where object
+computeroropeningadrawer[36].Thestatetrajectoryseen
+deformations can be reversed like cloth folding [39] or rope
+by releasing and moving away from a power button when
+manipulation [40] TRASS is applicable. However in cases
+reversed provides a strong supervision signal of reaching
+where object deformations cannot be reversed, for example
+towards and pressing a button. Similarly, when starting at
+cracking an egg, mixing two ingredients, or welding parts
+the goal state of gripping an open drawer, self-supervised
+together, TRASS cannot be applied.(cid:148)
+exploration outward will either explore outward from the
+handle or push the drawer closed. Then the time reversal IV. METHOD
+model will learn to predict trajectories of approaching the The core contribution of our method lies in acquiring
+handle and pulling open the drawer. supervisionthroughtime-reversal,whichcanbebrokendown
+Household Manipulation: (1) Setting up a dining table into three distinct phases (1) Time-reversal exploration and
+[37], (2) Making a bed [38], (3) Cleaning a room. (1) data collection (2) Time-reversal model (TRM) training (3)
+Startingfromaproperlysettable,explorationwillknockthe Test time goal and trajectory prediction using time-reversal
+plates/utensils around on the table. This trajectory reversed model. Then, using the goals and trajectories provided by
+(cid:24)
+provides a useful cost signal in re-setting the table. (2) the time reversal model, one can create a policy a (cid:25)(s )
+t t
+Starting from a made bed, random perturbations to the bed to complete the task.
+can crumple the blanket, which when reversed provides Time-Reversal Exploration and Data Collection: The
+supervision on how to (cid:3)atten and spread the blanket. (3) motivation behind time-reversal is that for many tasks, it is
+Similarly, randomly perturbing objects in a clean/organized much easier to invert the task, i.e. destroy the scene from
+room will distribute the objects around the room. These a goal state, than to reach a goal state from an initial state.
+trajectories reversed will show objects being placed back to Thus, if the information collected by inverting the task can
+theircorrectpositions,strongsupervisionforaroomcleaning be used to reach goals, the need for external supervision to
+robot. learn tasks can be reduced.
+TRASS cannot be applied to: Duringtheexplorationanddatacollectionphase,thescene
+0 2
+Gripper in state: The primary situation where TRASS resets to a goal state s S , and the agent explores
+g g
+is not applicable is when (1) the gripper that manipulates outward using random perturbations to the scene. Thus,
+objects is visible in state and (2) the dynamics between using no expert knowledge, the agent collects a trajectory
+0
+the gripper and objects are irreversible. For example, when s ;s ;s ;:::;s which when reversed can be used
+g t+1 t+2 t+M
+grasping an object and holding it up, if the gripper is visible by the agent to learn to return to the goal state.
+inthestate,thenthereisnowaytoreversethestatetrajectory Formanymanipulationtasks,arandomexplorationpolicy
+(keep the gripper (cid:2)xed in the air, while the block (cid:3)oats up such as the one described is suf(cid:2)cient in exploring the
+into it). However - if the gripper is not part of the state, space, in particular when randomly perturbing the scene the
+117
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. distributionofs matchesthedistributionofinitialstates model becomes a video prediction model. Speci(cid:2)cally we
+t+M
+s . While this holds true for several domains of robotics use identical architecture and training parameters as [41].
+0
+(assembly,stacking,rearranging),insomemanipulationtasks Additionally, while the time-reversal framework can operate
+this may not be the case. Consider the task of screwing a with any control policy, we use visual model predictive
+cap on a bottle. In this setting, random perturbations on the control as in [23], the details of which are provided below.
+tightenedcapareunlikelytoyieldstateswhichrepresentthe Using TRM Prediction for Control: Given the time-
+distributionofinitialstates(beforethecaphasbeenscrewed reversal model’s predictions (trajectory leading towards the
+on the bottle). However, we argue that our time reversal goal), an agent can use any number of control methods
+framework can be still be applied in these cases, using a to take actions which follow this trajectory. For example,
+different method of exploration1. using model-based techniques, one can use a model to plan
+Time-Reversal Model Training: After the exploration actions which follows the states predicted by the TRM.
+and data collection phase, the agent has collected k trajec- Using model-free approaches, one can learn a policy using
+2
+tories of the form s ;s ;s ;:::;s where s S are a reward function which gives high reward for following a
+t t+1 t+2 t+M t g
+potential goal states. state trajectory similar to the TRM prediction. In this work,
+We then reverse these trajectories, and train the time- we use visual model predictive control as a means to take
+reversal model to predict a sequence of states along the actionswhichfollowtheTRMtrajectory(SeeFigure2),due
+reversed trajectories: totheabilitytolearnvisualMPCfrompurelyself-supervised
+(cid:3) (cid:3) (cid:3) (cid:24) data, and its ability to generalize to novel tasks and objects.
+s (cid:0) ;:::;s (cid:0) (cid:0) ;s (cid:0) TRM (s )
+t+M 1 t+M (A 1) t+M A (cid:18) t+M We learn the visual dynamics model through random
+where A is a tunable parameter for how many actionsasdonein[23].Thevisualdynamicsmodelisalsoan
+time steps time-reversal model predicts. The instanceoftheSV2Pmodel,andistrainedusinganidentical
+TRM is then trained to minimize the loss architecture and loss to the time-reversal model. The only
+L(TRM (s );s (cid:0) ;:::;s (cid:0) (cid:0) ;s (cid:0) ]) difference is that the visual dynamics model is trained on
+(cid:18) t+M t+M 1 t+M (A 1) t+M A
+across batches of trajectories. temporally ordered sequences (not reversed), and includes
+Goal and Trajectory Prediction using TRM: At test actions.Giventhecurrentstate,andasequenceofN actions,
+time, the agent’s objective is to reach some state in a new the visual dynamics model is trained to predict the next N
+scene which satis(cid:2)es the goal condition. In particular, the states:
+agent is initialized to some initial state s , and wants to (cid:3) (cid:3) (cid:3) (cid:24)
+reachsomegoalstates0 2S .Theagentisn0otprovidedany st+1;st+2;::;st+N F(cid:14)(st;at;at+1;:::at+N)
+g g
+supervision here besides knowing when the task is complete
+Then, given the trained visual dynamics model and time-
+(i.e. there is no explicit reward function). Rather, the trained
+reversal model, we plan actions using the cross entropy
+time reversal model predicts the sequence of states leading
+method (CEM) [42] such that the predicted future states
+towards the goal state:
+align with the predicted TRM trajectory (See Figure 2).
+(cid:24)
+(cid:3) (cid:3) (cid:3) (cid:24) Formally, this decomposes the control policy a (cid:25) (s )
+s ;s ;:::;s TRM (s ) t (cid:18);(cid:14) t
+t+1 t+2 t+A (cid:18) t intoavisualdynamicsmodelF (s ;a )andthetimereversal
+(cid:14) t t
+At every time step in the episode this trajectory is recom- model TRM (s ). (cid:25) =CEM(F ;TRM ;s )
+(cid:18) t (cid:18);(cid:14) (cid:14) (cid:18) t
+puted, producing a high level plan towards the goal state. Thispolicy(cid:25) isthenusedtoreceivestatesandproduce
+(cid:18);(cid:14)
+We observe that TRM is able to directly predict sequence actions at each step of evaluation. A visual depiction of
+of the Tetris blocks moving together and into the mated one step of the policy is shown in Figure 2. At a single
+con(cid:2)guration, all in image space (See Figure 3). time step, the time-reversal model predicts the sequence of
+Notethatthetime-reversalmodeldoesnotpredictactions, states leading towards a goal state, and iterative sampling
+but rather trajectories of states. This decoupling serves two and re(cid:2)tting is used to (cid:2)nd actions for which the visual
+purposes. First, clearly many actions are not reversible, e.g. dynamics model predicts a trajectory which matches the
+j 6 j
+p(s s ;a )=p(s s ;a ), so learning the time reversal time-reversal model trajectory. Note that the learning of the
+t+1 t t t t+1 t
+model with actions is not possible. Second, by allowing the visual dynamics model and use of CEM for planning is not
+TRM to focus exclusively on state trajectories, it is able to novel and is simply a means to take actions which follow
+learn a high level plan purely in state space, decoupling the the time-reversal model trajectory. Our contribution lies in
+controlfromhighlevelguidance.Then,usingatrainedtime- the time-reversal model itself, and any number of control
+reversal model, control can be learned separately. Details on methods can be used to plan with it.
+the control method can be found in Section V.
+VI. EXPERIMENTDETAILS
+V. METHODDETAILS
+Objects and Goals: Our problem of Tetris block mating
+While the time-reversal framework is agnostic to the
+consists of a set of blocks, decomposed, with each part
+choiceofstatespace,weexaminetheproblemofTetrisblock
+randomly placed on a (cid:3)at tabletop. A tool (simulated cube
+pair mating from raw RGB input. Thus our time-reversal
+or a robot end-effector) is used to push the objects in the
+scene. Each block pair consists of two parts which when
+1An exploration policy driven by curiosity in the form of state novelty
+couldworkwellhere.Lefttofuturework. mated complete a 3x3 square. The set of goal states S
+g
+118
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. Input Frame Predicted Frames
+consists of all states where the objects are combined to
+form the 3x3 square. Importantly, the goal con(cid:2)guration
+is pose invariant. As long as the 3x3 square is completed, kg
+the goal con(cid:2)guration is reached regardless of the location Blocatin
+on the table or orientation where the completion occurred. 2 M
+Observation/Action Space: The observation space consists
+of 64x64 pixel angled top-down RGB images. The action
+s(cid:0)pace is the high level action space A 2 R4 bounded from Blockating
+0:2 to 0:2, representing the start <x;y > location and an 3 M
+end <x;y > location of a push. In practice, when an action
+is called with a start and end point, the robot endeffector g
+(or simulated tool) moves to above the start location, moves werkin
+c
+down to the table height, pushes linearly towards the end ToSta
+point using Cartesian control with a force threshold, then
+  Time  
+lifts up and out of the scene, at which point the next state
+is captured. Environments: We primarily train our models
+Fig. 3. Time Reversal Model Qualitative Examples: Examples of the
+on data generated in a simulation environment, and evaluate
+outputofTRMfromunseeninitializationonthetasksof2BlockMating,3
+our methods on both the simulation environment and a BlockMating,andTowerStacking.InallcasestheTRMtrajectoryprovides
+real robot setup. Simulation Environment: The simulation arealisticplantothegoal.
+setup is built using the MuJoCo simulation engine [2]. It Next, we compare the quantitative performance of our
+consists of a (cid:3)at tabletop, upon which the male and female method against two other approaches with different levels
+blocks can slide in the x;y plane or rotate around the z of supervision on the 2 block assembly task: (1) a semi-
+axis.Theblocksarecomposedofseveralcubes(ofsidelength supervised approach which performs visual MPC with a
+5cm),forminguniqueshapes.Robot Environment:Therobot shaped cost but no ground truth goal information and (2)
+environment consists of a KUKA IIWA robot operating on a fully supervised approach which performs visual MPC
+a tabletop. The blocks dimensions are the same as in simu- with ground truth goal information (not available in real
+lation. Data Collection: To train both the visual dynamics world, made available only in physics simulators). We ob-
+model and time reversal model, we primarily collect data serve that TRM based supervision outperforms the semi-
+in simulation. To transfer to the real world, and to improve supervised baseline and gets comparable performance to the
+overall performance, we apply domain randomization [3]. full supervision.
+For the visual dynamics model we also explore collecting A. Baselines
+dataontherealrobot.Time-Reversal Model Data:Tocollect Below we describe the version of our method we use in
+training data for the time reversal model, we collect dis- our experiments and the two baselines which we compare
+assembly trajectories. Speci(cid:2)cally, in a single trajectory we our against. The success rates are shown in Figure 4.
+2
+(cid:2)rst initialize to a goal state s S chosen uniformly TRM (Ours) (Self-Supervised): Our method using
+g g
+at random. We then insert random forces to break apart CEM(F ;TRM ;s ),asdescribedinSectionIV,usingthe
+(cid:14) (cid:18) t
+the objects and record the subsequent trajectory of states 5th frame prediction from TRM to compute cost and doing
+s (s );s ;:::;s . We then save the trajectory in reverse: max 5 iterations of CEM.
+0 g 1 T
+s ;:::;s ;s (s ) Visual Dynamics Model Data: To collect Shaped Reward [23] (Semi-Supervised): Performs vi-
+T 1 0 g
+training data for the visual dynamics model, we simply sual model predictive control in the same way as in our
+execute random actions, and capture the subsequent state. method, using the same visual dynamics model. However,
+2
+In a single trajectory, we initialize to a state s S, sample the cost of an action is computed as the area of the convex
+0
+actions uniformly, and save the transitions (s ;a ;s ). hull of the blocks in the predicted future image. The convex
+t t t+1
+VII. RESULTS hull is computed by using color segmentation to identify the
+Since the focus of our contribution is acquiring self- blocks, and solving for the convex hull in pixel space. The
+supervisionthroughtimereversal,inourexperimentsweask convex hull is a continuous signal that will be larger the
+the question (cid:147)How does self-supervision from time-reversal fartherawaytheblocksare,andwillbeminimizedwhenthe
+compare to other more expensive forms of supervision?’’ blocks are correctly mated, thus it provides a dense reward
+First, we examine qualitatively the supervision provided by for the visual model predictive control. Despite using this
+TRM on 3 different tasks - 2 block assembly, 3 block shapedreward,thisapproachachievesasuccessrateroughly
+assembly,andtowerstackinginFigure3.Weobservethatin half of what our method achieves, indicating the value of
+allcasesTRMisabletoprovidearealistictrajectoryleading explicitly predicting a trajectory toward the goal.
+to the goal from an unseen initialization. Ground Truth Goal [23] (Fully-Supervised): In this
+setting, we perform visual model predictive control in the
+1Note that since there are many valid goal states, the video prediction same way as in our method, using the same exact visual
+problem is highly stochastic. Hence, predicted images are likely to be
+dynamics model. However, in this case, instead of planning
+blurrier than in more deterministic cases, such as in the visual dynamics
+model. actions for which the predicted future states match the
+119
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. Shaped TRM Ground Truth
+Training Success
+Reward [23] (Ours) Goal [23]
+(cid:6) (cid:6) (cid:6) Data Blocks Rate
+Seen 19 2 49 2 57 2 (cid:6)
+Seen (Far) 14(cid:6)3 56(cid:6)2 61(cid:6)2 Standard Seen 75(cid:6)10
+Unseen 26(cid:6)2 50(cid:6)3 55(cid:6)2 Standard Unseen 50(cid:6)11
++ Robot Data Seen 70 10
+Fig.4. SuccessRatesonSimulatedTetrisBlockMating:Hereweshow (cid:6)
+Fixed Camera Seen 75 10
+thesuccessrateofourtimereversalmethod(self-supervised)comparedto
+thatofashapedreward(semi-supervised),andgroundtruthgoalinformation Fig. 6. Success Rates on Real Robot: We test transferring our method
+(fully-supervised), on three variants of the Tetris block mating task. In toaphysicalsetupwithaKuKaIIWArobot.We(cid:2)ndthattestingonseen
+the Seen variant, the models are tested on mating block pairs seen during blocks,itachieves75%success.Weadditionallyreporttheperformanceon
+training,intheSeen(Far)variant,themodelsaretestedonseenblockpairs, (1)unseenblocks,(2)(cid:2)netunedonrealrobotpushingdata,and(3)without
+butinitializedfartheraway(atleast30cm),andintheUnseenvariant,the camerarandomizationinthedomainrandomizationprocess.20trialseach.
+models are tested on mating block pairs not seen during training. TRM
+signi(cid:2)cantlyexceedstheperformanceoftheshapedreward,whileachieving thecaseinawidecollectionoftasks,therearesomesettings
+comparableperformancetothefullysupervisedapproach.
+where it does not hold. Consider the example of cooking -
+TRM predicted trajectory, we plan actions for which the once an egg has been cracked, there is no way it can be
+predicted future states match a ground truth goal image (cid:147)uncracked(cid:148).
+(generated by accessing the internals of the simulator). That Another limitation of the current formulation is that we
+is, at every time step of the episode the action comes from exploretasksforwhichtheabstract,high-levelgoalsis(cid:2)xed,
+CEM(F ;s ;s ) using the difference to one goal image while the explicit goal state for a given scene is unknown.
+2 (cid:14) g t
+s S to compute cost. This approach has a marginally While this may apply in simple assembly problems, more
+g g
+higher success rate than our method (within 10%), due to complex problems will have a broader space of goals. One
+the fact that it uses the ground truth goal image, while our directionoffutureworkwouldbetomodifythetime-reversal
+method learns to predict the goal. model to accept some form of abstract goal speci(cid:2)cation,
+It is important to note that unlike our method, the Ground enabling goal conditioned TRM. A limitation of the block
+Truth Goal comparison cannot be extended to the real robot mating task itself is that it is limited to the horizontal plane.
+because it requires a ground truth goal image. Rather, it Whilethemultiplestagesofthetaskmakeitdif(cid:2)cultforstate
+requiresaccesstoasimulatorwhichcanbeusedtocompute of the art methods to solve, the visual scenes are still fairly
+and render the ground truth goal image. TRM (our method) simple. We plan to extend this work to three dimensional
+does not use this information, but still achieves comparable structures, which will push the complexity of both time-
+performance (See Figure 4) by learning to predict the goal reversal and control. Another limitation is the nature of
+image and the trajectory towards it. TRM also outperforms the time-reversal exploration. Currently, the exploration is
+the Semi-Supervised comparison with shaped cost. done through random perturbations applied to the goal state,
+B. Robot Results however in some complex tasks (such as screwing a cap
+We demonstrate that our ap- on a bottle), this form of exploration is insuf(cid:2)cient. Using
+proach successfully extends to a exploration methods driven by state novelty is one possible
+physical robot setup (See Figure approach to address this. Lastly, blurriness in the video pre-
+5). In Figure 6 we report our diction has made it challenging to extend this work to more
+method’s performance on both complex assembly problems with longer horizons, many
+seen and unseen blocks, as well objects, and complex degrees of freedom. One approach to
+as with (cid:2)ne-tuning on robot data address this would be to plan in latent space.
+and a modi(cid:2)ed version of do- Fig. 5. Our Robot Setup: IX. CONCLUSION
+mainrandomizationduringtrain- KuKaIIWA-7mountedovera We have proposed a method which self-supervises task
+ing that has no camera random- (cid:3)attabletop.
+learning through time reversal. By exploring outward from
+ization.Ourmethodsuccessfully
+a set of goal states and learning to predict these state
+mates seen block pairs 75% of the time and unseen block
+trajectories in reverse, our method TRM is able to predict
+pairs50%ofthetime.Wealso(cid:2)ndthat(cid:2)netuningthevisual
+unknown goal states and the trajectory to reach them. This
+dynamics model on the 825 robot trajectories and removing
+method used with visual model predictive control is capable
+camera randomization has no signi(cid:2)cant impact. We suspect
+ofassemblingTetrisstyleblockswithaphysicalrobotusing
+the lack of improvement from robot trajectories is due to
+onlyvisualinputs,whileusingnodemonstrationsorexplicit
+bene(cid:2)ts from aggressive domain randomization in training.
+supervision.
+Note: The success rates on the real robot are higher than
+thoseinsimulation,duetothefactthatthecontactdynamics ACKNOWLEDGMENT
+insimulationaremuchnoisier,makingmatingmoredif(cid:2)cult. We would like to thank Dumitru Erhan and others from
+GoogleBrainVideoforvaluablediscussions.Wewouldalso
+VIII. LIMITATIONSANDFUTUREWORK
+like to thank Satoshi Kataoka, Kurt Konolige, Ken Oslund,
+The primary limitation of time-reversal is that it is re-
+Sherry Moore and others from Google Brain for help with
+stricted to settings with reachability between states, as de-
+experimental setup and infrastructure.
+scribed in Assumption 3 of the Preliminaries. While this is
+120
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [23] ChelseaFinnandSergeyLevine. Deepvisualforesightforplanning
+robotmotion. CoRR,abs/1610.00696,2016.
+[1] TuomasHaarnoja,VitchyrPong,AurickZhou,MurtazaDalal,Pieter [24] AlexanderLambert,AmirrezaShaban,AmitRaj,ZhenLiu,andByron
+Abbeel,andSergeyLevine. Composabledeepreinforcementlearning Boots. Deepforwardandinverseperceptualmodelsfortrackingand
+forroboticmanipulation. CoRR,abs/1803.06773,2018. prediction. CoRR,abs/1710.11311,2017.
+[2] E. Todorov, T. Erez, and Y. Tassa. Mujoco: A physics engine for [25] FrederikEbert,ChelseaFinn,AlexX.Lee,andSergeyLevine. Self-
+model-basedcontrol. In2012IEEE/RSJInternationalConferenceon supervised visual planning with temporal skip connections. CoRR,
+IntelligentRobotsandSystems,pages5026(cid:150)5033,Oct2012. abs/1710.05268,2017.
+[3] FereshtehSadeghiandSergeyLevine. (cad)$(cid:136)2$rl:Realsingle-image [26] Chris Paxton, Yotam Barnoy, Kapil D. Katyal, Raman Arora, and
+(cid:3)ightwithoutasinglerealimage. CoRR,abs/1611.04201,2016. GregoryD.Hager.Visualrobottaskplanning.CoRR,abs/1804.00062,
+[4] DeanA.Pomerleau. Alvinn:Anautonomouslandvehicleinaneural 2018.
+network. InD.S.Touretzky,editor,AdvancesinNeuralInformation [27] Arunkumar Byravan and Dieter Fox. Se3-nets: Learning rigid body
+ProcessingSystems1,pages305(cid:150)313.Morgan-Kaufmann,1989. motionusingdeepneuralnetworks. CoRR,abs/1606.02378,2016.
+[5] MartinRiedmiller,ThomasGabel,RolandHafner,andSaschaLange. [28] Marcin Andrychowicz, Filip Wolski, Alex Ray, Jonas Schneider,
+Reinforcementlearningforrobotsoccer. AutonomousRObots,2009. Rachel Fong, Peter Welinder, Bob McGrew, Josh Tobin, Pieter
+[6] B. Espiau, F. Chaumette, and P. Rives. A new approach to visual Abbeel,andWojciechZaremba. Hindsightexperiencereplay. CoRR,
+servoinginrobotics. IEEETransactionsonRoboticsandAutomation, abs/1707.01495,2017.
+8(3):313(cid:150)326,June1992. [29] VitchyrPong,ShixiangGu,MurtazaDalal,andSergeyLevine. Tem-
+[7] K. Mohta, V. Kumar, and K. Daniilidis. Vision-based control of poraldifferencemodels:Model-freedeepRLformodel-basedcontrol.
+a quadrotor for perching on lines. In 2014 IEEE International CoRR,abs/1802.09081,2018.
+Conference on Robotics and Automation (ICRA), pages 3130(cid:150)3136, [30] AshvinNair,VitchyrPong,MurtazaDalal,ShikharBahl,StevenLin,
+May2014. andSergeyLevine.Visualreinforcementlearningwithimaginedgoals.
+[8] W. J. Wilson, C. C. Williams Hulls, and G. S. Bell. Relative end- arxiv:Preprint,2018.
+effectorcontrolusingcartesianpositionbasedvisualservoing. IEEE [31] AshleyD.Edwards,LauraDowns,andJamesC.Davidson. Forward-
+TransactionsonRoboticsandAutomation,12(5):684(cid:150)696,Oct1996. backwardreinforcementlearning. CoRR,abs/1803.10227,2018.
+[9] M. Jagersand, O. Fuentes, and R. Nelson. Experimental evaluation [32] Carlos Florensa, David Held, Markus Wulfmeier, and Pieter Abbeel.
+of uncalibrated visual servoing for precision manipulation. In Pro- Reverse curriculum generation for reinforcement learning. CoRR,
+ceedings of International Conference on Robotics and Automation, abs/1707.05300,2017.
+volume4,pages2874(cid:150)2880vol.4,April1997. [33] AnirudhGoyal,PhilemonBrakel,WilliamFedus,TimothyP.Lillicrap,
+[10] B.H.YoshimiandP.K.Allen.Active,uncalibratedvisualservoing.In Sergey Levine, Hugo Larochelle, and Yoshua Bengio. Recall traces:
+Proceedingsofthe1994IEEEInternationalConferenceonRobotics Backtracking models for ef(cid:2)cient reinforcement learning. CoRR,
+andAutomation,pages156(cid:150)161vol.1,May1994. abs/1804.00379,2018.
+[11] RaiaHadsell,PierreSermanet,JanBen,AyseErkan,MarcoScof(cid:2)er, [34] AshvinNair,BobMcGrew,MarcinAndrychowicz,WojciechZaremba,
+Koray Kavukcuoglu, Urs Muller, and Yann LeCun. Learning long- andPieterAbbeel. Overcomingexplorationinreinforcementlearning
+range vision for autonomous off-road driving. Journal of Field withdemonstrations. CoRR,abs/1709.10089,2017.
+Robotics,26(2):120(cid:150)144. [35] YukeZhu,ZiyuWang,JoshMerel,AndreiA.Rusu,TomErez,Serkan
+[12] S.Lange,M.Riedmiller,andA.Voigtla¤nder. Autonomousreinforce- Cabi, Saran Tunyasuvunakool, Ja·nos Krama·r, Raia Hadsell, Nando
+mentlearningonrawvisualinputdatainarealworldapplication. In deFreitas,andNicolasHeess. Reinforcementandimitationlearning
+The2012InternationalJointConferenceonNeuralNetworks(IJCNN), fordiversevisuomotorskills. CoRR,abs/1802.09564,2018.
+pages1(cid:150)8,June2012. [36] Corey Lynch, Mohi Khansari, Ted Xiao, Vikash Kumar, Jonathan
+Tompson,SergeyLevine,andPierreSermanet. Learninglatentplans
+[13] SergeyLevine,ChelseaFinn,TrevorDarrell,andPieterAbbeel. End-
+fromplay. arXivpreprintarXiv:1903.01973,2019.
+to-end training of deep visuomotor policies. CoRR, abs/1504.00702,
+[37] DanfeiXu,SurajNair,YukeZhu,JulianGao,AnimeshGarg,LiFei-
+2015.
+Fei, and Silvio Savarese. Neural task programming: Learning to
+[14] Lerrel Pinto and Abhinav Gupta. Supersizing self-supervision:
+generalizeacrosshierarchicaltasks. CoRR,abs/1710.01813,2017.
+Learning to grasp from 50k tries and 700 robot hours. CoRR,
+[38] Daniel Seita, Nawid Jamali, Michael Laskey, Ron Berenstein,
+abs/1509.06825,2015.
+AjayKumarTanwani,PrakashBaskaran,SoshiIba,JohnCanny,and
+[15] Sergey Levine, Peter Pastor, Alex Krizhevsky, and Deirdre Quillen.
+KenGoldberg. DeepTransferLearningofPickPointsonFabricfor
+Learninghand-eyecoordinationforroboticgraspingwithdeeplearn-
+RobotBed-Making.InInternationalSymposiumonRoboticsResearch
+ingandlarge-scaledatacollection. CoRR,abs/1603.02199,2016.
+(ISRR),2019.
+[16] AliGhadirzadeh,AtsutoMaki,DanicaKragic,andMa(cid:9)rtenBjo¤rkman.
+[39] Jan Matas, Stephen James, and Andrew J. Davison. Sim-to-real
+Deep predictive policy training using reinforcement learning. CoRR,
+reinforcement learning for deformable object manipulation. CoRR,
+abs/1703.00727,2017.
+abs/1806.07851,2018.
+[17] JeffreyMahler,JackyLiang,SherdilNiyaz,MichaelLaskey,Richard
+[40] ThanardKurutach,AvivTamar,GeYang,StuartJ.Russell,andPieter
+Doan, Xinyu Liu, Juan Aparicio Ojea, and Ken Goldberg. Dex-net
+Abbeel. Learning plannable representations with causal infogan.
+2.0: Deep learning to plan robust grasps with synthetic point clouds
+CoRR,abs/1807.09341,2018.
+andanalyticgraspmetrics. CoRR,abs/1703.09312,2017.
+[41] Mohammad Babaeizadeh, Chelsea Finn, Dumitru Erhan, Roy H.
+[18] DmitryKalashnikov,AlexIrpan,PeterPastor,JulianIbarz,Alexander
+Campbell,andSergeyLevine. Stochasticvariationalvideoprediction.
+Herzog, Eric Jang, Deirdre Quillen, Ethan Holly, Mrinal Kalakr-
+CoRR,abs/1710.11252,2017.
+ishnan, Vincent Vanhoucke, and Sergey Levine. Qt-opt: Scalable
+[42] R Y. Rubinstein and D P. Kroese. The Cross-Entropy Method:
+deep reinforcement learning for vision-based robotic manipulation.
+A Uni(cid:2)ed Approach to Combinatorial Optimization, Monte-Carlo
+arxiv:Preprint,2018.
+SimulationandMachineLearning. 012004.
+[19] StephenJames,AndrewJ.Davison,andEdwardJohns. Transferring
+end-to-end visuomotor control from simulation to real world for a
+multi-stagetask. CoRR,abs/1707.02267,2017.
+[20] Joshua Tobin, Rachel Fong, Alex Ray, Jonas Schneider, Wojciech
+Zaremba, and Pieter Abbeel. Domain randomization for transferring
+deep neural networks from simulation to the real world. CoRR,
+abs/1703.06907,2017.
+[21] PieterAbbeel,AdamCoates,MorganQuigley,andAndrewY.Ng.An
+applicationofreinforcementlearningtoaerobatichelicopter(cid:3)ight. In
+Advances in Neural Information Processing Systems, pages 1(cid:150)8, 01
+2006.
+[22] IanLenz,RossA.Knepper,andAshutoshSaxena.Deepmpc:Learning
+deeplatentfeaturesformodelpredictivecontrol.InRobotics:Science
+andSystems,2015.
+121
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:20:50 UTC from IEEE Xplore.  Restrictions apply. 

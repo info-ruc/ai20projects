@@ -1,0 +1,505 @@
+ 2020 IEEE International Conference on Robotics and Automation (ICRA)  
+31 May - 31 August, 2020. Paris, France
+Steerable Burrowing Robot: Design, Modeling and Experiments 
+Moran Barenboim  and Amir Degani, Member, IEEE 
+ 
+  Abstract—This paper investigates a burrowing robot that can  deflects the drill bit to change the drilling direction. This 
+maneuver  and  steer  while  being  submerged  in  a granular  method is known as horizontal or directional drilling. The 
+medium. The robot locomotes using an internal vibro-impact  horizontal drilling mechanism has a rigid connection to a 
+mechanism and  steers  using a  rotating  bevel-tip head.  We  thrusting system above ground, its diameter can be up to 500 
+formulate  and  investigate  a  non-holonomic  model  for  the  mm and can drill up to several kilometers deep. In [10], a small 
+steering  mechanism and a hybrid  dynamics  model  for  the  radius of curvature for such systems was noted, its parameters 
+thrusting mechanism. We perform a numerical analysis of the  are 114 mm diameter drill hole and 6,000 mm steering radius 
+dynamics of the robot's thrusting mechanism using a simplified,  of curvature. Although these mechanisms can thrust using 
+orientation and depth dependent model for the drag forces  large forces, they do not fit through narrow gaps, they are 
+acting on the robot. We first show, in simulation, that by  limited in the path they can follow, are complicated and 
+carefully tuning various control input parameters, the thrusting  consume a great deal of energy to operate. 
+mechanism can drive the robot both forward and backward. We 
+present several experiments designed to evaluate and verify the  In  our  current  work,  we  introduce  a  vibro-impact 
+simulative results using a proof-of-concept robot. We show that  mechanism. By using two masses: main body and an actuator 
+different input amplitudes indeed affect the direction of motion,  connected to a spring (as shown in Fig. 1), the robot can 
+as suggested by the simulation. We further demonstrate the  penetrate and propel itself underground. A similar mechanism 
+ability of the robot to perform a simple S-shaped trajectory.   was introduced in [11], and an extensive non-linear dynamics 
+These experiments demonstrate the feasibility of the robot's  analysis was conducted, though this mechanism wasn't used 
+design and fidelity of the model.  for underground locomotion. 
+I.  INTRODUCTION AND RELATED WORK  Robot locomotion underground may be affected by a 
+variety of factors, such as different materials, moisture or 
+Locomotion of robots on land, water, and air has been 
+density. In order to narrow down the problem to the scope of 
+possible for years. However, locomotion underground is a 
+this research, we focus on autonomous robot locomotion in 
+challenging task for robots and has yet to be fully addressed. 
+dry, granular, homogenous material, such as sand. 
+Underground robots can be useful in several applications, such 
+as laying underground cables, detonating mines, sensing for  To achieve the ability to steer inside the granular medium 
+precision agriculture, or even gas exploration. Several studies  we borrow an idea from medical robotics, using an asymmetric 
+were conducted in the field, yet little was reported on the  bevel-tip  that  causes  the  robot  to  move  along  a  curved 
+ability of robots to steer underground. The current paper  trajectory, e.g., [12]–[15]. Utilizing this asymmetry at the tip 
+investigates  the  design  and  modeling  of  a  simple,  self- of a flexible needle, the operator can steer the needle in three-
+propelled, steerable robot in granular medium. Several recent  dimensions.  By  rotating  the  needle,  hence  changing  the 
+studies have focused on locomotion underground, such as  direction of the bevel, the needle can perform intricate 3-D 
+drilling  robots  [1]–[3],  biomimetic  robots  [4],  [5]  and  motions [14]. Alterovitz et al. performed 2D path planning for 
+hammering robots [6]–[8]. Typical drilling robots use a screw- the flexible bevel tip needle [12]. Given initial data on the 
+like mechanism to create linear motion in the axial direction.  needle location and orientation, bevel rotation and insertion 
+The literature suggests that the latest drilling mechanisms can  distance,  the  suggested  model  would  anticipate  the  next 
+drill up to twice their own body length but then stop due to  location allowing path planning and obstacle avoidance. A 
+actuator  limitations  [1].  Biology  inspired  studies  allow 
+locomotion that is potentially more energy efficient. Still, such 
+biomimetic robots haven’t yet penetrated deeply into the soil 
+[4], [5]. Hammering robots, using impact mechanisms to dig 
+themselves underground, were shown to be able to penetrate 
+substantially deeper than other mechanisms and have the 
+ability to submerge several times their own body length [9].  
+The basic concept of burrowing robot presented in Becker 
+et al., [1], as well as in other works [2]–[9], are limited to 
+straight trajectories without the ability to steer. A common 
+solution for steering used in the piping industry relies on a 
+mechanism which deforms the main axial shaft and slightly 
+ 
+M. Barenboim is with the Technion Autonomous Systems Program, 
+Technion – Israel Institute of Technology, Haifa 3200003 ISRAEL 
+A. Degani is with the Faculty of Civil and Environmental Engineering and 
+with the Technion Autonomous Systems Program, Technion – Israel Institute   
+of Technology, Haifa 3200003 ISRAEL (Email: adegani@technion.ac.il).  Figure 1 - Underground Steerable Robot CAD model and its cross-section 
+ 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 829
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply.    
+more  recent  work  used  nonholonomic  motion  planning, 
+typically used for car models, to plan the steering of flexible 
+needles [14]. This work suggests that by using nonholonomic 
+modeling, control and path planning, a bevel-tip needle can 
+reach a target location in a 3D environment. Unlike previous 
+work, our proposed mechanism uses the bevel-tip steering 
+concept inside a soil-like granular medium rather than in a 
+tissue-like homogeneous ballistic gel. The concept of our 
+underground  robot  is  a  stiff  and  short  mechanism,  fully 
+submerged inside granular medium surface as opposed to the 
+long and flexible needle used in the medical applications that 
+extends above the surface. 
+In Sec. II, we briefly describe the mechanical design of our 
+robot. In Sec. III, we present a model of the robot's trajectory 
+using  nonholonomic  constraints,  followed  by  a  dynamic 
+model of the internal thrusting mechanism. Using that model,  Figure 2 - Schematic description of the bevel-tip robot, constraints direction 
+we show the results of the numerical simulation. In Sec. IV we  and center of rotation. 
+show validation of the model with experimental results on our 
+robot and show that the experimental results agree with the 
+the bevel-tip direction are not necessarily equal. The steering 
+predictions made in the simulation section. We conclude with 
+direction is the kinematic model parameter and is being found 
+discussion and future work in Sec. V. 
+in the experiments section, while the bevel-tip direction is a 
+II.  MECHANISM DESIGN  design parameter of the physical robot.  
+The robot comprises a thrusting mechanism and a steering   Keeping notation similar to [16], the robot's position and 
+mechanism. The thrusting mechanism consists of a linear  orientation are defined on a 2D plane. We denote the position 
+thrusting actuator connected through a spring to the robot's  of the rear end of the robot in a Cartesian plane with (𝑥,𝑦) and 
+frame. Interaction of the bodies inertial forces, spring forces  its orientation 𝜃 defined as the angle between the robot's 
+and non-conserving drag forces result in a net displacement  cylinder axis and the global x-axis (𝑒̂ ). The configuration, 
+(cid:2869)
+over time when actuating the inner body. This type of thrusting  describing the robot's pose, is defined as 𝑞 =(𝑥,𝑦,𝜃)(cid:3021). We 
+(cid:2869)
+mechanism exhibits motion without any externally moving  define 𝜙  as the steering angle of the robot. The Pfaffian 
+(cid:2868)
+parts. This may be significant in granular medium since the  constraints on the robot are 
+grains may interfere with exposed moving parts. The steering 
+𝑠𝑖𝑛(𝜃+𝜙)𝑥̇ −𝑐𝑜𝑠(𝜃+𝜙)𝑦̇ −𝐿𝑐𝑜𝑠(𝜙)𝜃̇ =0  (1) 
+mechanism, placed in front, uses a DC-motor, which can rotate 
+the bevel tip of the robot. With the rotation of the bevel tip, the  𝑠𝑖𝑛(𝜃)𝑥̇ −𝑐𝑜𝑠(𝜃)𝑦̇ = 0  (2) 
+robot’s direction of motion can be controlled. The steering 
+The equations for the kinematic model of the robot are 
+mechanism’s design allows a three-dimensional trajectory, but 
+in the scope of this work, we focus only on two-dimensional 
+𝑥̇ =cos(𝜃)⋅𝑢
+locomotion.  (cid:2869)
+𝑦̇ = 𝑠𝑖𝑛(𝜃)⋅𝑢
+(cid:2869)   (3)
+III.  MODEL AND SIMULATION  1
+𝜃̇ = 𝑡𝑎𝑛(𝜙)⋅𝑢
+In this section, we develop a model that describes the in- 𝐿 (cid:2869)
+plane behavior of our robot. We separate the model into two  Constraints (1) and (2) are satisfied by (3). The robot’s length 
+parts. The first part describes the nonholonomic model for the  is denoted 𝐿 and 𝑢  is a scaling factor, since any scalar multiple 
+(cid:2869)
+steering mechanism and the second part describes the thrusting  of the solution will satisfy (1) and (2). As mentioned earlier, 
+mechanism’s dynamics. The two models can be decoupled  we focus on motion in a two-dimensional plane. For this 
+based on the assumption that the motion underground is  purpose, we further restrict the model to only allow binary 
+quasistatic and the high drag forces cause the robot to come to  steering direction change, 𝜙 =±𝜙 , similar to Dubins car 
+(cid:2868)
+a stop at the end of each actuation cycle of the thrusting  [17],  but  without  the  ability  to  move  straight. A  simple 
+mechanism. Therefore, the dynamic effects of the thrusting on  simulated trajectory is shown in Fig. 3.  
+the  steering  model  can  be  neglected.  We  introduce  the 
+B.  Modeling the thrusting mechanism 
+simulation framework and the simulation results of the model.  
+As discussed in the introduction, the forward motion of the 
+A.   In-plane steering kinematics 
+robot is achieved by using a vibro-impact mechanism. A 
+Exploiting  the  vast  knowledge  accumulated  in  needle  relatively simple vibro-impact mechanism includes two bodies 
+steering  for  medical  purposes,  we  model  the  bevel  tip  connected by a spring. This type of mechanism exhibits stick-
+mechanism as a simple kinematic car, widely known as the  slip transitions under Coulomb's friction model. Both bodies 
+bicycle model [16]. In this model, the rear end of the robot is  are allowed to stick or slip relative to each other and relative 
+constrained to have a zero sideways velocity. In the front end  to a fixed coordinate frame, making the system a multi-body, 
+of the robot, where the bevel tip is located, there is a second  hybrid, dynamical system [18]. The robot is designed so that 
+velocity constraint, perpendicular to the steering direction,  the first body, denoted 𝑚 , is the outer shell of the robot 
+(cid:2869)
+marked 𝜙 , as depicted in Fig. 2. The steering direction and  including the steering mechanism’s mass. The second body, 
+(cid:2868)
+830
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply.    
+Thrusting Solenoid   Spring  Housing 
+(a) 
+(b) 
+ 
+ Figure 3 - Simulated trajectory using bicycle kinematic model. 
+𝑚 , is the inner mass serving as the thrusting actuator. A 
+(cid:2870)
+description of the thrusting mechanism is shown in Fig. 4.  
+(c) 
+We formulate the equations of motion using a set of   
+Figure 4 - (a) Model of the thrusting mechanism including linear actuator, 
+generalized coordinates, 𝑞  = [𝑠 ,𝑠 ](cid:3021),  where 𝑠   and 𝑠   spring and an impact spring. (b) Schematic model describing the main parts of 
+(cid:2870) (cid:2869) (cid:2870) (cid:2869) (cid:2870)
+represent the outer and inner body’s translation along the  the thrusting mechanism. (c) Photograph of the proof-of-concept mechanism. 
+robot's trajectory respectively (depicted in Fig. 4). 
+1 0
+𝑊 =(cid:4672) (cid:4673) , 
+The vibro-impact mechanism design allows the spring to  0 1
+reach its solid length. When this event occurs, it limits the 
+𝜆
+internal body translation relative to the external body and  Λ=(cid:3436) (cid:2869)(cid:3440) . 
+𝜆
+applies higher forces on both. To model this effect, we add a  (cid:2870)
+hybrid high stiffness spring, 𝑘 , which is toggled on and off in  The generalized actuating force between the two bodies is 
+(cid:2870)
+the simulation according to the bodies’ relative positions. The  denoted as 𝐹  and will be further discussed in the 
+(cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031)
+hybrid spring condition is 𝑠 −𝑠 <0, denoted 𝐽(𝑠 −𝑠 ), a  simulation section (Sec. III D). The constraint forces, denoted 
+(cid:2870) (cid:2869) (cid:2870) (cid:2869)
+Heaviside step function [19]. Following this, the dynamic  Λ=[𝜆 ,𝜆 ](cid:3021),  are  obtained  by  Lagrange's  multipliers, 
+(cid:2869) (cid:2870)
+equations, using Lagrangian mechanics, are given as  representing  the  friction  forces.  In  order  to  allow  a  slip 
+transition, the condition |𝜆 |>𝑓, (𝑖 =1,2) must be satisfied. 
+𝑀𝑞̈ +𝐺(𝑞)=𝐹(cid:3364)(cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) +𝑊⋅Λ  The drag forces, 𝑓, betw(cid:3036)een th(cid:3036)e granular medium and the 
+(cid:2869)
+where,  robot and 𝑓 is the Coulomb friction force which should satisfy 
+(cid:2870)
+|𝜆 |≥𝜇 𝑁 .  
+𝑚 0 (cid:2870) (cid:2870) (cid:2870)
+𝑀 =(cid:3436) (cid:2869) (cid:3440) ,  When the outer body remains in place relative to the global 
+0 𝑚
+(cid:2870) (4) 
+coordinate frame, or the inner body remains in place relative 
+𝐺(𝑞)=(cid:3436)𝑘(cid:2869)(𝑠(cid:2869)−𝑠(cid:2870))+𝐽⋅𝑘(cid:2870)(𝑠(cid:2869)−𝑠(cid:2870))(cid:3440) ,  to the outer body, their states are denoted as a Stick state. Table 
+−𝑘 (𝑠 −𝑠 )−𝐽⋅(𝑠 −𝑠 ) I summarizes the states and the conditions that are needed to 
+(cid:2869) (cid:2869) (cid:2870) (cid:2869) (cid:2870)
+be met in order to change a current state to a new state. When 
+𝐹
+𝐹(cid:3364) =(cid:3436) (cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (cid:3440) ,  the outer or the inner bodies move relative to the global 
+(cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) −𝐹
+(cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) coordinate frame or relative to each other, their state is denoted 
+TABLE I.   STATE TRANSITION TABLE 
+New State 
+Old State 
+Stick-Stick  Slip-Stick  Stick-Slip  Slip-Slip 
+|𝜆 |−𝑓 >0 
+(cid:2869) (cid:2869)
+Stick-Stick  -  |𝜆 |−𝑓 >0  |𝜆 |−𝜇 𝑚 𝑔>0  && 
+(cid:2869) (cid:2869) (cid:2870) (cid:2870) (cid:2870)
+|𝜆 |−𝜇 𝑚 𝑔>0 
+(cid:2870) (cid:2870) (cid:2870)
+𝑠̇ =0 
+(cid:2869)
+Slip-Stick  &&  -  -  |𝜆 |−𝜇 𝑚 𝑔>0 
+(cid:2870) (cid:2870) (cid:2870)
+|𝜆 |−𝑓 <0 
+(cid:2869) (cid:2869)
+𝑠̇ =0 
+(cid:2870)
+Stick-Slip  &&  -  -  |𝜆 |−𝑓 +𝑠𝑔𝑛(𝑠̇ )𝜇 𝑚 𝑔>0 
+(cid:2869) (cid:2869) (cid:2870) (cid:2870) (cid:2870)
+|𝜆 |−𝜇 𝑚 𝑔<0 
+(cid:2870) (cid:2870) (cid:2870)
+𝑠̇ =0  𝑠̇ −𝑠̇ =0 
+(cid:2869) (cid:2870) (cid:2869)
+Slip- Slip  -  &&  &&  - 
+|𝜆 |−𝑓 <0  |𝜆 |−𝜇 𝑚 𝑔<0 
+(cid:2869) (cid:2869) (cid:2870) (cid:2870) (cid:2870)
+831
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply.    
+as Slip state. The possible states of the thrusting mechanism 
+TABLE II.   PARAMETERS FOR MODELING SIMULATION 
+are denoted as Stick-Stick, Slip-Stick, Stick-Slip and Slip-Slip. 
+The first term refers to the state of the outer body, the latter  Parameter  Description  Value 
+refers to the inner body. It is assumed that two transitions  𝑚   Inner body mass  0.164 kg 
+(cid:2869)
+cannot be made at the same instant, therefore some of the 
+𝑚   Outer body mass  0.3 kg 
+transitions are not allowed.   (cid:2870)
+𝐿  Length between no-slip constraints  0.2 m 
+C.  Drag forces in granular medium 
+𝜙   Steering angle  22 ° 
+To model the reaction forces acting on the robot, we  (cid:2868)
+approximate the small grains of the granular material as a  𝜇   Friction coefficient between inner  0.05 
+(cid:2869) and outer bodies 
+continuous  medium  applying  pressure  on  the  robot, 
+Equivalent friction coefficient 
+consequently creating a normal force. Similar to Coulomb’s 
+between the outer body and the 
+friction law, we assume that tangential forces are proportional  𝜇(cid:2870)  granular medium (Aluminum and  0.2a 
+to the normal force, 𝑓 =𝜇 ⋅𝐹 , where 𝜇  is the coefficient of  glass bead) 
+(cid:2870) (cid:2870) (cid:3041) (cid:2870)
+friction and 𝐹  is the normal force. Analogous to a notion  𝑔  Gravitational acceleration  9.81 m/s(cid:2870) 
+(cid:3041)
+presented in [20], we assume that the pressure inside the 
+𝜌  Granular medium density  1510 kg/m(cid:2871) 
+granular medium increases linearly with depth, and can be 
+written in the form of 𝜎(𝑑)=𝛾𝜌𝑔|𝑑|, where |𝑑| is the depth  𝑘   Spring coefficient  244 N/m 
+(cid:2869)
+measured from the upper surface of the granular medium, 𝜌 is 
+𝑘   Hybrid spring coefficient  2500 N/m 
+the granular medium density, 𝑔 is gravitational acceleration,  (cid:2870)
+and  𝛾  is  a  constant  drag  coefficient  that  will  be  tuned  𝛾  Drag coefficient  0.5 
+empirically. The normal force can then be found by integrating 
+𝛼  Solenoid coefficient  200 N/m 
+the pressure acting on the surface of the robot 
+a. Aluminum-Glass bead coefficient approximated from [22]  
+𝐹(cid:3364) =(cid:3509)𝜎(𝑑)⋅𝑛(cid:3364)⋅𝑑𝐴,  (5) 
+(cid:3041)
+where, 𝑛(cid:3364) is the normal to the surface of the robot, and 𝐴 is the 
+E.  Numerical Simulation Results 
+surface area parametrization.  
+The aim of this section is to provide a control design tool 
+D.  Dimensionless analysis of thrusting mechanism model  and to allow further exploration of the dynamics with different 
+Two assumptions are made to simplify the mechanism’s  control parameters. The simulations were conducted using 
+equations of motion; First, the inner and outer bodies are  MATLAB™ ode solver, while the hybrid instances (i.e., slip-
+assumed to be point masses, which is a feasible assumption  stick transitions) were detected using the event function.  
+since the inertial terms were modeled with respect to the 
+ The  force  that  the  actuator  applies  is  subject  to  the 
+bodies’ mass and not their dimensions. Second, since the inner 
+system’s state. The electric solenoid is based on a magnetic 
+mass slides on a bearing with low friction, the friction 𝑓(cid:2870) can  field that weakens as the plunger exits the coil. Thus, the 
+be neglected relative to the drag forces of the whole body. The 
+solenoid  can generate  its maximum force only  when the 
+characteristic time and length scales for this non-unique set are 
+plunger is fully inserted into the solenoid coil [21], i.e., when 
+chosen to be (cid:3493)𝑚 /𝑘  and 𝐹 /𝑘 , respectively. The  the two bodies are at a minimum distance. The actuator’s force 
+(cid:2869) (cid:2869) (cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (cid:2869)
+terms (1/2𝜋)(cid:3493)𝑚 /𝑘  and 𝐹 /𝑘  correspond to the  is approximated by the linear, first-order equation  
+(cid:2869) (cid:2869) (cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (cid:2869)
+resonant frequency and the distance the mass moves per unit 
+𝐹 (𝑠 ,𝑠 )=𝜂⋅(𝐹 −𝛼   
+force of a simple harmonic oscillator. The dimensionless  (cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (cid:2869) (cid:2870) (cid:3020)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (cid:3014)(cid:3028)(cid:3051) (cid:3020)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (7)   
+⋅(𝑠 −𝑠 )),    
+analysis results in a more compact form of the equations of  (cid:2869) (cid:2870)
+motion  where 𝜂 is a simple square-wave signal that activates and 
+deactivates the solenoid force function and 𝛼 is the solenoid 
+𝑑(cid:2870)𝜒(cid:2869) +(1+𝐽𝜅)⋅(𝜒 −𝜒 )= coefficient.  
+𝑑𝜏(cid:2870) (cid:2869) (cid:2870)
+Fig. 5 displays the non-dimensional translation of the outer 
+𝑑𝜒
+                            𝐹(𝜏)−SlipSign (cid:3436) (cid:2869)(cid:3440)⋅𝛼  (6)  and  inner  bodies,  𝜒(cid:2869),𝜒(cid:2870)   respectively.  The  control  signal 
+𝑑𝜏 parameters are 𝑓 =10 Hz and 𝐹 =2 N for the 
+𝑑(cid:2870)𝜒(cid:2870) +(1+𝐽𝜅)⋅(𝜒 −𝜒 )=−𝐹(𝛺⋅𝜏) square wave freq(cid:3086)uency and the sol(cid:3020)e(cid:3042)n(cid:3039)o(cid:3032)(cid:3041)id(cid:3042)'(cid:3036)s(cid:3031)  a(cid:3014)m(cid:3028)(cid:3051)plitude. As seen 
+𝑑𝜏(cid:2870) (cid:2870) (cid:2869) in the figure, although the bodies displacement exhibits an 
+oscillatory motion, net motion is achieved. 
+where, 𝜒 =𝑠 ⋅𝑘 /𝐹   and 𝜏 =𝑡⋅(cid:3493)𝑘 /𝑚   are the 
+(cid:3036) (cid:3036) (cid:2869) (cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031) (cid:2869) (cid:2869)
+non-dimensional  position  coordinates  and  time.  SlipSign  Next, we simulate a control input "parameter sweep", with 
+denotes the velocity direction relative to the global coordinate  the  aim  of  mapping  the  influence  of  different  control 
+frame. Nondimensionalizing the equations of motion reduces  parameters on the locomotion performance. In the thrusting 
+the number of parameters from four to two, 𝛼 =𝑓/𝐹   part of the simulation, the control input parameters are the 
+(cid:2869) (cid:3046)(cid:3042)(cid:3039)(cid:3032)(cid:3041)(cid:3042)(cid:3036)(cid:3031)
+and 𝜅 =𝑘 /𝑘 . The values of the parameters used in the  frequency and magnitude of the force between the inner and 
+(cid:2869) (cid:2870)
+dimensionless  analysis  and  in  the  rest  of  this  work  are  outer bodies. Surprisingly, both the change of frequency and 
+presented in Table II. 
+832
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply.    
+T10S motion tracking system was used to record the robot’s 
+trajectory and measure its radius of curvature. To identify the 
+robot’s pose in space, we placed reflective markers on the 
+robot that allow a 2 mm measurement accuracy. Since the 
+robot is mostly underground, we connected the markers to 
+beams protruding outside and visible to the cameras. We 
+conducted an additional experiment to show the change in 
+direction of the robot, on which we accurately measured the 
+robot’s displacement using BAUMER ODAM12 laser sensor, 
+with resolution of 2-5 μm and National Instruments signal 
+acquiring system, at 1,000 Hz. 
+Throughout  the  experiments,  we  discovered  that  the 
+steering angle of the robot is affected not only by the bevel-tip 
+but also by the length of the robot. This is logical since a longer 
+robot may present a longer distance between the equivalent 
+reaction forces that oppose the moment (shown above in Fig. 
+2) causing the robot to turn in the yaw direction. It is also 
+Figure 5 - Simulated thrusting mechanism translation of outer body 𝝌  and 
+𝟏 expected with the kinematic bicycle model, as the radius of 
+inner body 𝝌 . 
+𝟐 curvature is affected by the length and the steering angle, as in 
+amplitude will not only cause a change of moving speed but,  (2). To allow rotation of the bevel tip, we had to elongate the 
+with careful choice of either one, the direction of movement  robot to add a DC-motor. This elongation increased the turning 
+can be reversed. A contour map showing the average velocity  radius significantly. To cope with the elongation, we increase 
+obtained by different combinations of input-signal parameters  the contact surface area of the bevel tip, as shown in Fig. 8. By 
+is presented in Fig. 6. In the figure, a black circle describes the  doing so, we decreased the radius of curvature, with the 
+parameters chosen for forward movement presented above in  downside of increasing the drag on the robot causing it to move 
+Fig. 5. Fig. 7 shows the simulation results of reversed motion,  slower. The optimization of the bevel-tip length relative to its 
+achieved by choosing parameters in the reversed area in the  body length is set aside for future research. 
+contour map, marked by a red circle in Fig. 6. 
+B.  Model validation and results 
+IV.  EXPERIMENTS AND MODEL VALIDATION 
+ To fit the parameters, we tested the trajectory output in 
+We  conducted  experiments  to  tune  and  validate  the  three different depths: 30 mm, 45 mm, and 65 mm, measured 
+proposed model. First, we present the experimental setup and  from the surface level to the cylinder’s axis. The trajectory 
+discuss the robot design based on simulations and some of the  obtained were fitted to a circle, with radius parameter fit of 
+experiment limitations. Then, we conclude with a proof-of- Ρ =327 mm,Ρ =252 mm,Ρ =254 mm, as shown in 
+(cid:2871)(cid:2868) (cid:2872)(cid:2873) (cid:2874)(cid:2873)
+concept experiment showing the feasibility of path planning.  Fig. 9. The different values of radius of curvature obtained can 
+See supplementary material for a video of these experiments.  be explained in the following way: it is obvious that actuating 
+the robot on land will not cause its yaw angle to change since 
+A.  Experimental setup and robot design 
+some reaction force perpendicular to the steering angle is 
+The experimental setup comprises a small container sized   needed. Keeping this in mind, actuating in shallow depth will 
+0.5 x 0.3 x 0.8 m(cid:2871). We used 1-1.5 mm diameter sphere-shaped  cause the robot to turn with a larger radius of curvature. As the 
+glass beads as a homogeneous granular medium. A Vicon  robot deepens, the reaction effect of the granular medium is 
+more significant, since more pressure is applied to the robot. 
+We therefore assume a boundary layer in the shallow depths. 
+In trajectories that were measured deeper than 45 mm, the 
+Figure 7 - Contour map describing the direction of motion and velocity given 
+a different input signal to the robot. Black and red circles show the values  Figure 6 - Simulation result shows steady reversal motion of the robot with 
+used in the numerical simulations of Figure 5 and Figure 6, respectively.  a carful choice of force amplitude while keeping the same frequency. 
+833
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply.    
+Figure 9 - Reflective markers connected above the robot so that trajectory can 
+be measured while the robot is underground. 
+r adius of curvature remained constant. After measuring the 
+radius of curvature, the steering angle was calculated using (2).  
+As discussed in Sec. II, with careful choice of the input 
+parameters, amplitude and frequency, motion direction can be 
+reversed. We validated the numerical simulation results of the 
+thrusting  mechanism.  Fig.  10  shows  three  displacement  Figure 8 - Radius of curvature measured in experiments at three different 
+measurements along time, for three different voltage levels  depths. 
+used for excitation. A fixed input frequency of 𝑓 =5.56 Hz 
+was used in all three experiments. Fig. 10 (a) shows a reversed 
+displacement with 𝑉 =8.5 V. In Fig. 10 (b) the amplitude 
+(cid:3036)(cid:3041)
+used is 𝑉 =10 V, and exhibits a reciprocal motion with no 
+(cid:3036)(cid:3041)
+net displacement along time. Fig. 10 (c) shows forward motion 
+given 𝑉(cid:3036)(cid:3041) =11.5 V.  (a) 
+We conclude with a proof-of-concept experiment. Using 
+the model parameters found above, we show the trajectory of 
+the  robot  in  a  2D  plane  in  Fig.  11.  We  performed  the 
+experiment using an open-loop control, with a constant input 
+(b) 
+voltage  𝑉 =11.5 V,  constant  frequency  𝑓 =5 Hz  and 
+(cid:3036)(cid:3041)
+changing the steering angle once 𝜙 =0°, 𝜙 =180°. By 
+(cid:2868)(cid:3284) (cid:2868)(cid:3281)
+changing the steering angle 𝜙 at a chosen pose it is feasible to 
+perform a motion planning algorithm, as suggested in [12].  
+V.  CONCLUSION  (c) 
+Several studies were done with the aim of designing a robot  Figure 10 - Translation measured at constant input frequency f=5.56 Hz, and 
+that can pave its own path underground. However, most of the  different input voltage. 
+work done thus far focused either on robots that are rigidly 
+connected above surface and can perform limited trajectories, 
+or untethered robots that can solely move straight. There has 
+been little research reported on non-rigidly attached robots that 
+are also able to maneuver underground. The purpose of this 
+study is to design a robot that can do both. In this paper, a 
+simple  mechanical  design  is  presented,  that  achieves  net 
+motion with an internal mechanism propelling itself and a 
+bevel-tip head that steers toward the desired direction. A 
+simplified dynamic model of the thrusting mechanism and 
+kinematic model of the bicycle model was introduced and was 
+used to perform numerical simulations. Using the simulations, 
+a parameter  sweep was  conducted  showing a  connection 
+between the parameters of the input signal and the robot's 
+direction  of  motion.  By  carefully  choosing  the  input 
+parameters, frequency and force amplitude, the robot was able 
+to  move  in  reversed  direction.  Several  proof-of-concept 
+Figure 11 – Trajectory measured in an experiment, including rotation of the 
+experiments showed the feasibility of moving within granular  bevel tip midway, to change direction. 
+medium in different depths, including a change of steering   
+and the robot's depth. Further design will also include on-board 
+direction.  
+sensing, replacing the Vicon camera system with internal 
+With the end-goal of a fully maneuverable underground  sensors, such as accelerometers, to approximate the robot's 
+robot, future work will focus on three-dimensional analysis.  position and orientation. Additionally, the presented study is 
+Such a model will help develop motion planning algorithm  limited to homogenous glass-bead medium; further work will 
+that will consider the dependence between radius of curvature  target additional granular mediums. 
+834
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply.    
+REFERENCES   
+ 
+  [11]  Y. Liu, E. Pavlovskaia, M. Wiercigroch, and Z. Peng, “Forward 
+[1]  F. Becker, S. Börner, R. Lichtenheldt, and K. Zimmermann,  and backward motion control of a vibro-impact capsule system,” 
+“Enabling Autonomous Locomotion into Sand – A Mobile and  Int. J. Non. Linear. Mech., vol. 70, pp. 30–46, 2015. 
+Modular Drilling Robot State of the art,” in Proceedings of ISR:  [12]  R. Alterovitz, K. Goldberg, and A. Okamura, “Planning for 
+47st International Symposium on Robotics, 2016, pp. 307–312.  steerable bevel-tip needle insertion through 2D soft tissue with 
+[2]  T. Dewei, Z. Weiwei, J. Shengyuan, S. Yi, and C. Huazhi,  obstacles,” in IEEE International Conference on Robotics and 
+“Development of an Inchworm Boring Robot(IBR) for planetary  Automation, 2005, pp. 1640–1645. 
+subsurface exploration,” in IEEE International Conference on  [13]  V. Duindam, R. Alterovitz, S. Sastry, and K. Goldberg, “Screw-
+Robotics and Biomimetics, IEEE-ROBIO, 2015, pp. 2109–2114.  based  motion  planning  for  bevel-tip  flexible  needles  in  3D 
+[3]  A. Greene, “Biologically Inspired Mechanisms for Burrowing in  environments with obstacles,” in IEEE International Conference 
+Undersea  Substrates,”  Ph.D.  dissertation,  Dept.  Mech.  Eng.  on Robotics and Automation, 2008, pp. 2483–2488. 
+Massachusetts Institute of Technology, 2011.  [14]  R. J. Webster, N. J. Cowan, G. Chirikjian, and A. M. Okamura, 
+[4]  A. Koller-hodac et al., “Actuated Bivalve Robot Study of the  “Nonholonomic modeling of needle steering,” Springer Tracts 
+Burrowing  Locomotion  in  Sediment,”  in  IEEE  International  Adv. Robot., vol. 21, pp. 35–44, 2006. 
+Conference on Robotics and Automation, 2010, pp. 1209–1214.  [15]  S. Misra, K. B. Reed, B. W. Schafer, K. T. Ramesh, and A. M. 
+[5]  R. A. Russell, “CRABOT: A biomimetic burrowing robot designed  Okamura,  “Mechanics  of  flexible  needles  robotically  steered 
+for underground chemical source location,” Adv. Robot., vol. 25,  through soft tissue,” Int. J. Rob. Res., vol. 29, no. 13, pp. 1640–
+no. 1–2, pp. 119–134, 2011.  1660, 2010. 
+[6]  K. Zacny, D. Boucher, P. Coste, B. Derkowski, R. Fincher, and B.  [16]  R. M. Murray, Z. Li, and S. S. Sastry, A Mathematical Introduction 
+Glass, Chapter 6 : Extraterrestrial Drilling and Excavation. 2009.  to Robotic Manipulation, vol. 29. CRC Press, 1994. 
+[7]  L. Richter and O. Kroemer, “Application of a Remote Controlled  [17]  L. E. Dubins, “On Curves of Minimal Length with a Constraint on 
+Hammering Drill from Space to Deep Sea,” in OCEANS, 2009, pp.  Average Curvature, and with Prescribed Initial and Terminal 
+1–4.  Positions and Tangents,” Am. J. Math., vol. 79, no. 3, pp. 497–516, 
+[8]  R. Lichtenheldt, B. Schäfer, and O. Krömer, “Hammering beneath  1957. 
+the surface of Mars – Modeling and simulation of the impact-driven  [18]  H. Schumacher, An Introduction to Hybrid Dynamical Systems. pp. 
+locomotion of the HP3-Mole by coupling enhanced multi-body  49-50, 1999. 
+dynamics and discrete element method,” in 58th Ilmenau Scientific  [19]  R. Bracewell, The Fourier Transform And Its Applications, 3rd ed. 
+Colloquium IWK, 2015.  New York: McGraw-Hill, pp. 61, 2000. 
+[9]  R. Lichtenheldt, F. Becker, and K. Zimmermann, “Screw-driven  [20]  T. Zhang and D. I. Goldman, “The effectiveness of resistive force 
+Robot for Locomotion into Sand,” in 59th ILMENAU SCIENTIFIC  theory in granular locomotion,” Phys. Fluids, vol. 26, no. 10, 2014. 
+COLLOQUIUM, 2017, pp. 11–15.  [21]  P. H. Schimpf, “A Detailed Explanation of Solenoid Force,” 2013. 
+[10]  National Research Council, Drilling and Excavation Technologies  [22]  B. Suhr and K. Six, “On the effect of stress dependent interparticle 
+for the Future. Washington, DC: The National Academies Press,  friction in direct shear tests,” Powder Technol., vol. 294, 2016. 
+1994.   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+835
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 16:49:48 UTC from IEEE Xplore.  Restrictions apply. 

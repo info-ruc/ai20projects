@@ -1,0 +1,505 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Bidirectional Resonant Propulsion and Localization for AUVs
+Thomas W. Secord1 and Troy R. Louwagie2
+Abstract—Batterylife,reliability,andlocalizationarepromi- manybio-inspiredorbio-mimeticapproaches,controllability,
+nent challenges in the design of autonomous underwater vehi- reliability, and precision of these mechanisms are typically
+cles(AUVs).Thisworkaimstoaddressfacetsofthesechallenges
+sacriﬁced to improve efﬁciency or maneuverability. Thus,
+usingasinglesystem.Wedescribethedesignofabidirectional
+AUV propulsion remains a very fertile area for design
+resonant pump that uses a single electromagnetic voice coil
+motor(VCM)capableofrotationaroundacentraltwodegree- improvement and paradigm shift.
+of-freedom ﬂexure stage axis. This actuator design produces Two additional challenges in AUV development are lo-
+highly efﬁcient resonant motion that drives two orthogonally calization and overall system reliability. The multiple facets
+oriented diaphragms simultaneously. The operation of this
+of localization difﬁculty are well understood (e.g., [13]) and
+diaphragm pump mechanism produces both adjustable thrust
+stem mainly from the inability to use radio transmission,
+vectors at the aft surface of the AUV and a monotonic
+relationship between thrust vectors and operating frequency. broad-spectrumcommunications,andglobalpositioningsys-
+Weproposeusingtheuniquefrequencytothrustrelationshipto tems (GPS) underwater given the signiﬁcant attenuation
+enhanceAUVlocalizationcapabilities.Weconstructaprototype of electromagnetic radiation. Acoustic underwater signals,
+and use it to experimentally demonstrate the feasibility of the
+though commonly used, still rely upon a digital paradigm
+directionally-tunable resonance concept.
+(e.g.,acousticmodems)forcommunicatingpositionalknowl-
+edge between robots within a multi-agent arrangement [13].
+I. INTRODUCTION
+Beyondassuringreliablelocalization,overallsystemreliabil-
+Unmanned Underwater Vehicles (UUVs) are widely used
+ity in AUVs is a known challenge [14], [15]. For example,
+in exploration, search and rescue, structural monitoring, and
+Xu, Li, and Liu acknowledge that system complexity can
+military applications. Among the different types of UUVs,
+substantially degrade reliability and they employ a fault
+remotely operated vehicles (ROVs) are most commonly
+tree technique to identify ways to improve AUV reliability.
+employed,yettheyarehinderedbothincostandperformance
+The simulated variables include AUV propulsion system
+by the length and bulk of their tether to a surface ship [1].
+leaks,steeringmotorfaults,andpropellerfailures[14].Brito
+By contrast, autonomous underwater vehicles (AUVs) hold
+and Grifﬁths provide an even more comprehensive catalog
+thepromiseofloweroperationalcostandgreaterunderwater
+of actual AUV reliability issues that include propulsion
+ﬂexibility by eliminating the need for human teleoperation
+motor bearing degradation, cables entangled in propellers,
+through a physical tether. AUV design presents its own
+reducednavigationaccuracy,andfailuresinacousticDoppler
+host of challenges. Three of the major challenges in the
+currentproﬁlers(ADCPs)[15].AsinAUVpropulsion,AUV
+design and application of AUVs include power endurance,
+localization and overall system reliability offer prominent
+localization, and reliability.
+avenues for improvement.
+PowerenduranceofAUVsisfundamentallylimitedbased
+The approach described in this work attempts to address
+on the nearly exclusive use of propeller-based propulsion
+all three of the foregoing challenges within a single system.
+schemes. Typical electromechanical system efﬁciency is ap-
+We propose a design for a single electromagnetic voice coil
+proximately 40% and this efﬁciency is substantially lower
+motor (VCM) that pivots around a central two degree-of-
+for electro-hydraulic thrusters [1]. Efforts to improve these
+freedomﬂexurestageaxis.Theﬂexurestageiscomprisedof
+classical systems have seen some success (e.g., [2]), yet
+multipleﬂexurespringsthatarecutfromasolidpieceofma-
+the propeller paradigm persists even in some systems that
+terialsoastoallowformotionintwodirections.Byrotating
+use novel actuation technologies or methods (e.g., [3]–[7]).
+aroundthecentralaxisofthestage,theVCMproducesreso-
+Many researchers attempt to improve power endurance and
+nant motion in two orthogonally oriented diaphragm pumps.
+enhance maneuverability of AUVs using biomimetic or bio-
+These pumps produce adjustable thrust vectors at the aft
+inspired propulsion [8]. In particular, thrust produced by
+surface of the AUV. In this paper, we amalgamate concepts
+cephalopod jets have been of interest [9], [10], and the
+drawn from prior work by combining the idea of resonance-
+undulation motion of the manta ray has also shown some
+based propulsion [16] with our previous development of
+promise as a propulsion strategy for AUVs [11], [12]. As in
+resonance-based pumps [17]. We also take inspiration from
+novel jet-based propulsion mechanisms such as [18] and
+*Thisworkwasnotsupportedbyanyorganization.
+recent diaphragm propulsion ideas described in [19].
+1Thomas W. Secord is an Assistant Professor of Mechanical Engineer-
+ing, University of St. Thomas, 2115 Summit Ave., St. Paul, MN 55105, Ourdesignaddressespropulsionefﬁciencybyusingatun-
+thomas.secord@stthomas.edu able resonant frequency that is achieved through anisotropic
+2TroyR.LouwagieisaResearchAssistantintheDepartmentofMechan-
+ﬂexure stage stiffness. The device is operated at resonance
+ical Engineering, University of St. Thomas, 2115 Summit Ave., St. Paul,
+MN55105,louw1728@stthomas.edu in all of its possible excitation orientations and thereby
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 878
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. minimizes current input into the VCM regardless of the In order to change the ﬂow through each channel, and
+thrust generated at the output of the diaphragm pump mech- thereby maneuver the AUV, the orientation of the pitch or
+anism. Our design also enhances AUV localization capa- yawpumpVCMisadjustedusingrotationofacarriagering
+bility through a monotonic relationship between operating towhichtheVCMisattached.Thisrotationalchangeisonly
+frequency and the thrust vector proﬁle. When acoustically requiredintermittentlyandcanbeprovidedbyastandardDC
+coupledtotheexteriorsurfaceoftheAUV,theinstantaneous gear-motor.AstheVCMorientationischanged,thedisplace-
+resonant frequency of pump operation directly broadcasts ment of each diaphragm (and therefore the stroke volume)
+the AUV’s thrust vectors to neighboring AUVs or stationary varies according to the displacement of the ﬂexure stage.
+acousticreceivers.Thistechniqueavoidsthestandarddigital Like magnetically coupled actuators (such as in [3]), our
+communication paradigm and encodes what would normally pump design isolates the mechanism components from the
+be multiple bytes of thrust information into a single fre- ﬂuidenvironment.Theoperatingprincipleofthemechanism
+quency.Finally,ourproposeddesignachieveshighreliability is described in more detail below.
+inmultipleways:1)reducedpartcountcomparedtostandard
+propeller designs; 2) mechanical component isolation using
+A B
+actuated diaphragms; 3) a high cycle ﬂexure-based linear
+bearing mechanism; and 4) standard off-the-shelf actuators
+and components.
+II. AUVDESIGNCONCEPT
+Fig. 1 (a) shows the design of an AUV that utilizes
+Diaphragm Deformation Diaphragm Deformation
+resonant pumps to apply forward thrust as well as pitch and
+yaw moments using thrust vectors at the aft surface of the
+C D
+AUV. The two resonant pumps are oriented at right angles
+within the AUV housing as shown in Fig. 1 (b). In this
+concept, one pump controls the yaw, one pump controls the
+pitch,andbothpumpscontributetoforwardthrustappliedto
+the AUV. Each pump drives the motion of two diaphragms
+based on the orientation of a single voice coil motor (VCM)
+around the central axis of a two degree-of-freedom ﬂexure Diaphragm Deformation Diaphragm Deformation
+stage.Thediaphragmmotionsprovidepositivedisplacement
+pumpingthroughtwosetsofdiametricallyopposedchannels Fig.2. Operatingprincipleoftheresonantpumpsystemusingaradially
+that span the length of the AUV and terminate in check directed VCM. (a) Minimum resonant frequency; zero ﬂow in the left
+channel(b)Operationatamid-rangeresonantfrequencytoequalizechannel
+valves.
+ﬂow.(c)Operationnearthemaximumresonantfrequencytofavorﬂowin
+theleftchannel.(d)Operationatmaximumresonance;zeroﬂowintheright
+channel.
+Fig. 2 shows the operating principle of the pump system.
+Themostsalientfeatureofthisdesignisthatthetwo-degree
+of freedom ﬂexure stage exhibits different resonant frequen-
+ciesbasedontheorientationoftheexcitationforcefromthe
+radially directed VCM. We explore this idea quantitatively
+A
+in Section III-A. Flexure stages commonly exhibit resonant
+frequencies, yet they are considered undesirable behaviors
+Pitch  Pump  Pitch control  Inlet  from a position control perspective [20]. In our design,
+down  diaphragm resonant pump valve we operate in an open-loop fashion and deliberately excite
+channel
+the fundamental resonant frequency of the ﬂexure stage at
+the given orientation of the VCM. In this way, resonance
+is used advantageously to minimize the power required to
+drive the voice coil. Others have also shown viability of
+Forward  theresonanceapproachinunderwaterpropulsion[16],[21]–
+Yaw control  cavity   
+resonant pump [23]. Hence, the present approach holds signiﬁcant promise
+Outlet  B
+valve for enhancing AUV power endurance and longevity through
+increased propulsion efﬁciency.
+Fig. 1. AUV design concept. (a) Fully assembled AUV. (b) Cross In Fig. 2 (a), the ﬂexure and diaphragm system is shown
+sectionalviewoftheAUVshowingthepitchandyawresonantpumpthrust at resonance in the most compliant direction. The associated
+mechanisms.
+ﬂow is maximum in the right channel causing the most
+879
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. aggressive directional change. For example, in the pitch F
+VCM
+control usage, this resonant frequency would yield the most
+aggressive possible pitch maneuver in the associated direc-
+K
+tionoftheAUVpitch.Fig.2(b)and(c)showtheresonance q y
+of the ﬂexure stage and diaphragm in between the two x
+resonance extremes. By moving between the two resonance
+M M
+extremes,ﬂowismodulatedbetweenthechannelsasdictated ax
+D
+bythestrokevolumeandfrequencyoftheparticularresonant K x
+x y
+pump design. Hence, moving between resonance extremes D
+y
+will causing more gradual veering motion in pitch or yaw.
+Finally, Fig. 2 (d) shows the resonance of the ﬂexure stage M
+ay
+and diaphragm in the stiffest direction. The associated ﬂow
+is maximum in the left channel causing the most aggressive Fig.3. Lumpedparametermodelofthebidirectionalresonantpumpsystem
+subjecttovoicecoilmotorexcitation.
+turning moment about the associated pitch or yaw axis.
+III. DYNAMICSOFRESONANTPROPULSION (cid:113)
+Webeginbyconsideringthedynamicsofresonance-based γ
+propulsion pumps using a simpliﬁed model for a single Keq=Kx (2)
+γ2cos2θ+sin2θ
+pump mechanism. We then discuss the considerations for
+diaphragm design to ensure that the desired ﬂow rates are where we have used an additional deﬁnition of the dimen-
+achieved despite different frequencies of diaphragm motion sionless ratio between the x- and y-axis stiffness values:
+(cid:44)
+across the range of excitation angles illustrated in Fig. 2. γ Ky/Kx, which we take to be between 0 and 1 because
+the x-axis represents the stiffest direction of the stage from
+A. Angular Dependence of Resonant Frequency our previously stated assumption.
+We represent the dynamics of the resonant propulsion The natural frequency, fn(γ,θ), of the stage is now rec-
+system using the simple lumped parameter model shown in ognized to bea function of the angle ofexcitation θ and the
+Fig. 3. The model consists of a stiffness along each axis value of the stiffness ra(cid:114)tio γ(cid:118). If we assume that M>>M
+(Kx, Ky), a viscous damping effect along each axis (Dx, Dy), and M>>May, then the natu(cid:117)(cid:117)(cid:116)ral(cid:113)frequency can be written aasx
+a central mass (M) representing the ﬂexure stage and any of
+1 K γ
+iatsssotrcainasteladtiwngithcoemacphodnieanpths,raagdmde-dﬂumidasinsteelreamcteionnts,a(nMdaxa,fMoracye) fn(γ,θ)= 2π Mx γ2cos2θ+sin2θ (3)
+(F ) from the voice coil applied at an angle with respect
+VCM
+to the principal x- and y-axis directions. Theassumptionregardingsmalladdedmassismadeonlyfor
+This model is intended to undergo relatively small dis- model simpliﬁcation purposes. Added mass terms can be re-
+placement in both the x and y directions, so we approximate inserted with an associated angular dependence should this
+(cid:112)
+the spring deformations using only the values of the dis- become necessary for certain resonant pump designs. The
+placementcoordinatesofxandy.Inourmodeldevelopment natural frequency of the stage during pure x-axis excitation
+we deﬁne the x direction of the pump to be the stiffer willbedenotedbyωnx= Kx/M.Weshalldeﬁnethesecond
+directionandthereforethedirectionalongwhichtheresonant squareroottermof(3)tobeascalarfunctionΦ(γ,θ).Hence,
+frequency is the largest. We also assume that the ﬂexure (3) is now more compactly written as
+stage behaves as a single degree-of-freedom, second-order,
+1
+oscillating system with only a single, dominant resonant fn(γ,θ)= 2πωnxΦ(γ,θ) (4)
+mode, the frequency of which can be determined by the
+excitation angle of the VCM with respect to the x and y If we also assume that the equivalent damping, Deq, for
+directions.Lastly,weassumethattheAUVaccelerationsare an arbitrary excitation angle θ can be written in the same
+small and that the ground reference in Fig. 3 can be treated form as (2), then the equivalent stiffness and damping are
+as an inertial frame. now written as
+If F is a static force, then the deformation of each
+VCM
+diaphragm in the pump is given by Keq=KxΦ2(γ,θ) Deq=DxΦ2(λ,θ) (5)
+(cid:44)
+F cosθ F sinθ where λ Dy/Dx is the ratio of the viscous damping along
+x= VCM y= VCM (1) eachaxisandΦ(λ,θ)isthesamescalarfunctionasΦ(γ,θ)
+(cid:112) K K
+x y but with λ taking the place of γ.
+We will deﬁne the net displacement of the central stage Our primary interest is in the displacement amplitude of
+(cid:44) (cid:44)
+mass as δ x2+y2 and the equivalent stiffness as Keq thecentralstagesincethiswilldeterminethedisplacementof
+FVCM/δ. With these deﬁnitions, the equivalent stiffness be- each diaphragm as represented in Fig. 2 and Fig. 3. We now
+comes take the VCM force to be of the form FVCM(t)=F0sin(ωt).
+880
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. Therefore, the DC displacement of the system is F0/Keq. frequency) and excitation angle θ, Fig. 5 shows the fre◦-
+In response to this sinusoidal excitation, the steady state quency response of the ﬂexure stage at three angles: 0 ,
+◦ ◦
+displacement amplitude (normalized with respect to the DC 45 , and 90 . These frequency response curves represent
+displacement)canbewrittenusingthestandardsecond-order radial slices of Fig. 4 along the corresponding θ line. For
+system frequency response as the plot in Fig. 5, we have selected γ =0.75, λ =0.9, and
+ζx =0.1. For these design parameter values, the frequency
+A(ω¯,γ,λ(cid:112),θ,ζx)= response peak amplitude remains relatively constant and the
+◦
+−Φ2(γ,θ) (6) 4ap5proexxcimitaattieolnymdiirdewctaioynbeytiweledesnathrees0o◦naanndt f9r0e◦queexntrceymtehsa.tAiss
+(Φ2(γ,θ) ω¯2)2+4ζ2Φ4(λ,θ)ω¯2
+x shown in Section V, behavior consistent with these model
+wherewehaveintroducedthex-axisvib√rationdampingratio parameters can be realized in practice.
+usingthefamiliarrelationshipζx=Dx/ 4KxM andwehave
+also introduced the dimensionless frequency ω¯ (cid:44)ω/ωnx. B. Diaphragm Design
+To illustrate the use of this equation, we selected λ =1, We will assume that thrust vectors Tx and Ty arise from
+γ = 0.5, and ζx = 0.1. The resulting frequency response the jets of water exiting the diametrically opposed aft valves
+amplitude contours of (6) are shown in Fig. 4. In Fig. 4, the and that these thrusts are proportional to the corresponding
+peakdisplacementamplitudeisnormalizedtoavalueof1for volumetric ﬂow rates Q and Q in the x and y channels,
+x y
+excitation along the x-axis. For our selected values of λ, γ, respectively. Letting this proportionality constant be denoted
+andζ ,thefrequencyresponsemagnitudefunctionexhibitsa by τ, we have
+x
+strongresonantpeakatthevariousexcitationanglesbetween
+◦ ◦
+0 and 90 . The frequency at which peak displacement Tx=τQx Ty=τQy (7)
+occurs shifts downward as the excitation angle is increased.
+Though more elaborate thrust models are possible (e.g.,
+This downward shift is the result of the downward shift
+[24]), the ﬂow rate from the x-axis side of the diaphragm
+in K . Hence, for highly efﬁcient operation of the pump- (cid:18) (cid:19)
+eq
+pump will be approximately
+based thruster system, the excitation frequency for a given
+excitation angle must reside in the red (i.e. highest) contour α F ωcosθ
+ofFig.4.InthecaseofplanarAUVmaneuvering,theunique Qx= 2πxKx0Φ2(γ,θ) A(ω¯,γ,λ,θ,ζx) (8)
+resonantfrequencyforeachangleofstageexcitationhasthe
+addedbeneﬁtofprovidingamonotonicrelationshipbetween where αx is the equivalent area of the diaphragm such that
+pump operating frequency and the forces and moments the product of this area and the stroke yields the stroke
+applied to the AUV. This allows for enhanced multi-robot volume for the diaphragm associated with the x-axis. All
+localization as discussed in Section IV. other parameters remain as previously deﬁned. A similar
+area, α , and ﬂow rate Q are deﬁned for the orthogonal
+y y
+y-axis diaphragm.
+A logical design goal is to achieve thrust out of a single
+◦
+channel that is equal when the VCM is oriented at 0 and
+◦
+90 . To achieve this, we combine (7) and (8) to deﬁne the
+required ratio for the diaphragm effective areas:
+√
+◦
+αx = A( γ,γ,λ,90◦ ,ζx) (9)
+αy γA(1,γ,λ,0 ,ζx)
+e1.2
+d
+u Compliant Direction
+plit 1 45 Degrees
+m Stiff Direction
+A
+nt 0.8
+e
+m
+e
+ac0.6
+pl
+s
+Di0.4
+d 
+alize0.2 0.86 0.91 0.99
+m
+or
+N 0
+Fig.4. Contoursofnormalizeddisplacementamplitudeversusnormalized 0.6 0.7 0.8 0.9 1 1.1 1.2
+excitationfrequencyforthebidirectionalresonantdevice.
+Fig.5. Displacementamplituderesponseversusnormalizedfrequencyfor
+To further illustrate the monotonicity of the relationship the bidirectional resonant device in the most compliant, middle, and least
+compliantdirections.
+between resonant frequency (i.e., optimal pump operating
+881
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. In(9),theamplituderesponsefunctionhasbeenevaluated Though thrust vector information would be insufﬁcient for
+◦
+at ω¯ =1 for the √x-axis excitation (0 ) while it has been accurate localization on its own, it would provide a useful
+◦
+evaluated at ω¯ = √γ for the y-axis excitation (90 ) since contribution to sensor fusion approaches. In short, multi-
+ω¯ny = ωny/ωnx = γ. If the diaphragms are designed to agent or cooperative localization techniques described in
+satisfy (9), then equal thrust is expected at the two extremes [27] can be applied to good effect provided that the chal-
+of θ. lenges unique to underwater communication (e.g., surface
+reﬂections) are accounted for in the algorithm [13], [28].
+IV. ACOUSTICLOCALIZATION Our future work will explore how strongly the acoustic
+As discussed in Section III-A, for an AUV operating in emission of the pump-based system can be transmitted into
+only pitch (up-down) or yaw (left-right) maneuvers, there surroundingﬂuidmediuminordertodeterminetheeffective
+is a monotonic relationship between the frequency of the range of our proposed technique.
+pump and the speciﬁc thrust vector proﬁle generated at the
+aft valves. This implies that the acoustic emission from a V. EXPERIMENTALPROTOTYPE
+resonantpumpcanbeusedtobroadcastanindividualAUV’s
+Fig. 7 shows the experimental prototype for the bidirec-
+thrust setting to neighboring AUVs. In this concept, we
+tionalresonantﬂexurestagesystem.Inthisinitialprototype,
+assume that the AUV is sufﬁciently close to neighboring
+we have not coupled the stage axes to diaphragms pumps,
+AUVssuchthattheactuatorsneedonlyresonateatrelatively
+≈ yet all other essential features such as directional stiffness
+lowunderwateracoustictransmissionfrequencies(i.e., 10
+dependence, VCM excitation, and rotating carriage ring are
+Hz - 300Hz [25]). This technique avoids the standard digital
+all included. We employ a ﬂexure stage kinematic structure
+communicationparadigmandinsteadencodesmultiplebytes
+described in [20] with a modiﬁcation to reduce stiffness by
+of thrust information into a single frequency. This general
+usingonlysingleﬂexurecolumnsinthexandydirections.In
+concept is shown in Fig. 6.
+future pump versions, all of the well established ﬂexure de-
+signtechniquesfortwodegree-of-freedomstages(e.g.,[29],
+[30]) can be employed to further enhance axis decoupling
+and minimize parasitic rotations.
+AUV B:
+Turning
+Rotating 
+Carriage Ring
+ ! Flexure Stage
+!
+AUV A:
+Fixed 
+  Course
+VCM
+Fig.6. Acousticlocalizationprincipleformonotonicfrequencytothrust Laser 
+relationshipsoftheAUVs. Displacement Sensor
+Fig.7. Experimentaltestsetupforthebidirectionaloscillatorprototype.
+Fig. 6 shows AUV B performing an aggressive left turn,
+which would require a high frequency excitation of the
+resonant pump’s ﬂexure stage along a direction close to The detailed schematic of our test setup is provided in
+◦
+θ =0 . At this frequency, the pump provides a preferential Fig.8.Wedrivethevoicecoilmotor(MoticontLVCM-010-
+thrust in AUV B’s right ﬂow channel per Fig. 2. This high 013-01) using a linear power ampliﬁer (Gain = 2) whose
+frequency acoustic transduction is detected by AUV A and inputisobtainedfromafunctiongenerator(Agilent33120A)
+used in conjunction with its own internal position estimate set to provide a 200 mV peak-to-peak sinusoidal voltage
+−
+rˆA to update rˆB and thereby update rˆAB=rˆB rˆA. sweep from 10 Hz to 80 Hz in a linearly spaced span of 20
+Once a neighboring AUVs thrust proﬁle is known at a seconds. Both the current and voltage in the voice coil are
+given instant (e.g., from hydrophone data), this thrust can measuredbyaNationalInstrumentsNI6215USB-baseddata
+be used in an online observer. For example, the Extended acquisitioncardsettosampleatat500Hz.Thedisplacement
+Kalman Filter (EKF) commonly used in land based simul- along the direction of excitation is measured using a laser
+taneous localization and mapping (SLAM) can be viable in displacement sensor (Micro-Epsilon optoNCDT 1420-25).
+this situation [26]. The EKF would continually update the All signals are stored using LabVIEW running on a data
+various position vectors r , r , and r shown in Fig. 6. acquisition desktop computer.
+A B AB
+882
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. VI. CONCLUSIONSANDFUTUREWORK
+12 V FUNCTION  We have described a bidirectional resonance-based di-
+GENERATOR aphragm pumping mechanism that can be used to propel
+LASER  TUNABLE VCM  AUVs using a small number of readily fabricated compo-
+SENSOR OSCILLATOR ASSEMBLY
+nents. In addition to operating efﬁciently at resonance, the
++
+device operating frequency can encode the thrust vector
+-
+conﬁguration of the AUV so that neighboring AUVs can
+R R better estimate relative and absolute positions. Our design
+R s
+12 V minimizes the component count and surface interfaces as-
+sociated with rotary and linear bearings by using a ﬂexure
+based suspension and deforming diaphragms. Reduced com-
+CURRENT  ponent count and ﬂexure-based mechanisms are expected to
+SENSE 
+DATA  RESISTOR VAOPLPTLAIEGDE  increaseAUVpropulsionsystemreliability.Ourfuturework
+ACQUISITION  LEADS will focus on implementing and testing speciﬁc diaphragm
+PC
+designs for optimal thrust generation at the scale of typical
+AUVs. The performance of the localization system may
+also exhibit depth dependence and issues attendant with
+Fig.8. Schematicoftheexperimentalsetupforthebidirectionaloscillator
+prototype. traditional acoustic sensing, which we also plan to assess
+in future work.
+Given the monotonic relationship between thrust vectors
+Using the setup described above, we collected resonance and operating frequency, useful information is encoded in
+data at three different directions of excitation: 1) along the the operating frequency of the pumps themselves. In its
+most compliant direction (i.e., y-axis); 2) along the stiffest current conceptual form, the localization principle described
+direction (i.e., x-axis); and 3) midway between these two in Section IV requires only simple hydrophone sensors. If
+extremesatanangleof45◦.Ateachorientationwecomputed we assume the AUV has identical pitch and yaw pump
+the ratio of FFTs between input current signal (A) and mechanisms, our approach would be limited to scenarios
+outputdisplacementsignal(mm).TheresultsshowninFig.9 in which multiple AUVs are performing maneuvers in one
+exhibit the dynamic behavior described in Section III-A and plane of motion (e.g. pitching up or down; turning left or
+model output in Fig. 5. Moreover, the experimental results right) at a time so as to avoid confounding between fre-
+incorporate a crucial aspect of efﬁciency: current input into quencies producing pitch motions or frequencies producing
+theactuator.TheplottedmetricinFig.9illustratesthebeneﬁt yaw motions. However, this limitation can be overcome
+of resonance wherein at least a three-fold increase in the by designing the yaw and pitch pumps to operate within
+displacement per unit of current is obtained relative to DC non-overlapping frequency ranges. Such designs form the
+or above-resonance operation. This is in stark contrast to basis for ongoing and future work. Overall, the bidirectional
+the typical UUV propulsion paradigm where continuously resonant pump mechanism addresses multiple challenges
+rotating propeller mechanisms provide no resonance beneﬁt. within AUV design and provides a promising foundation for
+further development.
+4
+Compliant Direction REFERENCES
+3.5 45 Degrees
+Stiff Direction
+[1] L.L.Whitcomb,“Underwaterrobotics:Outoftheresearchlaboratory
+3 andintotheﬁeld,”inProceedings2000ICRA.MillenniumConference.
+IEEEInternationalConferenceonRoboticsandAutomation.Symposia
+2.5 Proceedings(Cat.No.00CH37065),vol.1. IEEE,2000,pp.709–716.
+[2] B. Allen, W. S. Vorus, and T. Prestero, “Propulsion system per-
+formance enhancements on REMUS AUVs,” in OCEANS 2000
+2
+MTS/IEEEConferenceandExhibition.ConferenceProceedings(Cat.
+No.00CH37158),vol.3. IEEE,2000,pp.1869–1873.
+1.5
+[3] E. P. Vega, O. Chocron, and M. Benbouzid, “A ﬂat design and
+0.15 = 42.0 Hz = 52.2 Hz = 65.4 Hz [4] atpXhp.r.vuLa2silt8,ied9rDa,2”t.–eI2CdE9hE0meE1no,/,Ad2JeS0.lM1J6ifEno.,rTarnaandnsLAa.cUWtiVoannsrge,ocn“oAnMﬁngeoucvrheaalbtlrueonndmiecrsaw,gnavetoetlir.cp2i1ceo,zuonpeoll.ienc6g-,
+f  f  f  tric thruster with one single resonance mode,” Review of Scientiﬁc
+0 Instruments,vol.90,no.4,p.045007,2019.
+30 40 50 60 70 80 [5] E.Cavallo,R.C.Michelini,andV.F.Filaretov,“Conceptualdesignof
+Frequency (Hz) anAUVequippedwithathreedegreesoffreedomvectoredthruster,”
+JournalofIntelligentandRoboticSystems,vol.39,no.4,pp.365–391,
+Fig. 9. Resonance data collected from a simpliﬁed resonant propulsion 2004.
+prototype. [6] L. Pugi, B. Allotta, and M. Pagliai, “Redundant and reconﬁgurable
+propulsionsystemstoimprovemotioncapabilityofunderwatervehi-
+cles,”OceanEngineering,vol.148,pp.376–385,2018.
+883
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. [7] S. A. Watson and P. N. Green, “Propulsion systems for micro- multidirectional maneuvering,” IEEE/ASME Transactions on Mecha-
+autonomousunderwatervehicles(µAUVs),”in2010IEEEConference tronics,vol.20,no.6,pp.2890–2902,2015.
+on Robotics, Automation and Mechatronics. IEEE, 2010, pp. 435– [19] K.Choi,“Devicehavingavibrationbasedpropulsionsystem,”May2
+440. 2017,USPatent9,638,177.
+[8] M. Mojarrad, “AUV biomimetic propulsion,” in OCEANS 2000 [20] Y. K. Yong, S. S. Aphale, and S. R. Moheimani, “Design, identiﬁ-
+MTS/IEEEConferenceandExhibition.ConferenceProceedings(Cat. cation, and control of a ﬂexure-based XY stage for fast nanoscale
+No.00CH37158),vol.3. IEEE,2000,pp.2141–2146. positioning,”IEEETransactionsonNanotechnology,vol.8,no.1,pp.
+[9] K. Mohseni, “Pulsatile vortex generators for low-speed maneuvering 46–54,2008.
+of small underwater vehicles,” Ocean Engineering, vol. 33, no. 16, [21] X. Deng and J. Zhang, “Voice coil actuator direct-drive resonant
+pp.2209–2223,2006. system,”Feb.92017,USPatentApp.14/969,171.
+[10] F.Giorgio-Serchi,A.Arienti,andC.Laschi,“Underwatersoft-bodied [22] K. A. Harper, M. D. Berkemeier, and S. Grace, “Modeling the
+pulsed-jet thrusters: Actuator modeling and performance proﬁling,” dynamics of spring-driven oscillating-foil propulsion,” IEEE Journal
+The International Journal of Robotics Research, vol. 35, no. 11, pp. ofOceanicEngineering,vol.23,no.3,pp.285–296,1998.
+1308–1329,2016. [23] C.NiezreckiandS.Balakrishnan,“PowercharacterizationofTHUN-
+[11] C.-M. Chew, Q.-Y. Lim, and K. Yeo, “Development of propulsion DER actuators as underwater propulsors,” in Smart Structures and
+mechanism for robot manta ray,” in 2015 IEEE International Con- Materials2001:SmartStructuresandIntegratedSystems,vol.4327.
+ference on Robotics and Biomimetics (ROBIO). IEEE, 2015, pp. InternationalSocietyforOpticsandPhotonics,2001,pp.88–98.
+1918–1923. [24] E.P.Vega,O.Chocron,andM.Benbouzid,“AUVpropulsionsystems
+[12] K. W. Moored, P. A. Dewey, M. C. Leftwich, H. Bart-Smith, and modeling analysis,” International Review on Modelling and Simula-
+A.J.Smits,“Bioinspiredpropulsionmechanismsbasedonmantaray tions,vol.7,no.5,pp.827–837,2014.
+locomotion,” Marine Technology Society Journal, vol. 45, no. 4, pp. [25] J.-N.Decarpigny,B.Hamonic,andO.B.Wilson,“Thedesignoflow
+110–118,2011. frequency underwater acoustic projectors: present status and future
+[13] L. Paull, S. Saeedi, M. Seto, and H. Li, “AUV navigation and trends,”IEEEJournalofoceanicengineering,vol.16,no.1,pp.107–
+localization:Areview,”IEEEJournalofOceanicEngineering,vol.39, 122,1991.
+no.1,pp.131–149,2013. [26] M. Bryson and S. Sukkarieh, “Building a robust implementation of
+[14] H. Xu, G. Li, and J. Liu, “Reliability analysis of an autonomous bearing-only inertial SLAM for a UAV,” Journal of Field Robotics,
+underwater vehicle using fault tree,” in 2013 IEEE International vol.24,no.1-2,pp.113–143,2007.
+Conference on Information and Automation (ICIA). IEEE, 2013, [27] S. I. Roumeliotis and G. A. Bekey, “Distributed multirobot localiza-
+pp.1165–1170. tion,” IEEE transactions on robotics and automation, vol. 18, no. 5,
+pp.781–795,2002.
+[15] M.P.BritoandG.Grifﬁths,“Amarkovchainstatetransitionapproach
+to establishing critical phases for AUV reliability,” IEEE Journal of [28] S.E.Webster,R.M.Eustice,H.Singh,andL.L.Whitcomb,“Prelim-
+OceanicEngineering,vol.36,no.1,pp.139–149,2011. inarydeepwaterresultsinsingle-beaconone-way-travel-timeacoustic
+navigationforunderwatervehicles,”in2009IEEE/RSJInternational
+[16] T. W. Secord, A. Mazumdar, and H. H. Asada, “A multi-cell piezo-
+ConferenceonIntelligentRobotsandSystems. IEEE,2009,pp.2053–
+electricdevicefortunableresonanceactuationandenergyharvesting,”
+2060.
+in2010IEEEInternationalConferenceonRoboticsandAutomation.
+[29] G.Hao,“A2-leggedXYparallelﬂexuremotionstagewithminimised
+IEEE,2010,pp.2169–2176.
+parasiticrotation,”ProceedingsoftheInstitutionofMechanicalEngi-
+[17] T. Secord and M. Audi, “A high efﬁciency tunable resonance pump
+neers,PartC:JournalofMechanicalEngineeringScience,vol.228,
+for biomedical applications,” in 2018 Design of Medical Devices
+no.17,pp.3156–3169,2014.
+Conference. American Society of Mechanical Engineers Digital
+[30] S. Awtar and A. H. Slocum, “Constraint-based design of parallel
+Collection,2018.
+kinematic XY ﬂexure mechanisms,” Journal of Mechanical Design,
+[18] A. Mazumdar, M. S. Triantafyllou, and H. H. Asada, “Dynamic
+vol.129,no.8,pp.816–830,2007.
+analysis and design of spheroidal underwater robots for precision
+884
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 01:37:12 UTC from IEEE Xplore.  Restrictions apply. 

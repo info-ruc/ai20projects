@@ -1,0 +1,445 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Variable Stiffness Springs for Energy Storage Applications
+Sung Y. Kim, Tiange Zhang, and David J. Braun
+Abstract—Theory suggests an inverse relation between the works, there is an inverse relation between the stiffness
+stiffness and the energy storage capacity for linear helical and the energy storage capacity of the actuator. Such an
+springs: reducing the active length of the spring by 50%
+inverse relation entails that increasing stiffness reduces the
+increases its stiffness by 100%, but reduces its energy storage
+energy storage capacity of the actuator. A notable exception
+capacity by 50%. State-of-the-art variable stiffness actuators
+used to drive robots are characterized by a similar inverse is a previously designed variable moment arm actuator [16],
+relation,implyingreducedenergystoragecapacityforincreased wherechangingthemechanicaladvantageisusedtoincrease
+spring stiffness. This relation limits the potential of the vari- stiffness,withoutreducingtheenergystoragecapacityofthe
+able stiffness actuation technology when it comes to human
+actuator.However,modifyingthemechanicaladvantageofa
+performance augmentation in natural tasks, e.g., jumping,
+kinematic mechanism attached to the spring cannot increase
+weight-bearing and running, which may necessitate a spring
+exoskeleton with large stiffness range and high energy storage the energy storage capacity of the spring; increasing the
+capacity. In this paper, we theoretically show that the trade- energy storage capacity of a spring can only be done by
+off between stiffness range and energy storage capacity is not changing the geometric or material property of the spring.
+fundamental; it is possible to develop variable stiffness springs
+The range of stiffness and the energy storage capacity
+with simultaneously increasing stiffness and energy storage
+of a spring may be simultaneously increased by increasing
+capacity. Consistent with the theory, we experimentally show
+that a controllable volume air spring, has a direct relation the mass of the spring. For example, in coil springs and
+between its stiffness range and energy storage capacity. The leaf springs, adding mass could be done by increasing the
+mathematicalconditionspresentedinthispapermaybeusedto thickness of the spring. However, increasing the thickness
+develop actuators that could bypass the limited energy storage
+of a coil or leaf spring is nontrivial in a practical design.
+capacity of current variable stiffness spring technology.
+While increasing stiffness may be theoretically done with
+zeronetmechanicalwork[7],[8],[17],[18],thefundamental
+I. INTRODUCTION
+questionthatremainsishowtosimultaneouslyincreaseboth
+Variable stiffness actuators [1] used in robotics [2], pros- the stiffness and the energy storage capacity of a variable
+theses [3], and human augmentation [4], provide stiffness stiffness spring that, at least theoretically, does not require
+modulation for stable robot-environment interaction [5] and mechanical work. Developing such an actuator remains elu-
+safe human-robot interfacing [6]. Variable stiffness spring siveinboththeoreticalstudiesandpracticalapplication[19].
+actuators [7], [8] may also be used to accumulate elastic In this paper, we present a mathematical characterization
+energy while increasing stiffness under limited spring defor- of variable stiffness spring actuators that can simultaneously
+mation. This method of energy storage could be useful for increasestiffnessandenergystoragecapacitywithnegligible
+human performance augmentation [9]. For example, given a (theoreticallyzero)energycost.Wederiveasetofanalytical
+high enough spring stiffness, a large amount of gravitational conditions that deﬁne the class of these actuators. Using
+potentialenergymaybestoredwithinalimitedspringdefor- these conditions, we identify a variable volume air spring
+mation, which could be subsequently useful to jump higher, as one of the simplest actuators that satisﬁes our analytical
+walk with a heavy backpack, or run faster beyond what is conditions. Using a variable volume air spring, we experi-
+possible using a more conventional series elastic actuator. mentally demonstrate simultaneous increase of stiffness and
+However, energy storage within a limited deformation range energy capacity by increasing the volume of the air spring
+of an actuator requires high stiffness, which reduces the at atmospheric pressure. In practice, increasing the volume
+energy storage capacity of most variable stiffness actuators. of the air spring at atmospheric pressure requires negligible
+Stiffnessmodulationmaybeachievedbyextendingtheac- amount of mechanical work compared to the work done to
+tivelengthofthespringinantagonisticandspring-pretension deform the spring.
+based variable stiffness actuators [10], [11], reducing the High energy capacity variable stiffness springs may be
+active length of a helical spring [12] and leaf spring based used to develop actuators for robots, that could reduce the
+actuators[8],[13],orchangingthetransmissionratioinvari- weightandsize ofmoreconventionalactuators andbatteries
+able moment arm actuators [14], [15]. In all aforementioned [20],[21].Variablestiffnessspringswithhighenergycapac-
+itymayalsobeusefulforhumanperformanceaugmentation,
+where, beyond providing stiffness modulation, they could
+SungY.Kim,TiangeZhang,andDavidJ.BraunarewiththeDepartment
+of Mechanical Engineering, Vanderbilt University, Nashville, Tennessee store large amounts of energy to enable augmented humans
+37235,USA. bypass the limitations of their biological limb [9], [22].
+Email:sung.kim@vanderbilt.edu
+Email:tiange.zhang@vanderbilt.edu
+Email:david.braun@vanderbilt.edu
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 928
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:02:58 UTC from IEEE Xplore.  Restrictions apply. II. VARIABLESTIFFNESSSPRINGS increased stiffness. We will use these conditions to ﬁnd the
+∈N×Z
+Variablestiffnessactuatorsusetwomotors;onetocontrol exponents (m,n) in (2) that could be used to model
+anidealvariablestiffnessspringdesignedforenergystorage.
+thedeformation,andanothertosetthestiffnessofthespring
+The ﬁrst condition describes the behavior of a typical
+[1], [2], [17]. In this work, we consider variable stiffness
+spring; it asserts zero force at zero deformation (Section III-
+spring actuators [18], sometimes referred to as stiffness
+A). The second and third conditions assert simultaneously
+modulators [7], [8], which only provide stiffness modulation
+increasing stiffness range and energy storage capacity (Sec-
+without changing the equilibrium position of the actuator.
+tions III-B and III-C). Finally, the fourth condition ensures
+The conceptual model of a variable stiffness spring actuator
+that no force is required to change the stiffness of the spring
+is shown in Fig. 1.
+when the spring does not store energy (Section III-D). The
+last condition enables the stiffness and the energy storage
+z
+Fz capacityofthespringtobeincreasedwiththeoreticallyzero
+mechanical work when the spring does not store energy.
+Load A. Zero output force with zero deformation
+When the spring is not deformed, i.e. when z=z0, the
+k force provided by the spring should be zero regardless of
+m
+the stiffness:
+∀ −∂V
+z0:Fz(z0,z0)= ∂z(z0,z0)=0. (3)
+Fig.1. Modelofavariablestiffnessspring.Inthismodel,zdenotesthe Condition (3) yields the following set of basis functions:
+lengthofthespring,F denotestheforcebythespring,whilekdenotesthe
+z
+stiffnessofthespringchangedbythe“motor”m. B1={(z−z0)mzn0}, where(m,n)∈{N×Z:m(cid:54)=1}. (4)
+A. Variable stiffness helical springs This condition indicates that the exponent of the defor-
+−
+Thepotentialenergyfunctionofahelicalextensionspring, mation (z z0)m must be either zero or strictly greater than
+one. This condition is consistent with the potential energy
+with changeable active length and active length dependent
+function of standard helical springs, torsional springs, and
+stiffness, is given by:
+leaf springs, as well as, the potential energy function of
+1 − spring pretension based and variable moment arm based
+V(z,z0)= 2k(z0)(z z0)2, (1) variable stiffness actuators [17]. We note that (4) does
+−
+where z z deﬁnes the deformation of the spring, while not impose a symmetric force-deformation relation, because
+0
+k(z0)isthestiffnessofthespring.Thelatterrelationmaybe such relation does not constitute a necessary condition for
+justiﬁed by noting that the stiffness of a helical spring is the the practical realization of a spring. For example, helical
+functionofthenumberofactivecoilswhich,inturn,deﬁnes extension springs do not have symmetric force-deformation
+the active length z of the spring [12]. relations, as they cannot be compressed. The following two
+0
+conditions deﬁne springs for which the stiffness range and
+B. Variable stiffness springs the energy storage capacity simultaneously increase, as the
+The mathematical model of a variable stiffness spring geometry of the spring changes.
+which has changeable active length, and active length de-
+pendent stiffness, may be deﬁned by its potential energy B. Controllable increase in stiffness range
+function:
+The following condition ensures that the range of achiev-
+V(z,z0)= +∑∞ +∑−∞ Cm,n(z−z0)mzn0, (2) aobfltehestisfpfnriensgscvhaalunegsesof(atshez0spirsiningcirnecarseeads)e:s as the geometry
+m=0n= ∞
+where the exponents (m,n) ∈ N×Z deﬁne the kinematic ∂|kmax−kmin| >0, (5)
+design of the spring, while C encapsulates the geometric ∂z
+m,n 0
+and physical parameters. This Laurent series representation
+where k and k are deﬁned by:
+ofthepotentialenergyfunctionissimilartotheoneproposed max min
+in [23]. ∂2V ∂2V
+III. DESIGNCONDITIONSFORTHEIDEALVARIABLE kmax=z∈[zmmina,xzmax] ∂z2 (z,z0), kmin=z∈[zmmini,nzmax] ∂z2 (z,z0).
+STIFFNESSSPRING In order to present a reasonably simple representation of
+In this section, we introduce four analytical design con- (5), we assume that the minimum stiffness is attained at
+−
+ditions to deﬁne the model of a variable stiffness spring zero deﬂection z z0 =0 while the m∈a{ximum sti}ffness is
+characterized by increased energy storage capacity with attained at the largest deﬂection z=zk zmin,zmax . Under
+929
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:02:58 UTC from IEEE Xplore.  Restrictions apply. this assumption, the aforementioned inequality relation (5) An example of a simplest potential energy function – the
+leads to the following set of basis functions: one with the least number of basis functions and the lowest
+order of basis functions that belong to B is given by:
+B2={(z−z0)mzn0}, where(m,n)∈{N×Z:m≥2,∃m>2 − VSS
+sgn[Cm,n]sgn[(zk−z0)m−3][(zk−z0)n−(m−2)z0]>0} V(z,z0)=C3,−2(z z2z0)3, 12z0≤z≤z0, C3,−2<0. (12)
+(6) 0
+In the next section, we will present one practical design
+This condition is sufﬁcient but not necessary to achieve (5).
+where the p(cid:26)otential energy function is constructed usi(cid:27)ng a
+linear combination of similar basis functions given by:
+C. Controllable increase in energy storage capacity
+− − − −
+stoWraegeacimapatcoitydeassigitns satifsfnperisnsgintchraetasheas.sSiinnccreeathseedpreenveiorguys BV∗SS= (z zz0)2,(z z2z0)3,(z z3z0)4,(z z4z0)5,... .
+0 0 0 0
+condition ensures that the stiffness increases with z0, the (13)
+spring should store more elastic potential energy as z
+0
+increases. This assertion leads to the following condition: V. VARIABLEVOLUMEAIRSPRING
+An air spring with controllable volume, i.e., controllable
+∂V ∂
+∂mz0ax = ∂z0z∈[zmmina,xzmax]V(z,z0)>0. (7) anierssmaansds,thiseamdaexvimicuemthpaottceanntiaslimenuelrtganyesotuosrelydibnycrtehaessepsrtiinfgf-.
+Increasing the air mass can be done in two different ways.
+Assuming that the maximum potential energy is attained at
+∈{ } First, the air ﬂow control valve can be opened to let air
+z=zV zmin,zmax , the inequality can be reduced to the into the chamber by increasing the height of the piston
+following set of basis functions:
+(cid:18) (cid:19) whenthechamberisatatmosphericpressure.Second,anair
+B3={(z−z0)mzn0}, where(m,n)∈{N×Z: (8) pump can be used to add air to the chamber. The important
+difference between these two methods is that the former
+sgn[Cm,n]sgn[zV−z0]m−1 m+n−zzVn <0}. can theoretically be done with zero net mechanical work,
+0 while the latter requires mechanical work in proportion to
+Similar to the condition derived in the previous section, (8) the air mass pumped into the cylinder and the pressure
+is sufﬁcient but not necessary to achieve (7). in the cylinder. Our work will focus on the former, since
+that method may be practically implemented using a small
+D. Zero input force with zero deformation motor and a small battery because opening and closing the
+valveandmovingthepistonatatmosphericpressurerequires
+For variable stiffness springs that do not require energy
+limited amount of external energy.
+to hold stiffness, the stiffness modulating actuator, e.g., the
+motorinFig.1,shouldexperiencezeroforcewhenthespring
+A. Model of the Air Spring
+isnotdeformed,i.e.,whenitdoesnotstoreenergy[17].This
+imposes the following condition: Giventheassumptionthattheairspringiscompressedata
+sufﬁciently low frequency, the compression of the air spring
+∀ −∂V may be considered an isothermal process. Consequently, the
+z0:Fz0(z0,z0)= ∂z0(z0,z0)=0. (9) potential energ(cid:16)y function of(cid:16)the(cid:17)v(cid:17)ariable volume air spring
+is given by:
+This equality relation implies the following set of basis
+−
+fBun4c=tio{n(sz:−z0)mzn0}, where(m,n)∈{N×Z:m≥2}∪(0,0). V(z,z0)=Fatm z−z0−z0ln zz0 =p∑∞=2(−1)pFpat!m(zz0p−z01)p
+(10) (14)
+According to (10), the exponent of the deformation should where F is the atmospheric pressure, while the length of
+atm
+be greater than one or both exponents must be zero. the cylinder and the stroke length are given by:
+∈ ∈
+IV. DESIGNOFASPRINGUSINGANALYTICAL z0 [zmin,zmax] and z [zmin,z0]. (15)
+CONDITIONS
+One can conﬁrm that (14) satisﬁes the analytical design
+Potential energy functions that describe the class of vari- conditions given in (11).
+able stiffness springs, ideal for energy storage applications, Based on (14), the force-deformation characteristic of the
+(cid:16) (cid:17)
+can be obtained by a linear combination of basis functions spring is deﬁned by:
+that satisfy the following conditions (3), (5), (7), and (9).
+The basis functions that satisfy these conditions are given F(z,z0)=−∂V(∂zz,z0) =Fatm zz0−1 , ∀z∈[zmin,z0] (16)
+by:
+where the initial atmospheric pressure inside the uncom-
+∩ ∩ ∩
+BVSS=B1 B2 B3 B4. (11) pressed air cylinder ensures F(z0,z0)=0.
+930
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:02:58 UTC from IEEE Xplore.  Restrictions apply. (a) (b) (c) (d)
+g 
+ell ginme
+c nu
+d  aol
+a hv
+o C
+L
+g
+n
+ri
+p
+s
+er e 
+d h
+ylin ng t
+r c ssi
+Ai e
+r
+p
+e m
+v o
+al C
+v
+r 
+Ai
+Storing energy Changing stiffness
+(compressing the spring) (increasing the volume)
+High pressure Atm pressure
+z
+02
+z olume 1 z01 z01 z olume 1 z01 z volume 2 z01
+v zmin z zmin v zmin zmin
+closed valve open valve
+Fig. 2. Experimental set up of the controllable-volume air spring within one compression-expansion cycle. (a-b) Atmospheric air is being compressed
+fromequilibriumheightz totheminimumheightz whiletheairﬂowcontrolvalveisclosed.(c)Thepistonisthenreturnedtotheequilibriumheight
+01 min
+z (Volume 1) with the valve closed. (d) Once the piston reaches the equilibrium position, it is raised up to z (Volume 2) at atmospheric pressure to
+01 02
+introducemoreairmassintothesystemthroughtheopenedvalveforthenextcompression-expansioncycle.
+Similarly, the stiffness of the air spring is given by: Finally,wedeﬁnethemax(cid:16)imumelasticp(cid:16)otenti(cid:17)al(cid:17)energythat
+can be stored by the air spring:
+k(z,z0)= ∂∂2zV2 (z,z0)= Faztm2z0, ∀z∈[zmin,z0]. (17) Vmax(z0)=Fatm zmin−z0−ln zmzin . (20)
+0
+The stiffness of the spring depends on the length of the air
+In the next section, we will experimentally conﬁrm the
+cylinder z , and therefore, the air mass inside the cylinder.
+0 behavior of the air spring as predicted by (16), (17) and
+Increasing z leads to smaller minimum stiffness and larger
+0 (20).
+maximum stiffness:
+B. Experimental Setup and Procedure
+F F z
+kmin=k(z0,z0)= zatm, kmax=k(zmin,z0)= za2tm 0. (18) Figure2showstheairspringusedinourexperiment.The
+0 min device is composed of a double-acting air piston, where air
+Also, the range of achi(cid:32)evable stiffn(cid:33)ess values increase as the canenterfrombothsidesofthepiston,withaborediameter
+active length of the air cylinder increases: of 3 inches and a total stroke length of 12 inches. The air
+inlet on the compressed side is actuated by a valve, which
+−
+∂(kma∂xz kmin) =Fatm z21 −z12 ≥0, ∀z0∈[zmin,zmax]. lientsaiirnmaiarsastiantmthoespshperirnicgpisrefsascuirleitawtehdenbyopoepneendi.nTghtehechvaanlgvee
+0 min 0
+(19) when the air spring is at equilibrium, in order to minimize
+931
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:02:58 UTC from IEEE Xplore.  Restrictions apply. the work needed to move the piston. The minimum height Experimental data: energy capacity and stiffness ranges
+of the compressed air chamber is 4.31 inches. 90 80
+The spring was placed in an Instron 5944 testing machine
+80 70
+to ensure consistent and precise force and displacement
+70
+measurements throughout the course of the experiment. The 60
+tmesutmingvainlusetr,uim.e.enzt=wzamsinp,roregmraaminmededcotonsetannsutrtehrtohuagththoeutmeiancih- acity (J) 6500 50 Stiffnes
+experimentaltrial. Aftereach trial,the airﬂowcontrol valve p s
+ca 40  (1
+owfastheexcthenamdebderatwaastmoopsepnheedr,icanpdretshseurseh.afTthoisf tphreocaeirssspdroinegs Energy  4300 30 0N/m)3 
+not require any additional work in theory, but in practice,
+20
+work needs to be done to compensate for the gravitational 20
+forceactingonthepiston,energydissipationduetofriction, 10 10
+and transient thermodynamic effects. Once the piston was
+0 0
+raiseduptothenexttestingheight,thevalvewasclosed,and
+1.5 3.5 5.5 7.3
+the next trial of compression was performed. This process, Stroke length (in)
+shown in Fig. 2, was repeated at constant deformation rate
+until the compression length reached its maximum. The
+Fig.4. Experimentalresultsoftherangeofstiffnessandtheenergystorage
+stroke lengths were between 1.5, 3.5, 5.5, and 7.3 inches, capacityoftheaircylinder,fordifferentequilibriumheight,z ,andstroke
+0
+and the frequency of the deformation was consistent across length.Themaximumenergystoragecapacityandthestiffnessmodulation
+trials to mitigate unaccounted thermodynamic effects. rangebothincreasedasmoreairwasaddedintothecylinder.
+C. Results
+The experimental force-displacement curves starting from larger force was needed to deform the piston to the same
+the equilibrium position z , and ending at the minimal minimumheight.Additionally,asthecylinderincludesmore
+0
+height zmin, are shown in Fig. 3. These experimental force- airforeachtrial,theresultantforce-deformationcurveshows
+deformation curves were ﬁt with the normalized force func- increasedstiffness(seetheslopeofeachcurve)andincreased
+tion, found in (16). We obtained R2>99% for all ﬁts. The potential energy (see the area underneath each curve). Mini-
+resultsconﬁrmthepreviouslydiscussedtheoreticalairspring mal effort was needed to raise the piston to each new height
+model.Pleaseseethecorrespondencebetweenthemeasured since the pressure inside the cylinder was the atmospheric
+(solid) lines and the ﬁtted (dashed) lines in Fig. 3. pressurewhilethevalvewasopen.Thiswayofchangingthe
+stiffness is consistent with our theory of requiring negligible
+Experimental data: Force-displacenent curves amount of work to change the stiffness of the spring. These
+2500 observations are consistent with the theoretical predictions,
+(16) and (17).
+Active length of the air spring
+Figure 4 more directly shows that the stiffness range and
+2000 1.5 in
+3.5 in the energy storage capacity of the spring simultaneously
+Fit 
+5.5 in increase, as the active length of the cylinder increases.
+7.3 in
+N) 1500 This experimental result validates our theoretical conditions,
+ (F predictions (18), (19), (20), and shows the adequacy of the
+ce   simple air-spring model for the experimental investigation
+or
+F 1000 conducted in this paper.
+VI. CONCLUSION
+500
+This paper deﬁnes analytical conditions to characterize
+variable stiffness springs that can simultaneously increase
+0 stiffness and energy storage capacity. These conditions led
+0 0.2 0.4 0.6 0.8 1 to the design of a controllable-volume air spring that exper-
+Normalized displacement  s (-) imentally validated our theoretical ﬁndings.
+In some applications, air springs may be limited by
+the weight of the air cylinder, transient effects, and air
+Fig.3. Experimentalresultofthespringforce(N)versusthenormalized
+deformationofthesprings=(z−zmin)/(z0−zmin).Fourcompressiontrials leakage due to inadequate sealing and pressurization issues.
+wereperformedwithcylinderstrokelengthsof1.5,3.55.5,and7.3inches Maintaining atmospheric pressure when changing stiffness
+measuredfromthesamelowestcompressionheightz .Thedeformation
+− min requires the size of the cylinder to be scaled by the load.
+wasnormalizedwiththecorrespondingz z valueforeachtrial.
+0 min
+Pressurizingthecylindertodownsizeforhigherpoweroutput
+Thedataillustratesthatastheactivelengthofthecylinder applicationsrequiresworktobedonetochangestiffnessand
+was increased to include more air mass into the cylinder, increasesstart-upforce.Finally,transientthermodynamicef-
+932
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:02:58 UTC from IEEE Xplore.  Restrictions apply. fectsmayaddascalingfactorontheforcefunctionthatisnot [11] J. W. Hurst, J. E. Chestnutt, and A. A. Rizzi, “The actuator with
+captured by our isothermal assumption and a time constant mechanically adjustable series compliance,” IEEE Transactions on
+Robotics,vol.26,no.4,pp.597–606,2010.
+for achieving ambient pressure equilibrium. Additionally, in
+[12] K.W.Hollander,T.G.Sugar,andD.E.Herring,“Adjustablerobotic
+this paper, a conceptual process was tested in a controlled tendonusingaJackSpringTM,”inIEEEInternationalConferenceon
+laboratory setting, but a customized mechanical design may Rehabilitation Robotics (ICORR), (Chicago, IL, USA), pp. 113–118,
+June-July2005.
+be required for successful practical implementation.
+[13] T. Morita and S. Sugano, “Design and development of a new robot
+We note that despite the aforementioned limitations, vari- joint using a mechanical impedance adjuster,” in IEEE International
+ablevolumeairspringscouldbeusedtominimizethetrade- Conference on Robotics and Automation (ICRA), vol. 3, (Nagoya,
+Japan),pp.2469–2475,May1995.
+off between increased stiffness and reduced deformation
+[14] L.C.Visser,R.Carloni,andS.Stramigioli,“Variablestiffnessactua-
+limit, which is the pitfall of low energy capacity. For ex- tors:Aport-basedanalysisandacomparisonofenergyefﬁciency,”in
+ample,inpassiveprostheticdevices,airspringsmayprovide IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+(Anchorage,Alaska),pp.3279–3284,May2010.
+a larger range of joint stiffness without compromising the
+[15] A. Jafari, N. G. Tsagarakis, and D. G. Caldwell, “A novel intrin-
+amount of energy that can be stored by the spring. In sically energy efﬁcient actuator with adjustable stiffness (AwAS),”
+human jumping, weight-bearing and running augmentation, IEEE/ASME Transactions on Mechatronics, vol. 18, no. 1, pp. 355–
+365,2013.
+airspringsmayserveasaquasi-passiveenergyreservoirthat
+[16] E. Barrett, M. Fumagalli, and R. Carloni, “Elastic energy storage
+could allow a large amount of energy to be ﬁrst stored and in leaf springs for a lever-arm based variable stiffness actuator,” in
+then used to bypass the natural limitation of the biological IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),(Daejeon,Korea),pp.537–542,Oct2016.
+limb[9],[18].Furthermore,whenusedaspartofanactuator,
+[17] V. Chalvet and D. J. Braun, “Criterion for the design of low-
+the variable stiffness spring may be able to recycle energy powervariablestiffnessmechanisms,”IEEETransactionsonRobotics,
+and reduce motor power. In this way, variable stiffness vol.33,no.4,pp.1002–1010,2017.
+[18] D. J. Braun, V. Chalvet, C. T.-H., S. Apte, and N. Hogan, “Variable
+springs could reduce the size and weight of conventional
+stiffness spring actuators for low energy cost stiffness modulation,”
+high-output power actuators [21]. IEEETransactionsonRobotics,vol.35,no.6,pp.1435–1449,2019.
+[19] J. Zhang, J. Sheng, C. T. ONeill, C. J. Walsh, R. J. Wood, J.-H.
+VII. ACKNOWLEDGMENT Ryu,J.P.Desai,andM.C.Yip,“Roboticartiﬁcialmuscles:Current
+progress and future perspectives,” IEEE Transactions on Robotics,
+We thank Chase W. Mathews for his input during the
+vol.35,no.3,pp.761–781,2019.
+initial discussion phase of this work, Jantzen Lee for his [20] D.F.B.Haeuﬂe,M.D.Taylor,S.Schmitt,andH.Geyer,“Aclutched
+help with the experimental setup, and Brian O’Grady for his parallel elastic actuator concept: Towards energy efﬁcient powered
+legs in prosthetics and robotics,” in IEEE RAS EMBS International
+help with the experiment.
+Conference on Biomedical Robotics and Biomechatronics (BioRob),
+(Rome,Italy),pp.1614–1619,June2012.
+REFERENCES [21] S.Wolf,G.Grioli,O.Eiberger,W.Friedl,M.Grebenstein,H.Hppner,
+E. Burdet, D. G. Caldwell, R. Carloni, M. G. Catalano, D. Lefeber,
+[1] R. Van, T. Sugar, B. Vanderborght, K. Hollander, and D. Lefeber,
+S.Stramigioli,N.Tsagarakis,M.VanDamme,R.VanHam,B.Van-
+“Compliant actuator designs. review of actuators with passive ad-
+derborght, L. C. Visser, A. Bicchi, and A. Albu-Scha¨ffer, “Variable
+justable compliance/controllable stiffness for robotic applications,”
+stiffness actuators: Review on design and components,” IEEE/ASME
+IEEERoboticsAutomationMagazine,vol.16,no.3,pp.81–94,2009.
+TransactionsonMechatronics,vol.21,no.5,pp.2418–2430,2016.
+[2] D.J.Braun,F.Petit,F.Huber,S.Haddadin,P.vanderSmagt,A.Albu-
+[22] G.S.Sawicki,O.N.Beck,I.Kang,andA.J.Young,“Theexoskeleton
+Scha¨ffer,andS.Vijayakumar,“Robotsdrivenbycompliantactuators:
+expansion:improvingwalkingandrunningeconomy,”IEEETransac-
+Optimal control under actuation constraints,” IEEE Transactions on
+tionsonRobotics,vol.17,no.25,pp.1–9,2020.
+Robotics,vol.29,no.5,pp.1085–1101,2013.
+[23] T. H. Chong, V. Chalvet, and D. J. Braun, “Analytical conditions
+[3] E.M.GlanzerandP.G.Adamczyk,“Designandvalidationofasemi-
+for the design of variable stiffness mechanisms,” in IEEE Interna-
+activevariablestiffnessfootprosthesis,”IEEETransactionsonNeural
+tional Conference on Robotics and Automation (ICRA), (Singapore),
+Systems and Rehabilitation Engineering, vol. 26, no. 12, pp. 2351–
+pp.1241–1247,May2017.
+2359,2018.
+[4] S.H.Collins,M.B.Wiggin,andG.S.Sawicki,“Reducingtheenergy
+cost of human walking using an unpowered exoskeleton,” Nature,
+vol.522,no.7555,pp.212–215,2015.
+[5] B.KimandJ.Song,“Designandcontrolofavariablestiffnessactuator
+based on adjustable moment arm,” IEEE Transactions on Robotics,
+vol.28,no.5,pp.1145–1151,2012.
+[6] G. Tonietti, R. Schiavi, and A. Bicchi, “Design and control of a
+variablestiffnessactuatorforsafeandfastphysicalhuman/robotinter-
+action,”inIEEEInternationalConferenceonRoboticsandAutomation
+(ICRA),(Barcelona,Spain),pp.526–531,April2005.
+[7] D. J. Braun, S. Apte, O. Adiyatov, A. Dahiya, and N. Hogan,
+“Compliant actuation for energy efﬁcient impedance modulation,” in
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+pp.636–641,May2016.
+[8] H. F. Lau, A. Sutrisno, T. H. Chong, and D. J. Braun, “Stiffness
+modulator: A novel actuator for human augmentation,” (Brisbane,
+Australia),pp.7742–7748,May2018.
+[9] A.SutrisnoandD.J.Braun,“Enhancingmobilitywithquasi-passive
+variablestiffnessexoskeletons,”IEEETransactionsonNeuralSystems
+andRehabilitationEngineering,vol.27,no.3,pp.487–496,2019.
+[10] S.WolfandG.Hirzinger,“Anewvariablestiffnessdesign:Matching
+requirements of the next robot generation,” in IEEE International
+Conference on Robotics and Automation (ICRA), (Pasadena, CA,
+USA),pp.1741–1746,May2008.
+933
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:02:58 UTC from IEEE Xplore.  Restrictions apply. 

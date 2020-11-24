@@ -1,0 +1,531 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Lidar-Monocular Visual Odometry using Point and Line Features
+Shi-Sheng Huang1, Ze-Yu Ma1, Tai-Jiang Mu1, Hongbo Fu2, and Shi-Min Hu1
+Abstract—We introduce a novel lidar-monocular visual linefeatures,leadstomoreaccuratecameraposeestimation.
+odometryapproachusingpointandlinefeatures. Comparedto Besides, line features have conditional beneﬁts that they are
+previous point-only based lidar-visual odometry, our approach
+lesssensitivewithproblemssuchasnoise[13],widerangeof
+leverages more environment structure information by intro-
+view angle [14], and motion blur [15], which are the main
+ducing both point and line features into pose estimation. We
+provide a robust method for point and line depth extraction, drawbacks for the point-only systems such as LIMO [4].
+andformulatetheextracteddepthaspriorfactorsforpoint-line Thismotivatesustocombinepointandlinefeaturestogether
+bundle adjustment. This method greatly reduces the features’ foranaccuratelidar-visualodometrysystem.However,there
+3D ambiguity and thus improves the pose estimation accuracy.
+is an open issue for line-based visual SLAM systems since
+Besides,wealsoprovideapurelyvisualmotiontrackingmethod
+line-based 3D triangulation can be sensitive during camera
+andanovelscalecorrectionscheme,leadingtoanefﬁcientlidar-
+monocular visual odometry system with high accuracy. The tracking [16], thus causing an unstable visual SLAM system
+evaluations on the public KITTI odometry benchmark show without satisfactory pose estimation accuracy. Although line
+thatourtechniqueachievesmoreaccurateposeestimationthan features might richly exist in various scene environments
+the state-of-the-art approaches, and is sometimes even better
+(especiallyinurbanenvironments),itisnontrivialtodirectly
+than those leveraging semantic information.
+adopt line features for the lidar-visual odometry.
+I. INTRODUCTION In this paper, we provide a robust and efﬁcient lidar-
+monocular visual odometry method combining both point
+Lidar-visual odometry has been an active research topic
+and line features in a purely geometric way to extract
+due to its wide applications such as robotics, virtual reality,
+more structural information from scene environments than
+andautonomousdriving,etc.Thecombinationofvisualsen-
+point-only systems. More speciﬁcally, our system fuses the
+sors and lidar sensors as lidar-visual odometry achieves the
+point and line features as landmarks during camera tracking
+beneﬁts of both types of sensors,and thus has been gaining
+and formulates the point-based and line-based landmarks’
+more and more research interests in the computer vision,
+reprojection errors as factors for bundle adjustment in the
+computer graphics, and robotics communities nowadays [1].
+back end. During sensor fusion, we provide a robust method
+Recently, tightly coupled fusion algorithms like V-
+toextractthedepthofthepointsandlinesfromthelidardata,
+LOAM[2]showimpressiveperformanceforvisual-enhanced
+andusethedepthpriortoguidecameratracking.Inthisway,
+lidarodometry.Thosealgorithmsfollowtheodometryframe-
+we avoid the creation of 3D landmarks solely based on the
+work without using SLAM techniques such as bundle ad-
+possibly ambiguous 3D triangulation, especially for the 3D
+justment and loop closure. The subsequent works such as
+lines. The depth prior is also formulated as prior factors in
+DEMO [3], LIMO [4] and DVL-SLAM [5], [6] utilize
+the point-line bundle adjustment to further improve the pose
+bundleadjustmenttechniquestoachievemuchhighermotion
+estimation accuracy.
+estimationaccuracy.Althoughthecameratrackingfront-end
+Besides, to overcome the scale drift in the frame-to-frame
+may be different for these approaches (with DEMO [3] and
+odometry, we recover the scale in each keyframe using a
+LIMO [4] following the feature-based visual SLAM like
+scale correction optimization before bundle adjustment. In
+ORB-SLAM2[7],andDVL-SLAM[5]followingthedirect-
+this way, we achieve an efﬁcient but driftless lidar-visual
+based visual SLAM (as like DSO [8]) for camera tracking),
+odometry system. Beneﬁted from a rich set of structural 3D
+all of them take sparse point based bundle adjustment as
+landmarks,weachievemuchhigherposeestimationaccuracy
+back-end to correct camera tracking in an accurate way.
+compared with the other purely geometric approaches (such
+However, the accuracy of those point-only systems is still
+as DEMO [3] and DVL-SLAM [5]) evaluated on the KITTI
+not very satisfactory and some of them like LIMO [4]
+odometry benchmark [17], and comparable accuracy with
+requireextrasemanticinformationasinput,which,however,
+LIMO [4] but without using any extra semantic information.
+is computationally expensive to obtain.
+To the best of our knowledge, we give the ﬁrst efﬁcient
+The recent techniques for 3D reconstruction using struc-
+lidar-monocular odometry approach using the point and line
+ture from motion ([9], [10]) and accurate motion estimation
+features together in a purely geometric way.
+of visual SLAM systems ([11], [12]) show that utilizing
+more structural information from real environments, such as
+II. METHODOLOGY
+1Shi-ShengHuang,Ze-YuMa,Tai-JiangMu,andShi-MinHuarewith Preprocessing. Given a monocular image sequence and
+theDepartmentofComputerScienceandTechnology,TsinghuaUniversity a lidar sequence, we assume that the intrinsic and extrinsic
+andBNRist,China.
+parametersofthetwosensorshavebeencalibrated,andboth
+2Hongbo Fu is with the School of Creative Media, City University of
+HongKong,China. two sensor data have been temporally aligned. We set the
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1091
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. Fig.1. Thesystemframeworkofourapproach.Giventheinputmonocularimagesequenceandlidarsequence,weextractthepointandlinefeaturesfor
+eachimage,andtrackimageframesusingourframe-to-frameodometrywithscalecorrectedbyourscalecorrectionoptimization.Foreachkeyframe,the
+depthpriorsforpointandlinelandmarksareextractedandfedtothepoint-linebundleadjustment.Loopclosurewiththepointandlinefeaturesisused
+for further pose estimation correction. The graph structure for bundle adjustment is illustrated in the dashed box with different factors. The components
+highlightedingreenareourmaincontributioninthiswork.
+camera’s local coordinate as the body coordinate, and the
+world coordinate as the beginning of the body coordinate.
+Overview. Fig. 1 shows the framework of our system,
+which contains three running threads: a motion tracking
+thread (front-end), a bundle adjustment thread (back-end),
+and a loop closure thread. The front-end ﬁrst extracts the
+point and line features in every frame (Section II-A), then
+estimatesthefeature’sdepthpriorineverykeyframe(Section
+II-B),andﬁnallyestimatesthecameraposeswithaframe-to-
+frame odometry (Section II-C). A scale correction optimiza-
+tion(SectionII-D)isperformedtocorrectthescaledriftafter
+the frame-to-frame odometry. The back-end performs point-
+line bundle adjustment with point-line constraint factors Fig. 2. We chain short line segments into a longer one (Left), or merge
+near line segments into a new one (Right) to enhance the quality of lines
+(Section II-E). A bag-of-words based loop closure [18] with
+returnedbyLSD.TheimagescomefromKITTIdatasetsequence00.
+pointandlinefeaturesisalsoperformedtofurtherreﬁnethe
+poses of keyframes (Section II-F).
+of 3D line triangulation. To address these issues we propose
+A. Feature Extraction
+toimprovetheresultsoftheLSDalgorithmbymergingsuch
+Point Feature. Various point features (SIFT, SURF, ORB
+“bad” line segments, as shown in Fig. 2. More speciﬁcally,
+etc) can be used to serve as tracking features. We adopt
+for a line segment pair (l , l ), if only one endpoint of l
+the Oriented fast and Rotated BRIEF (ORB) feature as the i j i
+is near to l ’s endpoint, we link l and l to form a longer
+point feature for efﬁciency as done in ORB-SLAM2 [7]. j i j
+line segment. If both endpoints of l are near to those of l
+Duringdetection,theORBfeaturesarerequiredtobeevenly i j
+andthedistancebetweenl andl isunderagiventhreshold
+distributed in the image as much as possible. i j
+(10px in our implementation), we merge l and l as a new
+Line Feature. For each image, we use the popular line i j
+line segment. The LBD line descriptor is also updated for
+featuredetector,LineSegmentDetector(LSD)[19],todetect
+the newly linked or merged line segment.
+line segments, for which the Line Band Descriptor (LBD)
+[20] will be extracted.
+B. Point and Line Depth Extraction
+The LSD algorithm often breaks a long line segment into
+several short ones as shown in Fig. 2 (Left). Besides, some In this section we describe a method to extract the point
+detectedlinesegmentsmaybequitenear,suchastheborder and line depth from the lidar data. Here the depth for a 2D
+edgesofathinareaasshowninFig.2(Right).Theexistence point featuremeans thedepth ofits corresponding3D point,
+of such detected line segments often makes the subsequent and for a 2D line feature means the depth of two endpoints’
+line matching task complex, thus increasing the uncertainty corresponding 3D landmarks
+1092
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. Fig.3. Asimpleillustrationforpointandlinedepthextraction.Afterthe
+sparselidardata(greypoints)isalignedtotheimageplane,thepointdepth Fig.4. Thegraphstructureforscalecorrectionoptimization.
+andlinedepthareextractedinthepointneighborpatchandlineneighbor
+patchseparately.
+Since the descriptor distance might not be so descriptive
+for2D-2Dlinematching,inpracticeweuseseveralgeomet-
+Foreachdetected2Dpointorlinesegment,itsdepthprior
+riccriteriatoﬁlterout’poor’linematchingpairstoimprove
+is estimated using a neighbor patch separately as shown in
+the matching accuracy. Speciﬁcally, a good candidate line
+Fig. 3. More speciﬁcally, the lidar points belonging to a
+matching pair (l ,l ) needs to satisfy : (1) the angular
+point patch are ﬁrst segmented into foreground points and i j
+difference is smaller than a given threshold; (2) the length
+backgroundpointsusingthemethodintroducedbyTatenoet
+difference is also below a given threshold; (3) the distance
+al. [21]. Then a plane is ﬁtted using the foreground points,
+between the middle points of l and l should be small
+and the depth of the feature point is that of the intersection i j
+enough. After solving the perspective-n-point/line problem,
+point between the point ray and the plane. For the lidar
+points P ={pi} belonging to a line patch of an image lin∗e tphoeinctulrarnednmt afrrakmsaenFdil’isnecalamnedrmaaprokssearTeireis-puropjdeactteedd.tTohferam3De
+sbeygmmeinnitmlijz,inwgethﬁersftoellsotwim(cid:88)inagteeintsercgoyrresponding 3D line Lj Fi’s image plane to check whether the 3D-2D matching is
+outlier or not. Outliers are removed once detected. As for
+∗ the details of line camera projection, endpoints trimming,
+Lj =argmin d(pi,Lj)+e(Lj,lj), (1) and line triangulation, please refer to [10], [11].
+Lj i
+D. Scale Correction Optimization
+whered(p ,L )istheEuclideandistancebetweenlidarpoint
+i j
+p and L , and e(L ,l ) is the line reprojection error as Sincetheestimatedscalemightdriftfromitsrealphysical
+i j j j
+described in Section II-E. Here for initialization, we ﬁt the scale,weproposetocorrectthescaleusingascalecorrection
+(cid:48)
+lidar points belonging to the line patch with a 3D line L as optimization. Our key idea is to fuse the relative camera
+∗ j
+the initialization of L . After L is estimated, the two end poses computed from the ICP alignment step to adjust the
+j j
+points priors (as shown in Fig. 5(left)) can be obtained by newly estimated keyframe’s camera pose and the related 3D
+using endpoint trimming as described in [10], [11]. Besides, landmarks via a scale correction optimization.
+for points and line segments locating beyond the view of This problem is formulated as a graph based optimization
+LiDARdata,weusethepointtriangulationandlinetrimming as illustrated in Fig. 4. For a newly selected keyframe
+∈
+for the depth prior estimation [10], [11]. with the estimated camera pose T SE(3), we build
+T {i }
+WeadoptthePlu¨ckercoordinates[9]torepresenta3Dline its neighboring keyframe set = T ,T− ,...,T− , the
+P i i i 1 i n L
+during the motion tracking, and the orthonormal representa- 3D point landmarks set , and 3D line landmark set
+i T i
+tion [9] as the minimum parameters. The optimization can which are visible from the keyframe set . Our goal is to
+i
+beefﬁcientlysolvedbyLevenberg-Marquardtalgorithm[22]. adjust the keyframe’s camera pose T , 3D point landmarks
+P L i
+, and 3D line landmarks while keeping ﬁxed for
+i Ti\{ }
+C. Frame-to-Frame Odometry other keyframes’ ca(cid:88)mera p(cid:88)oses T(cid:88). Spe(cid:88)ciﬁcally, this is
+i i
+achieved by minimizing the following error function:
+We use a pure visual Frame-to-Frame Odometry to es-
+timate very frames’ camera pose, which is more efﬁcient Ei =epo−se + eP + eL , (2)
+than other ICP-based odometry like V-LOAM[2]. For a new i,i 1 ∈P ∈T j,k ∈L ∈T j,k
+frameF ,weestimateitscameraposeT ∈SE(3)usingthe Pj iTk i Lj iTk i
+i i
+previousframeand3D(pointandline)landmarksoptimized where epose, eP, and eL are the relative pose factor error,
+by the bundle adjustment (Section II-E ). The detected 2D point re-projection factor error, and line re-projection factor
+point features (ORB) and line features (LBD) in F are error as described in Section II-E, respectively. This opti-
+i
+matched with the previous frame F− ’s tracking features mizationcanbesolvedefﬁcientlyusingtheg2olibrary[24].
+i 1
+by performing 2D-2D point matching and line matching, Using our scale correction, the scale drift can be re-
+respectively. The estimated 3D point landmarks and 3D line duced efﬁciently (as shown the evaluation in Section III).
+landmarks are extracted to estimate F ’s camera pose by For efﬁciency, the time-consuming ICP alignment is only
+i
+solving a perspective-n-point/line problem [23]. performed between keyframes. Note that the relative camera
+1093
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. as eP =ρ TΣP ρ , where ΣP is the covariance matrix.
+i,j i,j i,j i,j ∈ L
+Line Re-projection Factor. A 3D line landmark Li
+in the world frame can also be re-projected to a keyframe
+T ∈T, yielding a line segment l =[li li li]T ∈R3 in the
+j i 1 2 3
+2DimageplaneasdescribedinSectionII-A.Supposealine
+(cid:48) (cid:48) (cid:48)
+segmentl withtwoendpointsp andq ismatchedtoLi,as
+i i i
+illustrated in Fig. 5. We can formulate the line re-projection
+error vector as: γi,j = [√lliiT2+p(cid:48)ili2 √lliiT2+qi(cid:48)li2]T ∈ R2. If
+there exists depth prior for 1this2line fe1ature2, we compute
+(cid:48) (cid:48)
+the distance between end points priors P , Q to the 3D line
+(cid:48) (cid:48)
+Fig. 5. A 3D line landmark Li is re-projected onto the image plane landmarkasd(P ),d(Q)separatelyasshowninFig.5(left).
+w (cid:48) (cid:48)
+yQTisihe(cid:48)deldeaeﬁrinernrgoethdraebb2peyDtrwitohlerieesnnedciotlshmiteapmnruceate-tepscdrhfoerfjordeomcmwteiidtttshhletiawndeoleilpneitenhadsnppedrgoimiotnhretesnexmttsotralatticch(hteLeedeldifntil)nei,nSlweieisc(tehRtgioimPgnheItn)Iat.-nBldi(cid:48). Tγthihe,jenl=inteh[√erlleli1ii-T2np+per(cid:48)ilo2ijr2eec-tpiro√onjlle1iiT2ce+tqriri(cid:48)loo2in2r ecradrn(oPrb(cid:48))ev+2edcc(tQoom(cid:48)r)p]iTuste∈cdoRma3ps.uFeteiLndalal=ys:,
+i,j
+γ TΣL γ , where ΣL is the covariance matrix.
+i,j i,j i,j
+In summary, our keyframe based bundle adjustment op-
+pose computed by the frame-to-frame odometry can be used
+as pose initialization to accelerate the ICP alignment. timization(cid:88)seeks the min(cid:88)imiz(cid:88)ation of th(cid:88)e fol(cid:88)lowing cost
+function,
+E. Point-Line Bundle Adjustment
+E = epose+ eP + eL (3)
+We form a point-line bundle adjustment in the back-end { }⊂T i,j ∈P ∈T i,j ∈L ∈T i,j
+between keyframes of a sliding neighbor window, similar to Ti,Tj Pi Tj Li Tj
+ORB-SLAM2[7].Speciﬁcally,whenanewkeyframearrives, In solving the non-linear optimization, we adopt a 6D
+∈ R
+bundle adjustment is performed in its neighboring keyframe vector ξ 6 as the minimum parameters for a camera
+set T, with 3D point landmark set P and 3D line landmark pose T(ξ) ∈ T , a 3D vector θ ∈ R3 for a point landmark
+L.AsillustratedinFig.1,weformulatebundleadjustmentas P(θ) ∈ P, and a 4D vector φ ∈ R4 for a line landmark
+∈ L
+a graph based optimization with the following three factors, L(φ) [10], to make the system computationally
+aimingatadjustingthekeyframes’cameraposesT,3Dpoint efﬁcient and numerically stable. We solve this point-line
+landmark position P, and 3D line landmark position L. bundle adjustment efﬁciently using the g2o library [24].
+Relative Pose Factor. For a pair of adjacent keyframes
+{ } ⊂ T F. Loop Closure
+with the estimated camera poses T ,T , and the
+i j
+relative camera pose Ticp computed from the point cloud Loop closure involves loop detection and loop correction
+i,j
+ICP alignment step, we formulate the difference vector ξ based on the keyframes during motion estimation. For loop
+∗ − i,j
+between the relative camera pose Tpose = T T 1 and detection, we ﬁrst use the DBoW [18] algorithm to train the
+Ticp as: ξ = Log(Tpose ∗Ticp−1)i,j∈ R6, wiherejLog(·) vocabulary for the point feature (ORB descriptor) and line
+i,j i,j i,j i,j feature (LBD descriptor) respectively. Then every keyframe
+is the logarithmic map of SE(3) [25]. The relative pose
+error is computed as epose = ξ TΣposeξ , where Σpose Ki is converted to a point BoW vector viP and line BoW
+is a 6 × 6 informationi,jmatrix.i,IjCP ia,jlignim,jent wouldi,fjail vectorviL.Whenevaluatingthesimilaritybetweenkeyframes
+under certain conditions leading to “bad” relative camera Ki−and Kj, we d−eﬁne the similarity score as: s(i,j) =
+poses.Topenalizethe“bad”ICPalignment,wecomputethe e(1 sp(viP,vjP))2e(1 sl(viL,vjL))2, with sp(viP,vjP) is the sim-
+informationmatrixadaptivelyaccordingtotheICPalignment ilarity score of the point BoW vector and sl(viL,vjL) for the
+quality. Letting eˆ be the ICP error for setting the relative line BoW vector. Once the similar keyframe candidates for
+i,j
+cameraposeasTpose ande¯ forTicp, wecomputeascale anewlyselectedkeyframeKi arefound,theloopcorrection
+factor ζi,j =e(−2i.,0j∗(ee¯ˆii,,jj)2)ia,jnd setiΣ,jpi,ojse =ζi,jI6×6. isperformedusingaglobalbundleadjustmentalgorithm[7].
+PointRe-projectionFactor.Assumea3Dpointlandmark III. EXPERIMENTS
+∈P
+P in the world frame is matched to a 2D point feature Our system is implemented based on ORB-SLAM2 [7]
+i ∈ T
+positioned p in the keyframe T . By re-projecting with three threads, namely frame-to-frame odometry,
+i j
+P onto the keyframe’s image plane, we can obtain a re- keyframe based bundle adjustment, and loop closure. When
+i (cid:48) K ·
+projected position for P as p = π(P ,T , ), where π() performing ICP alignment, we use the Normal Distributions
+i i K i j
+is the projection function and is the camera’s intrinsic Transform (NDT) [26] implemented in the PCL library [27]
+parameter matrix. We then compute the re-projection error to compute the relative camera pose between two adjacent
+− (cid:48) ∈ R
+as ρ = (p p ) 2. If there exists depth prior for point clouds.We test ourapproach on the trainingdataset of
+i,j i i
+this point feature, we formulate ρ as stereo-reprojection the public KITTI benchmark, which contains sequences 00-
+i,j
+error as described in ORB-SLAM2 [7] by including the 10 with ground truth trajectories, and analyze the accuracy
+depth prior. Finally, the point re-projection error is deﬁned andtimeefﬁciencyofourapproachonacomputerwithIntel
+1094
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. error on the whole KITTI training dataset. The compari-
+son results show that the depth priors module reduces the
+translation error to a great extent (from 3.64% down to
+0.94%).Thescalecorrectionmodulealsoplaysanimportant
+role to largely reduce the translation error, with about 50%
+translation error reduced (from 1.95% down to 0.94%).
+We can conclude that the depth prior module and scale
+correction module (especially the depth prior module) can
+Fig.6. Themotiontrackingaccuracycomparisonbetweenthepoint-only
+largelyreducetheposeestimationerrorinoursystem.There
+system(Left)andoursystem(Right),attheglanceofframe1380ofKITTI
+dataset sequence 00. The results by the point-only system have obvious are several representative motion tracking trajectories by
+drifts,whileourresultshavedriftfreemotiontracking. our system with different modules on some KITTI training
+dataset sequences shown in Fig. 7. Please see more details
+result in our video attachment.
+Comparison with Existing Methods. We compare
+our approach with DEMO [3], DVL-SLAM [5], [6] and
+LIMO [4], all of which also have an optimization back-end
+like ours. Other approaches such as V-LOAM [2] are only
+visualodometrysystemswithoutoptimizationback-end,and
+are thus not chosen for comparison. Note that LIMO [4]
+needs extra semantic label information to identify moving
+objects such as cars and people. To obtain such semantic la-
+Fig. 7. Our motion tracking trajectories on KITTI training dataset belinformation,itoftenneedshugecomputationalresources
+sequences00(Left)and05(Right),withresultsbyourfullsystem(Ours(*)),
+such as Nvidia TitanX Pascal. In contrast, our approach,
+the system without depth prior module (Ours(-)) and system without
+scale correction module (Ours(#)) comparing with the ground truth (GT) DEMO and DVL-SLAM do not require such semantic label
+trajectoryseparately. information and can efﬁciently run in a CPU-only platform.
+Our evaluation thus focuses on the comparison between our
+method, DEMO, and DVL-SLAM. The average translation
+Core i7-2600 @ 2.6GHz and 8G memory in a 64-bit Linux
+errors by the compared methods are shown in Table I. Since
+operation system.
+the semantic label data required by LIMO is available for
+Parameters. For each image, we extract 1000 ORB sequences 00,01,04, we show the results by LIMO for these
+features. Line segments with length below 50 pixels are sequences only.
+discarded. When performing line matching in Section II-
+◦
+C, we set the angle threshold as 2 , length difference ratio TABLEI
+as 0.1, and distance threshold as 5 pixels. In the bundle TRANSLATIONERROR[%]ONTHEWHOLEKITTITRAININGDATASET
+∗
+adjustment step, the covariance matrix is set ΣP = 0.1 I
+for the point re-projection factor and ΣL = 0.2∗I for the Seq. DEMO DVL- Ours Ours Ours Point- LIMO
+SLAM (*) (-) (#) Only
+line re-projection factor. 0 1.05 0.93 0.99 3.23 4.14 2.81 1.12
+Point-only versus Point-line. We ﬁrst evaluate our ap- 1 1.87 1.47 1.87 9.40 5.03 3.21 0.91
+proach on the performance of tracking features. We imple- 2 0.93 1.11 1.38 4.96 3.81 2.10 -
+3 0.99 0.92 0.65 1.06 0.67 1.67 -
+mented a baseline version of our approach using point-only
+4 1.23 0.67 0.42 0.89 0.66 1.78 0.53
+feature, and compared it with our full system. As shown 5 1.04 0.82 0.72 2.94 0.88 1.52 -
+in Fig. 6, our system achieves less drift motion tracking 6 0.96 0.92 0.61 3.28 0.85 1.30 -
+7 1.16 1.26 0.56 3.53 0.74 2.07 -
+with higher accuracy while the point-only approach has
+8 1.24 1.32 1.27 3.71 1.83 3.61 -
+obvious drifts. We conduct a quantitative evaluation on the 9 1.17 0.66 1.06 4.41 1.82 1.73 -
+whole training dataset and summarize the average rotation 10 1.14 0.70 0.83 2.63 0.99 1.92 -
+and translation errors obtained by dividing the segment of avg 1.16 0.98 0.94 3.64 1.95 2.16 0.93
+each trajectory by 100m, 200m, ..., 800m as done by DVL-
+SLAM [5], [6]. As shown in Table I, using both the point In the whole KITTI training dataset, we achieve the
+andlinefeaturesachievessigniﬁcantlylowertranslationerror averagetranslationerror0.94%androtationerror0.0036deg,
+m
+(0.94%) than the point-only baseline ( 2.16%). which are lower than DEMO (translation error 1.14%,
+Evaluation on Depth Priors and Scale Correction. rotation error 0.0049deg in the paper) and DVL-SLAM
+m
+We also perform evaluation on the depth priors module (translation error 0.98%, rotation error is about 0.0040deg
+m
+(Section II-B) and scale correction module (Section II-D) in the paper). According to the original LIMO paper [4],
+by comparing the accuracy with our full system. As shown theirreportedaveragetranslationerroris0.93%androtation
+in Table I, we build systems without depth priors module error is 0.0026deg. Though our translation error is slightly
+m
+(Ours(-))orscalecorrectionmodule(Ours(#))separately,and higher than LIMO’s, we achieve lower translation error in
+compare with our full system (Ours(*)) by the translation sequences 00 and 04 as shown in Table I. It shows that
+1095
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. Fig.8. TheerroranalysisperformedontheKITTItrainingdatasetbetween Fig.9. Thetestresultsofscene0007(toprow)andscene0024(bottomrow)
+DEMO,DVL-SLAM,LIMOandOurs.NotethatLIMOonlyprovidederror in NuScenes Part I dataset using our full system, including the point-line
+curvesaccordingtovehiclespeed(Right),soweonlycollectDEMO,DVL- detectionresults(left)andﬁnalpointcloudreconstructionresultsusingthe
+SLAMandOurserrorcurvesinthepathlengthanalysis(Left). estimatedcameraposes(right).
+our approach as a purely geometric approach can achieve this BoW based loop closure technique is ordinarily used in
+comparable (and sometimes even better) accuracy to LIMO, systems like DEMO, DVL-SLAM and LIMO. The vehicle
+which requires extra semantic label information. odometry sensor data could also be fused into our system
+by formulating the relative pose measured from the vehicle
+Weperformerroranalysisaccordingtothepathlengthand
+odometry as factors in the point-line bundle adjustment,
+vehicle speed as did in DVL-SLAM, and the comparison
+leadingtoamoreaccurateLiDAR-Visual-Odometrysystem.
+curves between DEMO, DVL-SLAM, LIMO and ours are
+However, we only forcus on fusing more structural prior
+shown in Fig. 8. When the vehicle speed is faster, our
+informationintotheLiDAR-VisualSLAMsolutionandleave
+system leads to the lower accuracy. This explains why our
+it for the future work. Besides, our system didn’t consider
+method performs relatively worse on sequence 01, which is
+the factors raised by errors from the calibration parameters
+a very challenging case with very fast vehicle speed. Please
+and approximative synchronization of the LiDAR-Camera
+see more detail results of our method on the whole KITTI
+sensors yet, which is also an interesting problem for a
+training dataset in the video attachment.
+robust LiDAR-Camera SLAM system valuable for a future
+Evaluation on NuScenes dataset. We evaluate our ap-
+exploration. One of the drawbacks of our approach lies in
+proachontheNuScenesdataset[28],whichisapubliclarge-
+the tracking robustness. When the camera moves in large
+scale dataset of urban enviroment with plenty of structural
+rotations or in fast speed, our tracking system might get
+line features. To evaluate the accuracy of our lidar-visual
+failed, leading to less accurate motion estimation. Another
+odometry without the effect of loop closure, we use the
+drawback of our approach lies in the moving objects, which
+NuScenes Part I subset dataset with 80 test scenes, each of
+is beyond the power of purely geometric methods like ours.
+which only has one way trajectory without any loop pathes.
+Inthefuturewewouldliketoincorporatesemanticinforma-
+Since the trajectory path of every test scenes is not too long
+tion for a more accurate lidar-visual odometry approach.
+(< 200m), we compute the average rotation and translation
+errors by dividing the trajectory into segments like DVL- IV. CONCLUSION
+SLAMbutusing5m,10m,50m,100m,150m,200msegment
+In this paper we presented an accurate and efﬁcient lidar-
+length.Insummary,ouraveragetranslationerroris2.4%and
+monocular visual odometry approach using both the point
+rotation error is 0.0007deg. In Fig. 9, we show the point-
+m andlinefeatures.Byleveragingmorestructuralinformation,
+line feature detection intermediate results (left) and point
+weshowthatourapproachismoreaccuratethanthestate-of-
+cloudreconstructionresultsusingtheestimatedcameraposes
+the-artpurelygeometrictechniques,andachievecomparable
+(right)oftwoexampletestscenesofNuScenesPartIdataset.
+accuracywithsystemsusingextrasemanticinformationsuch
+Time and Complexity.Thefeatureextractioncostsabout
+as LIMO. We hope that our work could inspire follow-up
+80ms, and the scale correction optimization takes about
+works to explore other types of structural prior information,
+30ms. The most time consuming part lies in the ICP align-
+such as plane prior, parallel, orthogonal or co-plane rules,
+mentstep,whichcostsabout300mseachtime.SincetheICP
+for a more accurate LiDAR-Camera sensor fusion system.
+alignment is only performed between keyframes, and one
+keyframeisselectedevery3-4frames,inaverageoursystem V. ACKNOWLEDGEMENT
+achieves about 5Hz processing rate in CPU-only platform, Thanks for the anonymous reviewers’ detail comments on
+thesameasLIMOwhichisachievedwiththeessentialGPU this paper. This work was supported by the Natural Sci-
+platform. ence Foundation of China (Grant No.: 61521002, 61863031,
+Discussion and Limitation. In this paper, we don’t claim 61902210) and the China Postdoctoral Science Foundation
+the point-line loop closure as our main contribution, since (Grant No.: 2019M660646).
+1096
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [26] P. Biber and W. Straßer, “The normal distributions transform: a new
+approach to laser scan matching,” in 2003 IEEE/RSJ International
+[1] S. Yang, B. Li, M. Liu, Y.-K. Lai, L. Kobbelt, and S.-M. Hu,
+ConferenceonIntelligentRobotsandSystems(IROS),2003,pp.2743–
+“Heterofusion:Densescenereconstructionintegratingmulti-sensors,”
+2748.
+IEEETrans.Vis.Comput.Graph.(TVCG),2020toappear.
+[27] P.org.,“Pcllibrary,”http://pointclouds.org/.
+[2] J.ZhangandS.Singh,“Visual-lidarodometryandmapping:low-drift,
+[28] H.Caesar,V.Bankiti,A.H.Lang,S.Vora,V.E.Liong,Q.Xu,A.Kr-
+robust, and fast,” in IEEE International Conference on Robotics and
+ishnan,Y.Pan,G.Baldan,andO.Beijbom,“nuscenes:Amultimodal
+Automation(ICRA),2015,pp.2174–2181.
+dataset for autonomous driving,” arXiv preprint arXiv:1903.11027,
+[3] J. Zhang, M. Kaess, and S. Singh, “A real-time method for depth
+2019.
+enhancedvisualodometry,”Auton.Robots,vol.41,no.1,pp.31–43,
+2017.
+[4] J.Gra¨ter,A.Wilczynski,andM.Lauer,“LIMO:lidar-monocularvisual
+odometry,”in2018IEEE/RSJInternationalConferenceonIntelligent
+RobotsandSystems(IROS),2018,pp.7872–7879.
+[5] Y.-S.Shin,Y.S.Park,andA.Kim,“Dvl-slam:sparsedepthenhanced
+directvisual-lidarslam,”AutonomousRobots,2019.
+[6] Y. Shin, Y. S. Park, and A. Kim, “Direct visual SLAM using sparse
+depth for camera-lidar system,” in 2018 IEEE International Confer-
+enceonRoboticsandAutomation(ICRA),2018,pp.1–8.
+[7] R.Mur-ArtalandJ.D.Tardo´s,“ORB-SLAM2:anopen-sourceSLAM
+system for monocular, stereo, and RGB-D cameras,” IEEE Trans.
+Robotics(TRO),vol.33,no.5,pp.1255–1262,2017.
+[8] J.Engel,V.Koltun,andD.Cremers,“Directsparseodometry,”IEEE
+Trans.PatternAnal.Mach.Intell.(PAMI),vol.40,no.3,pp.611–625,
+2018.
+[9] A.BartoliandP.F.Sturm,“The3dlinemotionmatrixandalignment
+of line reconstructions,” International Journal of Computer Vision
+(IJCV),vol.57,no.3,pp.159–178,2004.
+[10] A. Bartoli and P. Sturm, “Structure-from-motion using lines: Repre-
+sentation,triangulation,andbundleadjustment,”ComputerVisionand
+ImageUnderstanding(CVIU),vol.100,no.3,pp.416–441,2005.
+[11] G.Zhang,J.H.Lee,J.Lim,andI.H.Suh,“Buildinga3-dline-based
+mapusingstereoSLAM,”IEEETrans.Robotics(TRO),vol.31,no.6,
+pp.1364–1377,2015.
+[12] X. Zuo, X. Xie, Y. Liu, and G. Huang, “Robust visual SLAM with
+pointandlinefeatures,”in2017IEEE/RSJInternationalConference
+onIntelligentRobotsandSystems(IROS),2017,pp.1775–1782.
+[13] P.Smith,I.D.Reid,andA.J.Davison,“Real-timemonocularSLAM
+with straight lines,” in Proceedings of the British Machine Vision
+Conference2006(BMVC),2006,pp.17–26.
+[14] A.P.GeeandW.W.Mayol-Cuevas,“Real-timemodel-basedSLAM
+using line segments,” in Advances in Visual Computing, Second
+InternationalSymposium,2006,pp.354–363.
+[15] G.KleinandD.W.Murray,“Improvingtheagilityofkeyframe-based
+SLAM,”inECCV,2008,pp.802–815.
+[16] Y. Zhao and P. A. Vela, “Good line cutting: Towards accurate pose
+trackingofline-assistedVO/VSLAM,”inECCV,2018,pp.527–543.
+[17] A. Geiger, P. Lenz, and R. Urtasun, “Are we ready for autonomous
+driving?thekittivisionbenchmarksuite,”inConferenceonComputer
+VisionandPatternRecognition(CVPR),2012.
+[18] D. Ga´lvez-Lo´pez and J. D. Tardo´s, “Bags of binary words for fast
+placerecognitioninimagesequences,”IEEETransactionsonRobotics
+(TRO),vol.28,no.5,pp.1188–1197,October2012.
+[19] R. G. von Gioi, J. Jakubowicz, J. Morel, and G. Randall, “LSD: A
+fastlinesegmentdetectorwithafalsedetectioncontrol,”IEEETrans.
+PatternAnal.Mach.Intell.(PAMI),vol.32,no.4,pp.722–732,2010.
+[20] L.ZhangandR.Koch,“Anefﬁcientandrobustlinesegmentmatching
+approach based on LBD descriptor and pairwise geometric consis-
+tency,” J. Visual Communication and Image Representation, vol. 24,
+no.7,pp.794–805,2013.
+[21] K.Tateno,F.Tombari,andN.Navab,“Real-timeandscalableincre-
+mental segmentation on dense SLAM,” in 2015 IEEE/RSJ Interna-
+tional Conference on Intelligent Robots and Systems (IROS), 2015,
+pp.4465–4472.
+[22] W. M. Ha¨ußler, “A local convergence analysis for the gauss-newton
+and levenberg-morrison-marquardt algorithms,” Computing, vol. 31,
+no.3,pp.231–244,1983.
+[23] A. Vakhitov, J. Funke, and F. Moreno-Noguer, “Accurate and linear
+timeposeestimationfrompointsandlines,”inECCV,2016,pp.583–
+599.
+[24] R.Ku¨mmerle,G.Grisetti,H.Strasdat,K.Konolige,andW.Burgard,
+“G2o: A general framework for graph optimization,” in IEEE Inter-
+national Conference on Robotics and Automation (ICRA), 2011, pp.
+3607–3613.
+[25] H. Strasdat, “Local accuracy and global consistency for efﬁcient
+SLAM,”Ph.D.dissertation,ImperialCollegeLondon,UK,2012.
+1097
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:24:39 UTC from IEEE Xplore.  Restrictions apply. 

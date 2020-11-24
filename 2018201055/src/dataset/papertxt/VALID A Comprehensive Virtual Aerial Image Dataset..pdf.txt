@@ -1,0 +1,399 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Parallel-motion Thick Origami Structure for Robotic Design
+Shuai Liu, Huajie Wu, Yang Yang, Michael Yu Wang, Fellow, IEEE
+Abstract—Structures with origami design enable objects Parallel grippers are another type of widely-used
+to transform into various three-dimensional shapes. Tradi- engineering gripper with higher precision and gripping
+tionally origami structures are designed with zero-thickness force because the parallel gripping surface can usually
+flat paper sheets. However, the thickness and intersection of
+providealargercontactingareabetweengrippertipsand
+origamifacetsarenon-negligibleinmostcases,uniquelywhen
+objects. There is already some mature design using split
+integratingorigamidesignwithroboticdesignbecauseofthe
+more efficient force transfer between thick plates compared rails to achieve parallel-motion [13]. As those parallel
+withzero-thicknesspaper-sheets.Meanwhile,thesingle-layer- grippers are composed of gears and rails, it will break
+paperorientedinitialdesignlimitedtheshapetransformation when overloaded. In this work, we want to combine the
+potential as multiple layer origami structures could conduct
+high control precision and gripping force of traditional
+morevarietyofdeformation.Inthisarticle,weareproposing
+parallel gripper with the flexibility and adaptability of
+a general design method of parallel-motion thick origami
+structures that could apply in robotic design like a parallel- origami structures. There could be a lot of application
+motion gripper. scenariosforparallelorigamigripperwhenthecompliant
+and flexible parallel gripper is needed.
+I. INTRODUCTION
+Grippers with parallel-grasping capability are more
+Origami is an ancient art of paper folding. Its shape
+useful for various tasks and can be controlled with
+transforming ability has innovated various engineering
+better motion precision. Here in this project, we have
+designs. A typical example is the origami-based deploy-
+developed a novel design strategy for parallel-motion
+able arrays integrated with solar panels [1], [2]. Re-
+origami structures, and we integrated the geometric
+cently, some innovative designs are proposed for robots
+design with a parallel-motion gripper shown in Fig. 1.
+[3], wheels [4], actuators [5], [6], gift box[7] etc. The
+The main contribution of this paper is the general idea
+attraction of origami structures is that it could provide
+to take advantage of the parallel motion mechanism,
+unlimited possibilities of geometric transformation and
+which has always been a fundamental feature of origami
+motion with different crease patterns.
+structures.
+Generally, for robotic design, twisting, bending, and
+rotating motions are all essential. There are some re-
+search works combining the bending motion of origami II. DESIGN METHOD
+with a forceps-like robotic gripper design [8], [9]. A
+A. Parallel-motion Design for Zero-thickness Origami
+forceps-like gripper is able to work out fine for some
+Paper Sheets
+small objects, but larger and heavier ones would fall off
+because of the small contacting area of forceps. More
+For origami structures, the fundamental motion is
+complicatedorigamipatternsarealsoappliedtodevelop
+rotation because all facets are rotating around their
+pneumatic actuators [10], [11], [12]. Those pneumatic
+connected creases. To make our design strategy simple
+origami actuators are more compliant, flexible, and
+and easier to deploy, we will construct our origami
+passive; the grippers made from those structures are
+pattern based on the widely-used Miura-ori. Miura-ori
+more reliant on the shape adaptive ability of origami
+is a typical origami folding pattern with 1-DOF(Degree
+structures. It has the same function as a pneumatic
+of freedom) when all facets are considered to be rigid,
+suction cup or artificial muscles, and therefore the shape
+which means the facets can neither bend nor stretch
+configuration cannot be controlled precisely.
+[14]. The mechanical features like bi-stability, geometric
+relationsbetweendifferentfoldingstates,andkinematics
+ShuaiLiuiswiththeDepartmentofMechanicalandAerospace
+Engineering, Hong Kong University of Science and Technology. of Miura-ori structures have been widely discussed [15],
+(email:sliubw@connect.ust.hk) [16],[17].AunitcellofMiura-oriisshowninFig.2.The
+Huajie Wu is with the Shool of Information Science and Tech-
+unitcellissymmetricabouttheplane .Foractive
+nology, University of Science and Technology of China. (email: P1P2P3
+whj99129@mail.ustc.edu.cn) periodic Miura-ori patterns, the key parameters are the
+YangYangiswiththeDepartmentofMechanicalandAerospace angle ,whichistheanglebetweentwoadjacentcreases,
+(cid:11)
+Engineering, Hong Kong University of Science and Technology,
+the input angle , which is the dihedral angle between
+HongKongandalsowithSchoolofAutomation,NanjingUniversity (cid:18)
+of Information Science and Technology, Nanjing 210044. (email: the initial facet and the folded facet, and the output
+meyang@connect.hku.hk) angle which is the supplementary angle of ̸ .
+(cid:13) P P P
+Michael Yu Wang is with the Department of Mechanical and 1 2 3
+WhenaMiura-oripatternedorigamistructureisfolding,
+Aerospace Engineering, Hong Kong University of Science and
+Technology.(email:mywang@ust.hk) the relation between input angle (cid:18) and output angle (cid:13)
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 934
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. two parallel surfaces orienting to the same center point
+so we can integrate the mechanism with gripper design.
+Traditionally, origami patterns are designed in one sheet
+of paper by simply adding mountain and valley creases,
+and it usually results in the design in Fig. 4(a), here we
+solvethisproblembyreverseextendingthebottomfacets
+shown in Fig. 4(b). This transformation will create a
+◦
+dual-layerorigamistructurewhentheinputangle .
+(cid:18) =0
+Dual-layermeansthewholestructurecannotbeunfolded
+into one flat paper sheet, when the input angle is 0, it is
+composed of two stacked layers, which is shown in Fig.
+5
+This reverse extending strategy could apply to Miura-
+ori structure with more unit cells, in Fig. 4(c)and(d), a
+parallel-motion origami structure with 4 Miura-ori cells
+is shown, which we call it second-order parallel-motion
+Miura-ori as it can be treated as two first-order Miura-
+oricombined.Theupperandbottombluelineswillkeep
+parallel as long as , because
+(cid:11) = (cid:11) ;(cid:12) = (cid:12) (cid:13) +(cid:13) +
+◦ 1 2 1 2 1 2
+when previous conditions are satisfied.
+(cid:13) +(cid:13) =360
+3 4
+Unlike the single-unit Miura-ori structure, which has
+only one possibility for parallel-motion, there could be
+different choices for multiple Miura-ori structures when
+we want to get parallel-motion tips. Fig. 4(d)(e)(f)
+showed three different ways to get those parallel-motion
+facets.
+Fig. 1. (a)-(d)Motion of origami gripper under pneumatic ac-
+tuation, negative pressure for expansion and positive pressure for
+grasping;(e)-(h)Graspingexperiments
+√
+is given as [18]:
+(cid:0) cos(cid:11)
+(cid:13) =2kcos 1( (cid:0) ) (1)
+1 cos2(cid:18)sin2(cid:11)
+Thevariationofoutputangle withthechangeofinput
+(cid:13)
+angle and curve angle is shown in Fig. 3. As
+(cid:18) (cid:11) (cid:11)
+becomeslargerandlarger,therewillbeajumpofoutput Fig.2. (a)Miura-oriunitcell;(b)ThickMiura-oripanels
+angle when changes around zero, which means the
+(cid:13) (cid:18)
+acceleration of the moving facets will become extremely
+large. Therefore too large angle is not suitable for
+(cid:11)
+robotic design because of its jumping output angle. For
+origami-based gripper design, we suggest choosing an
+◦ ◦
+angle of between to .
+(cid:11) 30 60
+From (1), it is obvious that in a Miura origami
+structure composed of two unit cells with curved angle
+and respectively,once wewillget .
+(cid:11) (cid:11) (cid:11) =(cid:11) (cid:13) =(cid:13)
+1 2 1 1 1 1
+Fig. 4(a) shows a paper sheet folded into two Miura-ori
+cells, which we call it first-order parallel-motion Miura-
+ori. The boundary lines of the upper and bottom facets
+willkeepparallelinthewholefoldingprocess.Fromthis,
+we can extract the unit structure for parallel-motion
+origami, in Fig. 4(a), the upper and bottom beams are
+heading for reverse directions when folding. However, to Fig.3. Relationsbetween(cid:18) and(cid:13)
+makefulluseoftheparallelmotionmechanism,wewant
+935
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. material is determined, the geometric parameters of
+hinges are the main issue we need to concern.
+A significant difference between first and second-order
+parallel motion Miura-ori is the second-order unit can
+achieve the same travel distance with two smaller curve
+angles and compared to the curve angle of first-
+(cid:11) (cid:12)
+2 2
+orderunit .Ifthewidthfortheorigamipanelsisfixed,
+(cid:11)
+1
+then a smaller curve angle will result in a longer hinge
+length.Thisfeatureofthesecond-orderorigamiunitcan
+decrease the stress concentration in hinges. However, we
+cannotreducethestressconcentrationfurtherbykeeping
+adding hinges because force and displacement cannot
+fully pass living hinges, so the increased number of
+hingeswilldecreasetheprecisionofgeometricconstraints
+between origami panels. So here we only tried second-
+order origami unit for the sake of compromise between
+motion precision and structure stiffness and durability.
+Fig. 4. Construction of parallel motion tips for Miura-ori
+structures: (a)(b)Extending the bottom strips inversely to create
+parallel-motiontipswhichtowardsinside;(c)(d)(e)(f)Threediffer-
+entwaystomaketheendmosttipsheadinginside.
+B. Panel Thickness and Hinge Effects
+Previousdesignanddiscussionareallbasedonideally
+rigid and zero-thickness origami structure. In real engi-
+neeringsituations,thethicknessoforigamifacetsisnon-
+negligible. There are various discussions and methods
+on thick origami structure hinge design [19], [20]. In
+this article, we are using the hinge-shift technique to
+Fig.5. First-orderparallel-motionthickorigamistructure
+transform the Miura-ori unit to thick origami structures
+shown in Fig. 2(b). In zero-thickness Miura-ori unit, the
+four hinges will all point to and will stay in the
+P
+2
+same plane when input angle is zero, while in thick
+Miura origami structure, the four hinges will locate on
+two parallel planes and construct a spatial 4R linkage
+also known as Bennett linkage [21]. The thick origami
+structure will have only 1 DOF. Assume the thickness of
+the panel is then the thickness for the stage between
+t
+facets and is .
+C D 2t
+After we get the unit thick Miura-ori structure, we
+can apply it to parallel-motion design. As shown in Fig.
+5(a), the simplest parallel-motion structure is composed
+of one dual-layer tip and one thick Miura-ori cell (Fig.
+Fig.6. Second-orderparallel-motionthickorigamistructure
+5(b)).
+Similarly, the second-order parallel-motion thick
+III. MOTION ANALYSIS
+origami structure could be designed (Fig. 6). For an
+ideal rigid origami model, the number of hinges will Because of the symmetry in our parallel-motion struc-
+not influence the mechanical property of the whole ture,themotionanalysiscanbesimplifiedasasimple3D
+structure. However, for origami structure designed with rotation problem. Shown in Fig. 13(a)(b), for a single-
+living hinges, there will be stress concentration in hinge vertex Miura-ori unit, is the initial position of a
+P
+1
+areas, and it will accelerate hinge failure. Generally, the randomly selected point on the surface, is the
+P P
+2
+durabilityofhingesmainlydependsonthehingematerial current position of at any folding state. Assume the
+P
+and geometric parameters of hinges. In our design, we coordinate of is already known, the coordinate of
+P
+1
+will use 3D-printed thermoplastic elastomer(TPE) for can be calculated through two sequential rotating
+P
+2
+longer hinges and nylon-6 for short hinges. As the transformations around hinge 1 and hinge 2. For any
+936
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. Fig.7. Dimensionsformotionanalysis
+given point at an initial state, its coordinate at any
+P
+time could be easily calculated by multiplying different
+rotation matrix around certain hinges:
+P =R R (cid:0) :::R P (2)
+t n n 1 1 0
+Where is the rotation matrix for spatial rotation
+R
+n
+transformalongarbitraryaxisandhereitreferstohinge
+n.
+The geometric dimensions for motion analysis are
+shown in Fig. 7. For Fig. 7(a),
+H = 50mm;H =
+1 2
+. For Fig. 7(b),
+100mm;H = 30mm H = 50mm;H =
+3 1 2
+. For Fig.9. Pneumaticactuatorfororigamiactuation
+30mm;H = 100mm;H = 25mm;H = 15mm
+3 4 5
+both structures the beam width , panel
+d = 15mm
+thickness .
+t=2:5mm
+The motion analysis results are shown in Fig. 12. A
+point on the origami tips is picked for demonstration.
+P
+Obviously, from the figure, we can tell how the curve
+angle will influence the motion of the origami structure.
+As the curve angle changes, the path of is extending,
+P
+but the direction barely changes (Fig. 12(a)(d)). From
+the X and Y coordinates change, we find that the
+acceleration is changing rapidly due to the increase of
+curve angle. All these results indicate that we need to Fig.10. FEMsimulationresultsofhingeeffects
+findasuitablecurveangletobalancetraveldistanceand
+control capability.
+Fig.11. Motionandgraspingexperimentsofsecond-orderorigami
+Fig.8. Rotationaxisandactuationsurfaceofthickorigamiunits
+gripper
+937
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. Fig.12. Motionanalysisoffirstandsecond-orderparallel-motionthickorigamistructure
+Fig.13. Designandmotionoffirst-orderorigamigripper
+IV. EXPERIMENTS motion through an axis that is offset from the center-
+line, which is perfectly compatible with thick origami
+The final design and motion simulation of the grip-
+motion (Fig. 8). This kind of rotation actuator could
+per is based on the geometry shown in Fig. 13(c)(d).
+actually also considered as origami structures [22], [23].
+Two first-order thick Miura-ori structures are connected
+The actuation and grasping experiments of the origami
+through five flat connecting panels. This design is to
+gripper are shown in Fig. 1. The parallel motion worked
+increase the gripper stiffness in the tangential direction
+out nicely, and the gripper can hold an aluminum block,
+and provide two horizontal panels for the further up-
+which weighs up to 500g.
+grade; for example, soft tips can be installed through
+the reserved screw holes. The final gripper is made by The second-order gripper is also fabricated through
+3D-printing with nylon-6 filament. Those hinges which 3D-printing. The difference is the body of the second-
+may encounter stress concentration are extended to order one is printed with PLA and hinges with TPU
+prevent hinge failure. The gripper is actuated through filaments separately. As shown in Fig. 11, The motion
+a pneumatic rotating actuator, which is also 3D-printed of the second-order gripper is nicely identical to the
+with TPU filament. The actuator can provide a rotating simulation. Five grasping tests are shown in Fig. 11(e)-
+938
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. (i). The box that the gripper holds in Fig. 11(i) weighs [8] B.J.Edmondson,L.A.Bowen,C.L.Grames,S.P.Magleby,
+up to 1.5kg. L.L.Howell,andT.C.Bateman,“Oriceps:Origami-inspired
+forceps,”inASME2013conferenceonsmartmaterials,adap-
+An interesting phenomenon we found during our
+tive structures and intelligentsystems. American Societyof
+experiments is hinge thickness will deeply influence the MechanicalEngineersDigitalCollection,2014.
+parallelism of the structure. If the hinge is too thin, it [9] S. Kamrava, D. Mousanezhad, S. M. Felton, and A. Vaziri,
+“Programmable origami strings,” Advanced Materials Tech-
+will easily break, and no parallel motion will exist. On
+nologies,vol.3,no.3,p.1700276,2018.
+theotherside,ifthehingeistoothick,thelargestressto [10] S. Li, D. M. Vogt, D. Rus, and R. J. Wood, “Fluid-driven
+deformthehingewilldecreasetheparallelism.Asshown origami-inspired artificial muscles,” Proceedings of the Na-
+tionalacademyofSciences,vol.114,no.50,pp.13132–13137,
+in Fig. 10, the FEM(Finite Element Method) simulation
+2017.
+results indicate that when hinge has a thickness of [11] S.Li,J.J.Stampfli,H.J.Xu,E.Malkin,E.V.Diaz,D.Rus,
+△
+0.8mm, the resulted tip bending angle will be andR.J.Wood,“Avacuum-drivenorigami“magic-ball”soft
+φ
+gripper,”2019.
+apparent.
+[12] J. Yi, X. Chen, C. Song, and Z. Wang, “Fiber-reinforced
+origamic robotic actuator,” Soft robotics, vol. 5, no. 1, pp.
+V. CONCLUSIONS 81–92,2018.
+[13] J. M. Vranish, W. R. Bunch, and W. L. Johns, “Split rail
+Origami structures have great potential in developing parallelgripper,”Nov.171987,uSPatent4,707,013.
+[14] K. Miura, “The science of miura-ori: A review,” Origami,
+various robotic actuators. It could be either hard thick
+vol.4,pp.87–100,2009.
+origami panels composed of rigid plates and bearings [15] F. Zuliani, C. Liu, J. Paik, and S. M. Felton, “Minimally
+or soft elastomer sheets or even in between them. The actuatedtransformationoforigamimachines,”IEEERobotics
+andAutomationLetters,vol.3,no.3,pp.1426–1433,2018.
+parallel-motion mechanism demonstrated in this article
+[16] J. L. Silverberg, J.-H. Na, A. A. Evans, B. Liu, T. C. Hull,
+could be applied to both high precision mechanical C. D. Santangelo, R. J. Lang, R. C. Hayward, and I. Cohen,
+structure or compatible and compliant metamaterials. “Origami structures with a critical transition to bistability
+arising from hidden degrees of freedom,” Nature materials,
+We have proposed two different types of parallel-motion
+vol.14,no.4,p.389,2015.
+mechanismsandconductedthegraspingexperimentsfor [17] S. Kamrava, R. Ghosh, Y. Yang, and A. Vaziri, “Slender
+both. The future work of this project will mainly focus origami with complex 3d folding shapes,” EPL (Europhysics
+Letters),vol.124,no.5,p.58001,2018.
+on the improvement of fabrication and modeling. For
+[18] S. Kamrava, D. Mousanezhad, H. Ebrahimi, R. Ghosh, and
+thefabricationpart,producehingeswithlowerthickness A.Vaziri,“Origami-basedcellularmetamaterialwithauxetic,
+while higher stretching stiffness will be considered. For bistable,andself-lockingproperties,”Scientificreports,vol.7,
+p.46046,2017.
+the modeling, we will try to propose a simplified model
+[19] R. J. Lang, K. A. Tolman, E. B. Crampton, S. P. Magleby,
+based on FEM and pseudo-rigid body model to model andL.L.Howell,“Areviewofthickness-accommodationtech-
+the motion and elastic deformation inside the whole niques in origami-inspired engineering,” Applied Mechanics
+Reviews,vol.70,no.1,p.010805,2018.
+structure.
+[20] Y. Chen, R. Peng, and Z. You, “Origami of thick panels,”
+Science,vol.349,no.6246,pp.396–400,2015.
+References [21] G. T. Bennett, “A new mechanism,” Engineering, vol. 76, p.
+777,1903.
+[22] A.R.Deshpande,Z.T.H.Tse,andH.Ren,“Origami-inspired
+[1] S. A. Zirbel, R. J. Lang, M. W. Thomson, D. A. Sigel, P. E.
+bi-directionalsoftpneumaticactuatorwithintegratedvariable
+Walkemeyer, B. P. Trease, S. P. Magleby, and L. L. How-
+stiffness mechanism,” in 2017 18th International Conference
+ell, “Accommodating thickness in origami-based deployable
+onAdvancedRobotics(ICAR). IEEE,2017,pp.417–421.
+arrays,” Journal of Mechanical Design, vol. 135, no. 11, p.
+[23] J.Yi,X.Chen,C.Song,J.Zhou,Y.Liu,S.Liu,andZ.Wang,
+111005,2013.
+“Customizablethree-dimensional-printedorigamisoftrobotic
+[2] M. Natori, N. Katsumata, H. Yamakawa, H. Sakamoto, and
+joint with effective behavior shaping for safe interactions,”
+N. Kishimoto, “Conceptual model study using origami for
+IEEE Transactions on Robotics, vol. 35, no. 1, pp. 114–123,
+membrane space structures,” in ASME 2013 International
+2018.
+DesignEngineeringTechnicalConferencesandComputersand
+InformationinEngineeringConference. AmericanSocietyof
+MechanicalEngineersDigitalCollection,2014.
+[3] M.Yao,C.H.Belke,H.Cui,andJ.Paik,“Areconfiguration
+strategy for modular robots using origami folding,” The
+International Journal of Robotics Research, vol. 38, no. 1,
+pp.73–89,2019.
+[4] D.-Y.Lee,G.-P.Jung,M.-K.Sin,S.-H.Ahn,andK.-J.Cho,
+“Deformablewheelrobotbasedonorigamistructure,”in2013
+IEEEInternationalConferenceonRoboticsandAutomation.
+IEEE,2013,pp.5612–5617.
+[5] E.A.Peraza-Hernandez,D.J.Hartl,R.J.MalakJr,andD.C.
+Lagoudas,“Origami-inspiredactivestructures:asynthesisand
+review,” Smart Materials and Structures, vol. 23, no. 9, p.
+094001,2014.
+[6] J. A. Faber, A. F. Arrieta, and A. R. Studart, “Bioinspired
+spring origami,” Science, vol. 359, no. 6382, pp. 1386–1391,
+2018.
+[7] B.P.DeFigueiredo,N.A.Pehrson,K.A.Tolman,E.Cramp-
+ton, S. P. Magleby, and L. L. Howell, “Origami-based design
+of conceal-and-reveal systems,” Journal of Mechanisms and
+Robotics,vol.11,no.2,p.020904,2019.
+939
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. 

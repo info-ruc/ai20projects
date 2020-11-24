@@ -1,0 +1,600 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+On the Hardware Feasibility of Nonlinear Trajectory Optimization for
+Legged Locomotion based on a Simpliﬁed Dynamics
+Angelo Bratta1,2, Romeo Orsolino1, Michele Focchi1, Victor Barasuol1,
+Giovanni Gerardo Muscolo3 and Claudio Semini1
+Abstract—Simpliﬁed models are useful to increase the com- tion, it is a suitable approximation for robots with negligible
+putational efﬁciency of a motion planning algorithm, but their mass legs compared to the trunk’s weight.
+lackofaccuracyhavetobemanaged.Weproposetwofeasibility
+Since SRBD only considers a description in terms of the
+constraints to be included in a Single Rigid Body Dynamics-
+CoMandtherobot’sfeet,itispossiblethatamotionplanner
+basedtrajectoryoptimizerinordertoobtainrobustmotionsin
+challengingterrain.Theﬁrstoneﬁndsanapproximaterelation- based on this model ﬁnds a trajectory which violates feasi-
+ship between joint-torque limits and admissible contact forces, bility constraints of the robot. Such constraints include the
+without requiring the joint positions. The second one proposes jointkinematiclimits,thejoint-torquelimitsandthepossible
+alegmodeltopreventlegcollisionwiththeenvironment.Such
+collisions between robot’s links and the environment.
+constraints have been included in a simpliﬁed nonlinear non-
+convex trajectory optimization problem. We demonstrate the
+A. Related Works
+feasibility of the resulting motion plans both in simulation
+and on the Hydraulically actuated Quadruped (HyQ) robot, The trade-off between simplicity of the model and fea-
+considering experiments on an irregular terrain. sibility of a whole-body motion on rough terrain is still at
+the core of the research in robotic legged locomotion. One
+I. INTRODUCTION approach consists in using the trajectory generated with CD
+(which is typically lower dimensional than the full dynamic
+Motion planning is a key element for the locomotion of
+model of the robot) in combination with the full robot
+legged robots. The more complex the terrain to be traversed
+kinematics to obtain a feasible whole-body motion [5], [6].
+the harder it gets to ﬁnd a set of joint commands that allows
+A similar approach was used by Valenzuela et al. [7] in
+the robot to reach a desired target.
+which the authors compute the sequence of footholds using
+The literature is typically split between the usage of
+aMixedIntegerConvexoptimizationproblemandthensolve
+simpliﬁed dynamic models, such as the Linear Inverted
+a nonlinear problem to ﬁnd a linear and angular centroidal
+Pendulum(LIP)[1]ortheSpringLoadedInvertedPendulum
+momentumtrajectory.Budhirajaetal.[8]generatedatrajec-
+(SLIP) [2] and the usage of whole-body models. The ﬁrst
+toryfortheCoM,inbothsimpliﬁedandfulldynamicmodel,
+two are computationally efﬁcient but only applicable to
+making sure that the former is coherent with the latter. All
+ﬂat terrains; the latter guarantees accurate description of
+these approaches have been only tested in simulation with a
+the robot dynamics on arbitrary terrains but requires larger
+bipedal robot, but never on the robotic hardware.
+computational effort, not suitable for real-time applications.
+Farshidian et al. [9] introduced a nonlinear Model Predic-
+A third option is the Centroidal Dynamics (CD) [3], [4]
+tive Control (MPC) which is able to compute the relevant
+which exploits the full dynamics of a robot projected at its
+motion quantities in a short amount of time. The limit of
+own Center of Mass (CoM). The CD is not an approximate
+this approach is that it requires a big computational effort
+dynamic model, since it considers a complete description of
+and it can thus only plan few phases of the motion.
+the robot dynamics in terms of its inputs (feet and CoM
+Other authors leave on the motion controller the burden
+wrenches) and outputs (feet and CoM trajectories).
+to verify the whole-body feasibility of the motion plan and
+A simpliﬁcation of the CD is the Single Rigid Body
+focus, instead, on the nonlinearities which are present in the
+Dynamics (SRBD), where the robot is seen as a single rigid
+CDandSRBDformulations(mainlyangularmomentumand
+body with massless legs. The leg inertia is constant and
+contact phases duration). These are usually tackled by either
+correspondstoapredeﬁnedjointconﬁguration(whatimplies
+deﬁningaconvexrelaxationoftheformulation[10],[11],or
+that the inertia effect of the leg is neglected).
+bypredeﬁningthefeetpositionfortheentiretrajectory[12].
+Due to its simplicity, SRBD is well suited to problems
+Winkler et al. [13] implemented a trajectory optimization,
+which require low computational cost while dealing with
+basedontheSRBD,inwhichCoMposition,orientation,feet
+complexterrainsandpossiblenon-coplanarcontacts.Inaddi-
+position, contact forces and timings are concurrently opti-
+mized. The efﬁciency of this planner has been demonstrated
+1Dynamic Legged Systems (DLS) lab, Istituto Italiano di Tecnologia,
+both in simulation and on the real hardware on ﬂat terrains.
+Genova(Italy).email:ﬁrstname.lastname@iit.it
+2DepartmentofElectronicsandTelecommunications,CollegiodiIngeg- Onroughterrains,however,otherfeasibilityconstraintssuch
+neriaInformatica,delCinemaeMeccatronica,PolitecnicodiTorino,Turin asjoint-torquelimitsandgeometryoftherobot’slegsneedto
+(Italy).
+be considered to obtain a feasible whole-body motion suited
+3Department of Mechanical and Aerospace Engineering, Politecnico di
+Torino,Turin(Italy).email:giovanni.muscolo@polito.it for a real robotic hardware.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1417
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. A state-of-art approach to avoid collision between legs time that trajectories based on [13] are deployed on a real
+and ground is looking for a collision-free swing phase, hardware on non-ﬂat terrains different from the ﬂat ground,
+considering the height map of the terrain and the robot achievement which would not have been possible without
+conﬁguration [14]. An alternative is presented in [15], in the increased robustness guaranteed by the two feasibility
+which the controller is able to move the point of application constraints proposed in this paper.
+of the ground reaction forces from the foot to the shin in
+case of collision. This method can guarantee safe navigation II. FORMULATIONOFTHEPROBLEM
+onchallengingterrains,however,itisapurereactivemodule Weattempttoovercomethealreadymentionedlimitations
+which does not increase the robustness of the planner. by deﬁning a motion planner which solves a nonlinear, non-
+The joint-torque limits constraint problem is usually only convex, trajectory optimization problem based on the SRBD
+addressed at controller level [16], [17]. In order to explicitly and which includes some nonlinear constraints which will
+consider the limit at the planning stage, Ding et al. [18] bias the solver towards a solution that is more coherent with
+convexify the nonlinear joint-torque constraint such that it the whole-body model of the speciﬁc robot.
+can be added to a Mixed Integer Quadratically Constrained
+A. Single Rigid Body Dynamics Model
+Program (MIQCP). This formulation is suitable for con-
+The assumption of conﬁguration independent CoM and
+vex optimization and it thus computationally efﬁcient. The
+inertia of the robot is a fair assumption especially for
+decision to employ a unique outer bounding ellipsoid as
+quadrupeds with legs of negligible mass compared to their
+an approximation of the force ellipsoids, however, discards
+trunk’s mass, as in the case of HyQ [22]. For example, we
+the important conﬁguration-dependent information of the
+havefoundthatHyQ’slegconﬁgurationchangestheposition
+relationship between the leg’s conﬁguration and shape of
+the force ellipsoids. In our previous works, instead, we have of the CoM of 2cm in x and y direction at maximum, while
+shown that the value of the maximum admissible contact thezdirectionislessrelevantforstability.TheNewton-Euler
+(cid:88)
+equations lead to the following dynamic equation:
+forces depends on the leg’s conﬁguration and we have used
+the force polytopes [19] to map the joint-torques limits ni −
+into a set of admissible centroidal wrenches [20] or CoM m¨r= f (t) mg (1)
+(cid:88)i
+positions [21]. This work employs the same idea of force i=1
+polytopeforthesynthesisofmotionplanneralgorithmbased × ni × −
+onCD,orSRBDthatretainsarelationshipbetweentherobot Iω˙(t)+ω(t) Iω(t)= (f (t) (r(t) p (t))) (2)
+i i
+conﬁguration and the maximal contact forces. i=1
+∈
+B. Contributions wheremisthemassoftherobot,r R3 istheCoMposition
+∈ ∈
+¨r R3 is the CoM linear acceleration, f R3 are the pure
+In this manuscript we address the limitations of the ex- ∈ i ∈
+contact forces, n R is the number of feet, g R3 is the
+isting state-of-the-art nonlinear motion planners for legged i∈ × ∈
+gravity vector, I R3 3 is the inertia matrix, ω R3 is the
+robots based on SRBD. Our theoretical novelties allow to ∈
+angular velocity, ω˙ R3 is the angular acceleration, and p
+have a planner that devises contact forces consistent with ∈ i
+R3 is the cartesian position of foot i.
+actuation limits and feet trajectory that avoid shin collisions.
+Thanks to that, experimental results have been obtained for B. Kinematic Model
+non-ﬂat terrains.
+In order to guarantee that joints lie inside their kinematic
+1) Theoretical contributions:
+limits, the foot position with respect to the base is con-
+• anovelapproximateprojectionofthejoint-torquelimits strained to be inside a conservative approximation of the
+into the task space. This is limited to robots presenting leg’s workspace deﬁned as a cube. This box has edges of
+point-contacts and, to the best of our knowledge, it size 2b and it is centered in the nominal foot position p ∈
+represents a novel approach to describe the existing R3 1 : i
+relationship between the leg’s conﬁguration and the p (t)∈R ⇔|p (t)−p |<b (3)
+corresponding maximal pure contact forces at the end- i i i i
+effector. This allows motion planners based on nonlin- C. Terrain and Contact Models
+ear optimization to adjust the robot conﬁguration and This constraint enforces the fact that the feet have to be
+forces depending on the manipulability and actuation in contact with the terrain during the stance phase, and that
+∈
+capabilities of the platform they have to keep a minimum clearance h R from the
+min
+• anovelmodeloftheleg’slowerlinktoincludeintothe terrain during(cid:40)swing:
+trajectory optimization formulation the ﬁnite non-zero
+size of the robot’s feet and shin’s geometry.
+∈T ⇒ p =h (p ,p ) during stance
+2) Experimental contribution: we present the hardware p z ter x y
+implementation of the trajectories obtained with a revisited z pz >hmin+hter(px,py) during swing
+(4)
+version of the formulation presented by Winkler et al. [13].
+The planner’s trajectories have been tested on the HyQ [22]
+1The nominal foot position corresponds to a joint conﬁguration which
+robot of Istituto Italiano di Tecnologia (IIT). This is the ﬁrst maximizesthedistanceofeachjointfromitskinematiclimits.
+1418
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. wherep isthezcoordinateofthefootholdandh isthe
+z ter
+height of the ground obtained through a predeﬁned internal
+terrain model.
+The contact model of [13] checks whether the contact
+force f of every foot lies within the linearized friction cone
+F i
+. From a mathematical point of view it has to verify that:
+i
+     
+a <C f <a¯ (5)
+ i  i i  i   
+ −  −∞  
+( µ s +t )T    0 
+ − i i 1i  −∞  
+( µ s +t )T    0 
+i i 2i ∞
+C = (µ s +t )T a = 0 a¯ = (6)
+i i i 2i i i ∞
+(µ s +t )T 0
+i i 1i
+sT 0 f
+i max
+∈
+where s R3 is the normal direction to the terrain, µ Fig. 1. Representation of a planar leg with 2 DoFs in three different
+∈
+is the friction coefﬁcient, f R3 is the contact force, t , conﬁgurations. For each conﬁguration the corresponding force polytope is
+i 1i
+t are the two tangential directions to the terrain, they form shown.Theangleαrepresentsthetiltangleofleg(i.e.,anglebetweenthe
+2i verticalandthelineconnectingthefootandhipjoint).nj isthenormalto
+withsarighthandedsystemofcoordinatesandi=1,...nc the j-th plane of the k-th polytope. l is the distance betwkeen foot and hip
+where n is the number of feet in contact with the ground. joint.Shadowzonesrepresentthepolytopeswhenαisdifferentfromzero.
+c
+In this paper, we use a formulation which corresponds to
+the one employed by Winkler et al. [13], adding the force
+polytope A and the leg’s geometry P constraints that are where flim is one of the 2nd vertices of the leg’s force
+i i A
+the contribution of this work and are further explained in polytope [23].Equation(8)representsastaticrelationship,
+the following Section. The overall trajectory optimization which can be also considered as a good approximation for
+problem can be described as: dynamic movements of robots with low inertia legs. For
+A
+a maximum joint-torque value τlim, the polytope can
+ﬁnd: x(t)=[rT(t),θT(t),pT(t),fT(t)] be employed to relate the feet’s position to the maximum
+i i
+for i=0,...n , t=0,dT,2dT,...T , contact forces that the robot can perform on the ground.
+c f
+This is an important feature that needs to be considered
+with dT =0.1s and T =ﬁnal time
+f whenever the robot needs to take on complex conﬁgurations
+such that:
+in order to negotiate rough terrains. In Fig. 1 we can see
+A
+(dynamic model) [¨r,ω˙]T =f(r,θ,p ,f ) a planar example where three force polytopes (with
+∈F i i k
+(friction cone) f k = 1,...,3) are computed for the three default conﬁgu-
+i i
+∈R ∪T rationsofthesameplanarleg,correspondingtothesituation
+(foot position) p
+i∈A i i of minimum retraction, of maximum extension and to the
+(force polytope) f
+i i leg’s nominal conﬁguration. The selection of the number of
+∈P
+(leg’s geometry) p default polytopes, three in this case, affects the precision
+i i
+(7)
+∈ of the approach: the higher the number of default sampled
+where θ SO(3) is the orientation of the robot. polytopes, the higher the accuracy of our approach since
+the resulting polytopes will be closer to the precomputed
+III. GEOMETRYANDACTUATIONCONSISTENCY
+one. The considered leg has 2 DoFs and, therefore, all the
+In this Section, we propose a method to incorporate the
+force/wrench polytopes are made of 2n halfspaces. Each
+joint-torque limits constraint and shin collision avoidance halfspace can be represented by its normadl unit vector nj ∈
+into simpliﬁed models such as CD and SRBD. ∈ k
+Rm (with j = 1(cid:110)...2n ) and the offset term dj(cid:111) R. The
+A d k
+force polytope of (7) can be expressed as:
+A. Joint-Torques Limits k
+A ∈ | ≤
+Traditionalcontactmodelsneglecttheexistingrelationship = f Rm A (q)f d (q) (9)
+k k k
+between the maximum contact force flim and the limb
+conﬁguration qi ∈Rnd (where nd is the niumber of Degrees where m is the dimensi(cid:2)on of the contact for(cid:3)ce (i.e., m = 3
+of Freedom (DoFs) of the leg). On the robotics hardware, or m=2 as in the planar case of Fig. 1) and:
+(cid:2) (cid:3)
+acdomntiascstibfloercjoesintf-toraqtutehseτiit(hq)enarde-emffeacptpoerd[1in6t]o, a[d1m9]i,ss[i2b0le] Ak(q)= n1k(q),...,n2knd(q) T (10)
+i
+(fromnowon,unlessspeciﬁed,allthequantitiesrefertoone d (q)= d1(q),...,d2nd(q) T
+k k k
+single leg and we can thus drop the pedex i). This mapping
+is represented by the leg’s Jacobian J(q) matrix which is The rows of the Ak(q) matrix are related to the rows of the
+typically nonlinear and conﬁguration dependent: leg’stransposedJacobianJ(q)T.Asweareinterestedinthe
+way the matrix A (q) changes with respect to a variation
+k
+τlim =J(q)Tflim (8) of the foot p in the cartesian space, we should then analyze
+1419
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. Fig. 2. Geodesic average of theAunit vecAtors nja and njb normal to the Fheigig.h3t.,sRisetphreesleenntgatthioonfotfheonloewseinrgllienkl,egβoisftthheeaHnygQlersoebleoct.tehdtiostkheeepkntheee
+halfplanes of the force polytopes and . The generic normal vector
+a b shinfromhittingpossibleobstaclesandr istheradiusofthefootusedto
+nj isobtainedbylinearinterpolationoftheanglesθa andθb. avoidedgesandunsafefoothold.
+the quantity dJ(q)/dp. This is, however, robot-speciﬁc and [cos(θ ),sin(θ )]T closest to the value of l (see Fig. 2).
+goes against the assumption of SRBD. For this reason, we b b ∈ ×
+The rotation matrix R(α) R2 2 maps the obtained force
+then propose a robot-agnostic approximate approach which
+polytope by the angle α in such a way to align it to the
+expressestherelationshipbetweenfootpositionandmaximal
+leg. The generic offset term dj can be found as a linear
+contact forces without the need of explicitly knowing the
+interpolation between the values d and d :
+a b
+morphology of the considered robot. −
+l l −
+Inordertoexpressthepositionofthefootweusethepolar dj(p)= − a (d d )+d (16)
+coordinateswithrespecttothehipjointinthesagittalplane. lb la b a a
+In particular, the variable l represents the distance between Asasummary,following(11)-(16)weobtainanexpression
+the foot and the hip joint and α corresponds to the angle of the polytope which does not depend on the joint conﬁg-
+between the ve(cid:112)rtical and the line that connects the foot to uration q, but on(cid:110)the foothold p. The optimiza(cid:111)tion problem
+the hip joint (see Fig. 1) : 7 is fed a force polytope for each contact foot i:
+(cid:16) (cid:17)
+− − A ∈ (cid:2) | ≤ (cid:3)
+l= ( p h )2+( p h )2 (11) = f Rm A(p)f d(p) (17)
+B x B x B z B z
+− (cid:2) (cid:3)
+p h
+α=arctan B x−B x (12) A(p)= n1(p),...,n2n(p) T
+p h (18)
+B z B z
+d(p)= d1(p),...,d2n(p) T
+where ( h , h ) is the ﬁxed position of the hip joint and
+B x B z
+( p , p )isthefootpositionwithrespecttothebaseframe. Despite the nonlinearity given by the trigonometric terms
+B x B z
+l ,l andl correspondtothedistancebetweenhipandfoot, in (14), the polytope morphing of (14), (15) and (16)
+1 2 3
+respectively,atmaximumretraction,nominalpositionandat represents a signiﬁcant simpliﬁcation because it does not
+maximum extension. In the following notation, the indexes require the knowledge of the leg’s Jacobian matrix J(q)
+· ·
+() and () refer, for a given foot distance l, to the values at the considered leg conﬁguration. This morphing is well
+a b A
+corres(cid:40)ponding to the two neighboring force polytopes suited for trajectory optimization formulations such as the
+A A A A a
+and out of the three predeﬁned polytopes , , : one described in (7) where the optimization variables only
+b 1 2 3
+· · · · ≤ ≤ includes operational space quantities.
+() =()j, () =()j if l l l
+· a · 1 · b · 2 1 ≤ 2 (13) B. Environment Collision Avoidance
+() =()j, () =()j if l <l l
+a 2 b 3 2 3 As introduced in Section I, the SRBD considers the
+We assume that the transformation between the correspond-
+A A assumption of point feet, while in the real robots feet have
+ing halfplanes of two polytopes and consists of
+a b always a non-negligible size. In this Section, we include the
+an homogeneous transformation (polytope morphing). The
+radius of robot’s spherical feet in the formulation in such a
+generic normal unit vector nj(p) (describing the orientation waytodiscardsolutionsthatmayleadtoundesiredcollisions
+of the force polytope’s facet(cid:2)j) is found(cid:3)as the geodesic during swing phase or to unsafe footholds in presence of
+average [24] of the two neighboring values la and lb: obstacles and rough terrains. Unsafe footholds, for example,
+nj(p)=R(α) cos(θ)sin(θ) T (14) happen when the spherical foot does not step entirely on the
+terrain (e.g., edge of a step). To overcome this, we force
+where: − the planner to ﬁnd a foothold p in which the terrain height
+l l −
+θ = − a (θ θ )+θ (15) is constant at a radius r before and behind the considered
+lb la b a a foothold along the robot’s direction of motion (see Fig. 3).
+θ and θ are the angles corresponding to the two prede- The value of r coincides with the physical dimension of the
+a b
+ﬁned normal vectors n = [cos(θ ),sin(θ )]T and n = ball foot of the robot, e.g., 2cm in the case of HyQ.
+a a a b
+1420
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. Moreover, the leg’s volume plays an important role in Without force polytLoFpes RF LHWithR Hforce polytopes
+the execution of successful motion plans, as it may lead to
+self-collisions or to collisions with the environment if not 200 200
+properly managed. Shin collisions, for example, may either 0 0
+occurduringaleg’sstancephase(asaconsequenceofapoor
+-200 -200
+choiceofthefoothold)orduringaleg’sswingphase.Inorder
+to avoid such collisions, we provide a simpliﬁed kinematic 200 200
+modelofthelegtothemotionplanner.Weassumethelower 0 0
+link to be a straight line of length s (distance between the -200 -200
+foot’s contact point and the knee) with a ﬁxed angle β with
+respecttotheground.Theknee’sprojectiononthegroundis 200 200
+equal to scos(β) and the height of the knee corresponds to 0 0
+h=ssin(β) and it can then be mapped along the direction -200 -200
+of motion using the knowledge of the yaw angle ψ of the 0 0.5 1 1.5 2 0 0.5 1 1.5 2
+robot.Kneecollisioncanthusbeavoidediftheheightofthe
+kneeishigherthantheterrainonthatpoint.Fig.3represents
+Fig. 4. This plot shows the joint-torques of the HyQ robot walking in
+the model chosen for the ith leg in the x-z plane: simulation for 2.4s on a ﬂat terrain. We can see, in the case where no
+p∈P ⇒ pz+s·sin(β)>hter(pknee) (19) faonrdceτKpoFlyEtovpieoslaaterethceoinrsliidmeritesdm(luelfttipplelottism),etshadturtihnegttohrequweaslkτ.HOAnAt,hτeHriFghEt
+plots,instead,wecanseethattheforcepolytopeconstraintisabletobias
+pknee,x =px+scos(β)cos(ψ) (20) the planner towards a solution that respects all the limits. Minor violation
+p =p +scos(β)sin(ψ) att=0.8s(τHAA,RF andτHFE,RH).
+knee,y y
+Without force polytopes With force polytopes
+s is a constant robot parameter while the value of β angle
+is selected by looking at the maximum inclination of the leg 100 100
+duringawalk.Besidescheckingforpossiblekneecollisions, 50 50
+0 0
+we also avoid shin collisions by imposing (19) on a number
+-50 -50
+ofpointsbetweenthefootandtheknee.Thenumberofthese -100 -100
+points is selected through heuristics and it depends on the
+80 80
+length of the leg and on the roughness of the terrain. 20 20
+-40 -40
+-100 -100
+IV. SIMULATIONANDEXPERIMENTALRESULTS -120 -120
+In this Section we present the validation results that have 50 50
+lead to the successful execution of the optimal trajectories -50 -50
+generated by our motion planner on the HyQ robot, both in -150 -150
+simulation and on the real hardware. For all the simulations -250 -250
+0 0.5 1 1.5 2 0 0.5 1 1.5 2
+and experiments we used an Intel Core i5-4460 CPU @
+×
+3.20GHz 4 and the nonlinear optimization problem was
+solved using an Interior Point method [25] solver, imple-
+Fig.5. Thisplotshowsthejoint-torquesofthemonopedrobotovera2.4s
+mented in the IPOPT library [26]. hoppingonaﬂatterrain.Wecansee,inthecasewherenoforcepolytopes
+are considered (left plots), that the HFE torque τHFE and τKFE limit
+A. Joint-Torque Limits Approximation are violated during the stance phases. On the right plots, instead, we can
+seethattheforcepolytopeconstraintisabletobiastheplannertowardsa
+Fig. 4 shows the Hip Abduction-Adduction (HAA), Hip solution that globally respects all the limits. Minor violations at t=1.3s
+Flexion-Extension(HFE)andKneeFlexion-Extension(KFE) (τHAA)andatt=1.4s(τHFE).
+joint-torques and the corresponding saturation limits of the
+foottrajectoryinthebaseframe p(assumingaﬁxedoffset
+HyQ robot during a 1m walk on a ﬂat terrain (duration 2.4s B
+between base and robot’s CoM). M,c and g represent the
+- three crawl gait cycles).
+leg’s inertial matrix, the Coriolis and the gravity term.
+The plots show the torques obtained using the motion
+We can see in the left plots that the desired torques
+planner with (right) and without (left) the force polytope
+violate the saturation limits of the actuators of the HyQ
+constraints. Our motion planner does not explicitly optimize
+robot (120Nm for the HAAs and 150Nm for the HFEs
+over joint-torques τ and so they are obtained exploiting the
+and KFEs). This is justiﬁable considering that the baseline
+dynamic equation of motion of each single leg 2 :
+motion planner has no information about saturation values
+−
+τ =Mq¨+c(q,q˙)+g(q) J(q)Tf (21) and only linearized friction cones constraints act on the
+contact forces. The plots on the right, instead, satisfy the
+f is the contact force as optimized by the motion planner
+torquelimitsoftherobotduetotheforcepolytopeconstraint
+and q,q˙,q¨ can be obtained by inverse kinematics of the
+included in the motion planner. This is possible thanks to
+more extended leg-conﬁguration that HyQ takes on during
+2 HyQ’s control structure is equipped with a whole-body controller to
+computejoint-torques,see[17]forfurtherinformation. the walk and the stance phases. As a matter of fact, such
+1421
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. Non-zero foot size and shin collision avoidance
+Zero foot size  Non-zero foot size
+0.9
+0.6
+0.3
+0
+-0.3
+1
+0.75
+0.5
+0.25
+Fig.6. HyQrobotsteppingupapalletof10cminbothsimulation(Gazebo) 0
+andhardwareexperiment.
+0.75
+0.5
+0.25
+extended conﬁguration corresponds to a force polytope with 0
+0 2 4 6 8 10 12
+a larger maximum normal force (see Fig. 1) [21]. Minor
+violations happen, since the geodesic average is a good
+approximation of the polytope and not its real representa-
+Fig.7. Shincollisionplanning:trackingperformancesofsimulationsand
+tion. Figure 5 shows similar results for the monoped robot experimentswiththreedifferentterrainconstraints(zerofootsize,non-zero
+(corresponding to a single leg of HyQ, see Fig. 3). footsizeandnon-zerofootsizeandshin)forawalkof1mwiththreecrawl
+cycles.Thethicklinesrepresentthebasepositionxwhilethedashedlines
+B. Shin Collision Avoidance representthetrackingerrorwithrespecttothedesiredtrajectoryalongthe
+samexcoordinate.
+Exploiting the constraint that we described in Section III-
+B, HyQ was able to walk for 1m, performing three cycles
+of crawl in 11s to step onto 15cm high pallet in simulation and due to the absence of a proper initialization. According
+and onto 10cm high pallet on the hardware robot. Fig. 7 to the the characteristics of HyQ, we have chosen s = 0.3m,
+◦ ◦
+showsthebasepositionx(continuousline)andtrackingerror β=37 for the hind legs and β=127 for the front legs. The
+(dashedline)withrespecttothedesiredtrajectorycomputed shin collision is thus possible on HyQ only with hind legs
+by the planner in three following different versions: whenwalkingupastepandfrontlegswhenwalkingdowna
+1) Zero Point Foot and No Shin Collision Avoidance (red step;whichisautomaticallycapturedbythedeﬁnitionofthe
+lines): This corresponds to the formulation given in [13] in constraint deﬁned in (19). For this experiment we checked
+which both shin collision and the foot size are neglected. possible collision for the knee and for two points. Unlike
+∼
+The algorithm took 50s to ﬁnd an optimal solution. In the previous version of the planner, in this case the tracking
+the upper plot of Fig. 7 we can see that, in this case, the error did not increase for a higher step, thanks to the larger
+tracking error (dashed line) grows until the experiment is robustness given by the shin collision avoidance constraint.
+stopped because the robot falls down. As it can been seen
+V. CONCLUSION
+in the attached video3 the robot collides with the corner of
+In this paper we presented two theoretical contributions
+the edge, due to a non-robust choice of the foothold. The
+consisting of feasibility constraints aimed at increasing the
+attached video shows that even a terrain with a relatively
+robustnessoftrajectoriesthatareoptimizedusingtheSRBD
+low obstacle (10cm) cannot be overcome without explicitly
+model. The ﬁrst constraint focuses on including the joint-
+considering the feet and leg geometry.
+torque limits constraint and approximates the way these
+2) Non-ZeroPointFootSizeandNoShinCollisionAvoid-
+limits are mapped into admissible contact forces depending
+ance (green lines): In this case we enforce in the planner
+on the leg’s conﬁguration. The proposed approximation is
+a foot radius r of 2cm, while we do not include any
+suitableforrobotshavingcontactpoints,suchasquadrupeds
+shin collision avoidance constraint. The computation time
+∼ and for motion planning applications based on simpliﬁed
+increased by 30 % compared to the ﬁrst scenario ( 70s) in
+models,suchasSRBDorCD.Thesecondconstraint,instead,
+the case of 10cm high pallet. For the 15cm high pallet the
+isabletodescribeandapproximatethevolumeoftherobot’s
+solver took 105s to ﬁnd an optimal solution. This constraint
+legs in such a way to avoid undesired collisions between the
+guarantees the successful navigation in the non ﬂat terrain,
+lower limbs and the environment.
+but comparing the upper and the middle plot of Fig. 7 it can
+The experimental contribution of this paper consists of
+be seen that increasing of the height of the step will also
+thehardwaredeploymentoftheoptimaltrajectoriesobtained
+increase the tracking error.
+with the formulation of [13] which would not have been
+3) Non-ZeroPointFootSizeandShinCollisionAvoidance
+possibleonnon-ﬂatterrainwithoutthefeasibilityconstraints
+(blue lines): This version corresponds to the constraint
+that we proposed above.
+describedinSectionIII-B.Incaseofa10cmhighpallet,the
+∼ Future works include the development of strategies for
+algorithmtooktwiceaslongastheﬁrstsimulation( 100s),
+online replanning (the solver optimizes while the robot
+whilealargercomputationaltime(130s)wasrequiredincase
+walks) and the usage of pre-computed feasible solutions for
+of a 15cm high pallet, due to the more challenging terrain
+thewarmstartofeverynewnonlineartrajectoryoptimization
+3https://www.youtube.com/watch?v=bpjlRvtVwe8 to reduce the computational time.
+1422
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [22] C.Semini,N.G.Tsagarakis,E.Guglielmino,M.Focchi,F.Cannella,
+andD.G.Caldwell,“DesignofHyQ-Ahydraulicallyandelectrically
+actuatedquadrupedrobot,”ProceedingsoftheInstitutionofMechan-
+[1] S.Kajita,F.Kanehiro,K.Kaneko,K.Yokoi,andH.Hirukawa,“The
+ical Engineers. Part I: Journal of Systems and Control Engineering,
+3d linear inverted pendulum mode: a simple modeling for a biped
+vol.225,no.6,pp.831–849,2011.
+walking pattern generation,” in IEEE/RSJ International Conference
+[23] B.SicilianoandO.Khatib,SpringerHandbookofRobotics. Berlin,
+onIntelligentRobotsandSystems,Oct2001,pp.239–246.
+Heidelberg:Springer-Verlag,2007.
+[2] H. Geyer and U. Saranli, Gait Based on the Spring-Loaded Inverted
+[24] C. Gramkow, “On averaging rotations,” Journal of Mathematical
+Pendulum. Dordrecht:SpringerNetherlands,2018,pp.1–25.
+ImagingandVision,vol.15,no.1,pp.7–16,Jul2001.
+[3] D. E. Orin, A. Goswami, and S.-H. Lee, “Centroidal Dynamics of a
+[25] H.Yamashita,“Aglobalconvergentprimal-dualinteriorpointmethod
+HumanoidRobot,”Auton.Robots,vol.35,no.2-3,pp.161–176,2013.
+for constrained optimization,” Optimization Methods and Software,
+[4] P. M. Wensing and D. E. Orin, “Improved Computation of the
+vol.10,pp.443–469,1998.
+Humanoid Centroidal Dynamics and Application for Whole-Body
+[26] A.WachterandL.T.Biegler,“Ontheimplementationofaninterior-
+Control,”InternationalJournalofHumanoidRobotics,vol.13,no.1,
+point ﬁlter line-search algorithm for large-scale nonlinear program-
+2016.
+ming,” Mathematical Programming, vol. 106, no. 1, pp. 25–57, mar
+[5] H.Dai,A.Valenzuela,andR.Tedrake,“Whole-bodymotionplanning
+2006.
+withcentroidaldynamicsandfullkinematics,”inIEEE-RASInterna-
+tionalConferenceonHumanoidRobots,Nov2014,pp.295–302.
+[6] A. Herzog, S. Schaal, and L. Righetti, “Structured contact force
+optimization for kino-dynamic motion generation,” in IEEE/RSJ In-
+ternationalConferenceonIntelligentRobotsandSystems,Oct2016,
+pp.2703–2710.
+[7] A. K. Valenzuela, “Mixed-integer convex optimization for planning
+aggressivemotionsofleggedrobotsoverroughterrain,”2016.
+[8] R. Budhiraja, J. Carpentier, and N. Mansard, “Dynamics Consensus
+between Centroidal and Whole-Body Models for Locomotion of
+Legged Robots,” in IEEE International Conference on Robotics and
+Automation,may2019.
+[9] F. Farshidian, E. Jelavic, A. Satapathy, M. Giftthaler, and J. Buchli,
+“Real-Timemotionplanningofleggedrobots:Amodelpredictivecon-
+trol approach,” in IEEE-RAS International Conference on Humanoid
+Robots,2017,pp.577–584.
+[10] H. Dai and R. Tedrake, “Planning robust walking motion on uneven
+terrain via convex optimization,” in IEEE-RAS International Confer-
+enceonHumanoidRobots,2016.
+[11] B. Ponton, A. Herzog, A. Del Prete, S. Schaal, and L. Righetti,
+“On time optimization of centroidal momentum dynamics,” in IEEE
+InternationalConferenceonRoboticsandAutomation,2018,pp.1–7.
+[12] J.DiCarlo,P.M.Wensing,B.Katz,G.Bledt,andS.Kim,“Dynamic
+LocomotionintheMITCheetah3ThroughConvexModel-Predictive
+Control,”inIEEEInternationalConferenceonIntelligentRobotsand
+Systems,Jan.2019,pp.7440–7447.
+[13] A. W. Winkler, C. D. Bellicoso, M. Hutter, and J. Buchli, “Gait
+and Trajectory Optimization for Legged Systems through Phase-
+basedEnd-EffectorParameterization,”IEEERoboticsandAutomation
+Letters(RA-L),vol.3,no.3,pp.1560–1567,July2018.
+[14] F. Doshi, E. Brunskill, A. Shkolnik, T. Kollar, K. Rohanimanesh,
+R. Tedrake, and N. Roy, “Collision detection in legged locomotion
+using supervised learning,” in IEEE International Conference on
+IntelligentRobotsandSystems,2007,pp.317–322.
+[15] V.Barasuol,G.Fink,M.Focchi,D.Caldwell,andC.Semini,“Onthe
+Detection and Localization of Shin Collisions and Reactive Actions
+inQuadrupedRobots,”inInternationalConferenceonClimbingand
+WalkingRobots,Oct2019.
+[16] V. Samy, S. Caron, K. Bouyarmane, and A. Kheddar, “Post-Impact
+Adaptive Compliance for Humanoid Falls Using Predictive Control
+of a Reduced Model,” in IEEE-RAS International Conference on
+HumanoidRobotics,2017,pp.655–660.
+[17] S.Fahmi,C.Mastalli,M.Focchi,andC.Semini,“Passivewhole-body
+controlforquadrupedrobots:Experimentalvalidationoverchallenging
+terrain,”IEEERobot.Automat.Lett.(RA-L),vol.4,no.3,pp.2553–
+2560,Jul.2019.
+[18] Y.Ding,C.Li,andH.W.Park,“SingleLegDynamicMotionPlanning
+with Mixed-Integer Convex Optimization,” in IEEE International
+ConferenceonIntelligentRobotsandSystems,2018,pp.7391–7396.
+[19] P. Chiacchio, Y. Bouffard-Vercelli, and F. Pierrot, “Force Polytope
+andForceEllipsoidforRedundantManipulators,”JournalofRobotic
+Systems,vol.14,no.8,pp.613–620,1997.
+[20] R. Orsolino, M. Focchi, C. Mastalli, H.Dai, D. G. Caldwell, and
+C.Semini,“ApplicationofWrenchbasedFeasibilityAnalysistothe
+Online Trajectory Optimization of Legged Robots,” IEEE Robotics
+andAutomationLetters(RA-L),pp.3363–3370,2018.
+[21] R. Orsolino, M. Focchi, S. Caron, G. Raiola, V. Barasuol, and
+C. Semini, “Feasible Region: an Actuation-Aware Extension of the
+SupportRegion,”IEEETransactionsonRobotics(TRO),2020.
+1423
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:31 UTC from IEEE Xplore.  Restrictions apply. 

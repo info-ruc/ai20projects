@@ -1,0 +1,404 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Natural Scene Facial Expression Recognition
+with Dimension Reduction Network
+Shenhua Hu, Yiming Hu, Jianquan Li, Xianlei Long, Mengjuan Chen, Qingyi Gu1;2
+Abstract(cid:151)As an external manifestation of human emotions, conditionsstillneedstobeimproved.Duetotheparticularity
+expression recognition plays an important role in human- of the face, facial expression recognition still faces many
+computer interaction. Although existing expression recognition
+challenges,suchasfaceshapechanges,illuminationchanges,
+methods performs perfectly on constrained frontal faces, there
+scale changes, occlusion changes, and changes in identity
+are still many challenges in expression recognition in natural
+scenes due to different unrestricted conditions. Expression information. Uncertain factors in these complex scenarios
+classi(cid:2)cation belongs to a pattern recognition problem where can lead to lower accuracy of recognition, which reduces
+intra-class distance is greater than the inter-class distance, the application value of expression recognition technology.
+which leads to severe over-(cid:2)tting when using neural networks
+In addition, compared with other classi(cid:2)cation data sets, the
+for expression recognition. This paper proposes a novel net-
+expression recognition data set samples have dif(cid:2)culty in
+work structure called Dimension Reduction Network which
+can effectively reduce generalization error. By adding a data collection, and the problem of labeling is dif(cid:2)cult, resulting
+dimension reduction module before the general classi(cid:2)cation in the expression recognition data set sample number is
+network, a lot of redundant information is (cid:2)ltered, and only much smaller than other data sets. How to achieve high
+useful information is left.This can reduce the interference by
+performanceandef(cid:2)cientexpressionrecognitionhasbecome
+irrelevantinformationwhenperformingclassi(cid:2)cationtasksand
+an important research topic.
+reduce generalization error. The proposed method does not
+require any modi(cid:2)cation to the classi(cid:2)cation network, only As early as 1978, Ekman et al. (cid:2)rst proposed the facial
+a small dimension reduction module needs to be added in behavior coding system FACS, and de(cid:2)ned six standard
+front of the classi(cid:2)cation network. However, it can effectively expressions of the face through the action unit AU (Ac-
+reduce generalization error. We designed big and tiny versions
+tionUnit), including Happy, Anger, Disgust, Sad, Fear, and
+of Dimension Reduction Network, both exceeds our baseline
+Surprise. Although these six expressions still have some
+onAffectNetdataset.Thebigversionofourproposedmethod
+surpassed the state-of-the-art methods by more than 1.2% on limitations, due to their wide in(cid:3)uence, most of the existing
+AffectNetdataset.Ourcodewillopensource3 whenthepaper data sets are mostly labeled with these six expressions.
+is accepted. Within these data sets, majority of them are built on im-
+ages captured in controlled environment, such as CK+ [1],
+I. INTRODUCTION
+MMI[2],Oulu-CASIA-VIS[3],andotherlab-collecteddata
+In recent years, with the development of image pro- sets. The expressions in these data sets are collected in a
+cessing, computer vision, pattern recognition and arti(cid:2)cial controlled environment with constant illumination, constant
+intelligence technology, the face-related research has been angle, and no occlusion. And the expression is more ex-
+divided into face detection, face recognition, expression aggerated. Common expression recognition systems often
+recognition, and three-dimensional face reconstruction. As haveacceptableperformanceonthesedatasets.However,in
+an important part of human emotion analysis, expression natural scenes, people’s expressions are less noticeable, and
+recognition can be adopted by many interacting devices to the illumination and angles vary greatly. The performance
+realize emotional interaction between robots and humans. of these expression recognition systems is not satisfactory.
+In addition, facial expression recognition can be applied in Nowadays,researchershavemadegreateffortsoncollecting
+a wider range of human-computer interaction (cid:2)elds, such large-scale facial expression data sets in the wild, such as
+as game, animation synthesis, communication industry, ed- RAF-DB[4],AffectNet[5].Howtoachievehighaccuracyon
+ucational software, intelligent advertising recommendation, these expression recognition data sets becomes a challenge.
+assisted driving and so on. Therefore, the in-depth study In the (cid:2)eld of pattern recognition, the expression clas-
+of the expression recognition task will greatly promote si(cid:2)cation is a problem because intraclass distance is greater
+the development and application of the face (cid:2)eld. As an thantheinter-classdistance.Thedifferencebetweendifferent
+important research direction in the (cid:2)eld of bionic vision, faces, different angles and lighting will be much greater
+the accuracy of expression recognition tasks under complex thanthedifferencebetweendifferentexpressionsofthesame
+person. This has made it dif(cid:2)cult for the general expression
+This work was partly supported by the National Natural Science Foun- classi(cid:2)cation network to learn subtle differences between
+dationofChina(GrantNo.61673376).
+different expressions (cid:151) these differences may be masked
+1The authors are with the Research Center of Precision Sensing and
+Control, Institute of Automation, Chinese Academy of Sciences, Beijing, by differences in different faces and different lighting. If a
+f g
+China. qingyi.gu @ia.ac.cn general classi(cid:2)cation network such as ResNet, DenseNet,
+2TheauthorsarewiththeSchoolofArti(cid:2)cialIntelligence,Universityof
+etc. is used for expression recognition, it tends to learn
+ChineseAcademyofSciences,Beijing,China
+3https://github.com/hsh41/Dimension-Reduction-Network signi(cid:2)cantdifferencesindifferentfacescharacteristics,rather
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 987
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. than expression characteristics, which is the reason why B. ExpressionRecognitionmethodsBasedonDeepLearning
+generalization error occurs. This paper proposes the idea of
+In recent years, obvious advantages in feature extraction,
+adding a dimension reduction module before the classi(cid:2)ca-
+pattern classi(cid:2)cation, target detection and recognition are
+tionnetwork,structurallyforcetheneuralnetworktodiscard
+shown in deep learning framework. Because expression
+aportionofthedata,forcingtheneuralnetworktolearnonly
+recognition can be regarded as a classi(cid:2)cation problem,
+the features related to the expression. It is proved that this
+it is suitable for solving with deep learning. Liu et al.
+method can effectively reduce the generalization error and
+[12] proposed an enhanced deep Belief Network to learn
+exceed the state-of-the-art result.
+features. As the training time is accumulated, the classi(cid:2)er’s
+classi(cid:2)cation ability is continuously enhanced. Khorrami et
+II. RELATEDWORKS
+al. [13] proved that the method based on convolution neural
+We review the previous work considering three aspects
+network can improve the accuracy of expression recognition
+that are related to ours, i.e., expression recognition based on
+throughtheoreticalderivation,networkstructureanalysisand
+traditional methods, expression recognition based on deep
+contrast experiments.
+learning and the methods to reduce Generalization error.
+Because the difference between people with the same
+facial expression is much larger than that between different
+A. Expression Recognition based on Traditional Methods
+facial expressions of the same person, it is a more effective
+Traditionalexpressionrecognitionmethodscanbedivided
+method to perform expression recognition based on indi-
+into geometric feature based methods, appearance feature
+vidual. However, when you want to analyze the expression
+based methods, and blending methods.
+of a person in an image, you can’t get other expressions
+Geometric feature based methods use shape model of the
+of this person. One solution to this problem is to generate
+face and feature points to represent the expression of face,
+other expressions of the same person through generative
+and classi(cid:2)es expression by extracted geometric features of
+model. Kim et al. [14] (cid:2)rst introduced generative model
+the face. Kotisa et al. [6] proposed a face feature points
+in expression recognition. This method attempts to explain
+localization method based on the Kanade-Lucas-Tomasi
+the difference between different expressions by adversarial
+tracker, which uses the position change value of the face
+representation. In 2018, Zhang et al. [15] proposed a fa-
+feature points as a feature for the classi(cid:2)er’s expression
+cial expression recognition network based on a generative
+classi(cid:2)cation. Sebe et al. [7] proposed tracking the face
+adversarial network. The method constructs a generative
+feature points manually labeled by Piecewise Beziervolume
+adversarial network which can generate samples according
+Deformation to extract facial expression features. Choi et al.
+to a given image along with a random expression and pose.
+[8]proposedamethodforexpressingexpressionusingactive
+In this way, the data set is expanded and the network can be
+super(cid:2)cialmodelAAMandmulti-layerperceptron.Zhenget
+fully trained.
+al. [9] proposed multi-angle facial features to express facial
+expressions from each scale and angle through multi-scale C. Methods to Reduce Generalization Error
+segmentation of human faces, and constructing features and Commonlyusedmethodsforreducinggeneralizationerror
+labels using group-based sparse descending rank regression areregularization,networkpruning,dataaugmentation,batch
+models. The geometric feature based methods have a high normalization, dropout, early stopping, integrated learning
+dependence on the accuracy of face feature points location and so on. In ImageNet classi(cid:2)cation challenge, Krizhevsky
+and tracking. Once the feature points are located incorrectly, et al. [16] proposed a method of implementing PCA to
+it will lead to large expression recognition error. alter the intensity of the RGB color channels on training
+Appearance feature based methods extract intensity fea- AlexNetandalsotheyproposedthatthePCAapproximately
+tures, texture features and gradient features of the image to captured the notable properties of the images. Bengio et al.,
+represent the expression. Among them, the global feature proved that the deep architecture bene(cid:2)ts more from the
+representation includes gradient histogram HOG feature, data augmentation technique as compares with the shallow
+Haarfeature,LBPfeature,LPQ-TOPfeature,etc.Localfea- network[17].Mostcommonlyusedregularizationmethodin
+turerepresentationincludesMeanintensity,Eigenimagesand machine learning is imposing a squared L norm constraint
+2
+GLCMandsoon.Donatoetal.[10]proposedafacialexpres- on weights. It is also known as weight decay (Tikhonov
+sion recognition method based on different representation regularization) since the net effect of reducing the weight
+features of human face, including independent component by a factor, proportional to the magnitude at every iteration
+analysis ICA, principal component analysis PCA, linear dis- of the gradient descent [18]. Hinton et al., implemented
+criminant analysis LDA and Gabor wavelet analysis. Zhong the drop out in fully connected layers and they provide
+et al. [11] proposed a method for expression recognition by that the convolution shared Filter architecture reduce the
+using special face regions for learning different expressions. parameters and it improves the resistance to the over-(cid:2)tting
+This method effectively extracts some special regions of in convolution layers [19].
+faces and extracts expression features within these regions.
+The method based on appearance features has high require- III. PROPOSEDMETHOD
+ments on the stability of feature, so it is dif(cid:2)cult to ensure Let’stakethebinaryclassi(cid:2)cationproblemasanexample.
+2
+the accuracy of expression recognition in complex scenes. Forasamplex Rn tobeclassi(cid:2)ed,wecanregardithasn
+988
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. 8
+8
+6
+6
+4
+Z 2 Z 4
+0 2
+(cid:0)2 0
+(cid:0)4 (cid:0)2
+0 (cid:0)4
+20
+40
+60 (cid:0)100
+Y 80100 60 40 20 0 0
+120140 140 120 100 80 X Y100200 100 0 (cid:0)100
+200
+Fig.1. Truedistributionofpositiveandnegativesamples 300 300 X
+400
+8
+6 (cid:0)100 8
+6
+Z 24 1000X Z24
+0 200 0
+8 (cid:0)2 300 (cid:0)2
+(cid:0)4
+6 (cid:0)50 0 50 100Y150200250300 X Z (cid:0)100 0 100Y 200 300 Y 300 200 100X 0 (cid:0)100
+Fig.3. Distributionofpositivetestset.(Redpointsarepositivesamples,
+4
+Z bluepointsarenegativesamplesandgreenpointsarepositivetestsamples.
+2 Aboveisthe3Dview,belowaretheprojectionalongthex;z;y axis)
+0
+(cid:0)2
+in Fig.1. But in the distribution of training set, feature z, or
+feature (x;y) all can be used to effectively classify positive
+(cid:0)100
+(cid:0)500 and negative samples. Obviously, if we choose (x;y) as the
+50100 (cid:0)50 featureforclassi(cid:2)cation,theclassi(cid:2)cationalgorithmbehaves
+Y 150200 100 50 0 well in training, but if there is a new test set, as shown by
+250300 250 200 150 X the green points in Fig. 3, the test accuracy will be quite
+300
+low, this phenomenon is called generalization error. For a
+8
+6 (cid:0)100 8 neural network, it does not have any prior information about
+Z 24 1000X Z246 the true distribution, so it will choose features in training
+(cid:0)02 230000 (cid:0)02 set randomly. As we all known, there is a lot of redundant
+(cid:0)4 (cid:0)100 0 1Y00 200 300 X Z (cid:0)100 0 1Y00 200 300 Y 300 200 1X00 0 (cid:0)100 informationintheimage,theprobabilityofchoosinguseless
+feature is very large. Of course, we can force the neural
+Fig.2. Distributionofpositiveandnegativesamplesintrainingset.(Red
+pointsarepositivesamples,bluepointsarenegativesamples.Aboveisthe network to learn the most effective feature z by some tricks
+3Dview,belowaretheprojectionalongthex;z;y axis) such as adding prior information, regularization, designing
+the network based on Occam razor theory, etc. The most
+effective method is to expand the data set so that the neural
+features.Theessenceofneuralnetworkistoperformfeature network can see more samples and extract common features
+extraction,featurecompressionandfeaturetransformationon of the same class. In this method, the accuracy of neural
+this sample, and (cid:2)nally compress the features of the sample network in object classi(cid:2)cation task has reached or even
+intoaone-dimensionalfeaturey.Thenwecansetathreshold surpassed that of humans.
+(cid:17), when y is larger than (cid:17), the sample is positive and when But expression recognition task is far more complex than
+y is smaller than (cid:17), the sample is negative. theexamplewejustdiscussed.Toomanyfeaturesontheface
+Suppose the sample space is D, both training set and test have nothing to do with expressions, such as age, gender,
+set are obtained by random sampling from the sample space appearance, etc. The structure of common neural networks
+D. Obviously, they are discrete and cannot fully describe has a feature, the number of parameters in the back is more
+the characteristicsof D. Suppose thedistribution of positive than the front. This means that the network uses all the
+(cid:24) (cid:24)
+and negative samples is x p(x), x q(x), as shown imageinformationinsteadofusingitselectively.Asaresult,
+in Fig.1, where red points are positive samples and blue unrelated features such as appearance, age, and gender are
+points are negative samples. And the distribution of training consideredtobevalidwithoutdistinction,whichleadstothe
+set is shown in Fig.2. In this sample space D, there are generation of generalization errors. In this case, expanding
+three features, x;y;z. It is obviously that the samples can data set or enlarging network scale is no longer helpful for
+be divided by a plane z = 3 in true distribution as shown improving accuracy, because neither of these methods can
+989
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. Fig.4. NetworkStructureofDimensionReductionNetwork
+TABLEI
+We designed two groups of dimension reduction module,
+DIMENSIONOFINPUTANDOUTPUTFEATURES
+big one and tiny one. Big one can get higher accuracy, tiny
+onerequireslesscomputingpowerandcanrunfaster,which
+Sub-Module InputShape OutputShape Params
+(cid:2) (cid:2) (cid:2) (cid:2) is suitable for embedded devices. The size of feature map
+Big-1 224 224 3 224 224 2 0.9M
+fromeachlayerinournetworkishump-like,unlikecommon
+(cid:2) (cid:2) (cid:2) (cid:2)
+Big-2 224 224 2 224 224 1 6.0M neural networks that are incremental. This guarantees that
+(cid:2) (cid:2) (cid:2) (cid:2)
+Big-3 224 224 1 112 112 1 1.5M every time the image passes through a dimension reduction
+(cid:2) (cid:2) (cid:2) (cid:2)
+Tiny-1 224 224 3 224 224 2 0.2M module, its information will be partially lost. If remaining
+Tiny-2 224(cid:2)224(cid:2)2 224(cid:2)224(cid:2)1 1.5M featureshavenothingtodowithexpression,theclassi(cid:2)cation
+(cid:2) (cid:2) (cid:2) (cid:2) results will be very bad. Then optimizer will adjust the
+Tiny-3 224 224 1 112 112 1 0.9M
+network parameters until the network (cid:2)nds correct features.
+IV. EXPERIMENT
+achieve such a purpose: choose features wisely. In this section, the experimental results of our method
+In order to solve this problem, we propose a network are presented. First, we describe the experimental settings,
+structurecalledDimensionReductionNetwork.Itconsistsof including data sets and our implementation details. Then,
+two parts (cid:151) classi(cid:2)cation module and dimension reduction an ablation analysis of our method is provided. Finally, we
+module, as shown in Fig. 4. Classi(cid:2)cation module can be compare our method with the state-of-the-art FER methods.
+any general classi(cid:2)cation network, we use a lightweight
+A. Experimental Setup
+ResNet50 V2 in this paper. The channels of each feature
+map in this network is half that of the original network. 1) Data set: We evaluate our method on AffectNet, Af-
+Dimension reduction module consists of three sub-modules, fectNetisthelargestdatasetwithannotatedfacialemotions.
+which are used to reduce the dimension of the input feature Itcontainsabout400,000imagesmanuallyannotatedforthe
+map,theinputandoutputfeaturemapsizeisshowninTab.I. presenceofsevendiscretefacialexpressionsandtheintensity
+Each sub-module consists of three parts. The (cid:2)rst part is of valence and arousal. We only used images with neutral
+down sample, which is used to reduce the size of feature and 6 basic emotions, containing 280,000 training samples
+map and increase its channels. The second part is residual and 3500 test samples.
+block, which is used to mix and reorganize features. The 2) Implementation Details: We implemented Dimension
+third part is up sample, which uses transpose convolution to Reduction Network using Tensor(cid:3)ow deep learning frame-
+recoveryfeaturemaptoitsoriginalshape.However,thesize work. We adopted a lightweight ResNet50 V2 as the back-
+of output feature map is smaller than input feature map. We bone network due to its wide use and excellent performance
+2 (cid:2) (cid:2)
+can view the feature map as a vector of x RH W C, so in image classi(cid:2)cation. Besides, Resnet50 is much larger
+the dimension of output feature is reduced after dimension than the commonly used neural network for expression
+reduction module. recognition, so it is easy to over(cid:2)t when training. This
+990
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. TABLEII TABLEIII
+ABLATIONSTUDYRESULTS CLASSIFICATIONRESULTSONAFFECTNET
+Method Accuracy Params Method Accuracy
+LightweightResNet50 62.1% 16.7M VGG16[20] 51.1%
+ResNet50 62.1% 23.5M DLP-CNN[21] 54.4%
+ResNet101 61.3% 42.5M MultipledeepCNNs[22] 55.9%
+ResNet152 61.4% 58.2M gACNN[23] 58.7%
+ProposedMethod(Big) 63.3% 25.2M RAN-ResNet18[24] 59.5%
+ProposedMethod(Tiny) 62.7% 13.1M HERO[25] 62.1%
+ProposedMethod(Big) 63.3%
+makes it easy to demonstrate our method’s ability to reduce
+generalization errors It can be seen from the table that as the network grows,
+Since face detection is not the focus of our work, and the accuracy decreased. Because as the scale of the network
+detecting faces in AffectNet data set is not dif(cid:2)cult for expands, neural networks will make fuller use of every
+existingdetectionalgorithms.Wedirectlyusedthebounding features in the image. Too many redundant features will
+boxesprovidedbyAffectNet.Wecroppedfacesfromimages confuse the network and will seriously affect its generaliza-
+(cid:2)
+and resized to 224 224 without alignment. The data tion performance. However, with the help of the dimension
+distribution of the training set is heavily imbalanced, while reduction module, a large number of features are (cid:2)ltered. If
+the data distribution of the test set is balanced. In order to the remaining features are invalid, the classi(cid:2)cation network
+solvetheproblemofinconsistencybetweenthetwodatasets, will not be able to classify correctly. Classi(cid:2)cation loss will
+we performed a data equalization operation on training set. back propagate to dimension reduction module, instructing
+We selected a maximum of 30,000 samples from each class. it to discard invalid features and retain valid ones. As Tab.
+Since there are less than 30,000 samples for some classes II shown, after adding dimension reduction module, the
+such as Disgust, Surprise and Fear, the resulting training set accuracy of lightweight ResNet50 is improved by 1.2%.
+is semi-balanced. Then we heavily up-sampled the under- TheaccuracyofthetinyDimensionReductionNetworkalso
+represented classes by replicating their samples so that all exceeds the baseline, although its parameters are only half
+classes had the same number of samples as the class with of the baseline, which demonstrates the effect of dimension
+maximum samples, i.e., Happy class. reduction module on reducing generalization errors.
+In the process of up-sampling, we randomly performed
+C. Comparison with the state-of-the-art methods
+thefollowingoperationsontheimage:randomrotationfrom
+(cid:0) (cid:14) (cid:24) (cid:14)
+20 20 , random brightness, random contrast, random As usual, we compare our best results with several state-
+hue, random saturation. After the data augmentation, our of-the-art methods on AffectNet. The results are shown in
+training set size is 210,000 and the test set size is 3,500. Tab.III. We surpass the state-of-the-art methods of single
+We use a lightweight ResNet50 V2 as backbone and the model by more than 1% on AffectNet data set. It is worth
+big group in Tab. 4 as the dimension reduction module. mentioning that our dimension reduction module can be
+In addition, in order to run on embedded devices, we also applied in any network structure. That is to say, a general
+designed a tiny version of the dimension reduction module neutral network can get better performance on speci(cid:2)c tasks
+in Tab. 4 with a lighter ResNet50. The base learning rate with our training method. Fig. 5 shows the confusion matrix
+was set to 0.001, and decreased step-wise by a factor of 0.5 of our results.
+every6epochs.WeusedAdamoptimizerwithamomentum
+V. CONCLUSIONS
+of0.9.Wealsoadoptedwarm-upinthe(cid:2)rst2epochs.Since
+the test set is balanced, we used accuracy to measure the In this paper, we proposed Dimension Reduction Net-
+performance of our model as follows. work, a novel network structure that can effectively reduce
+generalization error, then applied this structure to general
+Acc= Npre classi(cid:2)cation network ResNet50 V2, and obtain good clas-
+N si(cid:2)cation results on the expression recognition task. We
+total
+achieved 63.3% accuracy on AffectNet data set, 1.2% above
+B. Ablation study on AffectNet
+state-of-the-art result. The improvement of the accuracy
+We tested big and tiny version of Dimension Reduction of expression recognition in natural scenes can effectively
+Network on AffectNet data set. We also use lightweight enhancetheapplicationofexpressionrecognitioninthe(cid:2)eld
+ResNet50 V2, ResNet50 V2, ResNet101 V2, ResNet152 V2 of service robots, and greatly enhance the experience of
+as our baseline. The lightweight ResNet50 is what is used human-computer interaction. We believe that this network
+in our Dimension Reduction Module. The result is shown in structure is a general method and can achieve better results
+Tab. II. in other tasks related to deep learning. In the future we
+991
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. [9] W.Zheng,(cid:147)Multi-viewfacialexpressionrecognitionbasedongroup
+sparsereduced-rankregression,(cid:148)IEEETransactionsonAffectiveCom-
+puting,vol.5,no.1,pp.71(cid:150)85,2014.
+[10] G.Donato,M.S.Bartlett,J.C.Hager,P.Ekman,andT.J.Sejnowski,
+(cid:147)Classifying facial actions,(cid:148) IEEE Transactions on pattern analysis
+andmachineintelligence,vol.21,no.10,pp.974(cid:150)989,1999.
+[11] L. Zhong, Q. Liu, P. Yang, B. Liu, J. Huang, and D. N. Metaxas,
+(cid:147)Learningactivefacialpatchesforexpressionanalysis,(cid:148)in2012IEEE
+Conference on Computer Vision and Pattern Recognition. IEEE,
+2012,pp.2562(cid:150)2569.
+[12] P.Liu,S.Han,Z.Meng,andY.Tong,(cid:147)Facialexpressionrecognition
+via a boosted deep belief network,(cid:148) in Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition, 2014, pp.
+1805(cid:150)1812.
+[13] P.Khorrami,T.Paine,andT.Huang,(cid:147)Dodeepneuralnetworkslearn
+facialactionunitswhendoingexpressionrecognition?(cid:148)inProceedings
+oftheIEEEInternationalConferenceonComputerVisionWorkshops,
+2015,pp.19(cid:150)27.
+[14] Y. Kim, B. Yoo, Y. Kwak, C. Choi, and J. Kim, (cid:147)Deep generative-
+contrastivenetworksforfacialexpressionrecognition,(cid:148)arXivpreprint
+arXiv:1703.07140,2017.
+[15] F.Zhang,T.Zhang,Q.Mao,andC.Xu,(cid:147)Jointposeandexpression
+modeling for facial expression recognition,(cid:148) in Proceedings of the
+IEEEConferenceonComputerVisionandPatternRecognition,2018,
+Fig.5. ConfusionMatrixofDimensionReductionNetworkonTestSet pp.3359(cid:150)3368.
+[16] A.Krizhevsky,I.Sutskever,andG.E.Hinton,(cid:147)Imagenetclassi(cid:2)cation
+with deep convolutional neural networks,(cid:148) in Advances in neural
+informationprocessingsystems,2012,pp.1097(cid:150)1105.
+are going to apply this training method to some common [17] Y.Bengio,P.Lamblin,D.Popovici,andH.Larochelle,(cid:147)Greedylayer-
+wise training of deep networks,(cid:148) in Advances in neural information
+classi(cid:2)cationtasksandtofurtheroptimizethetrainingspeed.
+processingsystems,2007,pp.153(cid:150)160.
+[18] A. Krogh and J. A. Hertz, (cid:147)A simple weight decay can improve
+REFERENCES generalization,(cid:148)inAdvancesinneuralinformationprocessingsystems,
+1992,pp.950(cid:150)957.
+[19] G. E. Hinton, N. Srivastava, A. Krizhevsky, I. Sutskever, and
+[1] T. Kanade, J. F. Cohn, and Y. Tian, (cid:147)Comprehensive database for
+R. R. Salakhutdinov, (cid:147)Improving neural networks by preventing co-
+facialexpressionanalysis,(cid:148)inProceedingsFourthIEEEInternational adaptationoffeaturedetectors,(cid:148)arXivpreprintarXiv:1207.0580,2012.
+Conference on Automatic Face and Gesture Recognition (Cat. No.
+[20] K. Simonyan and A. Zisserman, (cid:147)Very deep convolutional networks
+PR00580). IEEE,2000,pp.46(cid:150)53. for large-scale image recognition,(cid:148) arXiv preprint arXiv:1409.1556,
+[2] M. Pantic, M. Valstar, R. Rademaker, and L. Maat, (cid:147)Web-based 2014.
+database for facial expression analysis,(cid:148) in 2005 IEEE international [21] L.Zhao,X.Li,Y.Zhuang,andJ.Wang,(cid:147)Deeply-learnedpart-aligned
+conferenceonmultimediaandExpo. IEEE,2005,pp.5(cid:150)pp. representations for person re-identi(cid:2)cation,(cid:148) in Proceedings of the
+[3] G. Zhao, X. Huang, M. Taini, S. Z. Li, and M. Pietika¤Inen, (cid:147)Facial IEEEInternationalConferenceonComputerVision,2017,pp.3219(cid:150)
+expression recognition from near-infrared videos,(cid:148) Image and Vision 3228.
+Computing,vol.29,no.9,pp.607(cid:150)619,2011. [22] Z.YuandC.Zhang,(cid:147)Imagebasedstaticfacialexpressionrecognition
+[4] S. Li, W. Deng, and J. Du, (cid:147)Reliable crowdsourcing and deep withmultipledeepnetworklearning,(cid:148)inProceedingsofthe2015ACM
+locality-preservinglearningforexpressionrecognitioninthewild,(cid:148)in onInternationalConferenceonMultimodalInteraction. ACM,2015,
+2017IEEEConferenceonComputerVisionandPatternRecognition pp.435(cid:150)442.
+(CVPR). IEEE,2017,pp.2584(cid:150)2593. [23] Y. Li, J. Zeng, S. Shan, and X. Chen, (cid:147)Occlusion aware facial
+[5] A. Mollahosseini, B. Hasani, and M. H. Mahoor, (cid:147)Affectnet: A expression recognition using cnn with attention mechanism,(cid:148) IEEE
+databaseforfacialexpression,valence,andarousalcomputinginthe Transactions on Image Processing, vol. 28, no. 5, pp. 2439(cid:150)2450,
+wild,(cid:148)IEEETransactionsonAffectiveComputing,vol.10,no.1,pp. 2018.
+18(cid:150)31,2017. [24] K.Wang,X.Peng,J.Yang,D.Meng,andY.Qiao,(cid:147)Regionattention
+[6] I. Kotsia and I. Pitas, (cid:147)Facial expression recognition in image se- networksforposeandocclusionrobustfacialexpressionrecognition,(cid:148)
+quences using geometric deformation features and support vector arXivpreprintarXiv:1905.04075,2019.
+machines,(cid:148) IEEE transactions on image processing, vol. 16, no. 1, [25] W. Hua, F. Dai, L. Huang, J. Xiong, and G. Gui, (cid:147)Hero: Human
+pp.172(cid:150)187,2006. emotionsrecognitionforrealizingintelligentinternetofthings,(cid:148)IEEE
+[7] N. Sebe, M. S. Lew, Y. Sun, I. Cohen, T. Gevers, and T. S. Huang, Access,vol.7,pp.24321(cid:150)24332,2019.
+(cid:147)Authentic facial expression analysis,(cid:148) Image and Vision Computing,
+vol.25,no.12,pp.1856(cid:150)1863,2007.
+[8] H.-C.ChoiandS.-Y.Oh,(cid:147)Realtimefacialexpressionrecognitionusing
+active appearance model and multilayer perceptron,(cid:148) in 2006 SICE-
+ICASEInternationalJointConference. IEEE,2006,pp.5924(cid:150)5927.
+992
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. 

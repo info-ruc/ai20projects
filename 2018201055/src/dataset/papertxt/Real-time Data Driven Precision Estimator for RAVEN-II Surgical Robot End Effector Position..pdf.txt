@@ -1,0 +1,444 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Test Your SLAM! The SubT-Tunnel dataset and metric for mapping
+John G. Rogers III1, Jason M. Gregory1, Jonathan Fink1, Ethan Stump1
+Abstract—This paper presents an approach and introduces
+new open-source tools that can be used to evaluate robotic
+mapping algorithms. Also described is an extensive subter-
+ranean mine rescue dataset based upon the DARPA Sub-
+terranean (SubT) challenge including professionally surveyed
+ground truth. Finally, some commonly available approaches
+are evaluated using this metric.
+I. INTRODUCTION
+Situational awareness in a dynamic and evolving disaster
+recovery scenario is a critical component in allocating re-
+sources to minimize survivor casualties. In the subterranean
+regime, recovery can be hampered by limited access due
+to collapse or ﬁre, as well as environmental hazards such
+as noxious fumes and the risk of further collapse. Robots
+can be employed to locate survivors and build maps which
+Fig. 1. A sample landmark artifact report visualization resulting in
+enable incident commanders to make decisions balancing a scored point. The robot, shown in yellow, is positioned within the
+exposure to risk with reducing human casualties. To enable NIOSH Experimental mine at the DARPA Subterranean Challenge. The
+roboticiststospeaktothesechallenges,wepresenttheSubT- drill (orange) is visible in the robot’s stereo camera (upper right) as well
+asthermalIRcamera(upperleft).Thegroundtruthpositionofthedrillin
+Tunneldatasetandanalysistoolsintendedforbenchmarking a global reference frame is shown by the blue sphere, while the detection
+simultaneous localization and mapping (SLAM) algorithms reportisshownwiththegreensphere.Asthedetectioniswithinthescoring
+threshold, the reported location is shown in green which indicates a point
+in underground tunnel environments. This dataset represents
+isscored.Additionally,RMSEiscomputedontheartifactreportstoallow
+a snapshot of the Tunnel Circuit and SubT Integration forﬁne-grainedcomparisonandevaluationofmappingaccuracy.
+eXercise (STIX) events of the DARPA Subterranean Chal-
+lenge2, held in the United States at the National Institute for
+Occupational Safety and Health (NIOSH) and Edgar Mines Obtaininggroundtruthinformation,namelytheactualsen-
+in Pennsylvania and Colorado, respectively. Mines present a sor trajectory, for SLAM in extensive environments is chal-
+starklydifferentsetofenvironmentcharacteristicsthanthose lenging, and many datasets only provide complete ground
+found in typical SLAM datasets: poor to no lighting, varied truth for a small environment, partial ground truth through
+levels of roughness and irregularity in structure, sometimes a small portion of a larger traversal, or simply rely on users
+signiﬁcant changes in topography, wet, dirty, and no access doing qualitative analysis on the resulting map. We take
+to GPS. By providing a dataset which exposes these charac- the approach of providing ground truth modeled after the
+teristics, we aim to broaden the classes of environments that scoring of the DARPA Subterranean Challenge: during each
+SLAM algorithms should be judged against. collection,wehavemanuallylabeledthedetectionandlocal-
+In designing this dataset, we have followed the structure izationofseveralcompetition“artifacts,”andwecanevaluate
+of other datasets, such as the KITTI Vision Benchmarking the SLAM accuracy by composing these locations with the
+Suite [3], that contain a redundant set of sensory inputs in estimatedpositionoftheplatformandcomparingagainstthe
+order to admit multiple algorithmic techniques. In addition surveyed artifact locations. The SubT-Tunnel dataset thus
+to the standard stereo camera imagery and multiple LiDAR represents a simpliﬁed version of the competition.
+sources,wealsoincludethermalcameradataasanadditional
+In terms of mapping analysis, there are two general
+modality that provides special utility in low-light, under-
+methodologiesformeasuringmappingaccuracy,relativeand
+ground conditions. This style of benchmark dataset enables
+absolute [8], and we fall squarely on the side of absolute
+ablation studies, where algorithmic components and sensor
+error for this application. This puts much more stringent
+inputs are switched off or degraded to objectively determine
+requirements on the mapping system but is motivated by the
+marginal effects on performance.
+observation that many external interactions with the tunnel,
+suchasdrillingfromabovetoventilateorprovideemergency
+1CCDC Army R{esearch Laboratory (ARL), Adelphi, MD supplies to survivors, can only be successful with accurate
+20783, USA. john.g.rogers59, jason.m.gregory1,
+} absolute estimates. In addition, by focusing on a small set
+jonathan.r.fink3, ethan.a.stump2 .civ@mail.mil
+2https://subtchallenge.com of target locations, we are suggesting a shift to a task-based
+U.S. Government work not protected by 955
+U.S. copyright
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. benchmarking mindset for SLAM. This not only lowers the
+cost of obtaining good ground truth, but also allows the
+analysis to apply to a wider range of possible mapping
+sources,includingmultipleagentsworkingwithindependent
+maps but a shared coordinate system.
+The contributions of this paper are as follows:
+1) We introduce and describe a new, open dataset taken
+from the DARPA Subterranean Challenge Tunnel Cir-
+cuit competition and STIX events.
+2) We propose a new absolute-accuracy analysis metric Fig. 2. Robot used to collect data at the “Edgar” mine during the STIX
+event.
+for map evaluation modeled after the competition
+scoring.
+3) Weprovideasetofopen-sourcesupporttoolstoenable Each of the tunnel circuit challenge courses, SR and EX,
+researchers to easily evaluate their own mapping ap- aregivenintwoconﬁgurations:A,andB(onlyconﬁguration
+proachesagainstthismetric,includinganapproachfor B is represented in this dataset). For each of these conﬁgu-
+aligning their map coordinate frames with the global rations, 20 artifacts are placed within the courses. As teams
+frame without using GPS. achieve points by accurately reporting the locations of these
+4) Asabaseline,wecomparemultipleSLAMalgorithms artifacts, accurate ground truth positions for the artifacts are
+from the literature using this metric. necessary for comparison. To achieve the required level of
+In doing so, we seek to provide a useful resource for accurate position information for the artifacts, the ground
+researchers looking to get started in understanding the chal- truth positions were determined by professional surveyors
+lenges of subterranean operations. experienced in mine surveying.
+A. Sensors and Robots
+II. DATACOLLECTION
+For the STIX dataset, the iRobot PackBot was chosen
+The SubT-Tunnel dataset3 consists of sensor information
+due to its tracked conﬁguration to improve maneuverability
+from two mine sites. One recording was taken at the Edgar
+over the railroad tracks of the Edgar Mine. The robot and
+research mine, a former precious metals mine, in Idaho
+its sensor payload are shown in Figure 2. This robot is
+Springs, Colorado during the DARPA STIX, courtesy of the
+equipped with an Ouster OS1-64 to collect the primary
+ColoradoSchoolofMines.Theotherrecordingsarefromthe
+high-density LiDAR point cloud. A second LiDAR sensor
+mine used for the DARPA Subterranean Challenge Tunnel
+is also included in the Carnegie Robotics MultiSense SL
+circuit in Bruceton, Pennsylvania, courtesy of NIOSH. The
+for redundancy and comparative purposes. The Multisense
+mines used in this dataset were shut-down over 100 years
+SL sensor also provides stereo vision and high-intensity
+agoandhavesincebeenre-openedforeducational,research,
+illuminators, which are necessary to make observations of
+and training purposes by the aforementioned parties. These
+artifactsinthedarkerportionsoftheenvironment.Therobot
+locations were chosen by DARPA to provide representative
+is also equipped with a FLIR Tau2 thermal infrared camera
+examples of mine rescue, while maintaining safety for par-
+since several of the artifacts are heated (mock survivors and
+ticipants and personnel. Each mine presents some speciﬁc
+cell phones) and are quite apparent on thermal vision. The
+mapping challenges:
+dataset provides platform odometry that is generated using
+• STIX: The Edgar mine has a few improvements to
+wheelodometrywithorientationreplacedfromaMicrostrain
+illumination, but is dark along most of its tunnels.
+3DM-GX5-25 IMU. The Received Signal Strength Indicator
+The ground is mostly ﬂat, with some limited portions
+(RSSI) to all available wireless 2.4GHz hotspots is also
+with steep inclines. The mine also features a promi-
+recorded. This is primarily useful in locating the cell phone
+nent railroad track over signiﬁcant portions that makes
+artifacts; secondarily, it is planned for use in subterranean
+mobility challenging for ground robot platforms. The
+radio propagation analysis.
+mine is dry enough that the robot produces signiﬁcant
+For the Tunnel Circuit datasets, a Clearpath Husky was
+atmospheric dust at times that may scatter LiDAR and
+chosen for its superior ground clearance and rugged offroad
+obscure visible light cameras.
+tires. The robot platform, complete with deployed sensor
+• Tunnel Circuit: The Bruceton mine is divided into two
+payload,canbeseeninFigure3.Therobotisequippedwith
+separatecourses,SafetyResearch(SR)andExperimen-
+the same sensor payload as used in the STIX datasets with
+tal (EX). Illumination was provided by sparse overhead
+the following modiﬁcations. The Ouster OS1-64 LiDAR has
+lighting but does feature some dark areas. The ground
+been moved to a location on the robot where its view will
+is mostly ﬂat but wet and muddy, with ﬂooded areas
+not be occluded by other components. The other primary
+that reﬂect LiDAR in addition to visible light.
+change is that the FLIR Tau2 has been replaced with a
+FLIR Boson camera as the frame-grabber for the Tau was
+3Instructions for downloading the SubT-Tunnel dataset and the sup-
+not reliable when collecting data at the STIX event, and the
+porting code repository described in this paper can be found at
+https://bitbucket.org/jgrogers/subtreferencedatasets Boson camera has a direct USB interface board.
+956
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. This relative error metric is useful for many applications;
+however, in the subterranean regime, minimizing absolute
+error is needed in many cases. For example, in a worst-
+case mine collapse rescue, an access tunnel might need to
+be drilled from the surface. To hit the desired passageway
+requires accurate absolute position, within the characteristic
+width of the tunnel (in our case, this is around 2.5 meters).
+In the case of reporting the location of survivors to ﬁrst
+responders, a report made within 5 meters of the survivor
+would likely be close enough for the ﬁrst responder to ﬁnd
+that survivor.
+Since the ground truth survey gives us accurate absolute
+positions of the artifacts that are distributed throughout the
+Fig. 3. Robot used to collect data at the SR and EX courses from the challengecourses,theycanbeusedaslandmarkstocompare
+tunnelcircuitcompetitionmine.
+against to establish accuracy for a mapping procedure. The
+ﬁrst metric is the number of artifacts observed within 5
+meters of their ground truth positions, which corresponds
+All data collection was done under direct teleoperation,
+to the score a team would have received had they used their
+with the operator following behind the robot. For the STIX
+SLAM algorithm and their robot had driven the same path
+data, an XBox 360 wireless controller was used that has
+through the course. As this is a relatively coarse measure,
+limited range; therefore, personnel are occasionally visible
+the Root Mean Square Error (RMSE) on the distance to
+in the LiDAR view behind the robot. For the tunnel circuit
+the ground truth artifact landmarks is also used to give a
+data,teleoperationcontrolwasmanagedoveraWiFilinkthat
+ﬁne-grained comparison. Finally, the minimum error and
+enabled the operators to stay further back and avoid being
+maximum error to the artifact landmark position are also
+seen by the robot. Be aware that the operators are detected
+giventoestablishthestabilityofthemappingprocedureover
+by the LiDAR at times, but if the full scan is used, these
+the length of a run.
+errors are relatively minor.
+TosupporttestingofSLAMsystemsindependentofobject
+B. Dataset Collection recognition, artifact locations are coded into run ﬁles with
+theextensiona˙rtifacts.Theseartifactlocationsaregenerated
+The dataset is collected in Robot Operating System
+throughthesubt scoring nodewiththecoding modeparame-
+(ROS4)bagformatusingthetoolrosbagrecord.Somesensor
+tersettotrue.Incodingmode,thescoringnodegeneratesthe
+outputisrecordedbothinitsrawdatagrampacketform,and
+artifactﬁlebaseduponuserinput.ThelocationofAprilTags
+in some convenient conversions to more immediately usable
+correspondingtothegroundtruthframeoriginaregenerated
+forms such as point clouds. Camera imagery is recorded
+through the use of the AprilTag library, which is provided
+usingimage transportcompressedtypetogreatlyreduceﬁle
+as an entry in the included rosinstall ﬁle. As the AprilTags
+size while maintaining full frame rate and similar quality.
+for the ﬁducial landmarks are passed, the best measurement
+Example ROS launch ﬁles demonstrating how to play back
+as reported by the tag detection is kept and recorded into
+this dataset can be found in the tunnel ckt launch directory
+thea˙rtifactsﬁle.Theentryintheartifactsﬁleconsistsofthe
+of the included repository referred to in Section II.
+ﬁducialtag,theROStimewhenthedetectionwasmade,the
+Many more trajectories were recorded than appear in
+imagecoordinatesofthedetection(center),thecameraframe
+this description. A faulty encoder on the Husky rendered
+ID, and 3D coordinates of the tag (using stereo for depth)
+odometry unusable on Conﬁguration A runs at the tunnel
+and the robot base frame ID and 3D coordinates in the base
+circuit.Theserunswerethereforenotevaluatedhereasmost
+frame. When the user sees that the robot is observing an
+of the techniques we evaluate are conﬁgured to rely upon
+artifact that should be coded into the ﬁle, they ﬁrst pause
+odometry.Onerunwithpoorodometry,ex B route2.bag,was
+the bag playback, and then click the button on the right of
+included in the evaluation to see how well these techniques
+the coding window corresponding to the artifact type. The
+couldperformwithpoorodometry.TherunsinConﬁguration
+user then clicks on the center of the artifact in the image
+A with poor odometry are expected to be released in the
+shown in the window. The same type of entry as described
+future or can be provided by request, as they could still be
+for ﬁducial landmarks is made in the artifacts ﬁle, except
+useful to evaluate visual SLAM.
+using the artifact type string.
+III. METRICSFORCOMPARISON Since the artifact locations are recorded in a local coordi-
+nate system, the scoring node simply looks for a transform
+In prior SLAM metric comparison work such as [1], an
+between the darpa frame (established by the ground truth
+incremental relative error was chosen due to the assumption
+locations of the ﬁducial landmarks) and the local frame. As
+thatanequivalenterrormadeearlyoninamapshouldresult
+the darpa to map frame is automatically provided by the
+in the same “score” as an error made much later in the map.
+scoring node, the user needs only to provide the map to
+4www.ros.org “chinook/base” portion of the transform in TF. The user
+957
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. Fig.4. Top:Viewfromtherobotoftheentranceportalandtheframealignmentﬁducials.TheseAprilTags,alongwithIRreﬂectors,prisms,andspheres,
+have been surveyed in the “darpa” reference frame. This information is meant to be used by competitors to ﬁnd the transform to this frame as their
+robotsenterthechallenge.Bottomleft:Atop-downviewoftherobotafterithasenteredthetunnel,butbeforethedistalﬁducialtagisusedtoimprove
+the alignment of the “darpa” to map frame. Bottom right: The same view taken moments later after the distal ﬁducial is used to correct the absolute
+frametransform.Inbothoftheseimages,thelargepinkspheresrepresenttheﬁduciallocationintheglobalframe,andthesmallerspheresrepresentthe
+measurementsinthemapframe.
+can include the “chinook/odom” to chinook/base and opt is recorded along with the position of the tag in the robot’s
+to provide only the correction in map to chinook/odom. base frame. The stereo depth is currently used to ﬁnd the
+Using this transform, the scoring node computes the darpa distance to the tags. Upon observing a minimum of three
+framelocationofthelandmarkthatwouldhaveresultedfrom tags, the transform between the darpa and map frames is
+making this observation while using the mapping system estimated using the Umeyama algorithm [10] provided in
+underevaluation.Therelationshipsbetweentheseframesare the Eigen library.
+summarized in Figure 5. The scoring node processes the This dataset could be used to additionally test an object
+artifacts ﬁle and compares artifact positions to the ground recognition and localization mechanism; this would require
+truthwhentheROStimeofthereportcreationisreached.If anextensionto thescoringnodeto substituteartifactreports
+the location is within 5 meters of the ground truth position, processedfromthecodedartifactsﬁlewithareportcallback
+a point is accumulated. The RMSE and min/max errors are (which would have to be added to the scoring node). Care
+also updated to reﬂect this new measurement. should be taken to limit the number of reports made on
+a single artifact; the artifacts were coded only on one
+appearance in a given “loop” (i.e. the robot had to travel
+a signiﬁcant distance before revisiting the artifact for it to
+be subsequently recoded).
+must be
+provided
+IV. BENCHMARKS
+position at
+start of run map alternate chinook/base artifact We have selected a set of modern SLAM approaches that
+version sighting
+were available in the open source in addition to our own
+chinook/odom
+provided by technique. These approaches were selected to provide some
+scoring node
+(Umeyama alignment) examplesofusingthisdatasetwithdifferentsensorymodali-
+ground truth
+ties,includingLiDARandstereovision.Inaddition,theraw
+darpa proprioceptive odometric trajectory estimate is evaluated by
+itself to establish how necessary mapping is to achieving a
+Fig.5. TFframeinformation;analysisisperformedonthetransformfrom
+high score on this challenge.
+chinook/basetomapthataSLAMalgorithmgenerates.
+OmniMapper
+Alignment of the mapping system under test to the global The ﬁrst SLAM algorithm evaluated with this dataset is
+darpa frame is handled automatically by the scoring node. an approach from our previous work that was developed
+The procedure is illustrated in Figure 4. The AprilTags were basedupontheopen-sourceOmniMapper [9].Thismapping
+observed in the coding node, and the most conﬁdent match system is a modular framework for integrating sensory mea-
+958
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. surements from potentially many modalities. It is conﬁgured of the mine, and the experimental course is in the bottom
+for this analysis to utilize platform wheel odometry, gyro section of the mine.
+data for orientation only, and LiDAR data from the Ouster ResultsforeachtestedalgorithmcanbeseeninTableI.In
+OS1-64. OmniMapper builds a pose graph along the robot’s thistable,adashindicatesthatthealgorithmwasunabletobe
+trajectory, with connections between adjacent poses coming run on the dataset. The Cartographer algorithm (in both 3D
+fromIterativeClosestPoint(ICP)[7]whenamatchismade and 2D conﬁgurations) was not run on the data taken in the
+with low residual error, and wheel odometry is substituted STIXeventattheEdgarmine.Thisisduetoamistakeonthe
+when no match is found. Wheel odometry is used as an data collection, where the necessary odometry message was
+initial guess to bootstrap the ICP iterations, which greatly omitted. As this would deprive the Cartographer algorithm
+accelerates convergence. When the robot revisits a location of one of its key inputs, it was decided to omit the results
+previouslyseenalongitstrajectory,theICPprocedureisused for this dataset. Cartographer can indeed function without
+to ﬁnd loop closures, where additional constraints are added the odometry input; however, its accuracy with only IMU
+to the graph. This graph of relative frame transformations and laser scan data was insufﬁcient to come close to scoring
+is continuously optimized via iSAM2 [5] in the GTSAM any points. We believe that this may be due to imprecise
+package [2]. The dataset evaluations are performed in real calibration of IMU; this algorithm might be able to achieve
+time; however, only partially degraded performance is still signiﬁcantlybetterresultswithidealcalibration.Overall,the
+achieved at 400% speed. OmniMapper performs slightly better than Cartographer;
+Cartographer however,thismaybeattributedtothefactthatOmniMapper
+Cartographer [4] is an open-source mapping suite which has been tuned speciﬁcally for this operation and we may
+canincorporate2Dand3DLiDAR,landmarkmeasurements, not have conﬁgured Cartographer ideally.
+odometry, and IMU measurements. In place of ICP, Cartog- ORB SLAM2 was not conﬁgured to run on the STIX
+rapher uses a fast correlation-based scan matcher for both course since the right camera image was omitted. The
+frame-to-framematchingaswellasloopclosure.Thesemea- depth image is available, so results are anticipated in the
+surements are incorporated into a graphical representation future using the RGB-D conﬁguration. The main issue with
+that is solved by the Ceres solver. ORB SLAM2 on this dataset is that, due to the darker
+For our analysis, we have included the launch ﬁles and conditionsinthemines,featuretrackingfailswhentherobot
+conﬁgurations used for Cartographer. These parameters are rotates at even a moderate rate. The relocalization procedure
+not necessarily ideal and platform calibrations might not be in ORB SLAM2 was often unable to recover, as the robot
+up to the level that is needed for this software. In some does not return to revisit these locations until much later in
+of the runs made with Cartographer, the robot appears therun.Wemodiﬁedtherecoveryproceduretocontinuewith
+to descend and gets the wrong altitude early in the run, the last pose when tracking was lost, which is designated
+which limits the scoring accuracy. As this is likely due by ORB SLAM2+. As the vehicle was often rotating when
+to a platform calibration issue or conﬁguration parameter, trackingwaslost,thisprocedureenabledthemappingrunto
+we have included an alternative analysis where the artifact continue but typically introduced signiﬁcant tracking error.
+locations and robot detections are projected into the X-Y In some cases, additional progress was made; however, no
+plane, effectively eliminating this potential source of error. additional artifacts were identiﬁed with sufﬁcient precision
+TheseresultscanbefoundintheCartographer 2D entries to count for additional score. Each of the ORB SLAM2 runs
+in Table I. was terminated when the robot moved past the lit portion of
+ORB SLAM2 themine,whereitbecametotallynon-functional,despitethe
+ORB SLAM2[6]isarobotmappingsystemthatconsumes illumination provided by the onboard illuminators.
+camera data instead of LiDAR, either monocular, stereo, The illumination in this dataset is clearly less than what
+or depth camera (RGB-D). This approach leverages visual is typically given to ORB SLAM2; however, by observation
+odometrytobuildlocalkeyframemodels.Bundleadjustment the illuminators clearly provide enough light for an ob-
+is used to triangulate the location of landmarks across server to determine the platform’s motion. It remains to be
+keyframes. When locations are revisited, a bag-of-words demonstrated if visual SLAM-based techniques can operate
+descriptionisusedtoidentifyloopclosures.Thismechanism at the precision needed to score well on the Subterranean
+is also used to provide a reliable relocalization mechanism Challenge; the authors plan to test other approaches in the
+in the event of tracking failure. This approach has been future.
+evaluated against many existing (above ground) mapping
+datasets and has been demonstrated to achieve state-of-the- V. CONCLUSIONANDFUTUREWORK
+art accuracy. We have presented a dataset, a metric, and analysis tools
+ExperimentalEvaluation.Eachofthetechniquesdescribed for evaluating mapping algorithms applied to underground
+previously was evaluated against the dataset where possible. tunnel environments. Thanks to the efforts of the DARPA
+Qualitative results in the form of point clouds overlaid SubterraneanChallengesupportteam,surveyedgroundtruth
+on ground-truth-surveyed point cloud data can be seen in landmark artifact positions are provided that extend deep
+Figure 6. In this ﬁgure, both of the tunnel circuit courses below the earth in three mines which has enabled us to
+can be seen. The safety research course is the top section challengeresearcherstotesttheirownmappingsystems.We
+959
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. (a) (b) (c)
+Fig.6. Groundtruthpointcloudsofthetunnelenvironmentbyprofessionalsurveyingareshowninblack.OmniMapperresultsareoverlaidinbluefor
+qualitativecomparison.
+Run Algorithm Score RMSE Minerr Maxerr One advantage of a modern graph-based SLAM approach
+File Length [m] [m] [m]
+OmniMapper 8/8 1.12 0.31 2.22 is that localization along the trajectory can be corrected
+Cartographer 7/8 3.3 1.2 7.2 through loop closure. Our analysis methodology described
+Cartographer2D 8/8 1.5 0.71 2.1
+srBroute1.bag 909 ORBSLAM2+ 1/2* 13.7* 1.2 19.2 here scores a point each time an observation of an artifact
+ORBSLAM2 1/1* 1.2 1.2 1.2 is made. In the future, one improvement to this technique
+Odometry 1/8 13.25 4.44 27.7
+wouldbetoincorporatethistrajectorycorrectionbyusingthe
+OmniMapper 9/9 1.5 0.46 2.7
+Cartographer 9/9 2.3 1.7 3.0 ﬁnal posterior estimate instead of the intermediate one. The
+srBroute2.bag 792 ORBSLAM2+ 1/5* 28.3 2.8 51.6
+methodologydescribedhereisonethatcanbeeasilyapplied
+ORBSLAM2 1/2* 4.8 2.8 6.2
+Odometry 0/7 9.6 5.5 15.3 in many situations; future work will focus on enabling these
+OmniMapper 20/20 2.4 0.95 4.1
+type of posterior artifact reports in a universally applicable
+Cartographer 1/20 11.9 4.4 18.2
+Cartographer2D 18/20 2.6 0.23 6.7 way.
+exBroute1.bag 1930
+ORBSLAM2+ 3/6* 15.1 1.7 32.2
+Though this initial analysis used hand-coded artifact de-
+ORBSLAM2 3/3* 2.62 1.7 3.5
+Odometry 0/20 54.9 5.29 168.1 tections, this dataset has the potential for evaluating object
+OmniMapper 9/13 9.1 0.26 22.1
+recognition and localization alongside the current map accu-
+Cartographer 4/13 19.4 2.23 46.2
+exBroute2.bag 1187
+ORBSLAM2+ 0/0* 0 0 0 racy evaluation if users wanted to run their own perception
+Odometry 4/13 23.8 2.2 44.3
+algorithms. A mechanism could be implemented in the
+OmniMapper 7/19 14.0 0.27 37.2
+Cartographer - - - - scoring node that would accept global frame object reports
+stixmainloop.bag 871
+ORBSLAM2 - - - -
+and score them directly against the ground truth; replacing
+Odometry 4/19 19.3 0.53 47.8
+thecodedartifactreports.Weinvitethecommunitytosubmit
+TABLEI
+pullrequeststotherepositorythatimplementsupportforthis
+MAPPINGSCORE,RMSE,MINIMUM,ANDMAXIMUMERRORFOREACH
+mode of evaluation.
+ALGORITHMONTHEDATASET
+We intend to create similar datasets at each of the future
+DARPASubterraneanChallengecircuiteventsaswellasthe
+ﬁnal combined event. The future circuit events are planned
+to extend beyond mines; the next circuit event is planned to
+have performed an initial evaluation on our own mapping
+involvethe“UrbanUnderground”,theinfrastructurebeneath
+system, and two options available in the open source, as
+the city streets. The ﬁnal circuit event is planned to take
+well as an evaluation of how well the robot’s proprioceptive
+place in natural caves. As each of these planned future
+sensing alone could be used in place of mapping.
+circuit events has the potential to involve terrain that is
+Ourproposedmetricfocusesontheabsoluteaccuracyofa
+inaccessible to a wheeled platform, we plan to add aerial
+small set of locations rather than the accumulated trajectory
+assets to supplement future collections.
+error that is often reported. We argue that this is valid
+because it represents a task-based benchmarking mindset: VI. ACKNOWLEDGEMENT
+weareinterestedinassessinghowwellmappingenablesthe The authors would like to thank DARPA for supporting
+mission functions of the robotic system. More importantly, this effort, Dr. Tim Chung and Dr. Viktor Orekhov for their
+this provides a pathway for analyzing systems that look helpful advice and suggestions, Angela Maio for her help
+drasticallydifferentthanthe“singlemovingsensorpackage” with the data collection, and the DARPA support staff for
+that describes essentially every SLAM dataset. putting together the SubT Challenge courses.
+960
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. REFERENCES International Conference on Robotics and Automation, pages 3281–
+3288.IEEE,2011.
+[6] R.Mur-ArtalandJ.D.Tardo´s.ORB-SLAM2:Anopen-sourceSLAM
+[1] W. Burgard, C. Stachniss, G. Grisetti, B. Steder, R. Ku¨mmerle, systemformonocular,stereo,andRGB-Dcameras.IEEETransactions
+C.Dornhege,M.Ruhnke,A.Kleiner,andJ.D.Tardo¨s.Acomparison onRobotics,33(5):1255–1262,2017.
+ofSLAMalgorithmsbasedonagraphofrelations.In2009IEEE/RSJ [7] A. Segal, D. Haehnel, and S. Thrun. Generalized-ICP. In Robotics:
+International Conference on Intelligent Robots and Systems, pages scienceandsystems,volume2,page435.Seattle,WA,2009.
+2089–2095.IEEE,2009. [8] J. Sturm, N. Engelhard, F. Endres, W. Burgard, and D. Cremers. A
+[2] F. Dellaert. Factor graphs and GTSAM: A hands-on introduction. benchmark for the evaluation of RGB-D SLAM systems. In 2012
+Technicalreport,GeorgiaInstituteofTechnology,2012. IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems,
+[3] A.Geiger,P.Lenz,C.Stiller,andR.Urtasun. VisionmeetsRobotics: pages573–580.IEEE,2012.
+TheKITTIDataset. Int.JournalofRoboticsResearch,2013. [9] A. J. Trevor, J. G. Rogers, and H. I. Christensen. Omnimapper: A
+[4] W.Hess,D.Kohler,H.Rapp,andD.Andor.Real-TimeLoopClosure modularmultimodalmappingframework.In2014IEEEInternational
+in 2D LIDAR SLAM. In 2016 IEEE International Conference on Conference on Robotics and Automation (ICRA), pages 1983–1990.
+RoboticsandAutomation(ICRA),pages1271–1278,2016. IEEE,2014.
+[5] M. Kaess, H. Johannsson, R. Roberts, V. Ila, J. Leonard, and [10] S. Umeyama. Least-squares estimation of transformation parameters
+F. Dellaert. iSAM2: Incremental smoothing and mapping with ﬂuid between two point patterns. IEEE Transactions on Pattern Analysis
+relinearization and incremental variable reordering. In 2011 IEEE &MachineIntelligence,(4):376–380,1991.
+961
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:23:50 UTC from IEEE Xplore.  Restrictions apply. 

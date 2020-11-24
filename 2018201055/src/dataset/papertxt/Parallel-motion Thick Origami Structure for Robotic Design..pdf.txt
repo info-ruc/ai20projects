@@ -1,0 +1,442 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Underactuated Waypoint Trajectory Optimization
+for Light Painting Photography
+Christian Eilers*, Jonas Eschmann*, Robin Menzenbach*,
+Boris Belousov, Fabio Muratore, and Jan Peters
+Abstract—Despite their abundance in robotics and nature,
+underactuatedsystemsremainachallengeforcontrolengineer-
+ing. Trajectory optimization provides a generally applicable
+solution, however its efﬁciency strongly depends on the skill of
+theengineertoframetheprobleminanoptimizer-friendlyway.
+Thispaperproposesaprocedurethatautomatessuchproblem
+reformulationforaclassoftasksinwhichthedesiredtrajectory
+is speciﬁed by asequence ofwaypoints. Theapproach isbased
+on introducing auxiliary optimization variables that represent
+waypointactivations.Tovalidatetheproposedmethod,aletter
+drawing task is set up where shapes traced by the tip of a
+rotary inverted pendulum are visualized using long exposure
+photography.
+I. INTRODUCTION
+Controlling underactuated systems is of special interest (a) Quanser Qube. (b) Coordinate systems.
+in robotics and engineering because many common systems Fig. 1: Evaluation platform: Furuta pendulum.
+such as automobiles, hovercrafts, aircrafts, ships, legged and
+wheeled robots, as well as underwater vehicles are under-
+The main contribution of this paper is the design of
+actuated [1]. Nevertheless, designing efﬁcient controllers for
+the objective function for trajectory optimization described
+suchsystemsrequiressigniﬁcantlymoreeffortthanforfully
+in Section III. This objective function explicitly takes into
+actuated ones [2]. In particular, even if a feasible trajectory
+account the waypoints and thus enables the generation of
+isobtainedinsimulation,trajectorytrackingonarealsystem
+recognizable letter contours in long exposure photography.
+is non-trivial because not all deviations from the desired
+However,open-loopexecutionoftheoptimaltrajectoryisnot
+trajectorycanbecompensatedduetotheunderactuation[3].
+sufﬁcient on its own because even small deviations from the
+Although techniques such as partial feedback lineariza-
+planned trajectory yield unrecognizable letters. Section IV
+tion [4], which aim to cancel the system dynamics, can be
+details the implementation of the stabilizing feedback con-
+effective at reducing the plant to a partially linear form,
+troller that enables efﬁcient trajectory tracking. Finally, the
+they do not exploit the passive system dynamics [3]. For
+resulting trajectories and letters are presented in Section V.
+classicalcontrolsystems,suchasthecart-pole,convey-crane,
+pendubot, etc., a number of controllers have been hand- II. LIGHTPAINTINGSETUP
+designed [5] that do exploit the system dynamics. The task The hardware platform used for experiments is the
+in those examples is typically to drive the system to an Quanser Qube shown in Fig. 1a. It implements the rotary
+equilibrium state. In this paper, on the other hand, we are inverted pendulum system introduced by Furuta et al. [8],
+interested in generating and tracking a dynamic trajectory which consists of a freely rotating pendulum attached to a
+rather than reaching a static target state. motor-driven arm. A schematic is shown in Fig. 1b. While
+Trajectory generation for both actuated and underactuated thearmcanberotatedinthehorizontalplane,thependulum
+systems is commonly performed using numerical optimiza- swings in the vertical plane orthogonal to the arm. The state
+tion [3]. For fully actuated systems, waypoints are relatively of the nonlinear system(cid:2)is described (cid:3)by the two angles and
+straightforward to incorporate into the trajectory generation the corresponding angular velocities
+process because kinematic path planners can be used [6].
+For underactuated systems, however, a kinematic plan may x= θ α θ˙ α˙ T .
+be dynamically infeasible [7]. Therefore, a dynamics-based
+The Furuta pendulum is a classical platform for evaluating
+trajectoryoptimizationmethodisneededthatcanhandletra-
+control algorithms, appreciated for its rich passive dynamics
+jectoryspeciﬁcationintheformofasequenceofwaypoints.
+and underactuation. Its equations of motion are provided
+*Authorscontributedequallyname.surname@stud.tu-darmstadt.de in the Appendix, with derivations starting from the Euler-
+All authors are with the Computer Science Department, Technische Lagrange equations available in [8] and [9].
+Universita¨tDarmstadt,Germanyname.surname@tu-darmstadt.de The light painting task is set up as follows. A piece of
+This project has received funding from the European Union’s Horizon
+2020researchandinnovationprogrammeundergrantagreementNo640554. reﬂective tape is attached to the tip of the Furuta pendulum.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1505
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:06:09 UTC from IEEE Xplore.  Restrictions apply. Letter Conﬁg
+Projection
++parameters
+KinematicModel RBF
+Objective
+Fig. 2: Reachable space Fig. 3: Projection of a letter
+Collocation DynamicModel
+visualized as a point cloud. onto the reachable space.
+NLP Linearize
+While the pendulum is moving, a long exposure photograph
+is taken. The goal is to draw recognizable letters with the
+Activation LQR
+Solver
+tip of the pendulum. Since the reachable space of the Furuta Controller
+pendulum covers a part of a sphere, as shown in Fig. 2, all
+letters ﬁrst need to be projected onto the reachable space
+before drawing, as depicted in Fig. 3.
+Ideally, we would like to have a controller that receives LED-Device Camera Qube
+a letter as input and is able to trace its contour with the
+tip of the pendulum. If the system was fully actuated,
+trajectory tracking would be straightforward. However, due
+to underactuation, not every trajectory can be executed but A Image
+onlydynamicallyfeasibleones.Therefore,thecrucialtaskis
+to ﬁnd a trajectory which most closely follows the shape of Fig. 4: Full pipeline from planning to tracking for drawing
+the desired letter. As a proxy for this task, we discretize the lettersvialightpaintingphotographyusingFurutapendulum.
+letter into a sequence of waypoints and subsequently search
+for a trajectory that passes through these waypoints. A. Direct Collocation
+The diagram in Fig. 4 shows the full pipeline of our
+Trajectory optimization is concerned with ﬁnding a fea-
+approach to underactuated light painting. On a high level,
+sible trajectory that minimizes a given objective function.
+it can be split into three parts, from top to bottom: waypoint
+Numerical optimization methods such as multiple shooting
+generation(ﬁrstrow),trajectoryoptimiztion(rows 2–3),and
+and direct collocation work by transforming a continuous-
+execution (bottom 3 rows). Waypoint generation comprises
+time optimal control problem into a big Nonlinear Program
+letter discretization and projection discussed above. Trajec-
+(NLP) [10]. Methods differ in how exactly the discretiza-
+tory optimization takes the generated waypoints as input
+tion is done and what variables are treated as optimization
+and ﬁnds a sequence of control commands that drives the
+variables. We use direct collocation with cubic splines [11],
+system through these waypoints using the knowledge of the
+widely spread in robotics [3], and implement our optimiza-
+system kinematics and dynamics. Finally, an LQR feedback
+tion problem in CasADi [12].
+controllerisaddedfortrackingoftheoptimizedtrajectoryat
+Direct(cid:2)collocation tre(cid:3)ats both state(cid:2)s x and control(cid:3)com-
+theexecutionstage.Additionally,asynchronizedsetofLEDs t
+mands u as optimization variables,
+isactivatedwhenthependulumpassesthroughthetrajectory t
+segments belonging to the letter to increase illumination. X= x ... x , U= u ... u − ,
+0 N 0 N 1
+whereas the system dynamics are imposed as constraints.
+III. TRAJECTORYOPTIMIZATION The objective function typically has the form of a sum over
+(cid:88) (cid:88)
+the time steps
+Given a set of waypoints obtained via letter discretization
+−
+N N 1
+and subsequent projection onto the reachable space, we aim (cid:124) (cid:123)(cid:122) (cid:125) (cid:124) (cid:123)(cid:122) (cid:125)
+J(X,U)= α d(xˆ,x )+β u2 (1)
+to devise an objective function that will yield a trajectory t t t
+t=0 t=0
+passing through the waypoints upon optimization. To this
+end, we ﬁrst describe the trajectory optimization method Jα(X) Jβ(U)
+which we employ in Section III-A. After that, we present where d(xˆ,x ) is a distance-based metric that encodes the
+t ∈
+the main idea of our approach of introducing ‘attention’ state-dependent part of the running cost. Weights α [0,1]
+t
+into the optimization objective and explain it on the task of determine the importance of each time step and are usually
+reaching a single desired waypoint in Section III-B. Finally, settoα =1.Parameterβ ischosensuchthatthecostofthe
+t
+inSectionIII-C,wedemonstratehowtheideaofintroducing squared control commands is orders of magnitude smaller
+‘attention’ can be extended to multiple waypoints and how than the other cost terms. Moreover, we introduce xˆ as a
+to enforce a desired ordering among them. parameter, which will later play the role of a waypoint.
+1506
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:06:09 UTC from IEEE Xplore.  Restrictions apply. 0.05 Running cost waypoint: 0 1.0 of pre-specifying the activations αt, we treat them as op-
+Running cost0000....00001234 R''AAuttntteennninttiigoo nnc''o  ccsoot sswtt  awwyaapyyoppinootii:nn 1tt::  01 0000....2468me Activated Loss(Normalized) tciomeifzﬁactiieonntsvαartiabbyleRαsa.td=MiaolerxBepasc(cid:18)ios−nFc(urtˆent−σcetl2iyto),n2ws(cid:19)(eRpBaFras)moeftetrhiezefot(rh3me)
+0.00 0.0Ti
+0.0 0.2 0.4Time [s] 0.6 0.8 1.0 wheretˆisthecenteroftheRBFandσ isthebandwidth.The
+center tˆdetermines the activation time and is introduced as
+Fig.5:Effectof‘attention’onthelossfunction.Components
+a new optimization variable in the NLP. Thus, the optimizer
+of the loss function are drawn over time for a task with two
+is able to shift its ‘attention’ and can account for the time
+waypoints. Note that the loss is minimal and close to zero
+needed to accumulate sufﬁcient energy to reach a desired
+when ‘attention’ is one.
+state. Inserting Eq. (3) into E(cid:18)q. (1), we o(cid:19)btain the objective
+(cid:88)
+function that incorporates ‘attention’ for a single waypoint.
+speOcuiﬁrckweyayidtheaatidsratwosptahream‘aettteerniztieont’heofwtheeighotpstimαtizeirntoa N −(tˆ−t)2
+J (X,tˆ)= exp d(xˆ,x ). (4)
+the important moments in time when the waypoints need to α σ t
+t=0
+be reached. Crucially, which moments exactly are important
+Toexcludetrivialsolutionsachievedbyshiftingtheattention
+is determined by the optimizer itself. In the following, we
+out of the scope of the ﬁnite trajectory, tˆ needs to be
+detail how this is done, ﬁrst on a single-waypoint example
+constrained to the interval [0,N].
+and then on the full sequential problem.
+This formulation also allows one to minimize the time
+B. Attention Mechanism for Reaching a Single Waypoint of arrival at the waypoint by simply adding a punishment
+term γtˆ to the objective function in Eq. (4) with some
+If there is only one po(cid:40)int xˆ that needs to be reached, the
+positiveweightγ.Themainadvantageofthisapproachisits
+coefﬁcients α in Eq. (1) can be set as
+t independence on pre-speciﬁed activation times, which also
+makes it scalable to multiple waypoints.
+1, t=N,
+α = (2)
+t 0, otherwise, C. Attention for Reaching Multiple Waypoints in Sequence
+which puts all the weight on the last time step and yields a Extending Eq. (4) with an activation time tˆ for each
+i
+trajectory that ends up at the target state. At ﬁrst sight, one waypoint xˆ and summing o(cid:18)ver the wayp(cid:19)oints, we obtain
+i (cid:88) (cid:88)
+could imagine solving a set of such one-waypoint problems the objective function for multiple waypoints
+andthenchainingthesolutionstogethertoobtainacomplete − −
+M 1 N −(tˆ t)2
+trajectory. However, this approach will not work, because J (X,T)= exp i d(xˆ ,x ) (5)
+α σ i t
+it does not account for the fact that the ﬁnal state of one
+i=0 t=0
+segment becomes the initial condition for the subsequent where M is the number of waypoints and T is the set of
+one. Since the dynamics are nonlinear and the system is their associated activation times tˆ.
+i
+underactuated, the optimizer may decide to e.g. do an addi- Theorderinwhichthewaypointsaretraversedmatters:if
+tional swing between going from one waypoint to another, the waypoints are traversed in an arbitrary order, the drawn
+despite the points being next to each other, just because letters are hardly recognizable. However, the ordering is not
+the velocity with which the ﬁrst waypoint was reached enforced by the objective function in Eq. (5). To impose
+was not sufﬁciently high. Moreover, switching controllers order,weaugmenttheoptimizationproblemwithconstraints
+≤ −
+betweensegmentsisnon-trivialandleadstojerkytransitions. of the form tˆ tˆ , i = 0,...,M 2. Furthermore,
+i i+1
+Therefore, we aim for developing a method that allows to it is beneﬁcial to split up the set of the waypoints into
+pass through multiple waypoints smoothly instead. segments. All segments are then treated within one NLP,
+AnapproachbasedonEq.(2),wheretheactivationtimeis but the ordering constraints are only enforced within each
+triviallysettothelasttimestep,ishardlyscalabletomultiple segment.Tofurtherimprovethesmoothnessofthetrajectory,
+(cid:88)(cid:0) (cid:1)
+waypoints, as the activation time for each point would have we add a punishment term
+to be known in advance. Setting the activation times for −
+S 1 −
+multiple waypoints by hand is prohibitive and in general J (T)=µ tˆ tˆ (6)
+leads to suboptimal solutions. This can be attributed to the µ lj fj
+j=0
+underactuatedandoscillatingnatureoftheFurutapendulum, −
+to the objective function that favors short segments tˆ tˆ .
+which makes it hard to anticipate how much swinging is lj fj
+Here,f andl denotetheﬁrstandlastwaypointsinsegment
+needed to accumulate sufﬁcient energy for reaching certain j j
+j, respectively. Each letter is split into S segments and µ
+states.
+determines the strength of the segment duration punishment.
+Forlongexposurephotography,itdoesnotmatteratwhat
+The resulting objective function for multiple segments is
+exact time the system passes through each waypoint. This
+given by
+rendershard-codedactivationssuchasinEq.(2)unnecessary
+and motivates a more ﬂexible approach. Namely, instead J(X,U,T)=J (X,T)+J (U)+J (T). (7)
+α β µ
+1507
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:06:09 UTC from IEEE Xplore.  Restrictions apply. Fig. 6: Open-loop control on the Quanser Qube: (top) motor Fig. 7: Closed-loop LQR tracking controller successfully
+input voltage, (middle) horizontal joint angle θ, (bottom) tracks the same desired trajectory as in Fig. 6, and it is
+pendulumjointangleα,plottedovertime.Trajectoryinblue able to correct the deviations from the planned trajectory
+(Sim)wasoptimizedinsimulationtotraceletter‘S’asshown despite underactuation. Undesirable overshoots in the input
+in Fig. 8. Trajectory in orange (Qube) was obtained on the voltage,owingtoexploitsofthelinearizedsystemdynamics,
+real system, and it rather quickly diverges from simulation. are clipped to prevent excessively large control signals.
+The NLP is then solved by minimizing the objective Eq. (7) the system on the desired trajectory, we employ an LQR
+subjecttothecollocationconstraintsonthesystemdynamics, tracking controller described in the following.
+path and boundary constraints, and the proposed activations The ﬁrst step is to linearize the system dynamics along
+ordering constraints. a desired trajectory. If x˙ = f(x,u), then the linearization
+Fig. 5 illustrates the effect of ‘attention’ on the loss func- around a given point (xd,ud) can be written as
+tion. The results were obtained by optimizing the objective
+≈ ∂f(xd,ud) − ∂f(xd,ud) −
+given in Eq. (5) with two waypoints. The curves correspond x˙ x˙d+ (x xd)+ (u ud). (8)
+∂x ∂u
+to the individual terms d(xˆ ,x ) and αi for each of the two
+i t t Performing such linearization at every time step, we can
+waypoints i = 0 and i = 1. Thus, the value of the full loss
+obtain a linearization around the desired trajectory. It is
+is given by the sum of the terms αid(xˆ ,x ) over t and i.
+t i t convenient to introduce auxiliary variables representing the
+Notably, when ‘attention’ rises to one, the corresponding
+deviations from the desired trajectory
+distance-basedlossgoestozero,signallingthatthewaypoint
+is reached. Summing the losses up without time activations − −
+x˜ =x xd, u˜ =u ud. (9)
+would yield a high value for the total cost, despite both t t t t t t
+waypointsbeingreached(indicatedbythelossgoingtozero Inserting Eq. (9) into Eq. (8), we obtain
+once for each waypoint). Therefore, a formulation with a
+∂f(xd,ud) ∂f(xd,ud)
+ﬂat weighting αt = 1 for all time steps, as it is used in x˜˙t = ∂tx t x˜t+ ∂tu t u˜t. (10)
+most of the literature, would yield a high loss value despite
+Discretizing the continuous-time linear dynamical system
+the desired states being reached. In contrast, the RBF-based
+given in Eq. (10) using the Euler integration scheme
+objective function in Eq. (5), which only accumulates the
+distance-based losses close to the waypoints, results in a x˜ =x˜ +∆tx˜˙ , (11)
+much lower loss value. (cid:18) t+1 t (cid:19) t
+we arrive at the discrete-time time-varying dynamics
+IV. LINEAR-QUADRATICOPTIMALTRACKING
+∂f(xd,ud) ∂f(xd,ud)
+Executinganopen-loopsequenceofcontrolcommandson x˜t+1 = I+∆t ∂tx t x˜t+∆t ∂tu t u˜t
+therealsystemresultsinatrajectoryratherquicklydiverging
+=A x˜ +B u˜ . (12)
+from the desired path due to disturbances, modeling errors, t t t t
+and uncertainties in the initial conditions. An example is These dynamics provide the basis for designing a time-
+shown in Fig. 6. To prevent such divergence and to keep varying tracking feedback controller.
+1508
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:06:09 UTC from IEEE Xplore.  Restrictions apply. GiventhelinearizedmodelalongthetrajectoryinEq.(12),
+we can formulate the trajectory stabilization problem as the
+minimization of the(cid:88)cost(cid:0) (cid:1)
+−
+N 1
+J = x˜TQx˜ +u˜TRu˜ . (13)
+t t t t
+t=0
+The system is quadratically penalized for being away from
+thedesiredtrajectoryusingweightingmatricesQandR.The
+optimal feedback controller that minimizes the cost given
+in Eq. (13) subject to the dynamics provided in Eq. (12) is
+an afﬁne control law of the form
+−
+u =ud K x˜ (14)
+t t t t
+where the feedback gain matrix K is found by solving the
+t
+discrete-time Riccati equation backwards in time [13].
+The result of applying the stabilizing LQR controller
+derived in Eq. (14) to the same trajectory on which the
+open-loop execution failed is shown in Fig. 7. As it can be
+seen from the plots, the system is able to follow the desired
+trajectory, canceling all disturbances and deviations, in spite
+of being underactuated.
+Notwithstanding its impressive performance, the LQR as
+a tracking controller for the Furuta pendulum has some
+limitations.First,thecontrollercanonlystabilizethesystem
+when it is sufﬁciently close to the desired trajectory. Due
+(a) Trajectory trace. (b) Light painted shape.
+to underactuation, the envelope of correctable deviations
+is quite small. Second, due to high nonlinearity of the Fig.8:Pendulumtrajectoriesandcorrespondinglightpainted
+dynamics, linearizations can be rather bad in some states, letter shapes. Each highlighted segment on the right consists
+leading to overshooting and instability. As the LQR has no of a set of waypoints traversed in quick succession. Note
+natural way of incorporating control constraints, the applied that the complete trajectories may be quite long, as seen in
+control voltages were clipped. the traces on the left, and it is virtually impossible to design
+Another general problem of the LQR is the choice of such trajectories by hand or using kinematic path planning.
+the weighting matrices Q and R, which are typically found
+usingpriorknowledgeortrial-and-error.Wewereabletoﬁnd are added to our direct collocation formulation of the trajec-
+goodparametersforthepresentedexamples,butasgenerated tory optimization problem described in Section III.
+trajectories for different letters show signiﬁcant variability, a For all of our experiments, the initial state x is assumed
+0
+tailoredsetofparametersisrequiredforeachletter.Asimilar to be zero, which corresponds to the system being still, with
+problem is stated in [14]. Finding a good set of parameters the pole centered in the front and hanging down.
+without many trials is still an open research area and could Following the pipeline from Fig. 4, the trajectories shown
+bethesubjectforfuturework,potentiallysolvedbylearning in Fig. 8 were obtained in simulation. The traces on the left
+or optimization algorithms such as [15]. showthatasigniﬁcantamountoftimeisspentinpreparation
+of each maneuver, while the pendulum is accumulating
+V. RESULTS the required energy and momentum to pass through the
+waypointsinthespeciﬁedorderandinquicksuccession.The
+In the previous sections, individual blocks from the
+visualizations on the right show the expected results from
+pipeline in Fig. 4 have been introduced. In this section, the
+thelightpaintingphotography,wherethelettersegmentsare
+completeapproachisevaluatedandtheresultinglightpainted
+trajectories are presented. highlightedbasedontheactivationtimestˆi obtainedthrough
+the ‘attention’-augmented trajectory optimization described
+The Quanser Qube implementation of the Furuta pendu-
+in Section III-C.Notethatwhileletter‘I’consistsofasingle
+lum imposes a hard limit on the range of values that the
+segment, letters ‘A’ and ‘S’ are comprised of three segments
+horizontal rotary angle θ can take, reﬂected in the reachable
+each. The letter ‘S’ is specially challenging because of the
+space shown in Fig. 2. In addition, a software limit is
+kinodynamic structure of the Furuta pendulum.
+imposed on the input voltage signal u to avoid damaging
+Long exposure photographs of the light painted letters
+the motor. To account for the joint and control limits, the
+are presented in Fig. 9. The pictures have been taken in
+following inequality constraints
+a dark room with an LED device synchronized with the
+− ≤ ≤ − ≤ ≤
+umax ut umax, θmax θt θmax trajectory execution and activated based on the optimized
+1509
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:06:09 UTC from IEEE Xplore.  Restrictions apply. (cid:18) APPENDIX (cid:19)
+Equations of motion of the Quanser Qube are given by
+(cid:18) 1 −(cid:19)1 (cid:18) (cid:19)
+m L2+ m L2 m L2cos2α+J θ¨
+p r 4 p p 4 p p r
+(cid:18)1 (cid:19) 1
++ m L L cosα α¨+ m L2sinαcosα θ˙α˙
+2 p p r 2 p p
+Fig. 9: Images of letters ‘I’, ‘A’, and ‘S’ created by light −
+(cid:18)− 1 (cid:19) (cid:18) k ((cid:19)u k θ˙)
+painting photography following the pipeline from Fig. 4. m L L sinα α˙2+D θ˙ = m m ,
+2 p p r r R
+m
+(cid:18) (cid:19)
+1 1
+segment beginning/end times tˆi described in Section III-C. 2mpLpLrcosα θ¨+ Jp+ 4mpL2p α¨+Dpα˙
+Comparing the real images in Fig. 9 with the simulated
+− 1 1
+renderings in Fig. 8, we observe a sufﬁciently good match m L2cosαsinα θ˙2+ m L gsinα=0.
+allowing the letters to be well recognizable. However, the 4 p p 2 p p
+trajectoriesslightlydeviatetowardstheend,asitcanbeseen Thecontrolcommandu(seeupperEq.)isthemotorvoltage.
+onthemiddlestrokesintheletters‘A’and‘S’thataredrawn The dynamics parameters can be found in [16].
+last. These segments are slightly tilted compared to their
+desired location. For a better view, see the accompanying REFERENCES
+video, where real and simulated trajectories are drawn side [1] M.W.Spong,“Underactuatedmechanicalsystems,”inControlprob-
+by side. lemsinroboticsandautomation. Springer,1998,pp.135–150.
+[2] H. M. Choset, S. Hutchinson, K. M. Lynch, G. Kantor, W. Burgard,
+L. E. Kavraki, and S. Thrun, Principles of robot motion: theory,
+algorithms,andimplementation. MITpress,2005.
+VI. DISCUSSIONANDCONCLUSION [3] R.Tedrake.Underactuatedrobotics:Algorithmsforwalking,running,
+swimming, ﬂying, and manipulation (course notes for MIT 6.832).
+[Online].Available:http://underactuated.mit.edu/
+A method for objective function design in the context
+[4] M.W.Spong,“Partialfeedbacklinearizationofunderactuatedmechan-
+of trajectory optimization with waypoints has been pre- ical systems,” in Proceedings of IEEE/RSJ International Conference
+sented (see Section III). The proposed objective function onIntelligentRobotsandSystems,vol.1. IEEE,1994,pp.314–321.
+[5] I. Fantoni and R. Lozano, Non-linear control for underactuated
+(seeEq.(5))featuresanRBF-smoothed‘attention’overtime
+mechanicalsystems. SpringerScience&BusinessMedia,2001.
+thatactivatesthedistance-basedlosswhenthecorresponding [6] J. Lin, N. Somani, B. Hu, M. Rickert, and A. Knoll, “An efﬁcient
+waypointisnear.Crucially,theRBF-activationsarenothand- andtime-optimaltrajectorygenerationapproachforwaypointsunder
+kinematicconstraintsanderrorbounds,”inInternationalConference
+designed but jointly optimized together with the states and
+onIntelligentRobotsandSystems. IEEE,2018,pp.5869–5876.
+control commands. For the tasks in which the order of the [7] J. Schultz and T. Murphey, “Trajectory generation for underactuated
+waypoints matters, the objective function has been extended controlofasuspendedmass,”in2012IEEEInternationalConference
+onRoboticsandAutomation. IEEE,2012,pp.123–129.
+to enforce the desired ordering (see Eq. (7)).
+[8] K. Furuta, M. Yamakita, and S. Kobayashi, “Swing-up control of
+The proposed method has been evaluated on a task of inverted pendulum using pseudo-state feedback,” Proceedings of the
+drawing letters with the Furuta pendulum, a highly dynamic Institution of Mechanical Engineers, Part I: Journal of Systems and
+ControlEngineering,vol.206,no.4,pp.263–269,1992.
+underactuated system (see Section V). The letters were
+[9] B. S. Cazzolato and Z. Prime, “On the dynamics of the furuta
+discretized into a set of waypoints, and a trajectory passing pendulum,” Journal of Control Science and Engineering, vol. 2011,
+through them was optimized using the proposed objective p.3,2011.
+[10] J.T.Betts,“Surveyofnumericalmethodsfortrajectoryoptimization,”
+function. This procedure yielded activation times at which
+Journalofguidance,control,anddynamics,vol.21,no.2,pp.193–
+the waypoints were reached as a byproduct (see Fig. 5). 207,1998.
+An LQR-based tracking controller has been applied to exe- [11] C. R. Hargraves and S. W. Paris, “Direct trajectory optimization
+usingnonlinearprogrammingandcollocation,”JournalofGuidance,
+cute the planned trajectories (see Section IV). To visualize
+Control,andDynamics,vol.10,no.4,pp.338–342,1987.
+the trajectory traces, long exposure photography has been [12] J.A.E.Andersson,J.Gillis,G.Horn,J.B.Rawlings,andM.Diehl,
+employed, with an LED ring illuminating the scene at the “CasADi – A software framework for nonlinear optimization and
+optimalcontrol,”MathematicalProgrammingComputation,2019.
+activation times obtained through optimization (see Fig. 9).
+[13] F. L. Lewis, D. Vrabie, and V. L. Syrmos, Optimal control. John
+Althoughthedesiredperformancehasbeenachieved,sev- Wiley&Sons,2012.
+[14] A.W.DivelbissandJ.T.Wen,“Trajectorytrackingcontrolofacar-
+eralimprovementsarepossible.First,thelettersegmentation
+trailer system,” IEEE Transactions on Control systems technology,
+and discretization process should be automated. Second, the vol.5,no.3,pp.269–278,1997.
+complexity of waypoint optimization needs to be evaluated [15] A.Marco,P.Hennig,J.Bohg,S.Schaal,andS.Trimpe,“Automatic
+lqr tuning based on gaussian process global optimization,” in 2016
+in more depth; we used between 5 and 15 waypoints, but
+IEEE international conference on robotics and automation (ICRA).
+larger numbers may be required in other tasks. Finally, IEEE,2016,pp.270–277.
+parameters such as time horizon, waypoints order, segment [16] QuanserInc.,“Qube-servo2workbook-studentversion,”2013.
+duration penalty, as well as the tracking LQR cost matrices
+are currently set by hand for each letter. Automating this
+procedure would be of great practical interest even beyond
+the light painting task.
+1510
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:06:09 UTC from IEEE Xplore.  Restrictions apply. 

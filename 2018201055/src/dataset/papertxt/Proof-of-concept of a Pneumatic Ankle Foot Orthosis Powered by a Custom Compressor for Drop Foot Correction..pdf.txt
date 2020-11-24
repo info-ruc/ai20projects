@@ -1,0 +1,499 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Robust Lane Detection with Binary Integer Optimization
+Kathleen Brandes, Allen Wang, and Rushina Shah
+Abstract—FormulaStudentDriverless(FSD)isacompetition
+where student teams compete to build an autonomous racecar.
+The main dynamic event in FSD is trackdrive, where the
+racecar traverses an unknown track with lanes demarcated
+by cones. One major challenge of the event is to determine the
+boundariesofthelanefromconesperceivedonlinedespitefalse
+positive cone detections and sharp turns. We present a binary
+integer optimization to address this problem by leveraging a Fig.2. TheautonomoussystemsoftwarelayoutforMIT/DUTDriverless.
+prioriknowledgefromcompetitionrulesonparameterssuchas
+averageconespacingsandminimumtrackwidth.Inthispaper,
+we describe our approach, and analyze its latency, accuracy,
+and mapping. The path planning subsystem generates a path
+and robustness to false positive cone detections. This approach
+for the car to follow, and the controls subsystem ensures the
+isusedon-boardtosolvethelanedetectionproblemduringthe
+competition in real-time. execution of this path. A crucial piece in this pipeline is
+the accurate detection of the track boundaries based on the
+I. INTRODUCTION cone locations, which deﬁne the feasible driving region and
+the possible paths for the vehicle. This paper describes the
+With the recent acceleration in developmental efforts for
+MIT/DUT Driverless team’s approach to solve this problem.
+driverless vehicles, Formula Student Driverless (FSD) pro-
+vides an avenue for student teams to innovate in this space. Several factors complicate the problem of lane detection.
+The FSD racecar competition started in 2017 to challenge First, the competition track can contain very sharp turns,
+students to develop a fully autonomous racecar. The most making the underlying geometry hard to capture. Further,
+difﬁcult dynamic event of this competition is trackdrive, theaccuracyoftheperceptionsubsystem’sdetectionscanbe
+wheretheracecarmusttraverseanunknowntrackfortenlaps affected by weather, lighting conditions, and sensor quality,
+as quickly as possible. The track boundaries are demarcated resulting in a large number of false positives (15-25%) in
+by cones (yellow to the right, and blue to the left) as shown the cone detections. The competition track does have color-
+in Fig. 1. coded left and right boundaries, but the color information
+provided by the perception subsystem can be inaccurate
+and incomplete. Further, the MIT/DUT team aimed to have
+completeperceptionredundancyusingbothlidarandcamera
+pipelines, therefore the boundary detection system had to
+operate in scenarios (for the lidar-only system) where the
+problemoffalse-positiveswasexacerbatedbyhavingasmall
+look-aheadandwideﬁeldofview,oftenincludingdetections
+from other parts of the track or other nearby objects. In
+many cases, like the one shown in Fig. 3, given no other
+information, the number of false positives and inaccurate
+detections make the track geometry hard to decipher even
+for a human in some locations.
+Additional information to aid in solving this problem is
+providedbythecompetitionrules[1].Theconesonasingle
+Fig.1. ExampleofthetracklayoutatFormulaStudentCompetitionswith
+therules-speciﬁedcoloredsidesandconespacings. side are stated to be approximately 5m apart. In reality, this
+distance varied from 1m on tight turns to 5.5m on straight
+The software stack of the MIT/DUT Driverless team fol- sections.Theminimumtrackwidthisguaranteedtobe3m.A
+lowsthestructureshowninFig.2.Theperceptionsubsystem, boundarydetectionsystemthatcanleveragethisinformation,
+which has both camera and lidar pipelines, detects the cone as well as information of the vehicle state, can potentially
+locations and colors. The state estimation subsystem esti- overcome the issue of uncertainty in cone detections.
+mates the full state of the vehicle and performs localization Aconsiderableamountofworkhasbeendoneindetecting
+and tracking lane markers on the roads [2]. Most of these
+Kathleen Brandes, Allen Wang and Rushina Shah are students at the efforts are focused on detecting the lane markers, which
+MassachusettsInstituteofTechnology,Cambridge,MA02139,USA.Email
+are often then ﬁt using polynomial or spline curves [3],
+addresses:kbrandes@mit.edu(K.Brandes),allenw@mit.edu
+(A.Wang),rushina@mit.edu(R.Shah) [4], [5], [6]. Such curve-ﬁtting approaches do not naturally
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 229
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. the lane of a track in real-time. Section II deﬁnes the opti-
+mization problem and the constraints required to accurately
+produce the boundaries of the track. The implementation,
+including details for runtime improvements, are discussed in
+Section III. Section IV describes the analysis and validation
+of the optimization’s robustness and efﬁciency.
+II. ROBUSTLANEDETECTIONOPTIMIZATION
+Werepresenttheboundariesofthelanewithanundirected
+graph G = (V,E) where the set of vertices V is the set of
+observed cones, including false positives, and E is the set
+of edges connecting cones that are adjacent to each other on
+the same boundary. The overall strategy is to solve a binary
+integer program to ﬁnd the adjacency matrix, A, of the lane
+graphthatisoptimalwithrespecttoaspeciﬁedcostfunction.
+A. Deﬁnitions and Notation
+Deﬁnition1. AgraphG=(V,E)issaidtobealanegraph
+∈
+ifeveryedgee E isanelementofoneoftwosimplepaths
+Fig.3. Completedtrackwithfalsepositiveaccumulation.Thecomputed P ,P and P ∩P =∅.
+boundaries are visualized surrounding the car. The green markers repre- 1 2 1 2
+sent the perception system’s cone detections, which include false positive Deﬁnition 2. A cone c in a lane graph is said to be an
+detections.Thereddottedlinerepresentsthepathtraversed. i
+endpoint cone if it has degree one.
+Deﬁnition 3. A cone is said to be an inlier cone if it is a
+lend themselves to including rule-based heuristics and can member of one of the two simple paths of a lane graph.
+be skewed by outlier false positive detections. In [7], a | |
+The optimization operates on V = n cones, denoted
+dynamic programming approach is used to connect nodes ∈ | |
+c for i [n], and computes E total edges, denoted a ,
+on the lane by minimizing the cost to the goal node, after i ij
+connecting cones c and c . Let n denote the number of
+some heuristics-based edge extraction. In [8], a ﬁlter-based i j i
+inlier cones. Let a be the vectorized form of the lower
+approach is used to generate road boundaries for scenarios
+triangular portion of A arranged in column-major order and
+with multiple different markers (such as painted lanes or
+letn denotethenumberofelementsofa.LetD denotethe
+“Botts Dots”). The above mentioned approaches work well a ×
+distancematrixofsizen nwhereentryD istheEuclidean
+forthecaseofroad-driving,wherelanesaretypicallymarked ij
+distance between c and c . Throughout the paper, bold
+using a solid line segment. However, these methods, along i j
+letters denote vectors, and capital letters denote matrices.
+with outlier rejection methods such as random sample con- ×
+The m m matrix of ones is denoted Jm, and similarly the
+sensusasusedby[9]and[10],arenoteasilyadaptabletothe ×
+m 1 vector of ones is j . The matrix operations of the
+competitionscenariowhereconesmarkthetrackboundaries, m
+Kronecker product and element-wise product are denoted as
+and are not always capable of handling larger amounts of ⊗ ◦
+and , respectively. A subscript denotes the index into the
+false positives or detection inaccuracies.
+vector or matrix.
+To address the problem of generating track boundaries
+that are marked by cones, we present a novel binary integer B. Lane Graph Constraints
+program that is robust to false positives and false negatives, Inthissection,weshowhowlinearconstraintscanensure
+and ﬂexible enough to incorporate rule-based information. the results of an optimization problem over A form a lane
+The Robust Lane Detection optimization (RLD) is imple- graph and explicitly reject outliers. We begin by showing
+mented in both simulation and on an autonomous electric how boolean decision variab(cid:80)les can explicitly mark inlier
+racecar,andusedasthebasisforthepathplanningsubsystem cones.Letg beavectorofnbooleandecisionvariablesthat
+to deﬁne a driveable region in real-time, allowing the car mark inlier cones. Let A = n a , and note that A is
+to decipher and traverse a previously unseen competition- equivalent to the degreeiof theji=1 ciojne, c . Then, we cian
+th i
+compliant track. Our method can be modiﬁed to take into ensure that g = 1 if and only if c is an inlier cone by
+i i ∀ ∈
+accountknownlaneparameters(suchasthespacingbetween enforcing the following linear constraints i [n]:
+markers) or rules based on road construction standards
+− ≤
+[11]. Ideas from RLD may be useful for real-world lane gi Ai 0 (1)
+detection applications in the presence of high numbers of 1 − ≤
+A g 0 (2)
+false positives, as is likely to happen in inclement weather 2 i i
+or at construction sites. Note that (2) also constrains the degree of cones to be no
+The main contribution of this paper is an optimization- more than two. In addition, since g = 1 if and only if
+− − i
+based method for robustly determining the boundaries of A >0, we have that A 2g = 1 if and only if A =1.
+i i i i
+230
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. Thus,wecanconstrainthenumberofendpointconestofour
+(cid:88)
+by enforcing the following afﬁne constraint:
+n − −
+(A 2g )= 4 (cid:80) (3)
+i i
+i=1
+(cid:80) (cid:80)
+Thenumberofconeswithconnectingedgesisn = n g ,
+which is also the number of inlier cones. Thie numbi=e1r oif Fig.4. ExampleoftwolinesegmentssatisfyingEnd(aij,akl)=0.
+| |
+edges is E = 1 n n a . To ensure there are at
+2 (cid:88)i=1 j=1(cid:88)ij
+least two disjoint subgraphs, introduce the afﬁne constraint:
+Let MinDist(a ,a ) be the minimum Euclidean distance
+ij kl
+1 n ≤ n − between the edge segments aij and akl. If we enforce
+2 Ai gi 2 (4) constraint(6)wheneverMinDist(aij,akl)>dmin,wewould
+i=1 i=1 limitthemaximumlengthofthelanetheoptimizationroutine
+(cid:80)
+This constraint holds because, for any graph, the sum of the can identify. Thus, the minimum distance between edges
+degrees of all vertices equals twice the number of edges. exceeding d is not a sufﬁcient condition for introducing
+− | | min
+Therefore, ni degree(c )=2n 4=2E , and all other constraint (6). Let End(a ,a ) be a function that returns
+i=1 i i ij kl
+non-inlier cones do not contribute in the sum. However, the 1 if the minimum Euclidean distance path between a and
+| |− ij
+smallest connected graph will have at least V 1 edges, a connects an endpoint of a with an endpoint of a and
+kl ij (cid:54) (cid:54) kl(cid:54)
+which contradicts (4). Furthermore, a connected graph has 0 otherwise, as shown in Fig. 4. Then, for i = j = k = l,
+| | ≤ | | −
+no cycles when E V 1. When there are exactly introducetheconstraint(6)ifthefollowingconditionismet:
+twodisjoint,connectedsubgraphs,constraint(4)ensuresthat { }∧{ }
+MinDist(a ,a )>d End(a ,a )=0 (7)
+neither will have cycles. ij kl min ij kl
+The constraints thus far ensure the result consists of If the distance condition is met, then, in all scenarios
+exactly two disjoint paths, but allows for additional disjoint encountered in practice, End(a ,a ) = 0 only if a and
+ij kl ij
+cycles. Additional disjoint cycles can be prevented with an a do not belong to the same side. The pairwise constraints
+P kl
+additional constraint. Let (V) denote the power set of the are implemented in matrix form:
+∈P ∈
+stheet ofoflcloowneins.gF(cid:88)coornestarcahinstsetcSan prev(Ven)tacnydcleesa:ch cone ci S, Pa≤jnp (8)
+≤| |− ∀ ∈P The matrix P is computed during pre-processing such that
+a S 1, S (V) (5)
+ij each row consists of two entries that are one and will meet
+∈
+ci,cj S the constraint (6). P has n columns, but the number of
+a
+While it is possible to prevent cycles by imposing addi- rows of P, n , varies depending on the number of pairwise
+p
+tionalconstraintsoftheform(5)describedin[12],wefound constraintsthatneedtobeintroducedbasedoncondition(7)
+that, in practice, cycles would never be a part of the optimal for any given instance of the optimization problem.
+solution due to the high angle costs introduced by cycles
+D. Heading Constraint
+and the relatively small number of cones optimized over. To
+guarantee the solution is a lane graph, a post-optimization The car is assumed to be traveling in approximately the
+check eliminates any potential cyclic subgraphs at a lower correct direction along the track, so we want to also ensure
+computational cost than enforcing (5). the nearest boundaries are pointing in a direction similar to
+the car’s heading. Additional constraints are added such that
+C. Pairwise Edge Constraints the angle between the car’s heading vector and at least two
+The competition rules specify the track will have a min- edgeswithind metersofthecarhaveadifferenceofatmost
+h
+imum width of at least 3m, and similarly, for more general θ radians. In pre-processing, we compute a vector h
+heading
+applications,allroadlanesshouldatleastbethewidthofthe of size n such that h = 1 if the closest point on the i
+a i th
+car. Therefore, we want to ensure the lane graph boundaries edgeiswithind metersofthecarandtheanglebetweenthe
+h
+willbeatleasttheminimumdistanceapart.Toconstrainthe edge and the car’s heading vector is within θ radians
+heading
+minimum width of the lane to be greater than a distance, of each other. Otherwise, h =0. We then enforce the linear
+i
+d , we introduce pairwise edge constraints: constraint:
+min
+a +a ≤1 (6) hTa≥2 (9)
+ij kl
+E. Endpoint Distance Constraints
+This restricts certain edges a and a to not both be
+ij kl
+members of the optimal lane graph. We only use pairwise Wealsoconstraintheendpointconesofthelanessuchthat
+edge constraints to enforce the minimum width of the track, at least two of the degree one cones are within d meters
+near
+but they can be used to enforce any condition that speciﬁes of the car and the other two are at least d meters away
+near
+two edges should not simultaneously be members of the fromthecar.Thisconstrainsoneendofthelanegraphtobe
+optimal lane graph. nearthecar,ensuringthevehicleiswithinornearthefeasible
+231
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. driving region deﬁned by the boundaries and reducing any rejecting false positives and ﬁnding the correct lanes from
+needed pathextrapolation from thecar to thedriving region. the set of perceived cones.
+Let m denote a vector of n variables such that: Let d be the expected spacing between two cones and d
+e (cid:18) (cid:19) t
+− − be a tunable threshold parameter. The spacing cost for edge
+m = (A 2g ) (10)
+i i i a is:
+ij −
+Then, m = 1 if and only if the i cone has degree D d 4
+i th s = ij e (18)
+one. In pre-processing, we compute the vector r such that i,j d
+t
+r =1 if the i cone is within d meters of the car and
+i th near Let s be the vector of spacing costs s , and w be the
+r =0 otherwise. We can ensure that exactly two endpoints i,j s
+i spacing weight. The spacing cost term is thus:
+are within d meters of the car by enforcing the linear
+near
+constraint: w sTa (19)
+s
+rTm=2 (11) Let angle(a ,a ) be the acute angle between the two
+ij jk
+adjacent edges a ,a , let θ be the expected angle, and let
+F. Maximum Endpoint Distance Constraint ij jk e
+θ bethethresholdangle.Inprinciple,itispossibletochange
+In practice, we found it helpful to also constrain the t
+θ based off prior knowledge of the track or the current
+maximum distance, dmax, between the two endpoints that steate of the car, but, in practice, we found that setting θ
+arefurtherthandnear metersawayfromthecar.Thisallows to π proved to be effective. This is because connecting falsee
+us to leverage the fact that there is a maximum reasonable
+positives would often introduce very “sharp” angles into the
+lane width and prevents one side of the lane from being
+− resultinglanegraph.T(cid:18)hecostfortheangleb(cid:19)etweenadjacent
+signiﬁcantly longer than the other. Note that mi ri =0 if edges is:
+and only if the i cone is an endpoint cone and is within
+th −
+dnear meters of the car. To mark the endpoint cones that t = angle(aij,ajk) θe 4 (20)
+are further than d meters of the car, we introduce a i,j,k θ
+near t
+new vector of boolean decision variables u and enforce the
+To introduce these costs linearly into the cost function, we
+constraint: − − −
+deﬁne a new vector, f,(cid:40)of n = n2(n 1) n(n 1) binary
+− ∀ ∈ f 2
+m (1 r )+u =1, i [n] (12) variables with elements:
+i i i
+Deﬁne the following matrices: 1 a =a =1
+f = ji jk (21)
+M˜ =jT ⊗m=[m,...,m] (13) ijk 0 otherwise
+n
+⊗ ◦ ◦ ◦
+R˜ =jT (r m)=[r m,...,r m] (14) To achieve this behavior, we enforce the constraints:
+n
+⊗ − − ≤
+U˜ =jT u=[u,...,u] (15) 2f a a 0 (22)
+n ijk ji jk
+− − ≥−
+The i row of the matrix M˜ − R˜ is all ones if the i fijk aji ajk 1 (23)
+th th
+cone is an endpoint cone greater than dnear meters from the Theseconstraintscanbeunderstoodbylogicallyconsidering
+car; otherwise, the row consists entirely of zeros or negative
+all combinations of the binary edge variables a and a .
+ones. Due to the endpoint distance constraints, exactly two ij jk
+rjo∗w. sInwmillatcroixnsUi˜st, othfeorneews;illletbteheaslel zroewrossbienartowinsdiic∗esani∗dajn∗d. Wwbohhtihelen(2(a22i3j))=ainsdaajuk(2to=3m)0ai,tmitchpaellylnyt(hs2aa2tt)isfiﬁmedp.li=eWsht1he.natInafiijtjhk=emcauajsskte=bteh1a0t,
+Otherwise, the rows consist of ones or twos. Deﬁne a new ijk
+eithera ora equalsoneandtheotherequalszero,(23)is
+matrix: ji jk
+automatically satisﬁed while (22) implies that f =0. So,
+ijk
+Q=M˜ −R˜−U˜T (16) let t bethe vectorcontaining allofthe ti,j,k costsaccording
+to an order consistent with f, and let w be the angle cost
+t
+The matrix Q has ones only at the entries: weight. The angle cost term is thus:
+Q∗ ∗,Q ∗ ∗,Q∗ ∗,Q ∗ ∗. All other elements are zero
+oriniegatijvej. Thuisj, wejhaive that maxD◦Q is equivalent to wttTf (24)
+the distance between the two endpoint cones that are further
+The vehicle state is utilized to determine whether an edge
+than dnear meters away from the car. So, we enforce the isparalleltothecar’sheading.Duringnominaloperation,the
+linear constraint (by introducing a slack variable):
+edgesnearthecarwillbeapproximatelyparalleltothecar’s
+◦ ≤
+maxD Q d (17) heading,sotheanglebetweentheedgesnearthecarandthe
+max
+car’sheadingcanbeusedinthecostfunction.Letthevector
+G. Cost pointingfromconeitoconej bev andleth bethecar’s
+| × |ij c
+TheRLDoptimizationisaminimizationofacostfunction heading vector. Note that v h will be larger when the
+ij c
+derived from expected spacings between cones, the angles acute angle between the two vectors is larger; additionally,
+between adjacent edges, and the parallelism of edges and the absolute value is needed so that v and v have the
+ij ji
+thecar’sheading.Thiscostfunctionservesasaheuristicfor samecost.Edgesfurtherawayfromthecararenotexpected
+232
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. to be parallel to the car’s heading, so the cost falls off based
+on distance of the midpoi(cid:18)nt of the edg(cid:19)e to the car, dcar(aij).
+The heading cost for a is:
+ij
+| × |
+v h 4
+p = ij c (25)
+ij dcar(aij)
+Let p be the vector of p with an ordering consistent with
+ij
+a, and let w the the heading cost weight. The cost term is
+p
+thus:
+w pTa (26)
+p
+Finally, let w denote a uniform “beneﬁt” of adding an
+b
+edge. Without this term, the optimization will never ﬁnd
+edges since a pair of cones without an edge does not
+Fig.5. Averagesolvetimeanalysisformultipledifferentconesetsizes.
+contribute cost and all other costs are positive and additive. Theerrorbarsrepresentonestandarddeviationfromtheaveragesolvetime.
+H. High Cost Constraints
+Certain possible edges and angles have costs that are too
+high to be members of any reasonable solutions and can
+therefore be ruled out with constraints. Let s be the
+crit
+maximumallowedspacingcostforanedge.Nowletsc bea
+pre-computed vector of Boolean variables such that sc =1
+ij
+if s >s and sc =0 otherwise. Similarly, we introduce
+ij crit ij
+t and vector tc to constrain large angle costs between
+crit
+edge pairs. We then impose the constraints:
+◦ ≤
+sc a j (27)
+◦ ≤ na
+tc f j (28)
+nf
+I. Optimization Problem Statement
+The complete Robust Lane Detection optimization for Fig.6. Distributionofsolvetimesforaconesetofn=12runonvehiclefor
+determining a lane graph from a set of cone detections is 10consecutivemappinglaps.Theaveragesolvetimeforsuccessfulsolves
+as follows: is71.79ms,andonly2.81%ofsolveswereunsuccessful.
+−
+min (w s+w p w j )Ta+w tTf (29)
+a,f,g,u s p b na t the RLD instance can be built at the program’s start, and
+s.t. g(cid:88)−A ≤0, 1A −g ≤0 (30) parameters (e.g. cone positions) can be updated before
+i i 2 i i computing each optimization, reducing latency by removing
+n − − repeatedcomputationsindependentofsituationalinformation
+(cid:88)(A 2g(cid:88))= 4 (31)
+i i like cone positions.
+i=1
+The worst case scaling of the number of RLD decision
+1 n ≤ n −
+A g 2 (32) variables is O(n3), but, in practice, the large number of
+2 i i introducedconstraintsmakestheeffectivesearchspacemuch
+i=1 i=1
+≤ ≥
+Pa j , hTa 2, rTm=2 (33) smaller.Theoptimizationdirectlytakestheconepositionsas
+◦ ≤np ◦ ≤ input, requiring minimal preconditioning and reducing solve
+sc a j tc f j (34)
+◦na≤ nf times,asopposedtoDelaunaytriangulationorothermethods
+maxD Q dmax A=AT (35) which reduce the problem space by inputting favorable
+III. IMPLEMENTATION edges, yet require more computation time.
+The RLD optimization, described in Section II-I, is a IV. RESULTS
+binary integer program. It is modelled in CVX and solved
+A. Runtime Analysis
+with Mosek [13], [14]. Intel’s Math Kernel Library, [15], is
+used to accelerate the matrix optimizations within Mosek. Latency of the RLD optimization is measured from the
+Extensive work has been done to decrease the latency of input of cone positions and optimization parameters to the
+RLD such that the algorithm can be run on vehicle during outputoftheboundaryedgeset.Theresultinglatencieswere
+mapping laps without inhibiting speed. Warm starting RLD collected on a fully stressed, 7-core CPU machine running
+with previous successful results decreases the optimization RLD for 20 iterations in mapping mode (no prior cone
+solve time and improves the result quality. Additionally, information) on data collected for a 340m track. The RLD
+233
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. quality checks: less than or equal to one cone different from
+the expected boundary cone set, one boundary on each side
+of the vehicle, no edges crossing, and the distance between
+boundariesfallingwithintheminimumandmaximumwidth.
+The accuracy of the optimization was evaluated on a
+curvy track (concave and convex portions of the track), a
+straight track, and a circular track. These geometries can
+be combined to represent an expected track topology at the
+FSD competition. For all three track topologies, the RLD
+optimization has only 3.62% inaccurate solves for 1:5 false
+positives to real cones, which is a comparable amount of
+noise for tracks of 250-400m length experienced by the
+racecar. The type of track topology has minimal effect on
+the accuracy of results, with the percent incorrect deviating
+Fig. 7. Percent of inaccurate solves on different track topologies for
+byatmost4.53%acrossalltracktopologies.However,RLD
+increasingratiosoffalsepositives.Lessthan10%ofallsolvesareincorrect
+foranytracktopology,evenwitha1:1ratiooffalsepositivestocones. tends to be slightly less accurate for curvier tracks since
+this deviates from assumptions made by the cost terms in
+equations (20) and (25). All track topologies achieve less
+optimizationwasrunwithvariableconesetsizestomeasure than 10% inaccurate solutions for extreme amounts of false
+how the solve times will scale with increasing number of positives (1:1 ratio of false positive to real detections).
+input cones, as shown in Fig. 5. RLD can reliably compute The robustness and stability of the optimization can allow
+solutions in under 80ms, on average, for cone sets less than the perception subsystem to lower thresholds for detection;
+14 cones. thiscanintroducemorefalsepositives,butalsoincreaselook
+The results of RLD are classiﬁed as successful when ahead range. A video of the RLD optimization running suc-
+the optimizer result is found within a time limit of 0.4 cessfully during the Formula Student Germany competition
+seconds and achieves a×n ab−solute optimality gap less than onanautonomousracecarcompletingamappinglapat4m/s
+some threshold,  = 1 10 5. The absolute optimality gap is available at https://youtu.be/bEQi4eglH2Y.
+is deﬁned as the difference between the minimum possible
+objective and the minimum computed objective; it is calcu-
+V. CONCLUSION
+lated by the optimizer through the duality gap as described
+in[16].Foraﬁxedsizeconesetofn=12,Fig.6showsthe To create an efﬁcient and robust system to identify track
+distribution of RLD solve times. 97.19% of all iterations of boundaries during the Formula Student Driverless competi-
+the optimization are successful, with an increase in average tion, we developed the Robust Lane Detection optimization
+latency of only 1.71ms for unsuccessful solves. RLD can toﬁndtwofullyconnectedpathsconnectingconedetections.
+solve 95% of all n = 12 optimizations within 155.88ms RLDutilizesthevehiclestateandtrackinformationspeciﬁed
+(standarddeviationσ =51.96ms).Additionally,Fig.6shows by the competition rules. The optimization is shown to
+onlyatailend(.1%)ofthesuccessfulsolvetimesaregreater be robust to false positive detections, failing to ﬁnd the
+than .26 seconds; a trade-off can be made to sacriﬁce these accurate solutions only 3.62% of the time for different track
+successfulresultsforguaranteesonlowerlatencybycapping topologies with false positive detections matching those of
+the maximum solve time for the optimizer. thevehicleoperatinginrealtime.TheRLDoptimizationran
+In practice, we found n = 12 to utilize the entire in real-time on an autonomous electric racecar in mapping
+perception sensor look ahead and ﬁeld of view with the mode during competition and testing.
+lowest average latency. With the low latency of RLD and Additional constraints to prevent edge crossing and cost
+theothersubsystemlatencies,wehavebeenabletocomplete terms utilizing color information of the cones were incorpo-
+mapping laps at speeds up to 5.65 m/s. rated into the optimization for improving the result speciﬁ-
+callyforFormulaStudentDriverless.TheRLDoptimization
+B. Robustness and Accuracy
+could be extended beyond the scope of Formula Student
+The algorithm is robust to many different situations in as a robust method for detecting lanes based on consistent
+which it is difﬁcult to determine the correct lane graph from markers, such as mile markers. For future work, we plan to
+the cone set, such as many false positives or inaccurate incorporate detection conﬁdences into the optimization cost
+positions.Toevaluatetherobustnessanddeterminepotential function and relax binary constraints to decrease latency.
+failure modes, the RLD optimization was tested on multiple
+concaveandconvextracktopologies.Random,uniformnoise
+ACKNOWLEDGMENT
+is inserted as additional cone detections in simulation.
+The optimization results are ﬁrst classiﬁed as successful The authors thank MIT/DUT Driverless for the opportu-
+using the absolute optimality gap described in Section IV-A. nity to develop software for an autonomous racecar and for
+Theresultisthenclassiﬁedasaccurateifitpassesaseriesof the consistent support throughout the process.
+234
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [12] L.Klein,“Combinatorialoptimizationwithonequadraticterm,”Ph.D.
+dissertation,2014.
+[1] “Formula student rules 2019,” 2019. [Online]. Available: https: [13] M.GrantandS.Boyd,“CVX:Matlabsoftwarefordisciplinedconvex
+//www.formulastudent.de/fsg/rules/ programming,version2.1,”http://cvxr.com/cvx,Mar.2014.
+[2] A. Bar-Hillel, R. Lerner, D. Levi, and G. Raz, “Recent progress in [14] E.D.AndersenandK.D.Andersen,“Themosekinteriorpointopti-
+roadandlanedetection:asurvey,”MachineVisionandApplications, mizerforlinearprogramming:animplementationofthehomogeneous
+vol.25,pp.727–745,2011. algorithm,” in High performance optimization. Springer, 2000, pp.
+[3] Y. Wang, E. K. Teoh, and D. Shen, “Lane detection and tracking 197–232.
+using b-snake,” Image and Vision Computing, vol. 22, no. 4, pp. [15] IntelMathKernelLibraryReferenceManual. IntelCorporation,2009.
+269 – 280, 2004. [Online]. Available: http://www.sciencedirect.com/ [16] S. Boyd and L. Vandenberghe, Convex optimization. Cambridge
+science/article/pii/S0262885603002105 UniversityPress,2004.
+[4] Y. Wang, D. Shen, and E. K. Teoh, “Lane detection using spline
+model,” Pattern Recognition Letters, vol. 21, no. 8, pp. 677 –
+689,2000.[Online].Available:http://www.sciencedirect.com/science/
+article/pii/S0167865500000210
+[5] A.S.Huang,D.Moore,M.Antone,E.Olson,andS.Teller,“Finding
+multiple lanes in urban road networks with vision and lidar,” Au-
+tonomousRobots,vol.26,no.2-3,pp.103–122,2009.
+[6] D. Neven, B. De Brabandere, S. Georgoulis, M. Proesmans, and
+L. Van Gool, “Towards end-to-end lane detection: an instance seg-
+mentation approach,” in 2018 IEEE Intelligent Vehicles Symposium
+(IV). IEEE,2018,pp.286–291.
+[7] S.P.AdhikariandH.Kim,“Dynamicprogrammingandcurveﬁtting
+based road boundary detection,” in Proceedings of the 9th WSEAS
+internationalconferenceoncomputationalintelligence,man-machine
+systemsandcybernetics,2010,pp.236–240.
+[8] J. C. McCall and M. M. Trivedi, “An integrated, robust approach to
+lanemarkingdetectionandlanetracking,”inIEEEIntelligentVehicles
+Symposium,2004. IEEE,2004,pp.533–537.
+[9] A. Borkar, M. Hayes, and M. T. Smith, “Robust lane detection
+and tracking with ransac and kalman ﬁlter,” in 2009 16th IEEE
+InternationalConferenceonImageProcessing(ICIP),Nov2009,pp.
+3261–3264.
+[10] H. Du, Z. Xu, and Y. Ding, “The fast lane detection of road using
+ransacalgorithm,”012018,pp.1–7.
+[11] “Standard speciﬁcations for construction of roads and bridges on
+federalhighwayprojects.”
+235
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:56:02 UTC from IEEE Xplore.  Restrictions apply. 

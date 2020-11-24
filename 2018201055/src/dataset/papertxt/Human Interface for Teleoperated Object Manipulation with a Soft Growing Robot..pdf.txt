@@ -1,0 +1,469 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Prediction of Human Full-Body Movements with
+Motion Optimization and Recurrent Neural Networks
+Philipp Kratzer1, Marc Toussaint1 and Jim Mainprice1,2
+firstname.lastname@ipvs.uni-stuttgart.de
+1Machine Learning and Robotics Lab, University of Stuttgart, Germany
+2Max Planck Institute for Intelligent Systems ; IS-MPI ; Tu¨bingen, Germany
+Abstract—Human movement prediction is difﬁcult as hu-
+mans naturally exhibit complex behaviors that can change
+drastically from one environment to the next. In order to
+alleviatethisissue,weproposeapredictionframeworkthatde-
+couplesshort-termprediction,linkedtointernalbodydynamics,
+and long-term prediction, linked to the environment and task
+constraints. In this work we investigate encoding short-term
+dynamics in a recurrent neural network, while we account for
+environmental constraints, such as obstacle avoidance, using
+gradient-based trajectory optimization. Experiments on real
+motion data demonstrate that our framework improves the
+prediction with respect to state-of-the-art motion prediction
+methods, as it accounts to beforehand unseen environmental
+structures. Moreover we demonstrate on an example, how this
+framework can be used to plan robot trajectories that are
+optimized to coordinate with a human partner. Fig.1:Predictionof1.5secreachingmotiontowardsthebowl
+on the big shelf by our method
+I. INTRODUCTION
+velocities of the human at each prediction step. We can then
+For safe and efﬁcient human-robot interaction it is cru-
+differentiate the network with respect to this control input,
+cial to foresee human motion in order to plan around the
+andoptimizethemotionusingagradient-basedoptimization
+human partner and interact with the human partner without
+algorithm.
+disturbing the natural ﬂow of the human’s motion. A good
+interaction strategy needs to plan trajectories that minimally Whiletheideaofblendingmotioncapturedataandmotion
+intervenewiththehumanwhilestillretainingtheabilitythat planning algorithms for motion prediction is not new [7], to
+both, the human and the robot, can achieve their goals with- the best of our knowledge, this paper is the ﬁrst to combine
+out having to deviate widely from their optimal trajectory. motionoptimizationwitharecurrentneuralnetworkinorder
+to predict human motion. This approach has the following
+However, human motion is the result of complex biome-
+advantages: 1) It relies on potentially inﬁnite amount of
+chanical processes that are challenging to model. As a con-
+motion capture data to train the low-level dynamics as the
+sequence,state-of-the-artworkonmotionpredictionfocuses
+network does not grow with the size of the training dataset,
+on data-driven models, such as recurrent neural network
+2)Optimizationisaﬂexibleframeworkformotionplanning,
+models[3],[4],[5].Adrawbackofthesearchitecturesisthat
+which allows to integrate many different constraints (i.e.,
+the network is only trained on the human state and therefore
+smoothness, obstacle avoidance, closed kinematic chain,
+not able to take scene context, such as targets for reaching
+hand orientation, goalset, human-robot interaction, etc.).
+motion or obstacles into account. Adapting scene context
+directly into the architecture would require a generalizable In this work, we present experiments on motion capture
+scenerepresentationandhugeamountsoftrainingdatatobe data recorded at the University of Stuttgart. We test our
+able to generalize to unseen environments. approach on segmented motions ranging between 1 and 4
+Inpriorwork[6],weproposedtoaccountforenvironmen- seconds as shown in Figure 1 using goalset constraints,
+tal constraints in a later trajectory optimization step, using obstacle avoidance and joint human-robot coordination. Our
+a Gaussian Process (GP) to model the low-level dynamics. resultsindicatethattheadditionalmotionoptimizationphase
+However, GPs do not scale to large datasets of training data leads to higher predictive performance than state-of-the-art
+as they require comparing all training points in the data set neuralnetworkpredictors,especiallyinlong-termprediction.
+to predict the next state. In this work, we instead propose to Thispaperisorganizedasfollows:InSectionIIwediscuss
+adaptastate-of-the-artrecurrentneuralnetworkmodel[5]to relevant prior work. Section III introduce our framework
+learn purely kinematic predictions of the human. In order to theoretically and explain how the implementation is done.
+optimize the human motion in a later stage, we introduce In Section IV we evaluate our prediction framework on real
+a modiﬁcation to the network architecture to control the motion data. Conclusions are drawn in Section V.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1792
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK C. Motion Optimization
+Gradient-basedoptimizationalgorithmsarewidelyusedin
+A. Human Motion Prediction in Robotics
+theﬁeldofroboticsandoptimalcontrol[14],[15],[16],[17],
+Prior work on motion prediction in robotics has made [18], [19] for optimizing trajectories. These techniques have
+use of graphical models. For example, Kulic´ et al. encoded been shown to successfully generate motions with a variety
+full-body motion primitives using Hidden Markov Models of kinematic and dynamic objective and constraints. In 2009
+and applied the model to motion imitation [8]. Koppula and [15],Ratliffetal.haveusedinsightsfromdifferentialgeom-
+Saxena focused on movement prediction using conditional etry making it possible to use gradient-based optimization
+random ﬁelds [9]. While these approaches are sound they to solve motion planning with non-convex obstacles. Their
+generally do not scale to large databases of motion capture. main ﬁnding was that obstacle costs should be integrated
+Another approach commonly used for predicting human with respect to arc-length in Cartesian space, leading to the
+motion is Inverse Optimal Control (IOC), which aims to notion of workspace geodesics [20], [21], which we use
+ﬁnd a cost function underlying the observed behavior. For here.
+example, Berret et al. investigated cost functions for arm Mordatch et al. use motion optimization techniques to
+movement planning [10]. The authors reported that such synthesize complex behaviors [22], [23]. The authors show
+movements are closely related to mechanical energy ex- thatmotionoptimizationapproachesforsynthesizingmotion
+penditure and joint-level smoothness. Mainprice et al. in- andanimatingcharacterscangeneraterealisticmotionseven
+vestigated prediction of human reaching motions in shared without the use of motion capture data. While the focus
+workspaces [11]. Their method accounts for obstacles and a of their work does not lie on forecasting an observed
+moving collaborator using iterative replanning. In IOC, bio- motion, concepts, such as constraining foot contacts, have
+kinematic processes are typically represented by simpliﬁed great potential to be incorporated in our motion prediction
+models, which are not able to completely capture the com- framework.
+plex bio-mechanical behaviors of human full-body motion
+and to accurately forecast an observed motion. III. METHOD
+Next we formalize our approach, by presenting ﬁrst our
+B. Neural Network Human Motion Prediction
+method for predicting human motion and then for planning
+Recent work on human motion prediction for short-term a coordinated human-robot behavior.
+motionhasfocusedonrecurrentneuralnetworkarchitectures
+A. Human Motion Optimization
+(RNN). Fragkiadaki et al. proposed a RNN based model
+that incorporates nonlinear encoder and decoder networks Whenpredictinghumanmotion,theaimistoﬁndatrajec-
+∗
+before and after recurrent layers [1]. Their model is able to tory s that maximizes the likelihood of the next states
+t+1:T D
+handletrainingacrossmultiplesubjectsandactivitydomains. given our demonstration data and fulﬁlls the constraints.
+Jain et al. introduced a method to incorporate structural The constraints are the human dynamics s = d(s ) and
+t+1 t
+elements into a RNN architecture [12]. Autoencoders also further constraints h and g that arise from the environment.
+can be used for denoising the prediction [2]. Martinez et al. Thiscanbewri(cid:88)ttenasthefollowingoptimizationproblem:
+introducedagatedrecurrentunit(GRU)basedapproachwith
+a residual connection in the loop function and showed that T − | D
+min logp(s s , ) (1)
+this outperforms prior RNN based methods [3]. Pavllo et al. t+1 0:t
+st+1:T
+further improved the RNN-based prediction by changing the t+1
+joint angle representation to quaternions [4], [13]. However, subject to st+1 =d(st)
+this comes at the cost of additional normalization layers h(s )=0
+t
+≤
+and normalization penalty. Recently Wang and Feng intro-
+g(s ) 0
+t
+duced a position-velocity recurrent encoder-decoder model
+D
+(VRED) [5]. Their model adds an additional velocity con- We approximate the maximum likelihood given as a
+nectionasaninputtotheGRUcellintherecurrentstructure. regression problem and train a recurrent neural network
+Motion prediction based on recurrent neural networks model to ﬁnd the prediction states s = f(s ,δ )
+t+1:T 0:t t+1:T
+promisesgoodresultsforpredictingshort-termmotion.How- as discussed in Subsection III-D. We introduce parameters
+ever, the models are trained on human data only. Handling δ tothemodelinordertobeabletovarythepredictions
+t+1:T
+environmental constraints is not possible yet and would andthusaccountfortheconstraintshandg usingnumerical
+require large amounts of training data. Human environments optimization. We will describe this in Subsection III-E. The
+are typically cluttered with objects and obstacles. Thus, dynamicconstraints =d(s )islearnedfromthedataand
+t+1 t
+in a human-robot collaboration scenario, adapting to such thus also approximated by the recurrent neural network f.
+environmental constraints is crucial for the prediction.
+B. Coordinated Motion Optimization
+For our human prediction model we adapt the VRED
+architecture by Wang and Feng and modify it as described In the caseof joint motion optimizationof the human and
+∗
+in Subsection III-D. therobot,wenotonlyaimtoﬁndahumantrajectorys
+t+1:T
+1793
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. + + + + +
+Linear Linear Linear Linear Linear
+GRU GRU GRU GRU GRU
+GRU GRU GRU GRU GRU
+GRU GRU GRU GRU GRU
++ +
+Fig. 2: Architecture of the Recurrent Neural Network s =f(s ). In blue the past joint angles and velocities, in green
+t+1:T 0:t
+the future predicted states and in red the control input δ, which allows motion optimization.
+∗
+butalsoarobottrajectoryx .Theoptimizationproblem velocities are fed into the network, which then only predicts
+(cid:88) t+1:T (cid:48)
+changes to: velocities. The new states s are obtained through a residual
+connection by adding the velocity to the previous state.
+T − | D The full architecture can be seen in Figure 2. Inputs
+min logp(s s , )+c (x ) (2)
+st+1:T,xt+1:T t+1 0:t R t+1:T variables are depicted blue, the new predictions are depicted
+t+1
+green. In contrast to the original model, we stack 3 GRU
+subject to s ,x =d(s ,x )
+t+1 t+1 t t cells with 1000 hidden units, which improves the prediction
+h(st,xt)=0 performance in our experiments Additionally we do not
+≤
+g(s ,x ) 0 feed the position of the base (i.e., pelvis) into the recurrent
+t t
+unit. This avoids conditioning the model on world positions
+with C being costs on the robot trajectory x . The
+R t+1:T and leads to better generalization. We found that the same
+additional constraints h and g can now be function of both,
+approach does not hold for the base rotation which encodes
+s and x , and arise from joint interaction objectives, such
+t t the direction of motion. Hence we instead offset the rotation
+as collision constraints.
+randomly during training time to avoid overﬁtting.
+C. Summary For training, the data is sliced into same sized trajectories
+of 2sec. One second is fed as input to the network and 1sec
+Our approach works in two phases: 1) ofﬂine we learn a
+ispredictedbythenetwork.Thelossiscomputedonthefull
+predictive model of the human s = f(s ) where s
+t+1:T 0:t 0:t trajector(cid:88)y. We use a squar(cid:88)ed error loss for the base position
+is the observed trajectory of human states. The aim of f is
+and a quaternion loss for the base rotation and joint angles:
+to predict the kinematic states of the human in the next time (cid:124) (cid:123)(cid:122) (cid:125)
+steps up to a prediction horizon T, based on a sequence of L= ||p(cid:48)−p||2+(cid:124) min(||q(cid:48) −(cid:123)(cid:122)q ||,||q(cid:48) +q ||(cid:125)) (3)
+previous states. This is achieved by supervised training of a ∈B t t t t
+position-velocity recurrent encoder-decoder neural network s0:T position t,q
+model on human motion capture data, 2) online we use quaternion
+the learned model to predict future states. The prediction is with q being the quaternion representations. The learning
+t
+optimizedtofulﬁllconstraintsbyvaryingthevelocityinputs rate is set to 0.0001 and the batch size is 8.
+in the decoder’s loop function at every time step. At test time we make use of numerical optimization to
+handle additional constraints. In order to change the predic-
+D. Human Model
+tionsweaddanadditionalconnectionδtothevelocityinputs
+For prediction of the human we base our model on the (see Figure 2 depicted red). The network thus has additional
+(cid:48)
+position-velocity recurrent encoder-decoder neural network input parameter s = f(s ,δ ). These parameters
+t+1:T 0:t t+1:T
+(VRED) [5]. We model the kinematic state of a human as can be used to change the velocities that are predicted by
+a vector consisting of base position, base rotation and joint the neural network and fed into the next time step which
+angles: s = (p,r,j) which in our case is a 66 dimensional canbeviewedasaddinganadditionalaccelerationterminto
+vector for full-body data. The joints are toes, ankles, knees, the model.
+hips, pelvis, torso, neck, head, inner shoulders, shoulders, Duringtrainingδ issettozero.Notethattheδ isfedinto
+t
+elbows and wrists. the network at one time step but changes the predictions for
+Asproposedin[5],werepresentanglesintheexponential all the following time steps as well. In the following, the
+map representation and convert them to quaternions for neural network f(δ ) will only be parameterized by δ
+t+1:T
+the loss computation. The velocity inputs v are computed because s is already observed at test time and is not able
+0:t
+using ﬁnite differences. At each time step the positions and to change during prediction.
+1794
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. E. Trajectory Optimization
+In this paper we consider optimizing predictions with the
+ability to account for the following additional constraints:
+• low-level: human prediction should be close to the
+original network prediction.
+• goalset: human prediction should end up with a hand
+close to a speciﬁed point.
+• collision: human prediction should not collide with
+obstacles.
+• human-robot: human prediction and a robotics agent
+should not collide. Fig. 3: Motion Capture Setup
+• robot smoothness: robot trajectory should be smooth.
+• robot goal: robot trajectory should end with an endef- The robot smoothness term is similar, as deﬁned in
+fector close to a speciﬁed point. CHOMP, to a sum of squared derivatives:
+• robot collision: robot trajectory should not collide with (cid:62)
+obstacles. csmooth(x)=x Kdx (8)
+Due the fact that δ is only used as input to the neural where K is a ﬁnitedifferences matrix: 
+network and does not directly change the trajectory, it is
+ 
+ensured that the predicted states still ground on the network  − 
+−6 4−1 ... 0 0 0 
+prediction.However,weaddanadditionallosstermtofulﬁll  4−6 4 ... 0 0 0 
+1 4 6 ... 0 0 0
+the low-level constraint: K = ... ... ... . (9)
+(cid:107) (cid:107) −
+cc(δ)= δ 2 (4) 00 00 00 ...... −64−64−14
+0 0 0 ... 1 4 1
+This term ensures that δ is not becoming too big and thus Thefullunconstrainedproxyobjectiveisgivenasthesum
+does not push the network into states that are too far from
+of the cost functions for human, robot and joint cost:
+the training data to make reliable predictions.
+The goal is given as the squared distance between the c(δ,x)=c (δ)+c (x)+c (δ,x) (10)
+H R J
+∗
+human endeffector and a reference point p : cH(δ)=λ1cc(δ)+λ2cg(δ)+λ3co(δ) (11)
+cg(δ)=(cid:107)φFK(f(δ)T)−p∗(cid:107)2 (5) cR(x)=λ4cRg(x)+λ5cRo(x)+λ6csmooth(x) (12)
+whereφ :s(cid:55)→pistheforwardkinematicsofthehuman, cJ(δ,x)=λ7cj(δ,x) (13)
+FK ∈ R
+for example, calculating the hand position p 3. Thus with Lagrange multiplier λ. Note that implementing this
+p =φ (f(δ )))computesthehandpositionattimet=T, framework using a principled augmented Lagrangian opti-
+t FK t
+where T is the last predicted time step by the network. mization algorithm would be straight forward and is left for
+We represent objects using a signed distance ﬁeld (SDF). future work.
+To account for the collision a potential function, similar as We derived the respective gradients and Jacobians mainly
+usedinCHOMP[15],isused.Becausemovingmorequickly usingautomaticdifferentiationframeworks.Weimplemented
+through regions with high cost should not be penalized less, therecurrentneuralnetworkusingtheTensorﬂowlibraryand
+cost elements are integrated with respect to an arc-length we use its automatic differentiation functionality to compute
+parameterizationintheworkspace.Thusinourcase,wehave the Jacobian of the network JNN = ∂f. We use a limited
+the following obstac(cid:88)le poten(cid:8)tial: (cid:9) memory version of the numerical op∂tδimization algorithm
+BFGS in order to optimize the trajectory [24].
+T −
+co(δ)= exp α SDF(pt) ∆H (6) IV. EXPERIMENTS
+t=1
+(cid:107) − (cid:107) In this section we evaluate our method using real motion
+where ∆ = p p , with p =φ (f(δ ))).
+H t+1 t t FK t data. Since available motion capture datasets do not include
+Similarly we deﬁne the human-robot objective, as a func-
+(cid:88) (cid:8) (cid:9) obstacles, we gathered our own dataset, which can be made
+tion of the human variables δ and robot states x as:
+available on request.
+T − (cid:107) − (cid:107) All data was captured using an Optitrack motion capture
+cj(δ,x)= exp α pt xt ∆H∆R (7) systemwith50reﬂectingmarkersplacedontheentirehuman
+t=1 body. The motion capture setup can be seen in Figure 3.
+(cid:107) − (cid:107)
+where ∆ = pR pR , with pR =φ (x ). Data was recorded at a rate of 120Hz and downsampled
+R t+1 t t FK t
+The robot goal c and robot obstacle c are similar to to 30Hz for use in the network. For the experiments we
+Rg Ro
+the human goal and obstacle constraints with the difference captured 3 datasets using one single actor. A reaching1
+that we optimize the trajectory directly and do not pass it dataset, which contains pick and place motions of different
+through the neural network. objects on different heights and lasts 31 minutes. A walking
+1795
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. Fig. 4: Human trajectory of reaching towards an object on the table for 2secs. The prediction by our method is shown in
+green, baseline of human motion in gray. From left to right we show the prediction after 1sec, 1.3sec, 1.6sec and 2sec. The
+top row shows the prediction without obstacle constraint, the bottom row with obstacle constraint. In the prediction without
+obstacle constraint the human collides with the chair.
+ms 125 250 375 500 625 750 875 1000
+dataset, which consists of 60 minutes of walking data in the
+Zerovel(b) 0.72 1.37 1.80 2.31 2.72 3.01 3.15 3.25
+motioncapturearea.Areaching2dataset,whichcontains22
+VRED(b) 0.20 0.36 0.45 0.57 0.68 0.78 0.86 0.94
+minutesofpickandplacemotionsofdifferentobjectssimilar ours(b) 0.20 0.35 0.44 0.53 0.56 0.59 0.62 0.64
+to reaching1, however, chairs have been placed in the scene Zerovel(w) 0.14 0.28 0.37 0.48 0.56 0.61 0.62 0.62
+so that the human has to perform the pick and place tasks VRED(w) 0.03 0.07 0.09 0.11 0.13 0.14 0.15 0.15
+ours(w) 0.03 0.07 0.08 0.09 0.08 0.06 0.04 0.01
+while walking around the chairs. We train our model with
+Interp(w) 0.05 0.11 0.15 0.17 0.17 0.13 0.08 0.00
+data from all three datasets. A fraction of 10% from every
+TABLE I: Error of state prediction on different time steps in
+dataset is held out for testing purposes.
+thefutureforthewholebody(b)andtherightwristonly(w).
+A. Goal Set Constraints Reported values are in meters. For the whole body the sum
+distance of 9 key joints is shown.
+In our ﬁrst experiment we evaluate whether the prediction
+ms 250 500 750 1000 1250 1500 1750 2000
+of the VRED network can be improved by our prediction
+Zerovel 1.21 2.45 3.90 5.50 7.53 9.49 11.15 11.74
+method when we already know the target position of the VRED 0.70 1.25 1.79 2.48 3.48 4.56 5.70 6.39
+reaching motion for the human hand. oursg 0.68 1.25 1.79 2.27 2.57 2.52 2.24 2.18
+oursg+o 0.69 1.25 1.74 2.18 2.45 2.41 2.15 2.10
+Fromthereaching1testset25reachingtrajectorieswitha
+length of 1sec have been extracted. We compare our method TABLE II: Error of state prediction on different time steps
+with three baselines. We compute the distance of key joints in the future for the whole body. Our method with goal
+of the human (wrists, elbows, knees, ankles and pelvis) and objective(g)andgoalandobstacleobjectives(g+o)isshown.
+compute the mean distance of the predictions to the ground
+truth (see Table I). full-bodytrajectoryofthehumangivenatargetstatewhichis
+The zero velocity baseline predicts the same state for all useful for scenarios where we already know possible target
+future steps. The VRED baseline is the prediction network states of the human obtained by a higher level prediction
+without the trajectory optimization part. Our method is mechanism or through scene understanding, for example
+informed with the goal position of the hand. Table I (b) using affordances [9].
+shows the sum of the mean distances of the 9 key joints. Alimitationoftheapproachwithgoalsetconstraintisthat
+The use of trajectory optimization improves the prediction wehavetopredeﬁnethedurationofthetrajectorywhichisa
+among all future steps. known problem in the trajectory optimization literature [15].
+In Table I (w) we only compute the distance of the wrist Simple approaches to solve this issues include optimizing
+to the ground truth. We also compute a linear interpolation trajectories of different time horizon or reoptimizing the
+baseline between the start position of the wrist and the trajectory with a longer horizon if the target position is not
+targetposition.Theinterpolationbaselineandourmethodare reached. A more general approach would dynamically add
+informedwiththegoalstateandthusabletogetzeroerrorin and remove samples during optimization.
+thelasttimestep.However,ourmethod,wheretherecurrent
+B. Obstacle Constraints
+neuralnetworkimplicitlyreconstructs theunderlyinghuman
+dynamics, outperforms the interpolation baseline on other In this experiment we evaluate whether the obstacle po-
+time steps, which simply constructs a naive straight line. tential helps to further improve the prediction. Therefore we
+Theresultsshowthatourmethodisabletoreconstructthe extracted 22 reaching trajectories from the reaching2 test
+1796
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. Fig.5:Jointtrajectoryoptimizationofhumanandrobot.Fromlefttorightthetrajectoriesafter1sec,2.3sec,3secand3.6sec.
+The top row shows the trajectory without the joint optimization potential, the bottom trajectory is with joint optimization.
+set with a length of 2sec. Some of the trajectories contain the human would react to the robot moving and adapt his or
+motion trajectories that are close to an obstacle (chair). We herwalkingpathtotherobotmoving.Similar,ifwekeepthe
+approximatethechairsigndistanceﬁeldasasphereandadd robot trajectory ﬁxed, the human would either need to wait
+an obstacle objective in addition to the goal objective. till the robot passes or walk a longer way around the robot,
+Figure 4 shows an example reaching trajectory with the which results in reaching the goal state later. Our aim is to
+ground truth (gray) and our prediction (green). The top row ﬁnd a collision free plan for human and robot so that both,
+shows the prediction without obstacle objective. There the thehumanandtherobothavetoleavetheoptimalrouteonly
+human prediction collides with the chair because the RNN a bit. Therefore we jointly optimize the robot states x and
+has no information about obstacles in the scene. Activating the human prediction variables δ including the human-robot
+the obstacle objective in the trajectory optimization step pe- objective. The resulting trajectory can be seen in Figure 5
+nalizescollisionsandforcesthepredictionaroundtheobject. bottom. The robot speeds up a bit and keeps farther away
+In the second row the improved prediction with obstacle fromthehumanandthehumanpredictionwalksabitfurther
+avoidance is shown. The prediction no longer collides with to the right.
+the chair. Theexperimentshowsthatourmethodcanbeusedtoplan
+We performed a quantitative comparison averaged over a robot trajectory while simultaneously adapting the human
+the 22 extracted reaching motions (see Table II). The table prediction to it. This can be used to plan a trajectory that
+shows the mean full body error of the key joints compared minimally changes the human path. How much the robot
+to the ground truth. Note that only a few of the trajectories or the human has to deviate from the optimal path can be
+containmotiontrajectoriesthatareclosetotheobstacle.The modiﬁed by adapting the optimization parameters λ.
+method with additional obstacle objective outperforms the
+V. CONCLUSIONS
+other prediction methods.
+In this paper we presented a novel prediction framework
+C. Joint Human Robot Optimization for human motion in the presence of environmental ob-
+jectives. We showed that a state-of-the-art recurrent neural
+The last experiment is about joint optimization of hu-
+network model can be adapted to use it within a trajectory
+man and robot for collaborative planning. We initialize a
+optimization framework. This improves the predictions and
+human walking trajectory from the test data of the walking
+accounts to unseen environmental structures.
+dataset. Additionally, we add a robot model. We set a goal
+Furthermore, we showed an initial experiment on how the
+objective for the human base and the robot base so that
+method could be used for shared human-robot planning.
+the trajectories of human and robot intersect. We initialize
+Forfutureworkweplantoconductrealworldexperiments
+the robot trajectory as a straight line from start to target
+on real human-robot interaction tasks. We plan to optimize
+position and the human trajectory with setting the δ to zero. the trajectory optimization parameters in a way to adapt for
+The trajectories are predicted for a duration of 4sec. Using
+human comfort during more complex interaction scenarios
+the goal objectives without the human-robot objective will
+lead to a collision of robot and human (see Figure 5 top). ACKNOWLEDGMENT
+Only planning for the robot and assuming that the human This work is partially funded by the research alliance
+staysonthepredictedtrajectorywouldleadtoaroutewhere “System Mensch”. The authors thank the International Max
+the robot completely avoids the human and has to go for a Planck Research School for Intelligent Systems (IMPRS-IS)
+longer path around. In reality this is not necessary because for supporting Philipp Kratzer.
+1797
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [22] I. Mordatch, E. Todorov, and Z. Popovic´, “Discovery of complex
+behaviorsthroughcontact-invariantoptimization,”ACMTransactions
+[1] K.Fragkiadaki,S.Levine,P.Felsen,andJ.Malik,“Recurrentnetwork onGraphics(TOG),vol.31,no.4,pp.1–8,2012.
+models for human dynamics,” in Proceedings of the IEEE Interna- [23] I. Mordatch, J. M. Wang, E. Todorov, and V. Koltun, “Animating
+tionalConferenceonComputerVision,2015,pp.4346–4354. humanlowerlimbsusingcontact-invariantoptimization,”ACMTrans-
+[2] P.Ghosh,J.Song,E.Aksan,andO.Hilliges,“Learninghumanmotion actionsonGraphics(TOG),vol.32,no.6,pp.1–8,2013.
+models for long-term predictions,” in 2017 International Conference [24] R. H. Byrd, P. Lu, J. Nocedal, and C. Zhu, “A limited memory
+on3DVision(3DV). IEEE,2017,pp.458–466. algorithm for bound constrained optimization,” SIAM Journal on
+[3] J.Martinez,M.J.Black,andJ.Romero,“Onhumanmotionprediction ScientiﬁcComputing,vol.16,no.5,pp.1190–1208,1995.
+using recurrent neural networks,” in IEEE Conference on Computer
+VisionandPatternRecognition(CVPR). IEEE,2017.
+[4] D. Pavllo, D. Grangier, and M. Auli, “Quaternet: A quaternion-
+basedrecurrentmodelforhumanmotion,”inBritishMachineVision
+Conference(BMVC),2018.
+[5] H. Wang and J. Feng, “Vred: A position-velocity recurrent
+encoder-decoder for human motion prediction,” arXiv preprint
+arXiv:1906.06514,2019.
+[6] P. Kratzer, M. Toussaint, and J. Mainprice, “Towards combining
+motion optimization and data driven dynamical models for human
+motionprediction,”in2018IEEE-RAS18thInternationalConference
+onHumanoidRobots(Humanoids). IEEE,2018,pp.202–208.
+[7] J. Pettre´, J.-P. Laumond, and T. Sime´on, “A 2-stages locomo-
+tion planner for digital actors,” in Proceedings of the ACM SIG-
+GRAPH/EurographicssymposiumonComputeranimation,2003,pp.
+258–264.
+[8] D. Kulic´, C. Ott, D. Lee, J. Ishikawa, and Y. Nakamura, “Incre-
+mental learning of full body motion primitives and their sequencing
+throughhumanmotionobservation,”InternationalJournalOfRobotic
+Research,vol.31,no.3,pp.330–345,2012.
+[9] H. S. Koppula and A. Saxena, “Anticipating human activities using
+object affordances for reactive robotic response,” IEEE transactions
+onpatternanalysisandmachineintelligence,vol.38,no.1,pp.14–
+29,2016.
+[10] B.Berret,E.Chiovetto,F.Nori,andT.Pozzo,“Evidenceforcomposite
+costfunctionsinarmmovementplanning:aninverseoptimalcontrol
+approach,”PLoScomputationalbiology,vol.7,no.10,2011.
+[11] J. Mainprice, R. Hayne, and D. Berenson, “Goal set inverse optimal
+controlanditerativereplanningforpredictinghumanreachingmotions
+insharedworkspaces,”IEEETrans.Robotics,vol.32,no.4,pp.897–
+908,2016.
+[12] A. Jain, A. R. Zamir, S. Savarese, and A. Saxena, “Structural-rnn:
+Deeplearningonspatio-temporalgraphs,”inProceedingsoftheIEEE
+Conference on Computer Vision and Pattern Recognition, 2016, pp.
+5308–5317.
+[13] D. Pavllo, C. Feichtenhofer, M. Auli, and D. Grangier, “Modeling
+humanmotionwithquaternion-basedneuralnetworks,”International
+JournalofComputerVision,pp.1–18,2019.
+[14] E.TodorovandW.Li,“Ageneralizediterativelqgmethodforlocally-
+optimalfeedbackcontrolofconstrainednonlinearstochasticsystems,”
+inProceedingsofAmericanControlConference,2005. IEEE,2005,
+pp.300–306.
+[15] N. Ratliff, M. Zucker, J. A. Bagnell, and S. Srinivasa, “Chomp:
+Gradient optimization techniques for efﬁcient motion planning,” in
+IEEEInternationalConferenceonRoboticsandAutomation. IEEE,
+2009,pp.489–494.
+[16] J.Schulman,J.Ho,A.X.Lee,I.Awwal,H.Bradlow,andP.Abbeel,
+“Finding locally optimal, collision-free trajectories with sequential
+convex optimization.” in Proceedings of Robotics: Science and sys-
+tems(RSS),,vol.9,no.1,2013,pp.1–10.
+[17] M.Toussaint,“Newtonmethodsfork-ordermarkovconstrainedmo-
+tionproblems,”arXivpreprintarXiv:1407.0414,2014.
+[18] Z. Marinho, A. Dragan, A. Byravan, B. Boots, S. Srinivasa, and
+G. Gordon, “Functional gradient motion planning in reproducing
+kernelhilbertspaces,”arXivpreprintarXiv:1601.03648,2016.
+[19] M.Toussaint,“Atutorialonnewtonmethodsforconstrainedtrajectory
+optimizationandrelationstoslam,gaussianprocesssmoothing,opti-
+malcontrol,andprobabilisticinference,”inGeometricandnumerical
+foundationsofmovements. Springer,2017,pp.361–392.
+[20] N.Ratliff,M.Toussaint,andS.Schaal,“Understandingthegeometry
+of workspace obstacles in motion optimization,” in 2015 IEEE In-
+ternationalConferenceonRoboticsandAutomation(ICRA). IEEE,
+2015,pp.4202–4209.
+[21] J.Mainprice,N.Ratliff,andS.Schaal,“Warpingtheworkspacegeom-
+etry with electric potentials for motion optimization of manipulation
+tasks,”inIEEE/RSJInt.Conf.onIntel.Rob.AndSys.(IROS),2016.
+1798
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:10:22 UTC from IEEE Xplore.  Restrictions apply. 

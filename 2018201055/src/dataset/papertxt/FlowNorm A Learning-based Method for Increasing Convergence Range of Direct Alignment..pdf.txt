@@ -1,0 +1,487 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Human-Centric Active Perception for Autonomous Observation
+∗ ∗
+David Kent and Sonia Chernova
+Abstract—As robot autonomy improves, robots are increas-
+ingly being considered in the role of autonomous observation
+systems — free-ﬂying cameras capable of actively tracking
+human activity within some predeﬁned area of interest. In
+this work, we formulate the autonomous observation prob-
+lem through multi-objective optimization, presenting a novel
+Semi-MDP formulation of the autonomous human observation
+problem that maximizes observation rewards while accounting
+for both human- and robot-centric costs. We demonstrate that
+theproblemcanbesolvedwithbothscalarization-basedMulti-
+Objective MDP methods and Constrained MDP methods, and
+Fig. 1: The Astrobee platform in a module of the ISS,
+discuss the relative beneﬁts of each approach. We validate our
+workonactivitytrackingusingaNASAAstrobeerobotoperat- simulated in Gazebo and visualized in rviz.
+ingwithinasimulatedInternationalSpaceStationenvironment.
+model of the Astrobee robot operating within a simulated
+I. INTRODUCTION ISS environment developed by NASA (Figure 1).
+Human operations in extreme and remote environments, Our work makes the following contributions. First, we
+such as space and deep water domains, have the potential show that the autonomous human observation problem can
+to beneﬁt from robots with autonomous observation capa- be formalized as a Semi-MDP that maximizes observation
+bilities. Due to their high-cost and high-risk nature, human rewards while accounting for both human- and robot-centric
+activities in such domains are often video recorded for doc- costs. Second, we demonstrate how the problem can be
+umentation and later analysis. NASA, for example, collects solved with both scalarization-based Multi-Objective MDP
+video documentation of each experiment conducted on the (MOMDP) methods and Constrained MDP (CMDP) meth-
+International Space Station (ISS), while remote operation of ods. Last, we discuss the two methods’ relative beneﬁts and
+underwatervehiclesissimilarlyrecorded.Asrobotautonomy drawbacks,supportedbyexperimentalresultsfromAstrobee
+improves,robotsareincreasinglybeingconsideredintherole viewpointplanningforasetoftasksontheISSunderdiffer-
+of autonomous observation systems — free-ﬂying cameras ent sets of task constraints. Our results show that while both
+capable of actively tracking human activity within an area of the techniques we present succeed in optimally solving
+ofinterest.ExamplesystemsincludetheNASAAstrobee[1] the task, the underlying characteristics of these methods
+and European Space Agency CIMON [2] robots developed highlight important tradeoffs in their potential application.
+for the ISS, as well as autonomous camera robots being The CMDP’s constraint-based formulation allows for far
+considered for underwater exploration [3]. more transparent parameter setting, eliminating the need
+While existing robot hardware offers capable candidates for pre-trial simulation or run-throughs of the experimental
+for autonomous observation systems, the autonomous ob- scenario.TheMOMDPapproach,however,isfarmorecom-
+servation problem itself is complex and largely unsolved. putationallyefﬁcient,andbettersuitedfordomainsinwhich
+Autonomous observation of humans moving in 3D space is the observation task and the environment remain relatively
+challengingduetotheproliferationofviewpointsrequiredto unchanged and efﬁcient computation is needed.
+coverunconstrainedhumansin6-DOFenvironments.Adding
+II. RELATEDWORK
+further challenge, the robot should act as a passive observer,
+In this section, we situate our work within the ﬁeld
+causing minimal distraction to the human subject from both
+of active perception, and discuss relevant multi-objective
+collisions and visual and auditory disturbance.
+optimization approaches to autonomous human observation.
+In this work, we formulate the autonomous observation
+problem through multi-objective optimization, as the prob- A. Active Perception
+lem requires balancing observation rewards with human-
+Bajscy et al. deﬁne active perception according to the
+centric costs and robot limitations. We base our problem
+active pentuple why, what, when, where, how [4]. Situating
+formulation on Markov Decision Processes (MDPs), as they
+our problem within this deﬁnition, our active agent is par-
+are effective at representing sequential decision problems
+ticularly concerned with when and where to position itself
+while accounting for the robot’s transition dynamics. We
+to maximize the expected visual coverage of a target agent
+validate our approach on activity tracking using a simulated
+which follows its own trajectory. Further, as a mobile robot,
+∗ { thepositioningdecisionsouragentcanmakeareconstrained
+Georgia Institute of Technology, Atlanta, GA, USA dekent,
+}
+chernova @gatech.edu by how the agent can move. In the context of Chen et al.’s
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1785
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. categorization of active vision tasks, our problem is most scalarization function that fully captures the relationship
+similartothesurveillanceproblemandtheobjectsearchand between all of a problem’s objectives. Some approaches
+tracking problem [5]. solve for all combinations of the weights [20], but still
+There is a large body of work on using mobile robots require a mechanism for weight selection at runtime.
+for surveillance, although the approaches typically focus on An alternative approach to scalarization is to optimize a
+achieving high area coverage rather than on human tracking primary objective, in our case the observation reward, while
+[5].Priorworksolvesforoptimalmobilecamerapositioning treating the costs as constraints. The GUBS formulation
+for individual optimal viewpoints with respect to ﬁeld-of- optimizes a single objective with a cost tradeoff for Goal-
+view and resolution constraints, for both coverage of key re- Directed MDPs [21]. Goal-directed behavior is not suitable
+gions[6]andtargettracking[7].Schroeteretal.addlighting forourapproach,asweaimtooptimizeobservationoverthe
+constraints as an extension [8]. Other work has formulated full trajectory of the human subject. Similarly, Constrained
+mobile robot surveillance according to environmental and MDP (CMDP) methods have been shown to meet a single
+human factors by combining them into a threat proﬁle, missionobjectivewhilesatisfyingcostconstraintsformulated
+biasing mobile robot surveillance coverage towards areas of as linear temporal logic (LTL) subgoals [22], [23]. Our con-
+higher threat [9]. The threat measure is treated as constant, straints do not ﬁt well into LTL, but the costs-as-constraints
+however, as it changes on a large time scale, whereas the approachaffordedbyCMDPsnaturallyincorporateshuman-
+effects of our human-centric constraints change rapidly as and robot-centric costs into our problem formulation.
+the subject moves through the environment. Both the self-
+III. PROBLEMFORMULATION
+organizing map algorithm [10] and the randomized algo-
+In this section, we formalize the general autonomous hu-
+rithm for informative path planning [11] optimize location
+man observation problem as a ﬁnite horizon SMDP with an
+observation rewards under travel budgets, but they assume
+associated set of cost functions, followed by an instantiation
+temporally-static targets and environments and are therefore
+of the problem for our Astrobee case study.
+not suited to observing moving subjects.
+Much of the object search and tracking literature explores A. General Problem Formulation
+the inherent tradeoff between search and tracking [12], [13]. WedeﬁnetheautonomousobservationproblemasaSemi-
+We assume the search problem is solved, and are concerned MarkovDecisionProcess(SMDP)[24]withthecomponents
+instead with the quality of observations collected during { (cid:48)| | (cid:48) (cid:48) }
+tracking,althoughthesearchandtrackingtradeoffisrelevant S,A(s),p(s s,a),p(τ s,a,s),r(s,a,s,τ) , (1)
+tosituationswherethehumansubject’slocationisnotknown deﬁned as follows:
+∈
+a priori. The online informative path planning algorithm • s Sisastateinthestatespaceconsistingoftherobot
+t
+maximizes classiﬁcation probabilities under a travel budget stateandthehumansubject’spose[x ,x ].Weassume
+r h ∈
+[14], but as with surveillance, it is designed more for the robot is at one of a set of waypoints x .pose
+r
+coverage than tracking. The aerial social force model [15] [w ,w ,...,w ]. The set can either be user-deﬁned or
+0 1 n
+combines attractive and repulsive forces to keep a UAV near calculated with viewpoint planners such as [8].
+a human subject while avoiding obstacles and pedestrians, • A(s) is the set of actions available to the robot
+but as a reactive approach it can be myopic. at the current state, which must include the subset
+{ }∪{ | ∈ }
+hold pos() move(w )w [w ,w ,...,w ] .
+B. Multi-Objective Optimization (cid:48)| i i 0 1 n
+• p(s s,a),thestatetransitionfunction,istheprobability
+The ﬁelds of planning and multi-objective optimization that executing action a in state s will result in state s(cid:48).
+provide relevant approaches to the autonomous human ob- • p(τ|s,a,s(cid:48)), the time duration distribution function, is
+servation problem. Many active perception tasks deal with the probability that transitioning from state s to state s(cid:48)
+planning under partial observability, which Partially Observ- with action a will take duration τ.
+ableMDPs(POMDPs)directlyaddress.POMDPshavebeen • r(s,a,s(cid:48),τ) is the reward function. We model this as
+successfully implemented for path planning on real robot an observation reward rate received over the period τ,
+systems [16], and even for planning with collaborators [17], i.e. r(s,a,s(cid:48),τ)=r(s,a,s(cid:48))τ.
+although they can be challenging to implement tractably for
+We deﬁne the observation reward based on subject cover-
+real-world tasks. In this work, we focus on fully observable
+ageandresolution(afunctionofdistance),astheyprimarily
+environments, but consider POMDPs for future extensions.
+affect the image quality of the observation images [7]. We
+Multi-objective optimization provides a spectrum of ap-
+calculate the reward as the expected percentage of a region-
+proachesforhandlingrewardsandcostswithinMDPframe- of-interest (ROI) covered by the robot’s ﬁ(cid:84)eld of view V ,
+works. The ﬁrst approach we consider is scalarization, in r
+scaled by the distance from the robot to the ROI center.
+whichthesetofrewardsandcostsarecombinedintoasingle || ||
+(cid:48) 1 V ROI
+objective by a (typically linear) scalarization function [18]. r(s,a,s)= || − || |r| || (2)
+Scalarization also extends to combining task- and belief- ROIc xr.pose ROI
+based rewards and costs in POMDPs [19]. The biggest The ROI can be deﬁned as a human-centric task workspace,
+drawback is the difﬁculty in correctly tuning the weights the subject’s full bounding box, or whatever area the robot’s
+of a linear scalarization function, or in selecting a different camera should capture.
+1786
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. Additionally, we introduce a set of constraints
+(cid:48)
+c (s,a,s,τ) to model human- and robot-centric costs.
+i
+Similar to the reward function, we accumulate costs over
+(cid:48) (cid:48)
+a time duration, i.e. c (s,a,s,τ) = c (s,a,s)τ. The costs
+i i
+are as follows:
+(cid:48)
+• c (s,a,s) represents potential collision between the
+0
+robot and the human, which is calculated based on the
+distance from the robot to a bounding box around the
+human’s workspace1, shown in red in Figure 1. The
+platform-speciﬁc parameter α controls how close to
+0
+the workspace edge the robot can be. Fig. 2: NASA’s freeﬂying Astrobee platform.
+(cid:48) −
+c0(s,a,s)=e α0dst(xr.pose,wkspc(xh)) (3)
+(cid:48) actionsetA(s)includesactionsforperchingandunperching,
+• c (s,a,s) represents the degree of intrusion caused
+1 available at waypoints with hand rails; the full action set
+by the robot to the human, calculated based on the { }
+becomes hold pos(),perch(),unperch(),move(w ) .
+distancefromtherobottothehuman’shead1.Notethat i
+We represent the region-of-interest used for calculating
+this is in direct conﬂict with the observation reward.
+observation rewards as a rectangular prism directly in front
+The platform-speciﬁc parameter α1 controls the rate at of the person’s torso and head, shown in blue in Figure 1,
+which distance decreases the robot’s intrusiveness.
+coveringtheiractivityworkspace.Weadapttherewardfunc-
+(cid:48) − || − ||
+c1(s,a,s)=e α1 xr.pose xhhead (4) tion to give zero reward during move, perch, and unperch
+(cid:48) actions.Thisactsasaworst-caserewardforAstrobee,asthe
+• c2(s,a,s) represents the platform-speciﬁc power con- robotisrequiredtouseitscamerasforsafenavigation.Thus,
+sumption of each of the robot’s actions. (cid:40)
+we update the reward function of Equation 2 as follows:
+(cid:84)
+The manner in which the cost functions are included in
+theproblemdeﬁnitiondependsontheplanningmethodused, || ||
+which we address in detail in Section IV. r(s,a,s(cid:48))= ||ROI1c−xr|| V|r|RORIO||I aishold pos, (7)
+As a ﬁnal point, we note that the reward calculation and 0 else.
+the human-centric cost calculations depend on knowing the
+The cost functions require some minor extensions. The
+human’sexactpose,xh,atalltimesteps,whichisimpossible collision cost (Equation 3) remains the same, aside from
+in practice. We overcome this issue by representing the
+tuning α . The intrusion cost is affected by perching, in that
+human’s trajectory as a continuous probability distribution 0
+perching reduces auditory disturbance as Astrobee can turn
+xh(t) ﬁt to known task data, e.g. timing and pose data its fans off. We add the indicator function I(s) to Equation
+collected from previous task executions. As such we replace
+4, which returns 1 if perched is true and 0 otherwise:
+the exact reward and cost functions with expected reward
+(cid:48) 1 − || − ||
+ahnudmacnosttrafjuencctotiroienss,xcna(ltc)uslaa(cid:88)tmedpleodvefrroamsext o(tf):N continuous c1(s,a,s)= 1+I(s)e α1 xr xhhead . (8)
+h h Lastly, we instantiate the power consumption cost with the
+r˜(s,a,s(cid:48))= N1 (cid:88)n r(s(xnh),a,s(cid:48)(xnh)) (5) lookup table: 
+0.125 aishold posandperched,
+(cid:48) 1 (cid:48)
+c˜i(s,a,s)= N n ci(s(xnh),a,s(xnh)) (6) c2(s,a,s(cid:48))=00..255 aaiisshpeorldchp,osand!perched, (9)
+Throughout the rest of the paper we use tildes to denote the
+0.5 aisunperch,
+use of expected reward and cost functions.
+1.0 aismove.
+B. Astrobee Case Study
+IV. PLANNINGMETHODS
+Inthissection,weusetheaboveformulationtodeﬁnethe
+We present two approaches to solve the SMDP
+autonomous observation problem for the NASA Astrobee
+with associated cost functions: Multi-Objective MDPs
+robot (Figure 2) operating on the ISS. Astrobee has a
+(MOMDPS) with scalarization functions, and Constrained
+perching arm to attach itself to hand rails, allowing it to
+MDPs (CMDPs). In both cases, we solve the SMDP over
+function as a power-saving pan-tilt camera instead of a
+a ﬁnite horizon with undiscounted rewards, to optimize for
+free-ﬂying robot. As such, in addition to robot and human
+totalaccumulatedobservationrewardsovertheﬁxedduration
+pose, our robot state x includes a boolean perched to
+r of the observation subject’s task.
+track whether or not Astrobee is perched. Additionally, the
+A. MOMDPs with Scalarization
+1Taken together, the human-centric costs c0 and c1 account for human Our ﬁrst approach is to solve the SMDP by reducing
+proxemics, with a hard-constrained personal space (the human workspace
+boundingbox)surroundedbyexponentiallyincreasingdistancezones[25]. our model to an MOMDP and performing backwards in-
+1787
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Cost weighting scenarios with associated scalar-
+duction [24] over a scalarized objective function [18] that
+ization weights (middle) and constraint thresholds (right).
+combines the reward and costs. First, we deﬁne reward and
+costfunctionscalculatedforonlyastateandactionbytaking w:[wr˜,wc˜0,wc˜1,wc2] d:[dc0,dc1,dc2]
+expectations over the resulting states and action durations. Scenario1 [0.67,0.33,0,0] [1,180,180]
+Additionally, w(cid:34)e discretize the durations τ into time(cid:35)steps, Scenario2 [0.33,0.41,0,0.26] [1,180,40]
+(cid:88) (cid:88)
+treating time as discrete throughout our solving approaches. Scenario3 [0.35,0.43,0.22,0] [1,20,180]
+Scenario4 [0.27,0.34,0.17,0.22] [1,20,40]
+r˜(s,a)= p(cid:34)(s(cid:48)|s,a) p(τ|s,a,s(cid:48))r˜(s,a,s(cid:48))τ (cid:35)(10)
+(cid:88) (cid:88)
+(cid:48) As such, instead of specifying a set of weights for a scalar-
+s τ
+izationfunction,theCMDPrequirestheusertospecifyaset
+(cid:48)| | (cid:48) (cid:48)
+c˜(s,a)= p(s s,a) p(τ s,a,s)c˜(s,a,s)τ . ofhardthresholdsboundingtheexpectedaccumulatedcosts.
+i i
+(cid:48) The CMDP is solved by reformulating the above problem
+s τ
+(11)
+as a linear program where we are solving for the variables
+We then combine multiple objective functions V(s,a) y , which represent occupancy measures for each state-
+(a vector containing all of the objectives, in our case s,a
+action p(cid:88)air, assuming a known initial state s0 (see [26] for
+[r˜(s,a),c˜0(s,a),c˜1(s,a),c2(s,a)]) into a single objective a full derivation of this method):
+function according to a set of weights w using a scalar-
+(cid:88) (cid:88)
+izationfunctionf(V(s,a),w).Weusealinearscalarization max r˜(s,a)ys,a
+functionthattreatsrewardsaspositiveandcostsasnegative: ys,a s,a
+· (cid:88) (cid:48) (cid:48)| ∀ (cid:48)
+s.t. y (cid:48) (cid:48) =δ(s ,s)+ T(s s,a)y s
+f(V(s,a),w)=V(s,a) w, s,a 0 s,a
+− − − (12) (cid:48) (17)
+a s,a
+w=[wr˜, wc˜0, wc˜1, wc2]. ≤ ∀
+c˜ (s,a)y d k
+For our application, the weights are selected by an expert in k s,a k
+s,a
+advance (although weight selection may not be straightfor- ≥ ∀
+y 0 s,a.
+ward, see Section V). s,a
+∗
+We then perform backwards induction, marginalizing out When an optimal y is found, we recover a policy as
+s,a (cid:80)
+τ as in Equations 10 and 11, to determine optimal action follows: ∗
+selection and the utilities of each state under the optimal π∗(a|s)=p(a|s)= ys,a∗ , (18)
+policy for each time step, using f(s,a)=f(V(s,a),w) as (cid:88) a(cid:48)ys,a(cid:48)
+the reward:
+∗ (cid:88) (cid:88) with the expected utilities given as:
+u (s(t))= am∈Aa(xs(cid:48)|)f(s,a)+ | (cid:48) ∗ (cid:48) (13) u∗r˜(s0,d)= r˜(s,a)ys∗,a. (19)
+p(s s,a) p(τ s,a,s)u (s(t+τ)) s,a
+s(cid:48)∈S τ V. EVALUATION
+∗ (cid:88) (cid:88)
+a (s(t))= argmaxf(s,a)+ We evaluate both the MOMDP with linear scalarization
+∈
+a A(cid:48)(|s) | (cid:48) ∗ (cid:48) (14) and the CMDP method on the Astrobee case study. We sim-
+p(s s,a) p(τ s,a,s)u (s(t+τ)). ulate three observation tasks in NASA’s Gazebo simulation
+s(cid:48)∈S τ oftheISS,underfourdifferentcostweightingscenarios.The
+B. CMDPs human’s tasks, with trajectories visualized in Figure 3, are:
+Alternatively,theproblemcanbeframedasaConstrained 1) Experiment: the human moves between the three ex-
+MDP2 [26], represented by the following tuple: periment stations shown in Figure 3a, staying at each
+{ (cid:48)| } pose for an extended duration.
+S,s0,A(s),p(s s,a),r˜(s,a),c˜(s,a),d , (15) 2) Inspection: the human slowly moves over a large area
+∈
+where c˜(s,a) c˜ is a cost function (i.e. Equation 11), and to perform a surface inspection, shown in Figure 3b,
+∈ i
+d d is a constraint value associated with c˜. The goal of primarilystayinginmotionforthedurationofthetask.
+i i
+aCMDP isto maximiz(cid:34)etheexpected t(cid:35)otalreward subjectto 3) Equipment transfer: the human moves back and forth
+(cid:88)
+a set of constraints deﬁned by the expected total costs: between pick-up points (blue and yellow in Figure 3c)
+and a drop-off point (red in Figure 3c), repeatedly
+E (cid:34) N | (cid:35) moving over long distances.
+maxuπr˜(s0)= π (cid:88)r˜(st,at)s0
+π For each task, we deﬁne a trajectory distribution x (t) by
+t=0 (16) h
+E N | ≤ ∀ ﬁtting Gaussian distributions to both key poses and task
+s.t.uπ(s )= c˜ (s ,a )s d k. timing data, allowing for changes in position, orientation,
+c˜ 0 π k t t 0 k
+and task segment speed. We sample a set of 5 different
+t=0
+evaluation trajectories x for each task, to ensure that
+2WenotethatCMDPsareasubsetofMOMDPs,butforbrevitywerefer heval
+ourevaluationisnotoverﬁttingtoindividualtrajectories.The
+tothetwomethodsweconsiderasMOMDPs(withlinearscalarization)and
+CMDPs. average duration of each task is 180 seconds.
+1788
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. to transparency of their effect on policy performance
+across tasks
+• Algorithm runtime
+Both the MOMDP and CMDP methods produce optimal
+policies over expected reward and costs for a given set of
+parameters. The total accumulated rewards and costs over
+all evaluation trials are presented in Figure 4. For context,
+we also show the optimal accumulated rewards and costs
+when solving the model using the exact rewards and costs
+from x , as bold tick marks in Figure 4. The main
+heval
+(a) Experiment task. takeaway is that when compared to each other, both algo-
+rithmsperformcomparablytoeachother.Thisisthecasefor
+all cost weighting scenarios, including avoiding collisions,
+constraining intrusiveness, limiting power consumption, and
+combinations of all three. Further, in all cases both methods
+approach the optimal reward and costs for a single known
+human subject trajectory.
+The methods differ signiﬁcantly in their parameter setting
+process. In the case of CMDPs, the effect of parameter
+setting on performance is much more transparent, as the
+constraints directly translate to total costs, acting as budgets
+on the cost functions (e.g. in Scenario 4, the observation
+(b) Inspection task.
+should be performed with at most 20 intrusiveness, using
+lessthan40power).Incontrast,theMOMDP’sscalarization
+weightsrepresentonlyrelativerelationshipsbetweenrewards
+and costs, and their effect on total reward and costs depend
+on the task and environment. As such the developer must
+run experimental trials, in simulation or on the real system,
+to understand exactly what effect a set of weights will
+(c) Equipment transfer task. produce. This is especially concerning when the human’s
+Fig. 3: Visualization of human task trajectories, with three task changes, as a set of weights tuned on one set of tasks
+poses shown to give an example of how the human may can produce a different cost proﬁle when run on a new task.
+move and rotate through the task. Human decision making literature further highlights the
+beneﬁtsofCMDPsoverMOMDPswithrespecttoparameter
+setting. By requiring acceptable threshold setting, CMDPs
+For each evaluation trajectory, we run both the MOMDP
+reduce the system designer’s role to speciﬁcation of a sat-
+and CMDP methods under four different cost weightings,
+isﬁcing problem, whereas by setting weights that combine
+according to the following scenarios:
+multiple rewards and costs, MOMDPs with linear scalariza-
+• Scenario 1: Avoid collisions, but ignore other costs
+tion require the designer to perform an optimizing role [27].
+• Scenario 2: Avoid collisions and limit power consump-
+Many studies have shown that, for humans, satisﬁcing takes
+tion, being as intrusive as necessary
+less time to evaluate than optimizing, and satisﬁcers are less
+• Scenario 3: Avoid collisions and limit intrusiveness,
+prone to choice paralysis, have lower decision regret, and
+while using as much power as necessary
+predict outcomes more accurately [28], [29], [30].
+• Scenario4:Reducecollisions,intrusiveness,andpower
+The algorithms also differ signiﬁcantly in run time. The
+consumption
+MOMDP with linear scalarization is a simpler model, and
+Table I lists scalarization weights and constraint thresholds
+as such, backwards induction (Equations 13 and 14) solves
+foreachscenario.Eachmodelissolvedoverexpectedreward
+an MOMDP for a 180 second task in approximately 1
+and costs (see Equations 5 and 6) calculated from N =
+second. For the same 180 second task, the linear program
+10 trajectories sampled from x , with a time step (i.e. a
+h required to solve a CMDP contains hundreds of thousands
+new decision made) of 1 second. Additionally, as execution
+of variables, and for our evaluation had a median solve
+is stochastic, the human’s trajectory is stochastic, and the
+time of 237 seconds3. Both methods can be solved a priori
+optimal CMDP solution is a stochastic policy, we execute 5
+when the observation subject’s trajectory can be predicted
+runs per solved model per cost weighting scenario.
+in advance based on previously collected data, and in such
+We evaluate the two methods according to three criteria:
+cases algorithm run time is not a limitation. In cases where
+• Policy performance with respect to the total accumu-
+lated r, c0, c1, and c2 3We use the lpsolve library to solve the CMDPs’ linear programs,
+• Ease of parameter setting for developers, with respect withruntimesbasedona3.4GHzprocessor.
+1789
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. ±
+Fig. 4: Average total accumulated rewards and costs ( 1 standard deviation) for three human tasks over four cost scenarios.
+All rewards and costs are normalized on the interval [0,1] per second, resulting in maximum total rewards and costs of 180
+for a 180 second human trajectory. For context, optimal rewards and costs given an exactly known human trajectory are
+shown with bold tick marks.
+the robot does not have task data or a reasonable trajectory cost threshold setting and policy performance. Due to their
+distribution to sample human trajectories from, only the requirement to be solved ofﬂine, however, we ﬁnd that
+MOMDP model is fast enough to re-solve in real-time. CMDPs are not practical for all real-world tasks. While
+Given the above factors, we ﬁnd that compared to the we have shown that the CMDP algorithm can be used
+MOMDP method, CMDPs are more ﬂexible to a variety of overtasktrajectorydistributions,whichaccountforexpected
+tasks and conditions. The ease of CMDP parameter setting deviations in the human subject’s path, an ideal algorithm
+allows a developer to specify zero tolerance for collisions, wouldbeabletoaccountforunexpectedtrajectorydeviations
+apply a limit to the degree of intrusion, and set a power by incorporating online re-planning. The linear scalarization
+budget based on the starting state of the robot, all of which MOMDP approach can be fast enough to solve for updated
+willberespectedforanytaskwithouttheneedfortestingand policies in real-time4, but the CMDP’s 4 minute run time is
+tuning. The CMDP linear program runtime is a signiﬁcant orders of magnitude too slow.
+drawback, however. While we have shown that the CMDP While some work has been done in ﬁnding any-time
+algorithm can be solved a priori when a task trajectory approximate solutions to CMDPs using Monte Carlo Tree
+distribution is available, we note that its long solve time Search (see the Cost-Constrained UCT algorithm[31]), both
+makes the approach unsuitable for cases with greater task or thebranchingfactorandsearchdepthofourproblemdomain
+environmentaluncertainty,assuchcasescanrequirereactive aretoolargeforMonteCarlosearchtoapproximateoptimal
+re-planning to account for unexpected human behavior. In solutions in real-time. In future work, we plan to explore
+such cases, the computationally efﬁcient MOMDP method approaches for approximating CMDP solutions so that the
+is more suitable. CMDP method can adapt to unexpected trajectory changes
+in real-world autonomous observation tasks.
+VI. CONCLUSIONANDFUTUREWORK
+In this work, we have presented two methods for solving ACKNOWLEDGEMENT
+theautonomousobservationproblem,anddemonstratedtheir This work is supported in part by an Early Career Fac-
+performance for a speciﬁc system and 6-DOF environment. ulty grant from NASA’s Space Technology Research Grants
+While both methods produce optimal policies, we ﬁnd that, Program.
+because of its satisﬁcing methodology, the CMDP formu-
+lation is preferable due to its clear relationship between 4Weconsider1secondareasonabledecisionperiodfortheAstrobeetask.
+1790
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. REFERENCES ConferenceonIntelligentRobotsandSystems(IROS),2017,pp.7011–
+7017.
+[1] T.Smith,J.Barlow,M.Bualat,T.Fong,C.Provencher,H.Sanchez, [16] S. Ragi and E. K. Chong, “Uav path planning in a dynamic en-
+and E. Smith, “Astrobee: A new platform for free-ﬂying robotics on vironment via partially observable markov decision process,” IEEE
+theinternationalspacestation,”2016. TransactionsonAerospaceandElectronicSystems,vol.49,no.4,pp.
+[2] “CIMON - the intelligent astronaut assistant,” https://www.dlr.de/dlr/ 2397–2412,2013.
+en/desktopdefault.aspx/tabid-10212/332read-26307/#/gallery/29911, [17] M.Chen,E.Frazzoli,D.Hsu,andW.S.Lee,“Pomdp-liteforrobust
+published:2018-03-02. robot planning under uncertainty,” in IEEE International Conference
+[3] M. Ishida and K. Shimonomura, “Marker based camera pose es- onRoboticsandAutomation(ICRA),2016,pp.5427–5433.
+timation for underwater robots,” in 2012 IEEE/SICE International [18] D.M.Roijers,P.Vamplew,S.Whiteson,andR.Dazeley,“Asurvey
+SymposiumonSystemIntegration(SII). IEEE,2012,pp.629–634. of multi-objective sequential decision-making,” Journal of Artiﬁcial
+[4] R. Bajcsy, Y. Aloimonos, and J. K. Tsotsos, “Revisiting active per- IntelligenceResearch,vol.48,pp.67–113,2013.
+ception,”AutonomousRobots,vol.42,no.2,pp.177–196,2018. [19] A.EckandL.-K.Soh,“Evaluatingpomdprewardsforactivepercep-
+[5] S. Chen, Y. Li, and N. M. Kwok, “Active vision in robotic systems: tion,”inInternationalConferenceonAutonomousAgentsandMulti-
+Asurveyofrecentdevelopments,” InternationalJournalofRobotics agent Systems-Volume 3. International Foundation for Autonomous
+Research,vol.30,no.11,pp.1343–1377,2011. AgentsandMultiagentSystems,2012,pp.1221–1222.
+[6] U. Nilsson, P. O¨gren, and J. Thunberg, “Towards optimal position- [20] D. J. Lizotte, M. Bowling, and S. A. Murphy, “Linear ﬁtted-q
+ing of surveillance ugvs,” in Optimization and Cooperative Control iterationwithmultiplerewardfunctions,”JournalofMachineLearning
+Strategies. Springer,2009,pp.221–233. Research,vol.13,no.Nov,pp.3253–3295,2012.
+[7] R.Bodor,A.Drenner,M.Janssen,P.Schrater,andN.Papanikolopou- [21] V.FreireandK.V.Delgado,“Gubs:Autility-basedsemanticforgoal-
+los, “Mobile camera positioning to optimize the observability of hu- directed markov decision processes,” in Conference on Autonomous
+manactivityrecognitiontasks,”inIEEE/RSJInternationalConference Agents and MultiAgent Systems. International Foundation for Au-
+onIntelligentRobotsandSystems,2005,pp.1564–1569. tonomousAgentsandMultiagentSystems,2017,pp.741–749.
+[8] C. Schroeter, M. Hoechemer, S. Mueller, and H.-M. Gross, “Au- [22] X. D. Ding, B. Englot, A. Pinto, A. Speranzon, and A. Surana,
+tonomous robot cameraman-observation pose optimization for a mo- “Hierarchical multi-objective planning: From mission speciﬁcations
+bileservicerobotinindoorlivingspace,”in2009IEEEInternational to contingency management,” in IEEE international conference on
+ConferenceonRoboticsandAutomation,2009,pp.424–429. roboticsandautomation(ICRA),2014,pp.3735–3742.
+[9] C. Y. Ma, D. K. Yau, J.-c. Chin, N. S. Rao, and M. Shankar, [23] S. Feyzabadi and S. Carpin, “Multi-objective planning with multiple
+“Matchingandfairnessinthreat-basedmobilesensorcoverage,”IEEE high level task speciﬁcations,” in IEEE International Conference on
+Transactions on Mobile Computing, vol. 8, no. 12, pp. 1649–1662, RoboticsandAutomation(ICRA),2016,pp.5483–5490.
+2009. [24] Q.HuandW.Yue,Markovdecisionprocesseswiththeirapplications.
+[10] G. Best, J. Faigl, and R. Fitch, “Multi-robot path planning for SpringerScience&BusinessMedia,2007,vol.14.
+budgeted active perception with self-organising maps,” in IEEE/RSJ [25] E.T.Hall,“Thehiddendimension,”1966.
+International Conference on Intelligent Robots and Systems (IROS), [26] E.Altman,ConstrainedMarkovdecisionprocesses. CRCPress,1999,
+2016,pp.3164–3171. vol.7.
+[11] S.AroraandS.Scherer,“Randomizedalgorithmforinformativepath [27] S. Eilon, “Goals and constraints in decision-making,” Journal of the
+planning with budget constraints,” in IEEE International Conference OperationalResearchSociety,vol.23,no.1,pp.3–15,1972.
+onRoboticsandAutomation(ICRA),2017,pp.4997–5004. [28] B.Schwartz,A.Ward,J.Monterosso,S.Lyubomirsky,K.White,and
+[12] Y. Wang, I. Hussein, and R. S. Erwin, “Awareness-based decision D.R.Lehman,“Maximizingversussatisﬁcing:Happinessisamatter
+making for search and tracking,” in American Control Conference. ofchoice.”Journalofpersonalityandsocialpsychology,vol.83,no.5,
+IEEE,2008,pp.3169–3175. p.1178,2002.
+[13] Y. Sung and P. Tokekar, “Algorithm for searching and tracking an [29] A. M. Parker, W. B. De Bruin, and B. Fischhoff, “Maximizers ver-
+unknown and varying number of mobile targets using a limited fov sus satisﬁcers: Decision-making styles, competence, and outcomes,”
+sensor,”inIEEEInternationalConferenceonRoboticsandAutomation JudgmentandDecisionmaking,vol.2,no.6,p.342,2007.
+(ICRA),2017,pp.6246–6252. [30] K. Jain, J. N. Bearden, and A. Filipowicz, “Do maximizers predict
+[14] M. Popovic´, G. Hitz, J. Nieto, I. Sa, R. Siegwart, and E. Galceran, better than satisﬁcers?” Journal of Behavioral Decision Making,
+“Onlineinformativepathplanningforactiveclassiﬁcationusinguavs,” vol.26,no.1,pp.41–50,2013.
+inIEEEinternationalconferenceonroboticsandautomation(ICRA), [31] J.Lee,G.-H.Kim,P.Poupart,andK.-E.Kim,“Monte-carlotreesearch
+2017,pp.5753–5758. forconstrainedmdps,”inICML/IJCAI/AAMASWorkshoponPlanning
+[15] A.Garrell,L.Garza-Elizondo,M.Villamizar,F.Herrero,andA.San- andLearning(PAL),72018.
+feliu, “Aerial social force model: A new framework to accompany
+people using autonomous ﬂying robots,” in IEEE/RSJ International
+1791
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:57:48 UTC from IEEE Xplore.  Restrictions apply. 

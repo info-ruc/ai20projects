@@ -1,0 +1,541 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+LAMP: Large-Scale Autonomous Mapping and Positioning for
+Exploration of Perceptually-Degraded Subterranean Environments
+Kamak Ebadi1, Yun Chang2, Matteo Palieri1, Alex Stephens1, Alex Hatteland1, Eric Heiden3, Abhishek Thakur4
+Nobuhiro Funabiki1, Benjamin Morrell1, Sally Wood5, Luca Carlone2, Ali-akbar Agha-mohammadi1
+Abstract—Simultaneous Localization and Mapping (SLAM)
+in large-scale, unknown, and complex subterranean environ-
+ments is a challenging problem. Sensors must operate in
+off-nominal conditions; uneven and slippery terrains make
+wheelodometryinaccurate,whilelongcorridorswithoutsalient
+features make exteroceptive sensing ambiguous and prone
+to drift; ﬁnally, spurious loop closures that are frequent in
+environments with repetitive appearance, such as tunnels and
+mines, could result in a signiﬁcant distortion of the entire
+map. These challenges are in stark contrast with the need to
+build highly-accurate 3D maps to support a wide variety of
+applications, ranging from disaster response to the exploration
+of underground extraterrestrial worlds. This paper reports
+Fig. 1: Two autonomous ground rovers (Husky A200) explore the
+on the implementation and testing of a lidar-based multi-
+network of underground tunnels at the Arch mines.
+robot SLAM system developed in the context of the DARPA
+Subterranean Challenge. We present a system architecture to the development for microbial life, as well as potential sites
+enhance subterranean operation, including an accurate lidar-
+for habitats in future human space missions [1].
+based front-end, and a ﬂexible and robust back-end that
+automatically rejects outlying loop closures. We present an Localization and mapping are key capabilities for au-
+extensive evaluation in large-scale, challenging subterranean tonomous underground operation. In typical applications,
+environments, including the results obtained in the Tunnel there is no prior map of the environment, and GPS cannot
+Circuit of the DARPA Subterranean Challenge. Finally, we
+be relied on to localize the robots. Indeed, the ultimate goal
+discuss potential improvements, limitations of the state of the
+ofmanyautonomousexplorationapplicationsistoobtainan
+art, and future research directions.
+accurate 3D map of the environment. Unfortunately, most
+I. INTRODUCTION SLAMsystemshaveinadequateperformancewhendeployed
+inperceptually-degradedsubterraneanenvironments:sensors
+Over the past two decades, there has been a growing
+mustoperateinoff-nominalconditions(poorilluminationor
+demand for autonomous unmanned exploration of diverse
+lack-thereof, dust, water puddles and non-Lambertian sur-
+subterranean environments, from tunnels and urban un-
+faces)whichrendervisual-SLAMapproachesunreliable[2];
+derground environments to complex cave networks. This
+uneven and slippery terrains make wheel odometry inaccu-
+surge of interest is motivated by terrestrial applications such
+rate,whilelong,featurelesscorridorsmakelidar-basedmap-
+as search and rescue, disaster response, and infrastructure
+ping prone to drift; ﬁnally, perceptual aliasing, the presence
+monitoring, as well as the unparalleled scientiﬁc opportu-
+of many similar-looking corridors and intersections, induces
+nities offered by exploration of other worlds. Lava tubes,
+spurious loop closures that can degrade the mapping results.
+subterranean conduits found on the Moon and Mars, are
+of particular interest: sheltered from cosmic radiation and
+Relatedwork.WereviewtheliteratureonSLAMsystems
+temperature ﬂuctuations, they provide ideal conditions for
+for subterranean and perceptually degraded environments,
+and refer the reader to [3] for a broader survey on SLAM.
+TheresearchwascarriedoutattheJetPropulsionLaboratory-California
+Related work investigates different sensing modalities, in-
+Institute of Technology, under a contract with the National Aeronautics
+andSpaceAdministration.ThisworkwaspartiallyfundedbytheDefense cluding vision [4], visual-inertial [5], [6], and thermal-
+(cid:13)
+AdvancedResearchProjectsAgency(DARPA). c2020CaliforniaInstitute inertial [7]. However, solely relying on vision for under-
+ofTechnology.
+ground localization and mapping can be challenging as
+1K.Ebadi,M.Palieri,A.Stephens,A.Hatteland,N.Funabiki,B.Morrell,
+and A.Aghamohammadi are with NASA Jet Propulsion Laboratory - camerasaredirectionalandsensitivetoilluminationchanges
+CaliforniaInstituteofTechnology,Pasadena,CA91109. and environmental conditions. Lidar sensors provide a 360◦
+2Y.Chang and L.Carlone are with Department of Aeronautics and As-
+horizontal ﬁeld of view and high sampling rate, and do
+tronautics,MassachusettsInstituteofTechnology,Cambridge,MA02139.
+3E.Heiden is with Department of Computer Science, University of not rely on external light sources. Therefore, 3D lidar-
+SouthernCalifornia,LosAngeles,CA90007. SLAM has been a popular solution to map complex un-
+4A.ThakuriswithAptiv,Troy,MI48098.
+structured environments, from early work [8] to more recent
+5S.Wood is with Department of Electrical and Computer Engineering,
+SantaClaraUniversity,SantaClara,CA95053. systems [9], [10], [11], [12], [13], [20]. Thrun et al. [14]
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 80
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. propose an underground mine mapping algorithm that relies
+on 2D scan matching and a global alignment step. Tardioli
+et al. [15], [16] propose a system architecture for single
+and multi-robot exploration in underground tunnels. Zlot et
+al. [17] present a lidar-based SLAM method for mapping
+of a 17 km underground copper and gold mine; to detect
+loopclosures,theyuseasurfelrepresentationandsearchfor
+matches against previous trajectory segments. Leingartner et
+al. [18] investigate the performance of off-the-shelf sensors
+andstate-of-the-artmappingalgorithmsinmappinga1.5km
+long motorway tunnel in an urban search & rescue scenario
+and conclude that the investigated sensing and mapping
+techniques are not yet robust enough to deal with these
+perceptually degraded environments. Jacobson et al. [19]
+Fig. 2: Centralized multi-robot SLAM architecture.
+present a semi-supervised method that relies on manual
+selectionoftopologicallandmarksinsidea300mlongtunnel A. Overview: Single and Multi-robot Architecture
+to perform localization using a low cost camera sensor.
+Fig. 2 shows LAMP’s multi-robot architecture. The local
+Contribution. This paper reports on the implementation
+front-end includes a lidar front-end (Section II-B, module
+and testing of a multi-robot SLAM system developed in the
+shown in blue in Fig. 2) that computes odometry estimates
+context of the Tunnel Circuit of the DARPA Subterranean
+and detects loop closures, and a vision front-end (Section
+Challenge (the ﬁrst of the three subdomains) [22], which
+II-C, module shown in green in Fig. 2) for artifact detec-
+aims to explore new approaches to rapidly map, navi-
+tion and localization. The local back-end uses pose graph
+gate, search, and exploit large-scale complex underground
+optimization (PGO) [3] to estimate the trajectory of the
+environments. The contribution of the paper is threefold.
+robot (Section II-D) along with the location of artifacts, and
+First, we describe the multi-robot system architecture and
+also includes an outlier rejection mechanism, based on ICM
+the choice and implementation of the algorithmic modules.
+(Section II-E). For robot i, the result of the local front-end
+We comment on the improvements we made to existing
+and back-end is an estimate of the robot trajectory (modeled
+algorithms to enhance subterranean operation, including (i)
+as a sparse set of poses) and artifact positions, as well as
+an accurate lidar front-end based on scan-to-scan and scan-
+a downsampled point cloud attached to each robot pose; we
+to-submap matching, (ii) a versatile SLAM back-end that G X
+denotewith and theposegraphandtheposeestimates
+can incorporate data from multiple sensors and inputs from i i P
+for robot i, and we denote with the collections of local
+i
+a human operator, and (iii) an Incremental Consistent Mea-
+point clouds for robot i.
+surement (ICM) Set Maximization approach based on [21]
+When within communication range, each robot sends the
+torejectoutlyingloopclosures.Thesecondkeycontribution X G P
+tuple ( , , ) to a base station. The base station fuses
+i i i
+is an extensive evaluation in challenging underground mines
+the estimates from all robots by searching for potential
+acrosstheUnitedStates,includingexperimentsconductedin
+loop closures between the maps (inter-robot loop closure
+the Bruceton Research mine in August 2019, as part of the
+detection module), discarding outliers (ICM module), and
+TunnelCircuitoftheDARPASubterraneanChallenge,where
+solving asecond PGO problem,this time involvingall robot
+the system described in this paper has afforded the CoSTAR
+trajectories and all observed artifacts. We discuss the key
+team [23] the second place. Finally, we discuss the lessons
+modules from Fig. 2 in the following sections.
+learned, including potential improvements, limitations of the
+B. Local Lidar Front-end
+state of the art, and future research directions.
+Thelidarfront-endisinchargeofusingtherawlidardata
+II. LAMP:LARGE-SCALEAUTONOMOUS to obtain relative pose measurements between consecutive
+MAPPINGANDPOSITIONING robot poses (odometry) and non-consecutive poses (loop
+ThissectionintroducesourLarge-scaleAutonomousMap- closures).Thefront-endbuildsuponanexistingopen-source
+ping and Positioning (LAMP) system. Using data from 3D implementation [24] and proceeds along the same lines as
+lidar scanners of one or more robots, LAMP estimates the modern lidar-SLAM systems such as LOAM [9].
+trajectories of each robot as well as a point cloud map of 1) Lidar Odometry: A typical 3D lidar, such as the
+thefullenvironment.Moreover,itusesanRGB-Dcamerato Velodyne Puck LITE [25], generates up to 10,000 points
+detectandlocalizeknownobjectsintheenvironment;wecall per scan and produces 10 scans per second. In order to
+these objects artifacts (following [22]) to distinguish them increase efﬁciency and ﬁlter out noise, we apply a 3D voxel
+from natural landmarks commonly used in landmark-based grid ﬁlter to the raw point cloud, using the implementation
+SLAM. While the system is designed to work with multiple available in the Point Cloud Library (PCL) [26]. We then
+robots (all connected to a central base station), it naturally usetheGeneralizedIterativeClosestPoint(GICP)algorithm
+falls back to a single-robot SLAM system when the base [27] to perform scan-to-scan matching, which estimates the
+station is out of communication range. relative motion between the point cloud collected at the
+81
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. − G
+current time t and the point cloud collected at time t 1. odometry edge are added to the local pose graph . When
+i
+We initialize the GICP algorithm with the identity pose. the back-end receives loop closure measurements from the
+Since compact lidars, such as the Velodyne Puck, have Loop Closure Detection Module, we ﬁrst check their quality
+◦
+relativelynarrowverticalﬁeldofview(30 )andlowvertical using the ICM module described in Section II-E, and reject
+◦ G
+angular resolution (2.0 , 16 scanning channels), the scan- outliers. Then, a loop closure edge is added to . Finally,
+i
+to-scan estimates are not very accurate. Therefore, as done when the vision front-end produces an artifact (or ﬁducial)
+in other lidar-SLAM pipelines [9], we also use a scan-to- detection, a new variable is instantiated in the graph (the
+submap matching step, where the latest scan is matched unknownartifactposition)andanedgeisaddedbetweenthe
+against a local submap. Note that both matching modules artifact and the corresponding observation pose. In the case
+produceanodometryestimate,butscan-to-submapmatching of a second observation of an artifact, an additional edge is
+typically produces more accurate estimates, as we show in added between the observation pose and the existing artifact
+the experimental section. The odometric estimate from the node. To compute the trajectory estimate, we optimize
+scan-to-submap matching is then passed to the back-end. the pose graph using the Gauss-Newton implementation in
+2) LoopClosureDetection: Inordertoﬁndloopclosures, GTSAM.
+P
+we compare the current scan at time t with scans in 2) Base station (Multi-robot) PGO: The base station
+i G
+within a given radius (10 m in our tests), see Fig. 3. The receives the single pose graphs from each robot i within
+i
+current scan is then registered against each of the nearby communication range and merges them together in a single
+G
+scansusingGICPtoobtainatransformation.Inordertoﬁnd pose graph . We assume that the robots share a common
+loop closures, GICP is initialized with zero translation and referenceframe(inpractice,theﬁducialmarkerscanbeused
+a rotation from the current pose estimates (from odometry). to establish a common frame). Before optimizing the multi-
+G
+Zero translation was found to give more reliable results in robot graph , we search for inter-robot loop closures; since
+narrowtunnelenvironmentsandavoidlocalminimainGICP, allrobotsshareacommonreferenceframe,thiscanbedone
+leveraging the topology of the environment that limits the using the same approach described in Section II-B.2.
+differences in possible positions. After executing GICP, we Human-in-the-loop Pose Graph Editing. The versatility
+check the ﬁtness score [26] and reject loop closures with of our PGO also enables a more ﬂuid interaction with the
+score larger than a threshold (5.0 in our experiments). The human operator. In some cases the operator can identify (by
+loop closures that pass the ﬁtness test are then passed to inspectingthemap)aloopclosurethathasnotbeendetected
+the local back-end. Since loop closure detection involves by the lidar front-end. In our system, the operator can use
+executing GICP for many pairs of scans, we execute it on a rviz [34] and the Robot Operating System (ROS) [35] to
+parallel thread, and we only execute it at a subset of scans interact with the map and attempt a loop closure between a
+(the key-scans, see Section II-D). pair of poses: this is done by calling a ROS service with the
+IDs of the potential loop closure poses, which results in the
+C. Vision Front-end and Artifact Positioning
+additionofanedgeintheposegraph.Thisfunctionalitycan
+The goal of the vision front-end is to detect objects of be used during operation or as a post-processing step.
+interest and estimate their relative position with respect
+E. Incremental Consistent Measurement Set Maximization
+to the robot. For instance, in the context of the DARPA
+Subterranean Challenge, the objects of interest are either Before executing PGO, we check the quality of the lidar
+artifacts (known objects of interest), or ﬁducial markers at loop closures and remove outliers. This is done by the In-
+known locations (only present at the entrance of the tunnel, crementalConsistencyMaximizationmodulesinFig.2.The
+for calibration purposes). We use YOLO [29] to detect the ICM modules are largely based on the Pairwise Consistent
+artifacts and the AprilTags library [30], [31], [32] to detect Measurement (PCM) Set Maximization algorithm of Man-
+the ﬁducial markers. YOLO produces a 2D bounding box gelson et al. [21], which we modify to enable online (single
+around a detected artifact; we then estimate the position of andmulti-robot)operation.ICMincludesthefollowingsteps.
+the artifact by using the bearing corresponding to the center
+of the bounding box and the range obtained from the depth
+channel of the RGB-D camera.
+D. Single and Multi-robot Pose Graph Back-end
+We use a versatile SLAM back-end based on pose graph
+optimization (PGO) [3] and implemented in GTSAM [33].
+The same PGO implementation is executed both locally at
+each robot and at the base station, as discussed below.
+G
+Fig. 3: Local pose graph : poses, edges, and cycles.
+1) Local (Single-Robot) PGO: The local back-end at i
+robot i receives the odometry measurements from the front- Odometry Check. While ICM has been designed for the
+end and periodically instantiates a new key-scan: a key-scan multi-robot case, we adapt it to the single-robot case. In the
+◦
+is created after a minimum odometric displacement (30 single-robot case, each loop closure can be tested both in
+rotation or 1m translation) and the corresponding pose and terms of pairwise consistency against other loop closures as
+82
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Underground tunnels and mines explored in our ﬁeld
+experiments.Thedistanceexplored,widthandheightareaveraged
+and rounded values from our experiments.
+Distance
+Name Type Location
+Explored
+ArchPocahontasMine 1100m CoalMine Beckley,WV
+BeckleyExhibitionMine 1000m CoalMine Beckley,WV
+BrucetonSafetyResearch(SR)Mine 1400m CoalMine Pittsburgh,PA
+BrucetonExperimental(EX)Mine 700m CoalMine Pittsburgh,PA
+HighlandMine 1400m CoalMine Logan,WV
+EagleMine 500m GoldMine Julian,CA
+in [21], and against the odometry edges. As in PCM, the
+basic observation is that, in the absence of noise, relative
+pose measurements should compose to the identity along
+cycles in the graph [36]. Cycles are deﬁned as complete
+loops in the graph, as depicted in Fig. 3. Assume that the
+front-end produces a putative loop closure measurement Tlc
+ij
+of the relative pose between poses T and T . Then, the
+i j
+measurements along the cycle formed by the loop closure Fig. 4: Partial ground truth map of the Bruceton Safety Research
+Tlc and the odometry edges (in red in Fig. 3) must compose Mine,obtainedbyoptimizingthebestrobottrajectorywithground
+ij
+to the identity: truthpositionofﬁducials,artifacts,andtotalstationmeasurements
+Terr =. Tlc·Todom (1) during the tunnel circuit of the DARPA Subterranean Challenge.
+ij ij ji
+challenging both for perception and mobility. In the follow-
+where Todom is the relative pose obtained by chaining the
+ji ing we provide a short description of our system setup.
+odometryedgesfromposej toposei.Eq.(1)representsthe
+Robots: The robots used in our tests are Husky-A200
+poseerroraccumulatedalongtheloop.IfTlc isanoutlier,it
+ij series ground vehicles, equipped with VLP-16 Puck Lite
+will cause the error Terr to be large. Denoting with m the
+ij lidar, an Intel RealSense D435 RGB-D camera, and an Intel
+numberofedgesalongtheloop(7intheexampleofFig.3), ×
+we reject as outliers loop closures inducing average errors NUC 7i7DNBE (4 1.9 GHz, 32 GB RAM) processor. The
+robots rely on communication radios (visible on the back of
+1Terr larger than a threshold (in our tests, we limit the
+m ij the robot in Fig. 1) which create a mesh network to provide
+rotation error to 0.05 rad and the translation error to 0.1 m).
+communication between robots and the base station.
+Pairwise Consistency Check. Using a check similar to the
+Base Station: The base station is an Intel Hades Canyon
+one described in the previous section, we check pairwise ×
+consistency between pairs of loop closures. Assume that the NUC8i7HVKVA(4 1.9GHz,32GBRAM).Thebasesta-
+tionisplacedoutsidetheminetoreceiveincomingtelemetry
+front-endproducesaputativeloopclosuremeasurementTlc.
+ij data as well as pose graphs, and artifact localization results
+In order to check if Tlc is consistent with a previous loop
+ij from all the robots deployed in the tunnel.
+closure Tlc, we compute the loop error as:
+kl Ground Truth: Obtaining ground truth trajectory and
+Terr =. Tlc·Todom·Tlc ·Todom (2) map estimates in large-scale underground environments is
+ij,kl ij jl lk ki
+a challenging task. After the tests in the Bruceton mines,
+andwebuildanadjacencymatrixkeepingtrackofwhichpair
+DARPA provided ground truth (surveyed) locations of the
+ofloopclosuresarepairwiseconsistent,asin[21].Notethat
+artifacts. To obtain a proxy for the ground truth trajectories
+we use the simpliﬁed check (2) instead of the probabilistic
+of our robots, we enforced the ground truth locations of
+checkproposedin[21]sincewedonothaveaccesstoprecise
+the artifacts in the pose graph of each robot, and used the
+covariances for the odometry and loop closures.
+resultingoptimizedtrajectoryasgroundtruthaspresentedin
+Incremental Consistency Maximization. So far we have
+Fig.4;whenavailable,wealsoaddedsporadicmeasurements
+rejected gross outliers using the odometry check and have
+of the robot poses obtained using a total station (TS) [37].
+built an adjacency matrix that keeps track of which pair of
+Since ground truth artifact locations are only available for
+loopclosuresisconsistent.Inourimplementation,thematrix
+the Bruceton mines, we report quantitative metrics for these
+is not built from scratch, but we only add a row and column
+mines, and visualize mapping results for the others.
+whenanewloopclosureisdetectedandpassestheodometry
+check. Then, we follow [21] and ﬁnd a set of mutually B. Results and Evaluation
+consistent loop closures by computing the maximum clique 1) OdometryEvaluation: Inthissection,weshowthatthe
+on the adjacency matrix. Loop closures in the maximum scan-to-submap matching (i) drastically improves the odom-
+clique are considered inliers and added to the graph. etry accuracy when compared to the scan-to-scan matching,
+and (ii) in nominal conditions, it has a drift of 1% of the
+III. EXPERIMENTS
+distancetraveled.Fig.5showsresultsintheBrucetonmines.
+A. Test Environments and Setup
+Fig. 5(a)-(b) report the trajectory estimates for the Safety
+We perform experiments in six underground tunnels and ResearchandtheExperimentalmine,respectively.Thescan-
+mines, listed in Table I. These environments are extremely to-scan matching quickly drifts, as it poorly estimates the
+83
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. Fig. 7: A section of Bruceton Safety Research mine. Left: PGO
+without ICM; the map is visibly distorted. Right: PGO with ICM;
+map has no distortion since outlier loop closures are rejected.
+Fig. 5: Left: odometric trajectories from scan-to-scan and scan- Exhibition Coal mine. This is particularly interesting, due
+to-submap matching versus ground truth for (a) Bruceton Safety to the presence of a very long loop. In this case, using the
+Research (SR) mine and (b) Experimental (EX) mine. Right: drift standard (odometric) initialization in GCIP does not allow
+statistics for (c) SR and (d) EX.
+closing the loop; the loop closure poses highlighted in red
+in Fig.6(c) are too far, and GICP does not converge to a
+reasonable estimate. However, the approach in Section II-B
+is still able to correctly detect and enforce the loop closure.
+3) ICM Evaluation: Spurious loop closures are frequent
+in environments with repetitive appearance, such as tunnels
+and mines. Including outliers in the PGO typically results
+in a signiﬁcant distortion of the entire map, hence their
+rejection is crucial to obtain accurate maps. Fig. 7 shows
+the impact of ICM on the mapping results (more results
+will also presented in the multi-robot subsection). The map
+on the left is obtained without ICM and is distorted due to
+inaccurate loop closures. The map on the right is obtained
+by enabling ICM: poor loop closures are removed by ICM
+and the resulting ﬁnal map shows no visible distortion. We
+evaluate the quality of loop closures by measuring the end-
+to-end drift where the robot is started and stopped at the
+samelocationinthetunnel.Theend-to-enderrorinthemap
+obtained with ICM is 0.2 m which is signiﬁcantly less than
+the 2.8 m end-to-end drift in the map without ICM.
+Fig.6:Mapestimateswithandwithoutloopclosure(LC)detection
+We show the performance and accuracy of LAMP in the
+for (a) Eagle mine, (b) Bruceton Experimental Research mine, (c)
+Beckley Exhibition Coal Mine. BrucetonSafetyResearchandExperimentalminesinFig.8.
+The boxplots show the artifact localization error with and
+pitch of the robot, due to the low vertical resolution of without loop closures (LC) and outlier rejection (ICM). In
+the Puck. The scan-to-submap matching has signiﬁcantly addition,thelocalizationperformanceachievedinthetunnel
+better performance. Fig. 5(c)-(d) provides a quantitative circuit of the DARPA challenge is shown in green; the latter
+evaluation of robot drift in terms of Relative Pose Error shows a reduced error due to the inclusion of total station
+(RPE) using evo [47]. In the Safety Research mine, the measurements of the robot pose in the pose graph.
+scan-to-submap odometry has a drift smaller than 1% of the 4) Multi-robot Mapping Evaluation: To demonstrate our
+distance travel. On the Experimental mine, the drift is larger multi-robot architecture, we show the mapping results ob-
+due to the presence of featureless corridors that cause GICP tained at the base station. For this experiment, we set the
+to underestimate the motion of the robot along the direction ICM translation and rotation thresholds to 0.05 m and 0.005
+of the tunnel (see discussion in Section IV). rad. In order to reject outlying inter-robot loop closures the
+2) Loop Closure Evaluation: Fig. 6 reports a selected set GICPisinitializedwithrobotodometryandaloopclosureis
+of maps obtained with and without loop closure detection conﬁrmed if the computed ﬁtness score is greater than a set
+(Section II-B) in three underground mines. Fig. 6(a)-(b) threshold(0.18).Fig.9showsthefusedmapfromtworobots
+show that loop closure detection avoids the appearance of (a)withoutloopclosures,(b)withloopclosuresbutnoICM,
+spurious corridors in the map (resulting from the odometry and(c)withICM.Weobservethatwithoutloopclosures,not
+drift) in (a) Eagle Mine and (b) Bruceton Experimental onlythedriftinthesinglerobottrajectoryestimatesbecomes
+Mine. Fig.6(c) shows the map obtained in the Beckley apparent, but also errors in the initial calibration (based on
+84
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. Lidar Odometry: Our choice of the lidar front-end
+odometry worked well in nominal conditions; however, as
+shown in Fig. 5(b),(d) it might underestimate the robot mo-
+tion in long symmetric corridors without detectable geomet-
+ric features. In these scenarios, the scan matching problem
+become intrinsically ambiguous and GICP is easily trapped
+in local minima. This degeneracy is a well-known problem
+in lidar-SLAM and can be mitigated by fusing information
+from other sensors (e.g., wheel odometry, vision [4], [7],
+IMU [20], [38]), or adopting more recent methods that
+attempt to explicitly model the degeneracy [45].
+Fig.8:ArtifactlocalizationaccuracyusingLAMP,withandwithout Loop Closure Detection: While using the odometry
+loop closures (LC) and ICM, and with total station (TS) measure- initialization in GICP leads to missing many loop closure
+ments in the Bruceton Safety Research and Experimental mines
+opportunities, the initialization proposed in this paper has
+duringthe TunnelCircuit ofthe DARPASubterranean Challenge.
+the advantage of computing a large number of putative loop
+closures. Indeed, we are able to capitalize on loop closure
+opportunities despite a large amount of odometric drift. The
+downside is that our approach also produces a large amount
+of outliers. A natural evolution of the proposed system is to
+usefeature-basedapproachesforrobustglobalscanmatching
+that do not require an initial guess [39]. Another practical
+solution might be to leverage other sensing modalities, e.g.,
+use vision to detect loop closures [4]. In addition, computa-
+tion of precise covariances for loop closures and odometry
+is an avenue for future work.
+Outlier Rejection: While we discussed ICM as a prag-
+maticsolutiontorejectoutlierloopclosures(basedon[21]),
+webelievethatmoreresearchisneededtoobtaintrulyrobust
+Fig. 9: Multi-robot mapping experiment with two robots at the SLAMsolutions.ICMcurrentlyrequiresextensiveparameter
+Bruceton Safety Research mine. (a) Base station map without tuning and it often fails to strike a good balance between
+performinginter-robotloopclosure;(b)basestationmapafterinter- rejecting outliers and keeping inliers. This is expected, due
+robot loop closure detection is enabled (no ICM); (c) base station totheapproximatenatureofthepairwiseconsistencychecks.
+map after inter-robot loop closure detection and ICM are enabled.
+Recent approaches [46] attempt to simultaneously assess
+theﬁducialmarkers)leadtoasigniﬁcantdivergencebetween
+the consistency of all loop closures accepted as inliers,
+the trajectories of the two robots. If we enable loop closure
+but they currently do not scale well to large problems.
+detection, but we do not use ICM, a few incorrect loop
+The development of a robust global solver for PGO would
+closuresvisiblydistortthemap.WithloopclosuresandICM,
+increase the reliability of SLAM and relieve the user from
+theﬁnalmapobtainedismuchimproved.Fig.9(c),however,
+time-consuming and problem-speciﬁc parameter tuning.
+shows that ICM is not able to detect and reject an incorrect Multi-robot Mapping: LAMP is currently a centralized
+loop closure made at the ﬁrst turn in the tunnel.
+SLAM system. While a centralized system works well for
+a small team of robots, we observed communication bottle-
+IV. DISCUSSION
+neckswhenperformingtestswithmorethanfourrobots.The
+In this paper we presented LAMP, a centralized multi- literatureoffersfullydistributedPGOsolutionstoreducethe
+robotSLAMsystem,developedinthecontextoftheDARPA communication burden [40], [41], [42], [43], [44]; however,
+Subterranean Challenge, which provides a robust estimate thesearenotrobusttooutliers,whichisakeyrequirementin
+of the trajectories of multiple robots and constructs a point our context. For underground exploration, it is also crucial
+cloud map using 3D lidar data. The system also includes a to exchange a map representation and possibly provide an
+vision front-end to detect and localize objects of interest. interpretable visualization to the user. Point clouds are rela-
+WhileLAMPwasinstrumentalfortheCoSTARteam[23] tively cumbersome models and exchanging them (even after
+to achieve second place in the tunnel circuit of the DARPA downsampling) quickly becomes impractical. Therefore, it
+Subterranean Challenge, it is merely the result of the ﬁrst is crucial to use map compression techniques (e.g., [17],
+phase of the competition, and, as such, it is a work in [48]) to reduce the communication bandwidth. In general, it
+progress. We believe there are several aspects that can be would be desirable to have an automatic approach to adjust
+improved:someoftheseaspectscanbeaddressedusingmore the type and amount of exchanged data depending on the
+advanced techniques in the literature, while others expose available bandwidth. More compact and uncertainty-aware
+fundamental open research problems. We review the main representations [49] that can enable accurate risk prediction
+outstanding technical challenges and future work below. formotionplanningareanotherdirectionforfutureresearch.
+85
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [23] ”NASA/JPL Team CoSTAR website.” [Online]. Available:
+https://costar.jpl.nasa.gov/
+[1] J.Haruyama,T.Morota,S.Kobayashi,S.Sawai,P.G.Lucey,M.Shirao, [24] ”Berkeley Localization and Mapping.” [Online]. Available:
+andM.N.Nishino,LunarHolesandLavaTubesasResourcesforLunar https://github.com/erik-nelson/blam
+ScienceandExploration,Moon,pp.139163,2012. [25] ”Velodyne Puck LITE lidar.” [Online]. Available:
+[2] D.Tardioli,L.Riazuelo,D.Sicignano,C.Rizzo,F.Lera,J.L.Villarroel, https://velodynelidar.com/vlp-16-lite.html
+andL.Montano.“Groundroboticsintunnels:Keysandlessonslearned [26] R. B. Rusu, and S. Cousins. “3d is here: Point cloud library (pcl).”
+after 10 years of research and experiments.” Journal of Field Robotics In2011IEEEinternationalconferenceonroboticsandautomation,pp.
+36,no.6,pp.1074-1101,2019. 1-4.IEEE,2011.
+[3] C.Cadena,L.Carlone,H.Carrillo,Y.Latif,D.Scaramuzza,J.Neira, [27] A.Segal,D.Haehnel,andS.Thrun.“Generalized-icp.”InRobotics:
+I. Reid, and J. J. Leonard. “Past, present, and future of simultaneous scienceandsystems,vol.2,no.4,p.435.2009.
+localization and mapping: Toward the robust-perception age.” IEEE [28] T.Tomic,K.Schmid,P.Lutz,A.Domel,M.Kassecker,E.Mair,I.L.
+Transactionsonrobotics32,no.6,pp.1309-1332,2016. Grixa,F.Ruess,M.Suppa,andD.Burschka,“Towardafullyautonomous
+[4] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardos. “ORB-SLAM: a uav:Researchplatformforindoorandoutdoorurbansearchandrescue,
+versatileandaccuratemonocularSLAMsystem.”IEEEtransactionson IEEErobotics&automationmagazine,vol.19,no.3,pp.4656,2012.
+robotics31,no.5,pp.1147-1163,2015. [29] J.Redmon,andA.Farhadi.“Yolov3:Anincrementalimprovement.”
+[5] M. Bloesch, S. Omari, M. Hutter, and R. Siegwart, “Robust visual arXivpreprintarXiv:1804.02767(2018).
+inertialodometryusingadirectekf-basedapproach,inIntelligentRobots [30] D. Malyuta, C. Brommer, D. Hentzen, T. Stastny, R. Siegwart, and
+andSystems(IROS),2015IEEE/RSJInternationalConferenceon.IEEE, R. Brockers, “Long-duration fully autonomous operation of rotorcraft
+2015,pp.298304. unmannedaerialsystemsforremote-sensingdataacquisition,Journalof
+[6] S. Leutenegger, S. Lynen, M. Bosse, R. Siegwart, and P. Furgale, FieldRobotics,p.arXiv:1908.06381,Aug.2019.
+“Keyframe-based visualinertial odometry using nonlinear optimization, [31] C. Brommer, D. Malyuta, D. Hentzen, and R. Brockers, “Long-
+The International Journal of Robotics Research, vol. 34, no. 3, pp. duration autonomy for small rotorcraft UAS including recharging, in
+314334,2015. IEEE/RSJ International Conference on Intelligent Robots and Systems,
+[7] S. Khattak, F. Mascarich, T. Dang, C. Papachristos, and K. Alexis. IEEE,p.arXiv:1810.05683,oct2018.
+“RobustThermal-InertialLocalizationforAerialRobots:ACaseforDi- [32] J. Wang and E. Olson, “AprilTag 2: Efﬁcient and robust ﬁducial
+rectMethods.”In2019InternationalConferenceonUnmannedAircraft detection,”inProceedingsoftheIEEE/RSJInternationalConferenceon
+Systems(ICUAS),pp.1061-1068.IEEE,2019. IntelligentRobotsandSystems(IROS)”,October2016.
+[8] A. Nuchter, H. Surmann, K. Lingemann, J. Hertzberg, and S. Thrun. [33] F. Dellaert, “Factor graphs and GTSAM: A hands-on introduction,
+“6D SLAM with an application in autonomous mine mapping.” In Georgia Institute of Technology, Atlanta, GA, USA, Tech. Rep. GT-
+IEEE International Conference on Robotics and Automation, 2004. RIMCP&R-2012-002,Sep.2012.
+Proceedings.ICRA’04.2004,vol.2,pp.1998-2003.IEEE,2004. [34] ”3D ROS visualization tool.” [Online]. Available:
+[9] J. Zhang, and S. Singh. “LOAM: Lidar Odometry and Mapping in http://wiki.ros.org/rviz
+Real-time.”InRobotics:ScienceandSystems,vol.2,p.9.2014. [35] ”Robot Operating System.” [Online]. Available:
+[10] W.Hess,D.Kohler,H.Rapp,andD.Andor.“Real-timeloopclosurein http://wiki.ros.org/melodic
+2DLIDARSLAM.”In2016IEEEInternationalConferenceonRobotics [36] L.Carlone,R.Aragues,J.A.Castellanos,andB.Bona.“Afastand
+andAutomation(ICRA),pp.1271-1278.IEEE,2016. accurate approximation for planar pose graph optimization.” Intl. J. of
+[11] T. Shan, and B. Englot. “LeGO-LOAM: Lightweight and ground- RoboticsResearch,33(7):965987,2014.
+optimized lidar odometry and mapping on variable terrain.” In 2018 [37] ”Nikon DTM322 Total Station.” [Online]. Available:
+IEEE/RSJ International Conference on Intelligent Robots and Systems https://www.mainetechnical.com/nikon-dtm-322-total-station-p296.html
+(IROS),pp.4758-4765.IEEE,2018. [38] R. Opromolla, G. Fasano, G. Ruﬁno, M. Grassi, and A. Savvaris.
+[12] X.Ji,L.Zuo,C.Zhang,andY.Liu.“LLOAM:LiDAROdometryand “LIDAR-inertialintegrationforUAVlocalizationandmappingincom-
+MappingwithLoop-closureDetectionBasedCorrection.”In2019IEEE plex environments.” In 2016 International Conference on Unmanned
+InternationalConferenceonMechatronicsandAutomation(ICMA),pp. AircraftSystems(ICUAS),pp.649-656.IEEE,2016.
+2475-2480.IEEE,2019. [39] H. Yang and L. Carlone,A Polynomial-time Solution for Robust
+[13] R.Dub,A.Cramariuc,D.Dugas,J.Nieto,R.Siegwart,andC.Cadena. RegistrationwithExtremeOutlierRates,Robotics:ScienceandSystems
+“SegMap: 3D segment mapping using data-driven descriptors.” arXiv (RSS),2019.
+preprintarXiv:1804.09557(2018). [40] P. Y. Lajoie, B. Ramtoula, Y. Chang, L. Carlone, and G. Beltrame.
+[14] S. Thrun, D. Hahnel, D. Ferguson, M. Montemerlo, R. Triebel, W. “DOOR-SLAM: Distributed, online, and outlier resilient SLAM for
+Burgard, C. Baker, Z. Omohundro, S. Thayer, and W. Whittaker. “A roboticteams.”IEEERoboticsandAutomationLetters(2020).
+system for volumetric robotic mapping of abandoned mines.” In 2003 [41] S. Choudhary, L. Carlone, C. Nieto, J. Rogers, H. I. Christensen,
+IEEE International Conference on Robotics and Automation (Cat. No. andF.Dellaert.“Distributedmappingwithprivacyandcommunication
+03CH37422),vol.3,pp.4270-4275.IEEE,2003. constraints:Lightweightalgorithmsandobject-basedmodels.”TheInter-
+[15] D. Tardioli, D. Sicignano, L. Riazuelo, J. L. Villarroel, and L. nationalJournalofRoboticsResearch36,no.12,pp.1286-1311,2017.
+Montano. “Robot teams for exploration in underground environments.” [42] A.Cunningham,V.Indelman,andF.Dellaert.“DDF-SAM2.0:Con-
+InWorkshopROBOT11:RobticaExperimental,pp.205-212.2012. sistentdistributedsmoothingandmapping.”In2013IEEEinternational
+[16] D. Tardioli, L. Riazuelo, T. Seco, J. Espelosn, J. Lalana, J. L. conferenceonroboticsandautomation,pp.5220-5227.IEEE,2013.
+Villarroel,andL.Montano.“Arobotizeddumperfordebrisremovalin [43] M.J.Schuster,K.Schmid,C.Brand,andM.Beetz.“Distributedstereo
+tunnelsunderconstruction.”InIberianRoboticsconference,pp.126-139. visionbased6Dlocalizationandmappingformultirobotteams.”Journal
+Springer,Cham,2017. ofFieldRobotics36,no.2(2019):305-332.
+[17] R.ZlotandM.Bosse,“Efﬁcientlarge-scale3dmobilemappingand [44] T. A. Vidal-Calleja, C. Berger, J. Sol, and S. Lacroix. ”Large scale
+surface reconstruction of an underground mine. In Field and service multiple robot visual mapping with heterogeneous landmarks in semi-
+robotics,pp.479-493.Springer,Berlin,Heidelberg,2014. structuredterrain.”RoboticsandAutonomousSystems59,no.9(2011):
+[18] M.Leingartner,J.Maurer,A.Ferrein,andG.Steinbauer.“Evaluation 654-674.
+ofsensorsandmappingapproachesfordisastersintunnels.”Journalof [45] A.Hinduja,B-J.Ho,M.Kaess.“Degeneracy-AwareFactorswithAp-
+ﬁeldrobotics33,no.8,pp.1037-1057,2016. plicationstoUnderwaterSLAM.”inIEEE/RSJInternationalConference
+onIntelligentRobotsandSystems(IROS),2019(preprint).
+[19] A. Jacobson, F. Zeng, D. Smith, N. Boswell, T. Peynot, and M.
+[46] P.Lajoie,S.Hu,G.Beltrame,andL.Carlone.“ModelingPerceptual
+Milford.“Semi-supervisedslam:Leveraginglow-costsensorsonunder-
+Aliasing in SLAM via Discrete-Continuous Graphical Models.” IEEE
+ground autonomous vehicles for position tracking.” In 2018 IEEE/RSJ
+RoboticsandAutomationLetters(RA-L),2019.
+InternationalConferenceonIntelligentRobotsandSystems(IROS),pp.
+[47] M. Grupp, evo: Python package for the evaluation of odometry and
+3970-3977.IEEE,2018.
+slam.https://github.com/MichaelGrupp/evo,2017.
+[20] C. L. Gentil, T. Vidal-Calleja, and S. Huang. “IN2LAAMA: INer-
+[48] C. O’Meadhra, W. Tabib, N. Michael. “Variable Resolution Occu-
+tial Lidar Localisation Autocalibration And MApping.” arXiv preprint
+pancy Mapping Using Gaussian Mixture Models.” IEEE Robotics and
+arXiv:1905.09517(2019).
+AutomationLetters(RA-L),4(2):2015-2022,2019.
+[21] J. G. Mangelson, D. Dominic, R. M. Eustice, and R. Vasudevan.
+[49] A. Agha-Mohammadi, E. Heiden, K. Hausman, and G. Sukhatme.
+“Pairwise consistent measurement set maximization for robust multi-
+“Conﬁdence-rich grid mapping.” The International Journal of Robotics
+robotmapmerging.”In2018IEEEInternationalConferenceonRobotics
+Research(2017):0278364919839762.
+andAutomation(ICRA),pp.2916-2923.IEEE,2018.
+[22] ”DARPA Subteranean (SubT) Challenge.” [Online]. Available:
+https://www.subtchallenge.com
+86
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:18:50 UTC from IEEE Xplore.  Restrictions apply. 

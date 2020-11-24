@@ -1,0 +1,577 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Visual-Inertial Telepresence for Aerial Manipulation
+Jongseok Lee1, Ribin Balachandran1, Yuri S. Sarkisov1,2, Marco De Stefano1, Andre Coelho1
+Kashmira Shinde1, Min Jun Kim1, Rudolph Triebel1,3 and Konstantin Kondak1
+Abstract—This paper presents a novel telepresence system
+for enhancing aerial manipulation capabilities. It involves not
+only a haptic device, but also a virtual reality that provides SAM
+a 3D visual feedback to a remotely-located teleoperator in
+Virtual reality 2D image
+real-time. We achieve this by utilizing onboard visual and
+inertial sensors, an object tracking algorithm and a pre-
+generated object database. As the virtual reality has to closely
+match the real remote scene, we propose an extension of a
+marker tracking algorithm with visual-inertial odometry. Both
+indoorandoutdoorexperimentsshowbeneﬁtsofourproposed
+systeminachievingadvancedaerialmanipulationtasks,namely Crawler
+grasping, placing, force exertion and peg-in-hole insertion.
+Ground station
+I. INTRODUCTION
+Fig. 1. An illustration of the proposed concept. Our aerial robot SAM
+Aerial manipulators exploit the manipulation capabilities [14]isdesignedtoachieveamanipulationtaskinaremotelocationwhere
+of robotic arms located on a ﬂying platform [1]. These humansﬁnditdifﬁculttoreach(seeleftsideoftheﬁgure).Consequently
+teleoperatorfromagroundstationdoesnothaveanyvisualcontacttothe
+systems can be deployed for tasks that are unsafe and
+scene. Therefore, the robot’s onboard perception system must provide a
+costly for humans. Some notable examples are repairing visual feedback to the operator with both 2D and 3D information which
+rotor blades of wind turbines and inspecting oil and gas overallenhanceitsmanipulationcapabilities(depictedintherightside).
+pipelines in reﬁneries. However, building an autonomous
+aerial manipulator [2]–[4] poses several challenges to the
+force and 3D visual feedback, which accurately displays
+current state-of-the-art robotic technologies. To this end,
+the interactions of the robotic arm with the objects. Several
+existing and close-to-market aerial manipulators are often
+studies conﬁrm that a virtual environment where one can
+tailored to a speciﬁc task such as contact inspection [5]–[7].
+change its sight-of-view and provide haptic guidance (e.g.
+An alternative is the remote control of an aerial ma-
+virtual ﬁxtures) improves the system capabilities [11]–[13].
+nipulator (namely, aerial tele-manipulation). Aerial tele-
+Therefore, we propose an advanced visual-inertial telep-
+manipulation, by having a human-in-the-loop, has an advan-
+resence system, which utilizes visual and inertial sensors to
+tage that several demands on robot’s cognitive modules can
+provide 3D visual feedback to the operator. The resulting
+be replaced by its teleoperator. Furthermore, recent studies
+system is equipped with a haptic feedback and a virtual
+showpromisingresultsthatindicateapossibilityfordeploy-
+realitywithvirtualﬁxtures.Inparticular,forcreatingthe3D
+ment of such systems under an imperfect communication
+displayofaremotescene,weconsideranobjectlocalization
+between the robot and the operator. For example, bilateral
+approach where an object database and a marker tracking
+teleoperation with force feedback has been demonstrated in
+algorithm are used. As existing marker tracking methods
+Kontur-2 mission [8] where a cosmonaut from the Interna-
+did not sufﬁce our requirements in terms of robustness and
+tional Space Station successfully operated a robot on Earth.
+run-time, we propose a new object tracking algorithm by
+In aerial tele-manipulation, the works on force feedback [9]
+extending ARToolKitPlus [15] with onboard visual-inertial
+and shared control [10] can be notably found.
+odometry (VIO). Lastly, an extension of the framework to
+Additionally, 3D visual feedback is an another important
+multiple objects is also addressed for pick-and-place tasks.
+aspectofaerialtele-manipulationsystemsforenhancingtheir
+The proposed concept is tightly integrated to a collision-
+manipulation capabilities. During our ﬁeld experiments with
+safe aerial manipulator called cable-Suspended Aerial Ma-
+such platforms, we experienced that a 2D visual feedback
+nipulator (SAM [14]). In particular, the main scenario of
+solely based on the live video streams is not sufﬁcient
+interestistodeployandretrieveaninspectionroboticcrawler
+to achieve precise manipulation tasks. Thus, we deduced
+(as illustrated in Fig. 1). This scenario, which was designed
+that aerial telepresence systems must involve both real-time
+under the scope of EU project AEROARMS, is relevant to
+1 Institute of Robotics and Mechatronics, German Aerospace Center inspection and maintenance of gas and oil pipelines in re-
+(DLR),Wessling,Germany.email: jongseok.lee@dlr.de ﬁneries[16].Itinvolvesgrasping,placingandpressingtasks
+2SpaceCREI,SkolkovoInstituteofScienceandTechnology(Skoltech), which need to be performed by a remotely located operator.
+Moscow,Russia.
+The proposed algorithm is validated indoors and a peg-in-
+3 Computer Vision Group, Technical University of Munich, Garching,
+Germany hole task with a margin of error less than 1cm is studied,
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1222
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. which further displays SAM’s advanced manipulation skills.
+In summary, our main contributions are as follows.
+• A visual-inertial telepresence system for aerial manip-
+ulation where a new object localization approach is
+proposedforcreatingvirtualrealityoftheremotescene.
+• An extend ARToolKitPlus [15] with onboard VIO for
+improving its run-time and robustness.
+• Experimental validations showing advanced manipula-
+tion skills with SAM for the ﬁrst time. In particular,
+ourﬁeldexperimentsindicateoverallsystemasaviable
+Fig.2. Illustrationofourcollision-safeaerialmanipulationconcept;SAM
+option for inspection and maintenance applications. with helicopter as an aerial carrier (left). Both hand-eye and eye-to-hand
+Experiments can be seen in the video: https://www. camerasarenowintegrated(right).WedenoteCAM1asmakoandCAM2
+ashand-eyecamera(hcforbrevity).
+youtube.com/watch?v=onOc05Ymxzs.
+A. Related Works
+Several researchers aimed to provide 3D information of II. CABLESUSPENDEDAERIALMANIPULATOR
+the remote scene for tele-manipulation. For this, 3D recon-
+struction techniques have been notably applied so far [17]–
+1) Robot hardware: An aerial manipulator SAM [14] is
+[21] where they aimed to create 3D visualization of an
+a complex ﬂying robot composed of an aerial carrier, a
+unknown environment. However, their applicability to our
+cable-Suspendedplatformanda7degreesoffreedom(DoF)
+use-case is limited as the scene has to be mapped ﬁrst,
+industrial robotic arm KUKA LWR [33]. An aerial carrier
+and then pre-processed for coping with the noisy 3D vision (e.g. crane, manned/unmanned helicopter1) provides means
+data. Unlike these methods, our approach differs as we use
+to transport the robotic platform to a location (see Fig. 2).
+object localization algorithms. Two beneﬁts are: (i) a real-
+Then,aplatformsuspendedtothecarrierperformsbalancing
+time display is possible, and (ii) the framework can also
+act by autonomously damping out the disturbances induced
+be extended to a pick-and-place task, which requires the
+by the carrier and the manipulator. This oscillation damping
+visualization of both the hand-held object and the target of
+control is performed using eight omni-directional propellers
+placement. The later is difﬁcult with the existing methods
+andthreewinchesasitsactuators.Designandcontrolaspects
+when the hand-held object is not rigidly ﬁxed to a gripper.
+of SAM have been presented previously in [14].
+A recent work AeroVR [22] uses a similar concept to ours.
+2) Sensors choices and integration: Relevant sensors for
+While the system demonstrates an inspiring way to also
+realizingourvision-basedtelepresencesystemareasfollows.
+include tactile feedback, the scope differs as AeroVR uses
+KUKA LWR [33] is equipped with torque and position
+VICON system for indoor usage.
+sensors as its proprioceptive sensors. Each joint contains
+For object localization, learning-based [23]–[25] and
+a torque sensor, incremental and absolute position sensors
+geometry-based [15], [26] approaches can be found. Recent
+which measure its joint torques and angles. Furthermore,
+learning-based methods with deep neural networks can be
+SAM is equipped with optical devices as its exteroceptive
+broadly formulated with either explicit [23] or implicit
+sensors. As shown in Fig. 2, a monocular camera (Allied-
+[25] representations. However, we do not consider machine
+vision Mako) is installed on the frame of the platform to
+learning approaches as the assumption that the test data
+display the overall operational space of the robotic arm.
+distribution to come from training distribution is routinely
+This is because the operator prefers eye-to-hand view which
+violated in the context of ﬁeld robotics. Within the geo-
+is more natural to a human. The camera provides high
+metric methods, Fidicual marker systems (based on creating
+resolution images of 1292 by 964 px at 30Hz. Additionally,
+artiﬁcial features on the scene) are widely used in robotics
+a stereo camera is integrated near the tool-center-point (tcp).
+for ground truths [26], applications where environments are
+Accuracy of the ﬁcidual marker systems depends on the
+known [27], simplifying the perception problem in lieu of
+distanceanditssizewhichjustiﬁestheintegrationofahand-
+sophistication[28]andcalibration[29].However,asweaim
+eye camera [26]. We use a commercial 3D vision sensor
+forcreatingthereal-timevirtualreality,ouruse-caseprovides
+that provides built-in VIO. Rcvisard provides 1280 by 960
+stringent requirements on their limitations in run-time and
+px images at 25Hz and VIO estimates can be acquired at
+inherenttime-delays.Notethatauthors[30]showthatcoping
+200Hz. Details on VIO algorithm can be found in [34]
+with time delays in the display improves the performance of
+thetele-operation.Furthermore,asweusehand-eyecameras, 3) Haptic device: A portable and space-qualiﬁed haptic
+ourlocalizationmethodshouldberobustnesstoloss-of-sight device, the Space Joystick [8] has been integrated to teleop-
+as the camera is not guaranteed to see the markers during erate the LWR located on SAM remotely.
+the operations. Robustness is important when using haptic
+guidance or virtual ﬁxtures for example, where inaccurate
+1The purpose of the aerial carrier is to transport the system and hover.
+haptic feedback can cause negative effects in terms of the
+We use a crane in this study which also provides better safety, versatility,
+manipulation performance [31], [32]. robustnessandapplicabilityforourconsideredapplicationscenario.
+1223
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. Fig.3. Anexampleofpre-generatedobjectdatabase.
+Fig.4. Failuremodesofﬁdicualmarkersystemintheﬁeldexperiments.
+The ﬁgure shows a nominal case (left), and failure modes namely lost of
+sightandshadowocclusion(others).
+III. VISION-INERTIALAERIALTELEPRESENCE
+A. 3D Visual Feedback with Object Localization
+For tackling these problems we propose Algorithm 1 for
+The aim is virtually displaying the robot and the objects
+which multiple tags are placed on an object with a target
+so that an operator can tele-manipulate remotely. If done in
+tag x. The algorithm initializes by detecting all the tags
+real-time, the operator can see the virtual remote scene and
+(we denote multiART+ which is based on ArtoolKitPlus
+perform the tasks. Here, accuracy is crucial as the virtual
+[15]), and saving their relative poses to the target (tag init).
+world has to closely match the real remote scene. In our
+While the process is running, k detected tags and their
+approach,werealizesuch3Dvisualfeedbackusingcameras,
+IDs are counted (counter multiART+). If all the tags are
+object localization algorithms and known object database
+detected, n+1 pose estimates of the target tag x can be
+(see Fig. 3). Once objects to be actively manipulated are
+computed by transforming pose estimates of non-target tags
+known a-priori, the essence of the problem simpliﬁes to
+Thc and their relative transformation to the target tag Ty
+computing relative transformation of an objects with respect y x
+(trafo3d). Then, RANSAC [37] is applied to these estimates
+to the camera Thc (t) and robot’s tcp Ttcp (t). Here, t
+object object to remove outliers, and then averaging to reduce variance
+denotes time. A ﬁxed transformation Ttcp can be precisely
+hc (ransac avg). Then, relative transformations are updated by
+estimated from CAD models or hand-eye calibration [35].
+applying RANSAC for the saved estimates, and averaging.
+Ttcp (t)=TtcpThc (t) (1) In case atleast one tag is detected, the same step is applied
+object hc object
+toestimatethetargettagx.Thesestepshaveadvantagesthat
+In this way, one can exploit object localization methods
+(1) accuracy and orientation ambiguity of ArtoolKitPlus can
+basedonﬁducialmarkerssystems.Thesesystemsarewidely
+be improved with RANSAC, and (2) the algorithm is robust
+adopted in robotics community and have been used as
+to loss-of-sight of a target (similar to [27], [28], [38]).
+ground truths for its accuracy [26]. While learning-based
+However, the algorithm must be robust to loss-of-sight
+pose estimation methods [25] can be leveraged under the
+on all the tags, as we consider object tracking for ﬂoating
+same framework (for several applications where markers
+base manipulators. Algorithm 1 addresses this problem by
+are not readily available), we limit our scope to validating
+integrating VIO estimates of camera motion with respect to
+the virtual reality concept in lieu of sophisticated object
+its inertial coordinate Tw(t). If no tags are detected, (2) can
+localization methods. Note that we use Instant Player [36] hc
+be used to still estimate the target Thc (t) (vio integrate).
+forcreatingthedisplayasitsupportsvarioushierarchiesofa − x,avg
+In(2),Thc(t)Tw(t 1)isarelativetransformationofcamera
+scenegraph.Usinganestedhierarchy,relativetransformation w hc
+motion from time t-1 to t and assumes a static object.
+between an object and tools can be routed to display the
+− −
+scene, while a ﬂat hierarchy can be used to extend the Thc (t)=Thc(t)Tw(t 1)Thc (t 1) (2)
+x,avg w hc x,avg
+framework in order to display multiple objects and tools.
+In a similar fashion, the delay of the system t can be
+d
+computed (delay computation) and corrected with VIO al-
+However, ﬁducial markers systems and their extensions
+gorithm by using (3) (vio delay compensator). The herein
+[15], [26]–[28] have also signiﬁcant drawbacks. It arises
+delay is present in any perception system (e.g. rectifying
+as we consider ﬂoating base manipulation outdoors. For
+an image) and ﬁducial marker systems (they are not real-
+example, shadows are inevitable for outdoor experiments
+and once it destroys certain shapes of the tags, the methods time). In (3), Twhc(t) and Thxc,avg(t) are computed using VIO
+wouldnaturallyfailasitsassumptionsontheartiﬁcialvisual and multi-tag tracking. On the other hand, Thwc(t+td) can
+features are violated. Similarly, the hand-eye camera (hc) be computed using linear and angular velocity estimates of
+can lose the view on the marker as the manipulator and the VIO, multiplied by the delay time td.
+basecanmoverapidly.Thesefailuremodes(reportedinFig.
+4) have consequences on the mission success rates. This is Thxc,avg(t+td)=Thwc(t+td)Twhc(t)Thxc,avg(t) (3)
+because it is difﬁcult for the operator to remotely perform These two steps have several advantages. The algorithm is
+precise manipulation with live streams of 2D images. Eye- robust to failure modes of ﬁdicual marker systems (see Fig.
+to-Hand views typically suffer from the occlusions of the 4)asitcopeswithmissingtagdetection,andtimedelaysare
+grasping points by the robotic arm (also found in humanoid incorporated by using velocity signals and computed delay
+robots) and lacks depth information. Lastly, time delays that time. Furthermore, maximum run-time of the algorithm can
+are inherent in these systems must be corrected in order to bepushedtothatofVIOdata.Thealgorithmdealsalsowith
+create a real-time virtual display of the scene. drifts of VIO estimates by using relative motion estimates
+1224
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. (3) (4) Algorithm 1: Robust marker localization
+x,avg x,avg
+Input: Image I, target marker ID x, n multi marker IDs
+y and mapping to object Tx .
+object
+hc(t) Output: Pose of the object Tsotbejreecot(t).
+hc(t-1) Algorithm:
+←
+Thc(0), Thc(0), ..., Thc(0) multiART+(I);
+hc(t) Txy1, Ty2,y.1.., Tyn ←ytnag init(Thc(0),Thc(0), ..., Thc(0))
+x x x x y y
+1 n
+while object localization == True do
+w w ←
+k, id counter multiART+(I);
+if k == n+1 then
+Fig.5. Illustrationof(2)and(3).Left:(2)usesVIOpositionandorientation
+←
+estimatesofcameramotiontostillestimatetheobject(denotedx,avg)when Thc(t), ..., Thc (t) trafo3d(Thc(t), Thc(t), Ty);
+marker is not detected. Right: (3) uses linear (yellow arrow) and angular Txhc (t) ← rxa,ynnsac avg(Thc(t), ..x., Thc y(t)); x
+vtheeloccaitmye(rbaluinetar+rotwd)s,eacnodndcso.mputedtimedelaytd topredictthemotionof Tyxx,1a,vgTyx2, ..., Tyxn ← tag ixnit update(xT,yyxn,pre, Tyx);
+else if 0 < k < n+1 then
+∈
+if x id == False then
+only when the tag detection is lost. Note that the method is Thc (t), ..., Thc (t) ← trafo3d(Thc(t), Ty);
+onewaytousecommodityvisionsensorswithVIOmodules x,y1 ← x,yn y x
+Thc (t) ransac avg(Thc (t), ..., Thc (t));
+inordertofurtherimproveperformance.Illustrationofthese x,avg x,y1 x,yn
+else
+two steps are found in Fig. 5. ←
+Thxc(t), ...←, Thxc,yn(t) trafo3d(Thyc(t), Tyx);
+B. Extension of 3D Visualization to Multiple Objects Thc (t) ransac avg(Thc(t), ..., Thc (t));
+x,avg x x,yn
+For tasks such as placing, virtually displaying multiple end
+objects and their relative pose is required. For example, if else
+←
+anoperatorwouldliketoplaceacage(withinspectionrobot Thc (t) Eq. (2);
+x,avg
+inside) on a pipe which have roughly the same dimension, end
+←
+thevirtualrealityshouldreﬂectitbydisplayingthepipe,the t delay computation()
+d ←
+cage, and the orientation changes of the cage with respect Thxc,avg(t+td) Eq. (3)
+to TCP (e.g. a hook). With 3D reconstruction methods, this Thocbject(t)=Thxc,avg(t+td)Txobject
+is difﬁcult as one explores the environment for mapping and end
+process the noisy data points for displaying. In our system,
+we tackle this challenge by using the hand-eye camera to
+estimate the orientation of the held object, while the eye-to- human & master slave robot
+handcameraestimatestheposeofotherobjects(e.g.apipe). Wireless 
+Communication 
+Then, the forward kinematics are leveraged as given below. position & force Channels position & force 
+with TDPA
+Tobject,1(t)=Tobject,1(t)TmakoTbase(t)TtcpThc (t) (4) TDPA Controller
+object,2 mako base tcp hc object,2 force feedback computed & measured
+with TDPA force
+In (4), transformation from the base to eye-to-hand camera
+(mako) Tmako and tcp to hand-eye camera Ttcp can be com- Fig.6. Controlleroverview.Communicationtimedelays,packetlossand
+base hc
+puted using hand-eye calibration [35]. Tobject,1 is essentially jittercancauseinstabilityoftheoverallsystem.Forcopingwiththis,TDPA
+mako isusedforforcefeedbacktele-manipulation.
+updatingthelocalbaseframe,andtheforwardkinematicsof
+the robotic arm Tbase is typically accurate. Thc displays
+tcp object,2
+theposeoftheheldobject.Forthis,onecanuseonlymulti- mounted on the SAM). As these signals pass through com-
+marker tracking without linear velocity integration. This is munication channels (in the considered scenario, a wireless
+because markers can always made visible when the objects communication), they will get affected by time delay. To
+are held by the robot. ensure stable tele-manipulation, we employ time domain
+passivity approach (TDPA [39]). Readers can refer to [8]
+C. Force Feedback with Space Joystick and LWR
+for more details and implementations.
+The controller design must ensure a stable bilateral tele-
+D. Haptic Guidance with Virtual Fixtures
+manipulation with force feedback. The main technical chal-
+lenge is to deal with communication time delays, packet On top of real-time virtual reality and haptic device,
+loss and jitters, which can cause instability of the system. another aspect of our telepresence system is haptic guidance
+For tackling this, a four channel architecture with time- via virtual ﬁxtures [12]. In this work, the virtual ﬁxtures are
+domain passivity approach (proposed in [8]) has been used. implemented as artiﬁcial walls that guide the motion of the
+A schematic of the system is shown in Fig. 5 and it is slave to the desired target point. If the teleoperator tries to
+brieﬂy explained as follows. The human operator sends both movetheslavedeviceoutsidethesewalls,artiﬁcialforcesare
+position (velocity analogously) and force signals from the activatedtolimitthemotionoftcp(slave)andalsotoprovide
+master device (Space Joystick) to the slave (KUKA LWR haptic feedback to the teleoperator. The virtual ﬁxtures in
+1225
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. TABLEI
+0.5
+ACCURACYANDRUN-TIMEANALYSIS
+m) AP2 multiART+ ours
+0
+x ( ex,rmse [m] 0.1690 0.1124 0.0252
+ART e [m] 0.1265 0.0847 0.0503
+y,rmse
+Vicon e [m] 0.1308 0.077 0.0316
+-0.5 z,rmse
+0 10 20 30 ours 40 eφ,rmse [rad] 0.2843 0.1867 0.1232
+time (s) AP3 eθ,rmse [rad] 0.1955 0.1232 0.0703
+eψ,rmse [rad] 0.±2565 0.1±755 0.1±153
+0.2 trun [s] 0.839 0.0616 0.0525 0.0218 0.0049 0.013
+m)
+y ( 0
+to determine the accuracy of the selected methods with
+-0.2 respect to the ground truth. Note that the trajectory selected
+0 10 20 30 40 includesloss-of-sightandtimedelay.Thecorrespondingroot
+time (s) mean squared errors (RMSE) have been reported in Table
+0.6 I. However, as seen in Table I, AP2 is slow while using
+high-resolution images, and thisresults inmore errorsas we
+m)0.4 compare the trajectories. In our approach, these trajectories
+z (0.2 arerelevantasweaimforcreatingvirtualrealitywithobject
+localization methods. Within our experiments, the analysis
+0
+0 10 20 30 40 of the accuracy, robustness and run-time further justiﬁes the
+time (s) proposed algorithm and its additional complexity.
+Fig. 7. Our proposed algorithm 1 for object tracking (denoted ours) is B. Peg-in-Hole Insertion with Virtual Fixtures
+comparedtogroundtruth(Viconmeasurements).Thealgorithmiscompared
+A peg-in-hole insertion task with margins of error less
+with two other popular ﬁdicual detection frameworks namely AprilTag 2
+(AP2)andARToolKitPlus(multiART).Ourproposedalgorithmisrobustto than 1cm is considered in which operator does not have any
+losingtheﬁdicualsinanimage,andcompensatesthedelay. directvisualcontacttotherealscene.Themainchallengein
+this setting is on the ﬁdelity of virtual reality and resulting
+virtual ﬁxtures. With the ﬁdelity provided by our proposed
+this work are based on Voxmap-PointShell algorithm [36], algorithmandresultingvirtualﬁxtures,apeg-in-holetaskhas
+[40]andmoredetailsontheirimplementationandparameter beenperformed(seetheattachedvideomaterial).Theresults
+tuning can be found in [41]. are depicted in Fig. 9 and Fig. 10. Fig. 9 plots force signals
+acting on the slave end-effector which constitutes computed
+IV. EXPERIMENTSANDRESULTS forcefrommaster’spositioncommands,andforceduetothe
+virtual ﬁxtures. Position tracking of tcp towards the target
+A. Robust Object Localization: Validation and Analysis
+(hole) is shown in Fig. 10. As these position signals are
+An object localization approach is taken for 3D visual- expressed in LWR base frame (see Fig. 6 for deﬁnition),
+ization and thus, accuracy, run-time and robustness of the the target also moves due to the motion of SAM. This
+proposed algorithm is reported. These results are important experiment shows the beneﬁts of our proposed telepresence
+as the created virtual reality should closely match the real system, as SAM is able to perform a precise manipulation
+remote scene. For this, we measure the ground truth of task. Note that the accuracy of object localization improves
+the relative poses between the object and the camera using overreportedvaluesinTableIwhenthepegisnearthehole
+Vicon tracking system and evaluate the performance on (shown in Fig. 7) which makes the task feasible.
+sequencesthatrepresentpeg-in-holeinsertiontask(seevideo
+C. Field Experiments and Validation
+attachment). The algorithm is also compared to Apriltag2
+[26] (AP2) and ARToolKitPlus [15] without (2) and (3) A ﬁeld experiment is conducted in order to demonstrate
+(multiART).InFig.7,estimatedtrajectoriesofrelativeposes theapplicabilityofSAMwithinarelevantindustrialscenario
+are compared with Vicon measurements. As depicted, our foraerialmanipulation.Thisscenarioinvolvesamaintenance
+proposed algorithm is robust against loss-of-sight problems andinspectiontaskinwhichSAMhastodeployandretrieve
+of object localization with a hand-eye camera while AP2 a 6.4kg inspection robot to a remotely located pipe. To
+and multiART produce jumps as no markers are detected transport the inspection robot, a cage (approximately of the
+(t=3s to t=8s as an example). This is due to the design same size as the pipe and the inspection robot) has been
+of the algorithm where we utilize VIO estimates of the designed. For this mission, SAM has to (a) grasp the cage
+camera pose when the marker is not detected. Furthermore, withahookatlocationAwithahookusedasend-effectorfor
+multiART suffers from time delay, while AP2 has both the LWR, (b) move to location B where the pipe is located,
+the time delay, and slow run-time. On the other hand, our (c) place the cage on the pipe, and (d) press the cage while
+proposed algorithm compensates the time delay, resulting in theinspectionrobotmovesout.Theteleoperatorislocatedin
+accurate estimates. Five experiments have been conducted a ground station and thus, has no direct visual contact to the
+1226
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. Fig. 8. Results of ﬁeld experiments for AEROARMS [16] industrial scenario. SAM successfully deployed and retrieved a pipe inspection robot by
+performing grasping (left), placing (middle) and pressing (right). As we consider outdoor manipulation tasks with an industry relevancy, the system has
+to both address force feedback, and 3D visual feedback. 2D visual feedback (bottom row), as depicted above, is not sufﬁcient as the depth information
+ismissingandsubjecttounderexposure.Ontheotherhand,thevirtualenvironment(middlerow)doesnotsufferfromtheseproblems,andtheoperator
+canzoom-inandout,andchangeitssight-of-view.TheseexperimentsshowSAMwithtelepresenceasaviableoptionforfutureapplications.
+20 F scene.Forthisscenario,wetackleprecisiongrasping,placing
+x
+F andpressingtele-manipulationtasksataremotelocation,and
+y
+10 F the results are depicted in Fig. 8. In particular, 2D images
+z
+alone do not show the depth information (placing task) and
+F (N) 0 aforercoeftfeenedobcacclukd,ead(pgrreacsipseingmaanndippurleastisoinngisphdaisfeﬁsc)u.lWt iftohrotnhliys
+-10 scenario. On the other hand, the virtual reality provides
+3D information of the remote scene, and moreover, one
+-20 can change the sight-of-view to avoid an occluded visual
+0 5 10 15 20 feedback.Theseresultsshowthebeneﬁtsofourtelepresence
+time (s)
+system. By touching and seeing, the teleoperator is able to
+performprecisemanipulationtasksforanindustrialuse-case.
+Fig.9. Forcesignalsonslave’send-effectorexpressedinLWRbaseframe.
+Theseforcescomposeofartiﬁcialforcefromavirtualﬁxture,andcomputed TheﬁeldexperimentsforAEROARMSindustrialscenario
+forcesfrommaster’scommandedpositions. did not use the haptic guidance using virtual ﬁxtures and
+VIO compensations for achieving the basic teleoperation
+-0.45 tasks. For further improving the inspection and maintenance
+tcp scenario, we plan to perform a user-study to investigate the
+m) -0.5 target degree of improvements with this shared autonomy concept
+x ( and further joint demonstration with recent developments on
+SAM [42], [43]. Lastly, robotic introspection [44] for object
+-0.55
+0 5 10 15 20 localization is another research direction that can support in
+time (s)
+industrial deployments of these systems.
+0.2
+V. CONCLUSION
+m) 0
+y (-0.2 This paper presents a vision-inertial telepresence concept
+in which onboard sensors, an object tracking algorithm and
+-0.4 databases of objects were utilized to provide a 3D visualiza-
+0 5 10 15 20
+tion of the scene in real-time. From our experiences in the
+time (s)
+ﬁeld, we believe that providing a 3D visual feedback to the
+1.2 tele-operatorisrequiredinaerialmanipulationapplicationsat
+m)1.15 remotesiteswhereadirectandclosevisualcontacttotheob-
+z ( jects are genuinely difﬁcult. Our demonstration of advanced
+1.1
+aerial manipulation shows that SAM with telepresence is a
+0 5 10 15 20 viable concept for inspection and maintenance applications.
+time (s)
+VI. ACKNOWLEDGEMENTS
+Fig.10. TCPandtargetpositionsexpressedinLWRbaseframe.Forpeg- Special thanks to Michael Vilzmann for the support on
+in-holeinsertion,tcpiscommandedtofollowthetarget.Notethatthetarget
+FCC, Thomas Hulin for the support on peg-in-hole experi-
+positionchangesasSAMmoves,anditisexpressediinLWRbaseframe.
+ments and Nari Song for the support on video editing.
+1227
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [19] D. Ni, A. Nee, S. Ong, H. Li, C. Zhu, and A. Song, “Point cloud
+augmentedvirtualrealityenvironmentwithhapticconstraintsfortele-
+[1] F. Ruggiero, V. Lippiello, and A. Ollero, “Aerial manipulation: A operation,”TransactionsoftheInstituteofMeasurementandControl,
+literaturereview,”IEEERoboticsandAutomationLetters,vol.3,no.3, vol.40,no.15,pp.4091–4104,2018.
+pp.1957–1964,July2018. [20] A.Leeper,S.Chan,andK.Salisbury,“Pointcloudscanberepresented
+[2] K. Kondak, F. Huber, M. Schwarzbach, M. Laiacker, D. Sommer, as implicit surfaces for constraint-based haptic rendering,” in 2012
+M. Bejar, and A. Ollero, “Aerial manipulation robot composed of IEEE International Conference on Robotics and Automation, May
+an autonomous helicopter and a 7 degrees of freedom industrial 2012,pp.5000–5005.
+manipulator,”in2014IEEEInternationalConferenceonRoboticsand [21] F.RydnandH.J.Chizeck,“Amethodforconstraint-basedsixdegree-
+Automation(ICRA),May2014,pp.2107–2112. of-freedom haptic interaction with streaming point clouds,” in 2013
+[3] F.Ruggiero,M.A.Trujillo,R.Cano,H.Ascorbe,A.Viguria,C.Perz, IEEE International Conference on Robotics and Automation, May
+V. Lippiello, A. Ollero, and B. Siciliano, “A multilayer control for 2013,pp.2353–2359.
+multirotor uavs equipped with a servo robot arm,” in 2015 IEEE [22] G.A.Yashin,D.Trinitatova,R.T.Agishev,R.Ibrahimov,andD.Tset-
+International Conference on Robotics and Automation (ICRA), May serukou,“Aerovr:Virtualreality-basedteleoperationwithtactilefeed-
+2015,pp.4014–4020. back for aerial manipulation,” in IEEE International Conference on
+[4] M.J.Kim,R.Balachandran,M.DeStefano,K.Kondak,andC.Ott, AdvancedRobotics(ICAR),2019.
+“Passivecompliancecontrolofaerialmanipulators,”in2018IEEE/RSJ [23] IEEE International Conference on Computer Vision, ICCV 2017,
+International Conference on Intelligent Robots and Systems (IROS), Venice,Italy,October22-29,2017. IEEEComputerSociety,2017.
+Oct2018,pp.4177–4184. [24] V. Lepetit, “Learning descriptors for object recognition and 3d pose
+[5] K. Bodie, M. Brunner, M. Pantic, S. Walser, P. Pfndler, U. Angst, estimation,”inConferenceonComputerVisionandPatternRecogni-
+R. Siegwart, and J. Nieto, “An omnidirectional aerial manipulation tion,2015,pp.1–10.
+platform for contact-based inspection,” in Proceedings of Robotics: [25] M.Sundermeyer,Z.Marton,M.Durner,M.Brucker,andR.Triebel,
+Science and Systems (RSS’19), Freiburg im Breisgau, Germany, Jun. “Implicit 3d orientation learning for 6d object detection from RGB
+22-262019. images,”inComputerVision-ECCV2018-15thEuropeanConfer-
+[6] M. A. Trujillo, J. R. Mart´ınez-de Dios, C. Mart´ın, A. Viguria, and ence,Munich,Germany,September8-14,2018,Proceedings,PartVI,
+A.Ollero,“Novelaerialmanipulatorforaccurateandrobustindustrial 2018,pp.712–729.
+ndt contact inspection: A new tool for the oil and gas inspection [26] J. Wang and E. Olson, “AprilTag 2: Efﬁcient and robust ﬁducial
+industry,”Sensors,vol.19,no.6,2019. detection,”in2016IEEE/RSJInternationalConferenceonIntelligent
+[7] P. J. Sanchez-Cuevas, P. Ramon-Soria, B. Arrue, A. Ollero, and RobotsandSystems(IROS). IEEE,oct2016,pp.4193–4198.
+G.Heredia,“Roboticsystemforinspectionbycontactofbridgebeams [27] D. Malyuta, C. Brommer, D. Hentzen, T. Stastny, R. Siegwart, and
+usinguavs,”Sensors,vol.19,no.2,2019. R.Brockers,“Long-durationfullyautonomousoperationofrotorcraft
+[8] J.Artigas,R.Balachandran,C.Riecke,M.Stelzer,B.Weber,J.Ryu, unmannedaerialsystemsforremote-sensingdataacquisition,”Journal
+andA.Albu-Schaeffer,“Kontur-2:Force-feedbackteleoperationfrom ofFieldRobotics,vol.37,no.1,pp.137–157,2020.
+theinternationalspacestation,”in2016IEEEInternationalConference [28] M.Laiacker,F.Huber,andK.Kondak,“Highaccuracyvisualservoing
+onRoboticsandAutomation(ICRA),May2016,pp.1166–1173. for aerial manipulation using a 7 degrees of freedom industrial ma-
+[9] M.Mohammadi,A.Franchi,D.Barcelli,andD.Prattichizzo,“Cooper- nipulator,”in2016IEEE/RSJInternationalConferenceonIntelligent
+ativeaerialtele-manipulationwithhapticfeedback,”in2016IEEE/RSJ RobotsandSystems(IROS),Oct2016,pp.1631–1636.
+International Conference on Intelligent Robots and Systems (IROS), [29] C.Nissler,M.Durner,Z.-C.Mrton,andR.Triebel,“Simultaneouscal-
+Oct2016,pp.5092–5098. ibration and mapping,” in International Symposium on Experimental
+[10] A. Franchi, C. Secchi, M. Ryll, H. H. Bulthoff, and P. R. Giordano, Robotics(ISER),BuenosAires,Argentina,Nov.2018.
+“Shared control : Balancing autonomy and human assistance with [30] F.Richter,Y.Zhang,Y.Zhi,R.K.Orosco,andM.C.Yip,“Augmented
+a group of quadrotor uavs,” IEEE Robotics Automation Magazine, reality predictive displays to help mitigate the effects of delayed
+vol.19,no.3,pp.57–68,Sep.2012. telesurgery,”inInternationalConferenceonRoboticsandAutomation,
+[11] V. Falk,D. H.Mintz, J.G. Grunenfelder,J. I.Fann, andT. Burdon, ICRA2019,Montreal,QC,Canada,May20-24,2019,2019,pp.444–
+“Inﬂuence of three-dimensional vision on surgical telemanipulator 450.
+performance,”SurgicalEndoscopy,vol.15,pp.1282–1288,2001. [31] J. v. Oosterhout, J. G. W. Wildenbeest, H. Boessenkool, C. J. M.
+[12] A.Bettini,P.Marayong,S.Lang,A.M.Okamura,andG.D.Hager, Heemskerk, M. R. d. Baar, F. C. T. v. d. Helm, and D. A. Abbink,
+“Vision-assistedcontrolformanipulationusingvirtualﬁxtures,”IEEE “Hapticsharedcontrolintele-manipulation:Effectsofinaccuraciesin
+TransactionsonRobotics,vol.20,no.6,pp.953–966,Dec2004. guidance on task execution,” IEEE Transactions on Haptics, vol. 8,
+[13] K. Huang, D. Chitrakar, F. Ryde´n, and H. J. Chizeck, “Evaluation no.2,pp.164–175,April2015.
+of haptic guidance virtual ﬁxtures and 3D visualization methods [32] H. Boessenkool, D. A. Abbink, C. J. M. Heemskerk, and F. C. T.
+in telemanipulation—a user study,” Intelligent Service Robotics, Jul van der Helm, “Haptic shared control improves tele-operated task
+2019. performance towards performance in direct control,” in 2011 IEEE
+[14] Y. S. Sarkisov, M. J. Kim, D. Bicego, D. Tsetserukou, C. Ott, WorldHapticsConference,June2011,pp.433–438.
+A.Franchi,andK.Kondak,“Developmentofsam:Cable-suspended [33] R. Bischoff, J. Kurth, G. Schreiber, R. Koeppe, A. Albu-Schaeffer,
+aerial manipulator,” in 2019 IEEE International Conference on A. Beyer, O. Eiberger, S. Haddadin, A. Stemmer, G. Grunwald,
+RoboticsandAutomation(ICRA),May2019,pp.5323–5329. and G. Hirzinger, “The kuka-dlr lightweight robot arm - a new
+[15] D. Wagner and D. Schmalstieg, “Artoolkitplus for pose tracking on reference platform for robotics research and manufacturing,” in ISR
+mobile devices,” in Proceedings of 12th Computer Vision Winter 2010(41stInternationalSymposiumonRobotics)andROBOTIK2010
+Workshop(CVWW07),012007,p.139146. (6thGermanConferenceonRobotics),June2010,pp.1–8.
+[16] A.Ollero,G.Heredia,A.Franchi,G.Antonelli,K.Kondak,A.San- [34] “Roboceptionrcvisardusermanual,”availableathttps://doc.rc-visard.
+feliu, A. Viguria, J. R. Martinez-de Dios, F. Pierri, J. Cortes, com/latest/en/index.html.
+A. Santamaria-Navarro, M. A. Trujillo Soto, R. Balachandran, [35] K.H.StroblandG.Hirzinger,“Optimalhand-eyecalibration,”in2006
+J. Andrade-Cetto, and A. Rodriguez, “The aeroarms project: Aerial IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems,
+robots with advanced manipulation capabilities for inspection and Oct2006,pp.4647–4653.
+maintenance,” IEEE Robotics Automation Magazine, vol. 25, no. 4, [36] H. Thomas, H. Katharina, P. Carsten, S. Chun-Yi, R. Subhash, and
+pp.12–23,Dec2018. L. Honghai, “Interactive features for robot viewers,” in Intelligent
+[17] G.Hirzinger,M.Fischer,B.Brunner,R.Koeppe,M.Otter,M.Greben- RoboticsandApplications,vol.7508,ICIRA2012.
+stein, and I. Scha¨fer, “Advances in Robotics: The DLR Experience,” [37] M. A. Fischler and R. C. Bolles, “Random sample consensus: A
+The International Journal of Robotics Research, vol. 18, no. 11, pp. paradigm for model ﬁtting with applications to image analysis and
+1064–1087,1999. automatedcartography,”Commun.ACM,vol.24,no.6,pp.381–395,
+[18] D. Ni, A. Song, X. Xu, H. Li, C. Zhu, and H. Zeng, “3d-point- June1981.
+cloud registration and real-world dynamic modelling-based virtual [38] C. Nissler, S. Bu¨ttner, Z. Marton, L. Beckmann, and U. Thomasy,
+environment building method for teleoperation,” Robotica, vol. 35, “Evaluationandimprovementofglobalposeestimationwithmultiple
+no.10,p.19581974,2017. apriltags for industrial manipulators,” in 2016 IEEE 21st Interna-
+1228
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. tionalConferenceonEmergingTechnologiesandFactoryAutomation
+(ETFA),Sep.2016,pp.1–8.
+[39] B.HannafordandJ.-H.Ryu,“Timedomainpassivitycontrolofhaptic
+interfaces,” Proceedings 2001 ICRA. IEEE International Conference
+onRoboticsandAutomation(Cat.No.01CH37164),vol.2,pp.1863–
+1869vol.2,2001.
+[40] M.SagardiaandT.Hulin,“Multimodalevaluationofthedifferences
+betweenrealandvirtualassemblies,”IEEETransactionsonHaptics,
+vol.11,no.1,pp.107–118,Jan2018.
+[41] T.W.Martins,A.Pereira,T.Hulin,O.Ruf,S.Kugler,A.Giordano,
+R. Balachandran, F. Benedikt, J. Lewis, R. Anderl, K. Schilling,
+and A. Albu-Scha¨ffer, “Space factory 4.0 - new processes for the
+roboticassemblyofmodularsatellitesonanin-orbitplatformbasedon
+industrie4.0approach,”in69thInternationalAstronauticalCongress
+(IAC),October2018.
+[42] Y. S. Sarkisov, M. J. Kim, A. Coelho, D. Tsetserukou, C. Ott, and
+K.Kondak,“Optimaloscillationdampingcontrolofcable-suspended
+aerial manipulator with a single imu sensor,” in IEEE International
+Conference on Robotics and Automation (ICRA), 2020, accepted,
+availableonline.
+[43] A. Coelho, H. Singh, C. Ott, and K. Kondak, “Whole-body bilateral
+teleoperationofaredundantaerialmanipulator,”inIEEEInternational
+Conference on Robotics and Automation (ICRA), 2020, accepted,
+availableonline.
+[44] H.Grimmett,R.Paul,R.Triebel,andI.Posner,“Knowingwhenwe
+don’t know: Introspective classiﬁcation for mission-critical decision
+making,” in 2013 IEEE International Conference on Robotics and
+Automation. IEEE,2013,pp.4531–4538.
+1229
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:51 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,482 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+A fast and practical method of indoor localization
+for resource-constrained devices with limited sensing
+Jan Wietrzykowski1 and Piotr Skrzypczyn´ski1
+Abstract—We describe and experimentally demonstrate a
+practical method for indoor localization using measurements
+obtainedfromresource-constraineddeviceswithlimitedsensing
+capabilities. We focus on handheld/mobile devices but the
+method can be useful for a variety of wearable devices. Our
+system works with sparse WiFi or image-based measurements,
+avoiding laborious site surveying for dense signal maps and
+runsinreal-time.ItusesConditionalRandomFieldstoinferthe
+most probable sequence of agent positions from a known ﬂoor
+plan, dead reckoning and sparse absolute position estimates.
+Our solution leverages known topology of the environment by
+pre-computingallowedmotionsequencesofanagent,whichare
+then used to constraint the motion inferred from the sensory
+data. The system is evaluated in a typical ofﬁce building,
+demonstrating good accuracy and robustness to sparse, low-
+quality measurements.
+I. INTRODUCTION
+Along with the progress in the integration of various Fig. 1. Functional scheme of the localization method: white circles
+“smart” devices with the ubiquitous computer networks, represent agent’s positions, black squares are factors in the CRF graph.
+Unary factors drive the agent’s positions to agree with the distribution of
+there is a rising demand for infrastructure-free, reliable and
+the measured absolute locations (from WiFi or VPR), while the pairwise
+cost-effective indoor positioning services. Indoor localiza- factorsdrivethepositionstoagreewiththedeadreckoningmeasurements
+tion can be implemented with handheld computers used
+in modern industry and logistics or wearable computers in
+formationthathastobesurveyedinadvanceandtherequired
+healthcare applications. This function may be useful for
+qualityofthesensorydata.Weassumethataﬂoorplanofthe
+monitoring a patient in a hospital as well as for a technician
+site is available, which is easy to implement, e.g. employing
+who should locate damage in a large building or factory.
+blueprints or evacuation plans that are publicly available
+Unfortunately, most of the handheld or wearable devices are
+and can be processed and segmented [3]. We also assume
+resource-constrained with respect to the computing power
+that a map of the WiFi signal strength ﬁngerprints and/or
+and memory and have only commodity sensors – usually
+map of reference images is pre-surveyed, but we do not
+inertial measurements units (IMU – accelerometers, gyro-
+require either the distribution of ﬁngerprints or images to be
+scopes) and magnetometers. These sensors can be used to
+densewithrespecttotheﬂoorplan.Theseassumptionsmake
+implementsomeformofdeadreckoning,whichis,however,
+our solution practical because the information augmenting
+prone to drifts due to the lack of absolute position updates
+the ﬂoor plan can be collected using the same handheld
+[1]. Measurements that pin-point the agent position to a
+devices(smartphones/tabletsinparticular)thatarethenused
+given location are commonly obtained by processing signals
+as localization sensors. Moreover, the recent changes in the
+from dedicated radio beacons or WiFi networks, but visual
+Android WiFi access policy reduced the allowed scanning
+place recognition (VPR) adopting techniques developed for
+rate, which may hamper localization relying on a dense
+localization of mobile robots can be also considered [2].
+radio map and frequent WiFi scanning [4]. In this paper, we
+Therefore, we propose a localization method that uses the
+demonstrate that using the linear-chain Conditional Random
+internalsensorsofahandhelddeviceandabsolute(external)
+Fields(CRF)[5]ourmethodcomputestrajectoriesofamov-
+position estimates that are obtained either by processing the
+ing agent from state change probabilities derived from noisy
+WiFi scans or images captured by the device’s camera (Fig.
+proprioceptive measurements, infrequent absolute position
+1). The considered proprioceptive sensors, WiFi adapters
+updates, and constraints imposed by the allowed range of
+and quite good quality cameras are present in a wide range
+motion.Thediscreterepresentationandexactinferencemake
+of handheld devices, making the proposed solution cost-
+itpossibletogreatlysimplifythelocalizationsystemdesign,
+effective and infrastructure-free. We keep our system min-
+while still maintaining the accuracy sufﬁcient for personal
+imalistic with respect to both the amount of site-speciﬁc in-
+navigation1.
+1Jan Wietrzykowski and Piotr Skrzypczyn´ski are with Institute of
+Robotics and Machine Intelligence, Poznan University of Technology, 60-
+965Poznan´,Polandname.surname@put.poznan.pl 1Codeavailableat:https://github.com/LRMPUT/wifiSeq
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 293
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK convergence in the gradient-based optimization back-end.
+Asshownbytherecentindoorpositioningcompetition[6], Methodsthatcastthelocalizationproblemasanestimation
+localization systems for mobile devices typically employ of the agent’s position in a discrete representation of ﬁnite
+the device’s internal sensors to implement a dead reckoning resolutioncan bemoresuitable forsparse absolutemeasure-
+trajectory tracking solution. The computed trajectory of a ments. Indeed, for most tasks related to indoor positioning
+mobile agent (usually a person with a handheld or wearable with resource-constrained devices, we want to determine the
+device) is then corrected by absolute positions of this agent agent’swhereaboutsforretrievalofaproperlocationcontext,
+obtained by matching WiFi and/or Bluetooth scans to a pre- rather than to obtain position estimates of centimeter-level
+surveyed radio map. Most systems use WiFi ﬁngerprinting, accuracy. An example of such a method is a grid-based
+which does not require explicit modeling of the signal Markov localization, well-known in mobile robotics [20].
+propagation nor any knowledge of the Access Points (AP) Markov models were also adopted for indoor location es-
+distribution [7]. Fingerprinting is commonly implemented timation [21]. One problem with the Markov models is their
+using the Weighted k-Nearest Neighbor (WKNN) method proper parametrization, which makes a learning-based pa-
+[8], which calculates the agent’s position as a weighted rameterestimationprocedurerecommended.Suchautomatic
+average of the locations of k most similar reference scans parametrization is easy to implement for another discrete
+retrieved from the known map. estimation framework – the Conditional Random Fields that
+Vision is considerably less popular than WiFi for lo- we have proposed for indoor positioning in [22]. A similar
+calization with handheld/mobile devices, as simultaneous concept of chain CRFs for positioning with measurements
+localization and mapping (SLAM) or visual odometry al- taken with a smartphone has been described in [23]. How-
+gorithms are computation-intensive. Implementing them on ever, our proposal differs signiﬁcantly in the deﬁnition of
+resource-constrained devices, although possible, is rather functions describing the constraints (factors). In this paper,
+impractical due to insufﬁcient robustness of localization and weextendthesystemfrom[22]demonstratingthegainsdue
+high battery drain [9]. Recently, Hashemifar et al. [10] have to utilizing the discrete structure of the accessible (allowed)
+shown that RGB-D SLAM frameworks can be augmented regions in the ﬂoor plan to compute local paths between
+by WiFi measurements to increase their robustness to data the sparsely located WiFi ﬁngerprints and images, and by
+association problems in loop closing, but this approach is using a more elaborated Mixture of Gaussians model for
+also computation-intensive. On the other hand, visual place the integration of the absolute position measurements in the
+recognition (VPR), which is commonly used for mobile CRF framework. This allows us to mix WiFi ﬁngerprints
+robots [11], is less demanding as to the computer power, and visual place recognition, as in [4] but using a more
+especially if the efﬁcient binary-feature-based encoding is computationally efﬁcient framework.
+used for images [12] or their sequences [13]. We have
+demonstratedin[2]thatvisualplacerecognitionisapractical III. PROBABILISTICREASONING
+technique for resource-constrained smartphones, introducing Whether the goal of localization is to deliver an online
+the FastABLE, a computationally efﬁcient improvement of position of an agent or to calculate the whole trajectory
+the algorithm from [13]. ofﬂine, it is necessary to ﬁnd a set of consecutive states that
+The most common state estimation frameworks used to best explains acquired measurements. We achieve that by
+integrate the internal and absolute position information are building a probabilistic model and performing an inference
+particle ﬁlter and extended Kalman ﬁlter (EKF). EKF is thatﬁndsthemostprobablepositions.Themainideabehind
+computationallyefﬁcient[14],butpronetounmodellednoise the model is to combine cues regarding each timepoint
+in the measurements and the agent’s motion model. On the separatelyandcuesregardingtransitionsbetweentimepoints,
+other hand, the major drawback of particle ﬁlters in the as depicted in Fig. 1. We consider only timepoints when
+context of resource-constrained devices is their high compu- a measurement allows for an absolute localization, i.e. for
+tational cost – a large number of particles are necessary to position estimation with respect to a ﬁxed map’s frame of
+reconstruct the correct position using noisy measurements. reference. We use two types of measurements for this pur-
+However, particle ﬁlters are being used [15] because they pose, namely, WiFi scans and sequences of camera images.
+can model multi-modal position distribution, thus being able In both cases, measurements are matched to a pre-surveyed
+to represent the ambiguity caused by occasional wrong data databasetoprovideanapproximateabsoluteagent’sposition
+associationsintheabsolutepositionupdates(e.g.fromWiFi in the map that refers to a speciﬁc timepoint and can be
+WKNN),alsointheWiFi-basedlocalizationofmobilerobots viewed as an a priori knowledge. In turn, the probability of
+[16]. Nowadays, the state-of-the-art framework for SLAM transitions between states is controlled by dead reckoning
+in robotics is a factor-graph-based optimization [17]. While measurements, orientation readouts, and map topology. This
+this approach has been used before with direct WiFi signal way we are able to use a sequence of absolute position
+measurements [18], our research [4], [19] has demonstrated measurements and exploit constraints stemming from the
+that this framework is suitable to integrate WiFi ﬁngerprint- fact that the agent cannot move randomly from one absolute
+ing constraints and dead reckoning for indoor localization. position to another one.
+Nevertheless, the large uncertainty associated with matching We represent the agent’s states by dividing the map into
+ofWiFiscansorcameraimagesmakesithardtoensurefast grid cells. Such representation enables us to use message
+294
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. E
+passing inference method instead of gradient-descend op- isasetofedgesconnectingconsecutivetimepoints,f (x ),
+s i
+timization. It helps us avoid problems typical to gradient- f (x ,x ), f (x ,x ) are features describing compatibility
+d i j o i j
+descent optimization, such as the requirement for a good withabsolutemeasurements(WiFiorVPR),deadreckoning,
+initialization point and moderate measurement noise, not to and orientation measurements, respectively; and θ , θ , θ ,
+w v d
+mention getting stuck in local minima. It is signiﬁcant miti- θ areparameterscontrollinginﬂuenceofrespectivefeatures.
+o
+gation, because WiFi scans, VPR matches, and orientation Proper design of features is crucial for effective inference
+measurements are inaccurate with the scans and matches because they deliver information about discrepancy between
+being also sparse in time. Additionally, typical precision measurement and a given state. The next two subsections
+of WiFi-based localization is lower than the quantization describe the appropriate functions.
+errors introduced by discrete states and in most building-
+B. Single states
+size path planning tasks localization within 1 m range is
+The function f (x ) describes how a given state is com-
+sufﬁcient. Thanks to the discretization, we were able to use s i
+patible with a WiFi scan taken at timepoint i or a sequence
+BeliefPropagation(BP)[5]algorithmtoinferassignmentsof
+of images ending at that timepoint. We achieve that by
+positionstotimepoints.Notlessimportantisthefactthatour
+building an unnormalized a priori probability distribution of
+approach computes exact results, thanks to a linear structure S
+a state x given single observation , whether it is a WiFi
+of the model and the used inference algorithm. This means i i
+scan or a sequence of images. In both cases, the method of
+that results are globally optimal with respect to the given
+construction is very similar, with the exception of the way
+model. Discretization of states also eases the exploitation
+dissimilarity is computed, which stems from different nature
+of the map structure. We improve localization accuracy and
+of those modalities.
+computational speed by considering some states as forbid-
+In case of WiFi measurements, we assess compatibility
+den.Theforbiddenstatesrepresentplacesnotincludedinthe
+usingtheﬁngerprintingmethodthatavoidsexplicitmodeling
+localization area or unreachable. This enables us to reduce
+of signal propagation in the environment, using instead a
+thenumberofpossiblestatestoallowedones(markedgreen
+database of pre-surveyed WiFi scans with known positions
+in the ﬂoor plan in Fig. 1). The map structure is also used
+theyweretakenat.Modelingsignalpropagationisacomplex
+duringthecalculationofdistancesbetweenstates,whichare
+processanditisimpossibletoconsiderallfactors.Moreover,
+needed for displacement constraints. Our intention was to
+the model changes over time as physical properties of
+keep both the model and the inference process simple yet
+the environments change due to e.g., elevators movement
+effective, so the system can be easily deployed in different
+or large objects displacement [25]. Fingerprinting methods
+environments without the need to tune many parameters.
+are more immune to such changes, are relatively easy to
+Therefore,factorsinthemodelareintheformofexponential
+implement, and a preparation of the map is simpler. They
+familyfunctionsthatdonotrequireprovidingvaluesforeach
+base on comparing the current scan against a database using
+possible state or combination of states, while sufﬁciently
+a selected metric and calculating position using positions of
+approximatingarbitrarydistributions(byprovidingsufﬁcient
+the most similar scans from the map of ﬁngerprints.
+statistics it is possible to represent any distribution [24]).
+Inturn,forvisualplacerecognition,weuseFastABLE[2]
+Moreover, we provide a Maximum Likelihood Estimation
+algorithm that compares a sequence of images with a
+(MLE) procedure to estimate the most important parameters
+database containing pre-recorded sequences presenting dif-
+on a relatively small set of training examples.
+ferent places from the environment. The method is compu-
+A. Probabilistic model tationally inexpensive and, due to exploitation of sequences
+The probabilistic model is composed of random vari- of images, robust to a self-similarity of the environment [2].
+ables for each timepoint, that take values representing the AnalogouslyaswiththeWiFiﬁngerprintsmap,everyimage
+state at this timepoint, and factors whose values reﬂect in the FastABLE database is labeled with the absolute
+how assignments to random variables are compatible with position it was taken at.
+|S
+measurements. Values of the factors depend either on one The distribution p˜(x ) is approximated as a Mixture
+i i
+variable for unary factors that regard single states or on two of Gaussians with Gaussian kernels placed in centers of
+variables for pairwise factors that regard transitions between matched map m(cid:88)easureme(cid:26)nts and weighted according to(cid:27)sim-
+states. According to this model, the joint probability p(x) is ilarity to the current measurement:
+afupnrcotidouncstdoefscarlilbfian(cid:40)cgto(cid:88)mrse,awsuhriecmheinntst,ucrna(cid:88)lldeedpefenadtuornes:values of p˜(xi|Si)=S ∈Mexp −d(Sσie2,Sm) + −|xiσ−w2xm|2 ,
+1  m (2)
+p(x)= Z exp(cid:88)S ∈Wθwfs(xi)+S ∈Vθvfs(xi)+ where M is a set of matched measurements, d(Si,Sj) is
+i i a function computing distance between two measurements
+
+in a sense of their dissimilarity, and σ , σ are parameters
+θdfd(xi,xj)+θofo(xi,xj) , (1) controllingsigniﬁcanceofdissimilarityeandwdistance,respec-
+S S ∈E
+( i, j) W V tively.
+whereZ isanormalizingfactor, isasetofWiFiscans, Fortwoscanstobeconsideredmatchedtheyhavetoshare
+S
+isasetofVPRmatches, isameasurementfortimepointi, a certain number of discovered BSSIDs (Basic Service Set
+i
+295
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. S S
+Identiﬁers).Ifwedenotebyc( , )theratioofthenumber wheeledrobotorapersoninawheelchair,theintegrationof
+i j S
+of shared BSSIDs to the number of BSSIDs in scan , IMU measurements should be implemented differently. The
+S S S S i
+thenbothc( , )andc( , )havetoexceed0.6.Having stepometer measurements are based on a spectral analysis
+i j j i
+matched scans it is possible to compute distance between of an acceleration vector magnitude [19]. While a person is
+them.WeuseL (cid:118)distancetocompareRSSs(ReceivedSignal walking, the device is accelerated upwards and downwards
+2(cid:117) (cid:88) (cid:88)
+Strengths) of sha(cid:117)red BSSIDs: attherateofsteps.Wedetectharmoniccomponentsinrange
+(cid:116)
+1.1 to 2.6 Hz (usual frequency of human steps) in a sliding
+S S 1 − window and compute velocity of the agent by assuming a
+d ( , )= 1 (s s )2,
+w i j n ∈S ∈S bi=bj i j constant length of steps. The velocity is then integrated to
+(si,bi) i(sj,bj) j calculate distance.
+(3)
+Due to signiﬁcant distances between consecutive time-
+where(s ,b )isaRSSandBSSIDofscanj,nisthenumber
+j j points,becauseofalowWiFiscanningfrequencyoralackof
+ofmatchedBSSIDs,and1 isanindicatorfunctionequalto
+c VPRmatches,approximatingtrajectorywithlinesegmentsis
+1 if c is true and 0 otherwise.
+insufﬁcienttoestimatethedistancebetweentwostatesinthe
+In the case of sequences of images, dissimilarity is com-
+map. Hence, we precompute distances between all possible
+puted using Hamming distance d between descriptors of
+h statesusingagraphoftransitions.Eachstate,i.e.gridcell,is
+thosesequences[2].Toconsidertwosequencesmatched,d
+h a vertex in the graph and is connected with its 8 neighbors
+hastobebelowathresholddh,max thatisautomaticallysetto with edges of length equal to Euclidean distance between
+avaluethatpreventssequencesinthedatabasetobematched
+centers of the cells. We use the Floyd-Warshall algorithm to
+to each other with a safety margin of 0.8. The dissimilarity
+is computed as: compute shortest paths between all pairs of states g(xi,xj).
+S S − Weuseonlystatesmarkedasallowedandthusresultsreﬂect
+d (S ,S )= dh( i, j−) dh,min, (4) realdistancethattheagentwouldhavetotraveltomovefrom
+v i j dh,max dh,min onestatetoanother,avoidingobstaclesandwithoutcrossing
+where dh,min is a rough estimate of minimal Hamming the walls.
+distance on a training set. We perform VPR at most every 1 As shown in our previous work [22], using only distance
+s to limit the computational burden. constraints produces sometimes the effect of jumping back
+The value of a single measurement matching feature can and forth, because direction of the movement is not con-
+be computed using the following formula: strained.Therefore,weextendthesetoffeaturestoconsider
+|S also orientation measurements. The value of the orientation
+fs(xi)=log(p˜(xi i)). (5) feature depends on a difference between the direction of the
+For the numerical stability, we restrict values of p˜(x |S ) agent movement and readouts from the orientation sensor:
+i i
+to be not less than 0.01. For each timepoint, we discard − {| − (cid:9) |− }
+states with p˜(xi|Si) below 0.015 or below maximum prob- fo(xi,xj)= exp arctan(xσj2 xj) oij δo , (7)
+ability over 2. This signiﬁcantly reduces computation time, o
+especially regarding pairwise factors, where computational where oij is an orientatio(cid:9)n measurement transformed to
+map’s frame of reference, is an operator calculating the
+complexityisproportionaltotheproductofnumbersofstates
+angulardifference(inradians,consideringtheperiodicnature
+in both random variables.
+of orientation measurements), δ is a parameter controlling
+o
+C. State transitions the width of a dead zone, and σ is a parameter controlling
+o
+Factors connecting two random variables force displace- the rate at which value of the function decreases.
+ment between two consecutive timepoints to be consistent
+D. Inference
+with measurements. We use two types of constraints in this
+regard, namely, movement distance constraints and move- To perform localization it is necessary to ﬁnd a set of
+ment orientation constraints. assignments to random variables that maximizes the joint
+With distance features we compare displacement of the probability (1):
+∗
+agentaccordingtodeadreckoningwiththedistancebetween x =argmaxp(x). (8)
+two states in the map: x
+− − However, testing all combinations is infeasible and an in-
+(g(x ,x ) d )2
+f (x ,x )= i j ij , (6) ference algorithm is required. In the presented solution, we
+d i j σ2
+d exploit the structure of the model to perform a fast and
+where g(x ,x ) is a function returning distance in the exact inference. We use Belief Propagation algorithm that
+i j
+map between two states, d is a distance calculated by passes messages between factors and random variables to
+ij
+dead reckoning, and σ is a parameter controlling rate propagate information in the graph. In the case of tree-
+d
+at which value of the function decreases. Assuming that structured graphs, it is necessary to pass only 2N messages
+the handheld/wearable devices are carried by people, we to compute exact results, where N is the number of edges
+implement the dead reckoning distance measurements us- in the graph. Computing each message requires considering
+ing an IMU-based stepometer. Naturally, if the agent is a allcombinationsofvaluesofrandomvariablesinvolvedina
+296
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. (cid:0) (cid:1)
+factor, therefore the computational complexity of the whole for pairwise factors we have:
+O
+inference process is NS2 , where S is the number of
+−θ −
+possible states. It is worth noting that S is strongly limited, θdfd(xi,xj)= σd2(g(xi,xj) dij)2,
+because only states marked as allowed are considered and, d
+−θ {| − (cid:9) |− }
+furthermore, for each timepoint only states which exceed a θ f (x ,x )= o exp arctan(x x ) o δ .
+given probability threshold are kept. The average number of o o i j σ2 j j ij o
+o
+states for all random variables in our testing environment Foreveryvalueofσ andσ parameterestimationprocedure
+d o
+(see Sec. IV) is equal to 261. ﬁndsvaluesofθ andθ ,soratiosofthoseparametersmax-
+d o
+The inﬂuence of each feature is controlled by the re- imize the likelihood. The dependence is more complicated
+spective parameter θ. The values of those parameters reﬂect in case of f , as log-sum-exp form does not allow for such
+s
+how reliable features are and therefore have a great impact expansion, but in practice only ratio of σ to σ is relevant.
+e w
+on the inference process. Manual tuning of such values is The reason for using σ parameters at all is to normalize
+time-consuming and does not guarantee the optimal setup. values of factors to be of the same magnitude to facilitate
+Therefore, we use a MLE procedure to estimate parameter MLE optimization.
+valuesusinglabeledexamples.Theproceduremaximizesthe We tested ﬁve variants of our solution against the com-
+likelihood of random variables being assigned to the labeled monly applied WKNN method. The variants marked with
+(cid:89)
+values: orient annotation include orientation feature while others
+lackthisone.Analogously,variantsmarkedwithvpr include
+D D| |
+L(θ : )=p( θ)= p(xm θ), (9) visual place recognition measurements. We also tested two
+|S
+m∈D possible methods for generating p˜(xi i), namely with a
+D single Gaussian kernel placed in a position returned by
+where is a set of labeled examples, and xm is a vector
+WKNN, as in our previous work [22], denoted Gauss; and
+with values for each random variable in example m. For
+with Mixture of Gaussians, denoted MoG. For the WKNN
+fully labeled examples the problem of maximizing (9) is
+method, we used k = 6. Additionally, we distinguish two
+concave [5], so using gradient optimization guarantees to
+versions of the algorithm: online (Fig. 2) that computes
+ﬁnd the optimal solution. We use L-BFGS algorithm that is
+current position with last l absolute measurements (either
+recommended for this kind of problems [5]. Furthermore,
+from WiFi or VPR), and ofﬂine (Fig. 3) that computes all
+weoptimizealogarithmofthelikelihood,notthelikelihood
+positions using all measurements. Quantitative results are
+itself, because of a better factorization.
+presented in Tab. I (best results in bold), whereas Fig. 4
+and Fig. 5 present Cumulative Distribution Function (CDF)
+IV. EXPERIMENTSANDRESULTS
+forlocalizationerrors.ConstructionoftheCRFfromscratch
+To provide a reliable evaluation of the proposed solution, and inference, which is the worst-case scenario for a single
+we used real-world data gathered in the building of the localization act, took 441 ms on average on i5-8250U CPU.
+Mechatronics Center of Poznan University of Technology. This enables real-time operation considering new absolute
+Data for the WiFi and VPR maps was acquired by a updates are available at most every 1 s.
+few researchers holding mobile devices with a dedicated
+TABLEI
+Android application. The application was designed to record
+RESULTSOFPOSITIONINGFOR9TESTTRAJECTORIES
+WiFi scans, camera images, acceleration values, orientation
+algorithm error[m]
+measurements, and respective timestamps. The ground truth
+positions of scans and images were calculated using an online,l=5 ofﬂine
+approximationofthemovementwithlinesegments.Theuser avg max avg max
+was asked to draw on the displayed ﬂoor plan his trajectory WKNN 2.66 9.93 2.60 9.93
+CRFGauss 2.20 7.78 1.91 9.06
+using line segments prior to the acquisition phase and then
+CRFGaussorient 2.04 7.78 1.61 7.78
+to follow this trajectory with constant speed along each
+CRFMoG 1.84 5.79 1.85 11.21
+segment. Every time the user moved to the next segments,
+CRFMoGorient 1.82 6.00 1.67 6.78
+he indicated this fact to the application, which recorded
+CRFMoGorientvpr 1.69 5.05 1.44 6.78
+the timestamp of this event. Using those timestamps and
+respective positions, we were able to interpolate positions of
+measurements using the assumption of a constant velocity V. CONCLUSION
+along each segment. This procedure and the developed The presented indoor localization system is fast and
+application deﬁne also a simple and cost-effective way of resource-efﬁcient enough to run in real-time, whereas the
+surveying the site for our localization system. achieved localization accuracy is considerably better than
+We gathered 13 trajectories which were randomly split for the baseline WKNN algorithm, even using only WiFi
+into training and testing datasets. The training set was updates.TheVPRfurtherreducestheaverageerrorbutdoes
+used to estimate parameters using the procedure detailed in not reduce the maximum (especially for the ofﬂine variant),
+subsection III-D. It is worth to notice that some parameters as the largest errors arise in locations where there are not
+σ and θ are coupled. By expanding factor value expressions enough absolute updates from both sources. The ability to
+297
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. Fig. 2. Visualization of positioning results for trajectory no. 1 with exemplary images for online version of the proposed method for l = 5 with and
+withoutVPR,comparedtoWKNNmethodandgroundtruthtrajectory.FilleddotsrepresentstatesforWiFiscans,whileemptyonesforVPRmatches
+Fig.3. Visualizationofpositioningresultsfortrajectoryno.1withexemplaryimagesforofﬂineversionoftheproposedmethodforwithandwithout
+VPR,comparedtoWKNNmethodandgroundtruthtrajectory.FilleddotsrepresentstatesforWiFiscans,whileemptyonesforVPRmatches
+Fig.4. CumulativeDistributionFunctionoferrorfor9testtrajectoriesfor Fig.5. CumulativeDistributionFunctionoferrorfor9testtrajectoriesfor
+onlineversionoftheproposedmethodwithl=5,comparedtoWKNN ofﬂineversionoftheproposedmethod,comparedtoWKNN
+handle sparse and heterogeneous absolute position updates
+of the CRF model parameters.
+makes our method particularly suitable for localization of
+• The building topology is used to limit the space of
+various handheld/wearable devices in ad-hoc scenarios if
+possible solutions and to derive motion constraints that
+there is no time for either the deployment of beacons or
+are essential in the presence of sparse sensory data.
+surveyingofadenseradiomap.Thenoveltyofthepresented
+• Mixture of Gaussians is used as a universal approxi-
+research is threefold:
+mation of the agent’s position probability distribution
+• Casting the localization problem onto a discrete model from the absolute measurements. This allows our CRF
+made it possible to use the Belief Propagation algo- toaccommodateheterogeneousabsolutemeasurements.
+rithm, which ﬁnds the globally most probable solution
+to our problem, being immune to local minima. An Further development of our system will concern VPR-only
+inherentpartofoursolutionistheautomaticestimation localization that eliminates the need for WiFi infrastructure.
+298
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. REFERENCES quencesfromimages,”inIEEEInternationalConferenceonRobotics
+andAutomation(ICRA),2015,pp.6328–6335.
+[1] P.D.Groves,PrinciplesofGNSS,inertial,andmultisensorintegrated [14] S. Ali-Loytty, T. Perala, V. Honkavirta, and R. Piche, “Fingerprint
+navigationsystems,2nded. ArtechHouse,2013. Kalman ﬁlter in indoor positioning applications,” in IEEE Control
+[2] M. Nowicki, J. Wietrzykowski, and P. Skrzypczyn´ski, “Real-time Applications,(CCA)IntelligentControl,(ISIC),2009,pp.1678–1683.
+visualplacerecognitionforpersonallocalizationonamobiledevice,” [15] M. S. R. Sakib, M. A. Quyum, K. Andersson, K. Synnes, and
+WirelessPersonalCommunications,vol.97,no.1,pp.213–244,2017. U. Ko¨rner, “Improving Wi-Fi based indoor positioning using par-
+[3] R. Bormann, F. Jordan, W. Li, J. Hampp, and M. Ha¨gele, “Room ticle ﬁlter based on signal strength,” in IEEE Ninth International
+segmentation: survey, implementation, and analysis,” in IEEE Inter- ConferenceonIntelligentSensors,SensorNetworksandInformation
+national Conference on Robotics and Automation (ICRA), 2016, pp. Processing(ISSNIP),2014,pp.1–6.
+1019–1026. [16] J. Biswas and M. Veloso, “WiFi localization and navigation for
+[4] M.NowickiandP.Skrzypczyn´ski,“Leveragingvisualplacerecogni- autonomousindoormobilerobots,”inIEEEInternationalConference
+tion to improve indoor positioning with limited availability of WiFi onRoboticsandAutomation,2010,pp.4379–4384.
+scans,”Sensors,vol.19,no.17,2019. [17] C.Cadena,L.Carlone,H.Carrillo,Y.Latif,D.Scaramuzza,J.Neira,
+[5] C.SuttonandA.McCallum,“Anintroductiontoconditionalrandom I.Reid,andJ.J.Leonard,“Past,present,andfutureofsimultaneous
+ﬁelds,” Foundations and Trends in Machine Learning, vol. 4, no. 4, localization and mapping: Toward the robust-perception age,” IEEE
+pp.267–373,2011. TransactionsonRobotics,vol.32,no.6,pp.1309–1332,2016.
+[6] J. Torres-Sospedra, A. R. Jime´nez, A. Moreira, T. Lungenstrass, W.- [18] J. Huang, D. Millman, M. Quigley, D. Stavens, S. Thrun, and
+C. Lu, S. Knauth, G. M. Mendoza-Silva, F. Seco, A. Pe´rez-Navarro, A. Aggarwal, “Efﬁcient, generalized indoor WiFi graphSLAM,” in
+M. J. Nicolau, A. Costa, F. Meneses, J. Farina, J. P. Morales, W.-C. IEEE International Conference on Robotics and Automation, 2011,
+Lu, H.-T. Cheng, S.-S. Yang, S.-H. Fang, Y.-R. Chien, and Y. Tsao, pp.1038–1043.
+“Off-lineevaluationofmobile-centricindoorpositioningsystems:The [19] M. Nowicki and P. Skrzypczyn´ski, “Indoor navigation with a smart-
+experiencesfromthe2017IPINcompetition,”Sensors,vol.18,no.2, phonefusinginertialandWiFidataviafactorgraphoptimization,”in
+2018. MobileComputing,Applications,andServices,S.Sigg,P.Nurmi,and
+[7] S.Xia,Y.Liu,G.Yuan,M.Zhu,andZ.Wang,“Indoorﬁngerprintpo- F.Salim,Eds. Springer,2015,pp.280–298.
+sitioningbasedonWi-Fi:anoverview,”ISPRSInt.J.Geo-Information, [20] D. Fox, W. Burgard, and S. Thrun, “Markov localization for mobile
+vol.6,p.135,2017. robotsindynamicenvironments,”J.Artif.Int.Res.,vol.11,no.1,pp.
+[8] Z. Guowei, X. Zhan, and L. Dan, “Research and improvement on 391–427,1999.
+indoorlocalizationbasedonRSSIﬁngerprintdatabaseandK-nearest [21] J.Seitz,T.Vaupel,J.Jahn,S.Meyer,J.G.Boronat,andJ.Thielecke,
+neighbor points,” in International Conference on Communications, “AhiddenMarkovmodelforurbannavigationbasedonﬁngerprinting
+CircuitsandSystems(ICCCAS),vol.2,Nov2013,pp.68–71. and pedestrian dead reckoning,” 13th International Conference on
+[9] M.Fularz,M.Nowicki,andP.Skrzypczyn´ski,“Adoptingfeature-based InformationFusion,pp.1–8,2010.
+visual odometry for resource-constrained mobile devices,” in Image [22] J.Wietrzykowski,“Probabilisticreasoningforindoorpositioningwith
+Analysis and Recognition: 11th International Conference on Image sequences of WiFi ﬁngerprints,” in IEEE Signal Processing Confer-
+AnalysisandRecognition,ICIAR2014,Vilamoura,Portugal,October ence(SPA),2018,pp.338–343.
+22-24,2014,PartII. Springer,2014,pp.431–441. [23] Z. Xiao, H. Wen, A. Markham, and N. Trigoni, “Indoor tracking
+[10] Z. S. Hashemifar, C. Adhivarahan, A. Balakrishnan, and K. Dantu, using undirected graphical models,” IEEE Transactions on Mobile
+“Augmenting visual SLAM with Wi-Fi sensing for indoor applica- Computing,vol.14,no.11,pp.2286–2301,2015.
+tions,”AutonomousRobots,vol.43,p.2245,2019. [24] M. J. Wainwright and M. I. Jordan, “Graphical models, exponential
+[11] S.Lowry,N.Sunderhauf,P.Newman,J.Leonard,D.Cox,P.Corke, families, and variational inference,” Foundations and Trends in Ma-
+andM.Milford,“Visualplacerecognition:Asurvey,”IEEETransac- chineLearning,vol.1,no.1–2,pp.1–305,2008.
+tionsonRobotics,vol.32,no.1,pp.1–19,2016. [25] E.S.Lohan,K.Koski,J.Talvitie,andL.Ukkonen,“WLANandRFID
+[12] D.Galvez-Lo´pezandJ.D.Tardo´s,“Bagsofbinarywordsforfastplace propagationchannelsforhybridindoorpositioning,”inInternational
+recognition in image sequences,” IEEE Transactions on Robotics, ConferenceonLocalizationandGNSS2014(ICL-GNSS2014),2014,
+vol.28,no.5,pp.1188–1197,2012. pp.1–6.
+[13] R.Arroyo,P.F.Alcantarilla,L.M.Bergasa,andE.Romera,“Towards
+life-longvisuallocalizationusinganefﬁcientmatchingofbinaryse-
+299
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:28 UTC from IEEE Xplore.  Restrictions apply. 

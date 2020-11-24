@@ -1,0 +1,366 @@
+   
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+VariPath: A Database for Modelling the Variance of Human 
+Pathways in Manual and HRC Processes with Heavy-Duty Robots 
+Mohamad Bdiwi*, Ann-Kathrin Harsch, Paul Reindel, Matthias Putz 
+Fraunhofer Institute for Machine Tools and Forming Technology IWU, Chemnitz 
+  Abstract—  Unlike  robots,  humans  do  not  have  constant  studies also has investigated the human movement behavior 
+movements. Their pathways are individually changeable and  created  a  dataset  for  human  detection [8],  [9]  and  [10]. 
+influenced by circumstances. This paper presents a method to  However, none of them has considered the requirements for 
+investigate  human  pathway  variations  in  a  real  study.  In  modelling the variance of human movements in the industrial 
+systematically selected tasks, human pathways are examined  sectors. In [11], a comparison for the human reactions against 
+for 100 participants in manual and human-robot collaboration  a moving robot and a moving human is presented. Inter alia, 
+(HRC) scenarios. As a result, the variations of pathways are  the human walking behavior in HRC was determined in [12] 
+presented depending on various features: e.g. in nearly all cases  and [13]. Here, Bardot et al. defined different tasks with a 
+the variance of women’s walking pathways is smaller than that  large-scale robot and determined the walking velocity and the 
+of men. VariPath database can be used in any planning process 
+distance of the human to the TCP (Tool Center Point) or the 
+of manual or HRC scenarios to ensure safety and efficiency. 
+robot  base.  However,  in  the  most  mentioned  works  the 
+I.  INTRODUCTION  human individuality still has no real influence on the robot 
+path planning and robot control, as is shown in Fig.1.  
+Human-robot-collaboration  (HRC)  as  a  man-machine 
+system increases the flexibility and efficiency, particularly in 
+complex  or  time  consuming  industrial  tasks  [1],  [2].  In 
+addition, heavy-duty collaborative robots improve ergonomic 
+and physically stressful tasks at all interaction levels which 
+are mentioned in [3] and [4]. However, working together 
+with a high payload robot can include a serious risk for 
+humans because of the large workspace and high potential 
+forces of the robot. According to safety requirements, the 
+calculation of safety distances is usually based on the worst-
+case scenario in which the human walks straight to the source 
+of danger. Safety distances are related to the robot’s and 
+human’s velocities and assumed to be fixed values – which 
+do not correspond to the reality. Therefore, industrial HRC 
+processes with  heavy-duty  robots  can  rarely  be  designed 
+efficiently, even at the lowest interaction level (fenceless 
+shared workspace, without shared tasks). If the real human 
+movements, and in particular the variance of pathways, can 
+be  described  as  a  function  of  the  human  tasks  and 
+environmental conditions, the HRC processes can be made   
+equally safe and efficient.   Fig. 1 Advantages of the proposed work in comparison to the 
+state of the art. 
+Processes in HRC can be controlled and secured in many 
+ways. In addition to visual monitoring of the process [3],  The aim of this work to get efficient HRC scenarios 
+another innovative concept comprises the control of HRC  without any lacks in the safety requirement. This efficient 
+processes via brainwaves [5]. These approaches secure the  HRC-planning  should  take  into  account  different 
+online process. During planning and conception of HRC- requirements  and  properties;  e.g.  human  anthropology, 
+processes,  verified  offline  information,  procedures  and  human tasks, robot tasks and environmental conditions (as 
+methods must be available. Empirical studies in the HRC  shown  in  “individual  planning  conditions”  in  Fig. 2)”. A 
+context often deal with human acceptance, wellbeing and  primitive approach to consider and investigate the variance of 
+user-friendliness of new technologies [6], [7]. Some further  human  motion  behavior  and  walking  pathways  in  the 
+planning  process  of  industrial  heavy  payload  HRC 
+ 
+applications is proposed in [14]. Based on that approach, this 
+This project has been funded by the European Union (EU) and the  paper  presents  extensive  investigations  as  an  important 
+European Fund for Regional Development (EFRE). 
+database for modeling the human pathways. The first step is 
+* Mohamad Bdiwi is the head of robotics department within Fraunhofer 
+to  collect  a  large  amount  of  data,  which  covers a  wide 
+Institute for machine tools and forming technologies “IWU”, Chemnitz, 
+Germany  (phone:  0049  371  5397-1658;  e-mail:  Mohamad.bdiwi@  spectrum of industrial tasks and body dimensions combined 
+iwu.fraunhofer.de).  
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1821
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:11:38 UTC from IEEE Xplore.  Restrictions apply.    
+with individual human movement and behavior. A systematic  Fig. 4 illustrates the relevant specifications examined in the 
+HRC  planning  process  has  been  considered  with  new  study. A reasonable combination of the tested specifications 
+boundary  conditions  in  the  HRC-tasks.  Based  on  these  results in 16 different boundary conditions for ”walking“. 
+conditions  an  empirical  study  has  been  performed.  The 
+collected  dataset  could  be  the  main  core  for  new  robot 
+planning tools in HRC scenarios. Furthermore, it can be used 
+for safe robot path planning. 
+ 
+Fig. 2 Databased planning process in heavy-duty HRC, due 
+to moving robots and individual human behavior. 
+II.  INVESTIGATED CONDITIONS AND PARAMETERS 
+                   
+A.  Investigation strategy 
+Fig. 4 Specified investigated variables. 
+To provide a reliable database representing the variance of 
+human motion behavior in industry, it is necessary to select 
+B. Specific tested scenarios 
+experimental conditions that correspond to real production 
+conditions.   Fig. 5 shows the layouts of the four test scenarios. The 
+As a first step, typical manual manufacturing activities  robot stage is related to the number of the scenarios. 
+were analyzed and listed in various industries (automotive, 
+Scenario  1  investigated  the  avoidance  strategy  of  the 
+agriculture, etc.). It turned out that “walking“ as well as 
+participants (preferred side of walking along the obstacle) 
+”picking and placing“ are the most frequently performed 
+and the variance while passing the obstacle. A 6 m long path 
+activities in assembly workspaces. Since “walking” ocupies 
+included a central obstacle (trolley, dimensions: 780/ 430/ 
+the larger space and holds the greater danger potential due to 
+560 mm). At the starting point a SLC (Small Load Carrier, 
+an inreased collision risk with the robot, it was investigated 
+dimensions: 300 x 200 x 150 mm) of 10 kg had to be gripped 
+in this paper.  
+at a height of 900 mm. The participant had to go from start to 
+end point and avoid the obstacle on a freely selectable side. 
+In each of four rounds the participant had to walk forth and 
+back four times. After each round, the obstacle was shifted by 
+100 mm in the preferred walking direction without being 
+noticed by the participant.  
+Scenario 2 determined the variance in pathways during a 
+surprisingly  occurring  distraction.  The  participant  had  to 
+walk 3 and 6 m in each pass, which consisted of four walks 
+back and forth, respectively. A SLC of 10 kg also had to be 
+randomly picked up and carried while walking. In some cases 
+(randomized and without prior-warning of the participant) the 
+distraction was activated in the form of a signal lamp with a 
+siren.  
+ 
+Scenario  3  served  to  investigate  the  pathways  when 
+Fig. 3 Most frequent tasks in the industrial sectors. 
+bypassing a robot over a path length of 6 m. Depending on 
+Despite the general definition of the task, there is a large  scenario  1,  the  starting  point  was  chosen  so  that  the 
+number of possible influencing variables. Thus it is possible  participant had to avoid the robot on his preferred side. The 
+to differentiate  how  long  the  pathway  is  or  whether  the  robot arm with a standard industrial gripper pointed in the 
+human has to fulfill a task or not. In addition, the human can  direction of the walking path at a height of approx. 1.40 m 
+be  distracted  while  walking  or  fulfilling  tasks  (such  as  and with a constant eccentricity of the robot arm of 1.15 m. 
+carrying an object).   The participant had to bypass the stationary robot as an 
+1822
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:11:38 UTC from IEEE Xplore.  Restrictions apply.    
+obstacle and randomly pick up and carry a 10 kg SLC for  of the participants are varying extremely, e.g. body-height 
+half of the passes.  ranges between 1600mm until almost 2000mm and body-
+weight ranges from 45kg to 120kg. All this diversities make 
+In  scenario  4  the  test  person  had  to  walk  a  straight 
+the  collected  measurements  an  optimal  database  for 
+distance of 3 and 6 m while the robot was moving, providing 
+modelling the variance of the human movements in relation 
+a diffuse distraction. A SLC of 10 kg also had to be randomly 
+to their body anthropometry.         
+picked up for half of the runs. In total, 96 curves were 
+recorded per participant in all presented walking scenarios.   
+ Test layout to evaluate the pathways. 
+Fig. 5
+Scenario 1: robot stage 0, no robot in sight, or space for human movement available   
+Scenario 2: robot stage 1, stationary robot within sight, but not in space for human movement  
+Scenario 3: robot stage 2, stationary robot as an obstacle in space for human movement   
+Scenario 4: robot stage 3, moving robot within sight, but not in space for human movement  
+Table 1  
+III.  PARTICIPANTS AND MOTION CAPTURE SYSTEM  Composition of the participant sample. 
+A.  Participants 
+Table 1 shows the composition of the 100 examined 
+participants. The first 10 test persons were evaluated as part 
+of preliminary investigations to insure the accuracy of all 
+required  measurement  setups.  Before  the  evaluation  and 
+using acquired data in the modelling, the plausibility of the 
+measurement for the rest participants have been again tested.  
+Due  to  technical  defects  or  missing  data,  about  20 
+measurement series could not be used in the final evaluation. 
+Hence, the evaluated data differs only marginally from the 
+total recorded data set.  
+As is shown in Table 1, about 65% from the evaluated 
+measurement have been performed on men with age average 
+between  twenty  and  sixty-five  years  old,  while  the  age 
+structure of the female-participants ranges between eighteen 
+ 
+and fifty years old. As is also shown, the body anthropometry 
+1823
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:11:38 UTC from IEEE Xplore.  Restrictions apply.    
+B.  Motion capture system  to the defined start point at [x=0, y=0]; 2. rotating the black 
+curve over a linear fit to the axis of the end point [x=0]; 3. 
+The human motion data was recorded with an inertial 
+filtering the continuous black curve over a moving average; 
+motion capture system (XSENS AwindaⓇ) using 17 sensors 
+4. determining the turning points (as start and end points of 
+attached  to  body  parts  (Fig.  6).  Accelerometers,  rate 
+the single curves) over the local minima and maxima (in y-
+gyroscopes and magnetometers are included in the inertial 
+direction) to split up the continuous curve into single curves 
+measurement  units  (IMUs)  enabling  the  determination of 
+(per path). All steps were repeated for each single curve. 
+acceleration, velocity and position. Using algorithms and a 
+Thus, the resulted red curve had correct start-points and the 
+generated  3D  human  model,  human  movements  can  be 
+end-points were just on the right axis. 
+reproduced. 
+ 
+Fig. 6. Applying the Inertial Measurement Units (IMUs) to 
+specific anatomical landmarks and the generated virtual 3-D 
+human model of XsensⓇ 
+Compared to an optical system, this system is not affected   
+Fig. 7. Method of data recording and post processing of the 
+by occlusion. However, it is influenced by the magnetic field. 
+pathways for each participant. Shown example: scenario 1, 
+It causes a drift of the measured values and has to be taken 
+central  obstacle  (E0,  with/  without  SLC).  a)  and  b)  
+into account. 
+Participant 13: female, P95 body height. (8 pathways)  c)
+  All  females  of  P95  body  height,  without  SLC.  (20 
+C. Preparation of the participants 
+pathways) 
+All participants were equipped with sensors as shown in 
+Fig. 5. The 17 sensors were attached with a skin-friendly tape  Fig. 7 b) shows the second step, the curve fitting. Since a 
+to given anatomical landmarks. Next, the anthropometric data  continuous pathway was recorded under different conditions 
+of the test persons were measured and implemented into the  (e.g. “with SLC”/ “without SLC”), it was not immediately 
+possible  to  compare  paths  with  the  same  conditions.  In 
+recording software (MVN AnalyzeⓇ), creating a virtual 3-D 
+addition, the starting point of the backward path was the 
+human model. 
+endpoint of the forward path and vice versa. So the single 
+curves  of  the  backward  paths  were  shifted  to  the  same 
+IV.  DETERMINING THE VARIANCE IN PATHWAYS 
+starting point of the forward paths, were rotated by 180° 
+towards the y-axis and fitted exactly to the end point [x=0, 
+A.  Data evaluation 
+y=6] . Furthermore, the test conditions were assigned to the 
+The data of the pelvis sensor (Fig. 6 B) was used to  individual curves. In the third step all curves with same test 
+evaluate the pathways. Unlike the center of mass, which  conditions were selected. Fig. 7 c) illustrates, for example, 
+changes rapidly with the human posture, the position data of  the  results  for all female  participants of the  95th height 
+this specific sensor is more constant. Due to the magnetic  percentile who walked around the obstacle without a SLC. 
+field prevailing in the test field, the measured values hold a 
+translational and/ or rotational drift. In Fig. 7 a) the recorded  B.  Calculation of the percentiles 
+black  curve  demonstrates  the  drift  for  the  path-ways  of 
+To  compare  different  variables,  e.g.  gender  or  test 
+scenario 1: it does not start at the defined starting point [x=0, 
+conditions, curves recorded under the same variables were 
+y=0] and theoretically runs through the obstacle.  
+grouped. Fig.8 shows the steps to compare the distributions 
+Fig. 7 a) and b) show the first steps of post processing for  of the pathways of all females, who walked with and without 
+scenario 1, exemplarily for test person 13. Participant 13 was  SLC in scenario 1. Fig.8 d) shows the curves of all females 
+a  woman  with  a  height  of  the  95th  percentile.  This  without  carrying  a  SLC.  Fig.8  e)  depicts  the  calculated 
+(randomly) means that at least 95% of German women are  percentiles for discrete points. The range between the 2.5th 
+smaller.   and 97.5th percentiles represent 95% of the measured values 
+and is pictured with the turquoise curve. The dark green 
+The data in Fig. 7 a) was corrected in the following steps 
+curve includes 80% of the measured values. Fig.8 f) shows 
+to obtain the drift-adjusted red curve and to split up the 
+the comparison of the percentiles of all females with and 
+continuous black curve in individual forward and backward 
+without SLC: Carrying an object does not seem to have a 
+paths: 1. shifting the actual starting point of the black curve 
+clear influence. 
+1824
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:11:38 UTC from IEEE Xplore.  Restrictions apply.    
+ 
+ 
+Fig. 8. Data post processing for comparing the variance in 
+pathways for the different test conditions. d) to f)  All  Fig. 9. Percentiles and variance of the pathway curves in 
+females. (104/ 208 pathways)  scenario 3 for all males who walked around the robot on the 
+right side.  a) with SLC, b) without SLC. 
+C. Comparison of percentile curves 
+The  variances  of  the  four  tested  scenarios  and  test 
+The procedure described above for drift correction, data  conditions were compared by using the variances ∆1m, ∆3m 
+preparation and determination of percentiles was applied to 
+and ∆5m (Fig. 9). It was found that 85% of the participants 
+all data of the four scenarios. The curves in all scenarios were 
+chose the right side when bypassing the obstacle in scenario 
+always differentiated regarding gender (“male”/ “female”), 
+1. Therefore Fehler! Verweisquelle konnte nicht gefunden 
+body height (“percentile 5”/ “50”/ “95” according to DIN 
+werden.  presents  the  variance  values  of  the  specific 
+33402) and weight (“with”/ ”without SLC”). In addition, the 
+following parameters were considered in the scenarios: In  scenarios for the “right” avoidance strategy and a distance of 
+scenario 1 a distinction was made between the eccentricity  “6 m”. 
+(“E0” - “E3”) and the avoidance strategy (“right”/ “left”). In 
+scenario  2  the  influencing  factor  “with”/  “without  Table  2  Variance  of  95%  of  the  recorded  pathways, 
+distraction” was evaluated. In dependence of the preferred  calculated over the delta of the 2.5th and 97.5th percentile 
+bypassing  direction  scenario  3  results  in  an  avoidance  (∆95%,1m, ∆95%,3m, ∆95%,5m).  Conditions: distance “6 
+strategy of “right”/“left”. Scenario 4 comprised a constant  m”, *bypassing direction (avoidance strategy) “right”  
+“diffuse distraction” by the moving robot. 
+Fig. 9 presents an example of the results for scenario 3. It 
+illustrates all curves including the percentiles of the male 
+participants who bypassed the robot on the “right” side with 
+and  without  SLC.  It  was  found  that  the  width  of  the 
+percentiles, which are depicted here as scatter or variance, is 
+smaller without carrying a SLC for all illustrated cases for 
+males in scenario 3. Furthermore, the variance in the first 
+half of the pathways is smaller compared to the variance 
+when the robot was passed.  
+ 
+Based on Table 2 the following valuable findings can be 
+concluded: 
+  1. Gender seems to have the most influence: in nearly all 
+1825
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:11:38 UTC from IEEE Xplore.  Restrictions apply.    
+tested  scenarios  females  exhibited  a  smaller  variance  in  human behavior during the work in a shared workspace with 
+path-ways compared to males.  various mobile agents.  
+[1] Colledani, M., Gyulai, D., Monostori, L., Urgo, M., Unglert, J., 
+2. The robot as an obstacle has a distinct influence: ∆3m 
+van  Houten,  F.,  2016.  Design  and  management  of 
+as the variance in the middle of the pathway was smaller  reconfigurable assemRbElFyE lRinEeNsC iEnS t he automotive industry. 
+than ∆1m and ∆5m in all cases of scenario 3.  CIRP Annals 65 (1), 441–446. 
+ 
+3. Carrying  a  SLC  has  an  ambiguous  influence:  the  [2] Delang, K., Todtermuschke, M., Bdiwi, M., Putz, M., 2018. 
+variance in pathways was rather greater when carrying an  An approach of service modeling for the demand-driven 
+implementation  of  Human-Robot-Interaction  in 
+object, but this did not apply to scenario 4 and females in 
+manufacturing,  in: 2018  IEEE  14th  International 
+scenario 3.   
+Conference  on  Automation  Science  and  Engineering 
+4. The diffuse direction by a moving robot seems to have 
+(CASE).  2018  IEEE  14th  International  Conference  on 
+no influence: the variances of scenario 4 are rather small  Automation  Science  and  Engineering  (CASE),  Munich, 
+com-pared to scenario 2, but they did not differ clearly.  Germany. 20.08.2018 - 24.08.2018. IEEE, pp. 705–710. 
+[3] Bdiwi, M., Pfeifer, M., Sterzing, A., 2017. A new strategy for 
+V.  CONCLUSION  ensuring human safety during various levels of interaction 
+with industrial robots. CIRP Annals 66 (1), 453–456. 
+Human  movements  in  different  HRC-scenarios  were 
+[4] Aaltonen, I., Salmi, T., Marstio, I., 2018.  Refining levels of 
+systematically analyzed with a motion capture system during   
+collaboration  to  support  the  design  and  evaluation  of 
+an extensive study. With more than 1800 measurements and 
+human-robot interaction in the manufacturing industry. 
+9300 walking paths a huge database for human pathways was  CIRP Annals 72  (2018), 93-98 
+generated  for  industrial  applications.  Post processing  and  [5]  Mohammed, A., Wang, L., 2018. Brainwaves driven human-
+evaluation of the data show that women exhibited a smaller  robot collaborative assembly. CIRP Annals 67 (1), 13–16. 
+width in the walking variance than men. When an obstacle, in  [6] Brauer, R.R., 2017. Akzeptanz kooperativer Roboter im 
+particular a robot, was bypassed, the variance at the bypass  industriellen  Kontext.  Universitätsverlag  Chemnitz, 
+ 
+point was the smallest. Finally, carrying an object had a  Chemnitz, 145, xxv. 
+different influence on the variance.  [7] D’Addona,  D.M.,  Bracco,  F.,  Bettoni,  A.,  Nishino,  N., 
+ 
+Carpanzano, E., Bruzzone, A.A., 2018. Adaptive automation 
+Taking into account the variance of human movements in 
+and  human  factors  in  manufacturing:  An  experimental 
+planning of HRC guarantees the natural moving behavior of 
+assessment for a cognitive approach. CIRP Annals 67 (1), 
+humans. Furthermore, the robot trajectory can be planned   
+455–458. 
+avoiding collisions, e.g. by using the ∆95% as the probable 
+[8] Taiana,  M.,  Nascimento,  C.,  Bernardino,  A,.  2013.  An 
+human movement space. In addition, the robot trajectory can 
+Improved Labelling for the INRIA Person Data Set for 
+be generated online considering the individual human profile  Pedestrian  Detection,  Iberian  Conference  on  Patern 
+and required tasks as is presented in Fig. 10.  Recognition and Image Analysis, pp 286-295. 
+ 
+[9] Cao, Z., Simon, T., Wei, S., Sheikh Y., 2017. Realtime Mulit-
+Person 2D Pose Estimation using Part Affinity Fields, IEEE 
+Conference on Computer Vision and Pattern Recognition. 
+[10]Villasenor,  L.M.,  Ponce,  H.,  Espinosa-Loera,  R.A.,  2018. 
+ 
+Multimodal Database for Human Activity Recognition and 
+Fall Detection, MPDI Proceedings 2018, 2, 1237.  
+[11]Höcherl, J., Wrede, B., Schlegl, T., 2017. Motion Analysis of 
+ 
+Human-Human  and  Human-Robot  Cooperation  During 
+Industrial  Assembly  Tasks,  in: Proceedings  of  the  5th 
+International Conference on Human Agent Interaction. the 
+ 
+5th  International  Conference,  Bielefeld,  Germany. 
+17.10.2017 - 20.10.2017. ACM, New York, NY, pp. 425–429. 
+[12]Bortot, D., Ding, H., Antonopolous, A., Bengler, K., 2012. 
+Human  motion  behavior  while  interacting  with  an 
+industrial robot. Work (Reading, Mass.) 41 Suppl 1, 1699–
+1707. 
+ 
+[13]Szemes,  P.T.,  Korondi,  P.,  Hashimoto,  H.  2006,  Human 
+Walking  Behavior  Model  for  Intelligent  Space,  IEEE 
+  International  Conference  on  Mechatronics,  DOI: 
+10.1109/ICMECH.2006.252585  
+   
+[14]Harsch, A., Delang K., Bdiwi, M., Breitfeld M., P.M., 2017. 
+Fig. 10. Future work based on VariPath database  
+Safe Human-Robot-Collaboration (HRC) based on a new 
+The  collected  dataset  can  be  easily  upgraded  by  concept  considering  human  movement  variability, 
+Vancouver. 
+investigation other scenarios. In other words, the influence of   
+other variables on the human pathways and behavior in the 
+industrial  sectors  could  be  defined  and  modelled.  One 
+Interesting scenario is by modelling the pathway variance and 
+1826
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:11:38 UTC from IEEE Xplore.  Restrictions apply. 

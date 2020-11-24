@@ -1,0 +1,531 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Learning How to Walk: Warm-starting Optimal Control Solver
+with Memory of Motion
+Teguh Santoso Lembono1,2 Carlos Mastalli3 Pierre Fernbach3 Nicolas Mansard3 Sylvain Calinon1,2
+Abstract—In this paper, we propose a framework to build Hpp
+Motion Memory
+a memory of motion for warm-starting an optimal control OCSolver
+Generation ofMotion
+solver for the locomotion task of a humanoid robot. We use
+HPPLoco3D,aversatilelocomotionplanner,togenerateofﬂine
+a set of dynamically consistent whole-body trajectory to be Hpp
+stored as the memory of motion. The learning problem is
+formulated as a regression problem to predict a single-step Crl
+motion given the desired contact locations, which is used as a OCSolver
+buildingblockforproducingmulti-stepmotions.Thepredicted
+motion is then used as a warm-start for the fast optimal
+control solver Crocoddyl. We have shown that the approach Fig.1. Twoapproachesthataretested.InApproach1(dashedgreen),the
+manages to reduce the required number of iterations to reach motion generation using HPP Loco3D produces the dataset HPP, while in
+∼ ∼
+theconvergencefrom 9.5toonly 3.0iterationsforthesingle- Approach2(solidblue),thedatasetHPPisfurtheroptimizedbytheoptimal
+stepmotionandfrom∼6.2to∼4.5iterationsforthemulti-step controlsolver(Crocoddyl)toproducethedatasetCrl.Ineachapproach,the
+motion, while maintaining the solution’s quality. memoryofmotionisusedforwarm-startingtheoptimalcontrolsolver.
+I. INTRODUCTION
+walkingmotions.Wethentrainfunctionapproximatorsusing
+Legged locomotion is often achieved by ﬁrst computing the database to generate the warm-starts for Crocoddyl.
+a sequence of contacts, generating a stable centroidal trajec- The memory of motion concept has been used in other
+tory, and ﬁnally computing a whole-body motion through works, e.g. for bicopter and quadcopter [13], serial manipu-
+inverse dynamics [1][2]. However, this approach cannot lators [14][15][16], and humanoid manipulation task [17].
+properly regulate angular momentum because (a) centroidal However, none of them involves locomotion tasks except
+trajectory optimization [3][4] does not consider the limbs in [18], where a trajectory library is constructed for the
+momenta,and(b)whole-bodycontrol[5][6]isinstantaneous LittleDog robot. Their work does not involve warm-starting
+control action that theoretically cannot properly regulate an optimization solver. Instead, the sequence of joint conﬁg-
+the angular momentum since it represents a nonholonomic urations retrieved from the library is used directly, with an
+constraint on the multibody dynamics [7]. integralcontrollertocorrectforerrors.Thelibraryiscreated
+Recently, optimal control is getting more attention in by using a joystick to move LittleDog across the terrain.
+legged robots due to (a) its ability to properly control Compared to [18], our approach of using HPP Loco3D
+angular momentum [8], and (b) they can be deployed for to build the library, function approximations to learn the
+real-time control [9][10]. In this vein, we have proposed motion,andtheoptimalcontrolsolverCrocoddyltooptimize
+an efﬁcient multi-contact optimal control framework called the motion is more versatile and applicable to higher DoFs
+Crocoddyl [11]. This framework relies on a novel multiple- robots with more complex dynamics, such as the humanoid
+shooting optimal control solver called Feasibility-prone Dif- robot Talos [19] considered in this work.
+ferential Dynamic Programming (FDDP). We have shown
+A. Contribution
+that Crocoddyl can generate highly-dynamic manuveurs for
+various legged robots such as iCub, Talos and ANYMal. Our contribution in this paper is as follows. Firstly, we
+As a locally optimal solver, providing warm-starts (i.e., propose a framework for learning a memory of motion to
+good initial guesses) to Crocoddyl can improve its real- warm-start a multi-contact optimal control solver (Fig. 1).
+timeperformanceinModelPredictiveControl(MPC)setting We generate ofﬂine a database of dynamically consistent
+signiﬁcantly. In this work, we use the concept of memory and collision-free motions using HPP Loco3D to build the
+of motion to generate the warm-starts for Crocoddyl, to memory of motion, which is then used to warm-start the
+avoid poor local optima while speeding up the convergence. optimalcontrolsolverCrocoddylonline.Westudytheeffect
+Using HPP Loco3D [12], a versatile locomotion framework of having different solvers for the ofﬂine and online com-
+for legged robots, we build ofﬂine a database of humanoid putations, and describe how we tackle this problem. Finally,
+we propose a method that learns single-step motions based
+1 Idiap Research Institute, Martigny, Switzerland 2 EPFL, Lausanne, on function approximations, which are then used to build
+Switzerland 3 GepettoTeam,LAAS-CNRS,Toulouse,France. multi-step motions.
+This work was supported by the European Union under the EU
+The outline of the paper is as follows. In Section II, the
+H2020collaborativeprojectMEMMO(MemoryofMotion,http://www.
+memmo-project.eu/),GrantAgreementNo.780684. overall framework and the learning method are presented.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1357
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. Section III presents the simulation results, both for the former generates conservative and stable motions, while the
+single-step and multi-step locomotions. Finally, Section IV latter uses the full dynamics that optimally reduces the
+concludes the paper and discuss some ideas for the future joint torques and contact forces. Therefore, warm-starting
+work. Crocoddyl using HPP Loco3D output will require additional
+iterationsduringtheonlinecomputationtoreﬁnethemotion
+II. METHOD according to its optimality criteria, which is undesirable.
+A. Problem Deﬁnition
+We overcome this problem by leveraging both HPP
+We consider the problem of generating whole-body lo- Loco3D and Crocoddyl for building the memory. That is,
+comotion of a biped robot from one location to another we take the motion samples generated by HPP Loco3D and
+in a known environment and a ﬂat terrain. The desired optimize them using Crocoddyl. The resulting output is then
+output consists of the robot joint conﬁguration trajectory saved as the new memory of motion. By doing this, we
+∈ R × ∈ R ×
+q Dq T and the control input trajectory u Du T, combine the beneﬁts of both frameworks: we can have a
+where D ,D ,T are the joint conﬁguration dimension, the sequence of stable footholds (HPP Loco3D) with optimal
+q u
+control dimension, and the number of time steps. q includes whole-body motions (Crocoddyl). We will demonstrate that
+both the trajectory of the root (i.e., the hip joint) and the this will yield improvement in the quality of the warm-
+joint positions, while u consists of the joint torques at each starts. In this work, we refer to the database containing the
+joint.Thejointvelocityandaccelerationtrajectoriescanalso HPP Loco3D motion samples as Database Hpp, and the
+beincluded,butweonlyconsiderthejointconﬁgurationand one containing the optimized Crocoddyl motion samples as
+thecontroltrajectoryhere.Togeneratethesetrajectories,we Database Crl.
+use a fast optimal control solver Crocoddyl as the online In what follows, we describe in details HPP Loco3D and
+solver. Our aim in this work is to provide good warm-starts Crocoddyl frameworks.
+toCrocoddylusingamemoryofmotionsuchthatthenumber
+1) HPP Loco3D: The planning framework proposed in
+of solver iterations to reach convergence can be reduced.
+HPPLoco-3Dgeneratesdynamicallyconsistentandcollision
+free multi-contact whole-body motion for legged robot. It
+B. Overall Framework
+takesasinputthemodeloftheenvironmentandaninitialand
+Intheproposedmemoryofmotionapproach,thechoiceof
+goal poses of the robot’s root. Optionally, some additional
+the ofﬂine and online solver is crucial. The ofﬂine solver is
+constraints may be speciﬁed, such as velocity bounds or a
+tobuildthedatabaseofmotions,whiletheonlinesolveristo
+set of initial and ﬁnal contact positions. This framework
+controltherobotinrealtime.Theonlinesolverhastobefast
+decouples the motion planning problem into several sub-
+and efﬁcient, hence it is usually only locally optimal, such
+problems to be solved sequentially. First, the guide planning
+as Crocoddyl in this work. The ofﬂine solver, on the other
+produces a rough initial guess of the root path of the
+hand,isusedtogeneratethedatabaseofﬂine,sothespeedis
+robot [12][21]. Then, a contact planner produces a feasible
+less important. There are two alternatives: either the ofﬂine
+sequence of contacts following the root path [12][22]. After
+solveristhesameastheonlinesolver,oradifferentone.The
+that,anoptimalcentroidaltrajectorysatisfyingthecentroidal
+advantage of choosing the same solver is that the motion in
+dynamic constraints for the given contact points is com-
+the database would then have the same characteristics (e.g.,
+puted [3]. Finally, a second order inverse dynamic solver1
+optimality)astheonlinesolver,whichisdesirable.However,
+generates a whole-body motion, following the references of
+since the solver would only be locally optimal, it is difﬁcult
+the contact locations and the centroidal trajectory.
+to use it for generating a good database without providing
+2) Crocoddyl: It is a framework for multi-contact op-
+warm-starts to the solver.
+timal control. Given a predeﬁned sequence of contacts, it
+The second alternative uses a different solver for building
+computes efﬁciently the state trajectory and control policy
+thedatabase,e.g.amoreglobalplannerthatcansolvevarious
+by using sparse analytical derivatives and by exploiting the
+taskswithoutrequiringwarm-starts.Thisistheapproachthat
+problem structure inherited from the dynamic programming
+we take, as can be seen in Fig. 1. HPP Loco3D [20], a
+principle. Its optimal control algorithm, called feasibility-
+locomotion framework for multi-contact locomotion, is used
+pronedifferentialdynamicprogramming(FDDP),hasagreat
+astheofﬂinesolver.Theframeworkisversatileandhasbeen
+globalization strategy and similar numerical behavior to
+applied to both biped and quadruped robots. HPP Loco3D
+multiple-shooting methods [11]. During the numerical op-
+can compute the sequence of stable contacts to achieve the
+timization, FDDP computes the search direction and length
+locomotiontask,whichcannotbedoneyetinCrocoddyl.We
+through backward and forward passes, respectively. Unlike
+use HPP Loco3D to generate motion samples corresponding
+theclassicalDDP,thebackwardpassacceptsinfeasiblestate-
+to various tasks and store them as the memory of motion.
+controltrajectorieswhichisacriticalaspecttowarm-starting
+However,theissuewiththisapproachisthatthemotionin
+the solver from the memory of motion; the forward pass
+the database might not be considered optimal by Crocoddyl,
+simulatesproperlyinfeasiblesearchdirection,obtainedinthe
+because HPP Loco3D does not properly regulate angular
+backward pass, which improves the algorithm exploration.
+momentum and uses heuristics for deﬁning the swing-foot
+trajectories. Indeed, there are qualitatively different motion
+characteristics between HPP Loco3D and Crocoddyl. The 1https://github.com/stack-of-tasks/tsid
+1358
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. C. Learning Strategies two function approximation techniques: Gaussian process
+regression (GPR) and Gaussian mixture regression (GMR).
+One important question that needs to be considered is,
+what do we expect the memory to learn? Should it learn
+Gaussian Process Regression (GPR)
+directly how to move from one location to another? while
+thisisindeedpossible,suchmethoddoesnotgeneralizevery
+GPR [26] is a non-parametric method which improves its
+well, even in a given environment. Instead, we decompose (cid:0) (cid:1)
+accuracy as the number of datapoints increases. Given the
+thedataintosingle-stepmotions,andweretrieveamulti-step { }
+database X,Y , GPR assigns a Gaussian prior to the joint
+trajectory as a combination of single-step motions. | N
+probability of Y, i.e., p(Y X) = µ(X),K(X,X) .
+1) Learning Single-step Motion: Following our previous
+µ(X) is the mean function and K(X,X) is the covariance
+work [23], we formulate the problem of learning the single-
+matrix constructed with elements K = k(x ,x ), where
+step motion as a regression problem to approximate the ij i j
+→ k(x ,x ) is the kernel function that measures the similarity
+mapping f : x y, where x is the task and y is the betwieenj the inputs x and x . In this paper we use RBF as
+corresponding trajectory output. We separate the database i j
+the kernel function, and the mean function µ(X) is set to
+into left-leg and right-leg movements, as this yields better
+zero, as usually done in GPR.
+results than combining both and let the memory learns how ∗ ∗
+To predict the output y given a new input x , GPR
+to choose the leg. Each motion starts with the root position
+constructs the joint probability distribution of the training
+at the origin.2 The task is deﬁned as the initial and goal
+∈ R ∈ R data and the prediction, and then conditions on the training
+foot poses, x = [cl0,cr0,c∗T] 9, where c 3 is the data to obtain the predictive distribution of the output,
+foot pose (2D position and orientation), the∗subscripts l,r p(y∗| x∗) ∼ N(m,Σ), where m is the posterior mean
+correspond to the left and right foot, while is either l for computed as
+the left-leg or r for the right-leg database. T is the ﬁnal ∗ −
+time step. y can be either the joint conﬁguration trajectory m=K(x ,X)K 1(X,X)Y(X), (2)
+∈ R × ∈ R ×
+q Dq T or the control trajectory u Du T. We then and Σ is the posterior covariance which provides a measure
+apply dimensionality reduction and function approximation of uncertainty on the output. In this work we simply use the
+techniques to solve the regression problem. posterior mean m as the output, i.e., y∗ =m.
+∈ R ×
+Since the dimension of y D T is high, we need to
+ﬁnd a smaller representation of y. First, we represent the Gaussian Mixture Regression (GMR)
+trajectory of each dimension of y as the weight of radial { }
+basis functions (RBFs), as commonly done in probabilistic Given the training database X,Y GMR constructs the
+movementprimitives[24][25].Lety ∈RT bethetrajectory joint probability of (x,y)(cid:88)as a mixture of Gaussians,
+i
+oasf t[hφe0i,t.h.d.i,mφeKn−si1o]n∈ofRyT.×WKe,cwanhedreeﬁnφekth∈e bRaTsisismtahtreixkΦth p(x,y)= K πkN(µk,Σk), (3)
+basis function, deﬁned as a Gaussian function centered at
+k=1
+the kth mean. The means are distributed equally along the where πk, µk, and Σk are the k-th component’s mixing
+time axis T, whereas the variance is chosen to be equal for coefﬁcient, mean, and covariance, respectively. Let θ =
+{ }
+all the basis functions and to have sufﬁcient overlap. y can π ,µ ,Σ K , denoting the GMR parameters to be de-
+then be represented as the weights of these basis functiions, termk inekd fr(cid:18)komk=th1(cid:19)e data. (cid:18) (cid:19)
+We can decompose µ and Σ according to x and y as
+y =Φw , (1) k k
+i i
+µ Σ Σ
+∈ R µ = k,x and Σ = k,xx k,xy . (4)
+where w K can be computed by standard linear least k µ k Σ Σ
+i k,y k,yx k,yy
+squares algorithm. This reduces the number of variables ∗
+Given a query x , the predictive distribution of y can then
+for each dimension from T, which is usually large, to computed by condition(cid:88)ing on x∗,
+K which can be much smaller. We can then stack the
+weights corresponding to all dimensions of y and obtain | ∗ K | ∗ | ∗
+∈ R p(y x ,θ)= p(k x ,θ)p(y k,x ,θ), (5)
+w = [w ,...,w ,...,w − ] DK. Each y has the
+0 i D 1
+corresponding weight vector w. | ∗ k=1 ∗
+where p(k x ,θ) is the probability of x belonging to the
+Now let’s consider all the N samples in the database. We
+k-th component, (cid:80)
+can apply principal component analysis (PCA) to further
+N ∗|
+roendluycMe thperindcimipeanlscioonmpoofnwentosvteorotbhtiasindayˆtab∈asReMb.yWkeeehpainvge p(k| x∗,θ)= πKk π(xN(xµ∗k|,µx,Σ,kΣ,xx) ), (6)
+thus reduced the dimension of y from DT to M. Inverse and p(y| k,x∗,θ) is th(cid:16)e pi=re1dicitive distribi,uxtioni,oxfxy accord-
+transformationfromyˆtoyisamatrixmultiplicationthatcan ing to the k-th component,
+beperformedquickly.Theregressionproblemthenbecomes (cid:17)
+f : x → yˆ. To solve the regression problem, we consider p(y| k,x∗,θ)=N µ +Σ Σ−1 (x∗−µ ),
+k,y k,yx k,xx k,x
+− −
+2Withoutanylossofgenerality,aswecanalwaystransformthecoordinate Σ Σ Σ 1 Σ , (7)
+system k,yy k,yx k,xx k,xy
+1359
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. TABLEI
+whichisaGaussiandistributionwiththemeanbeinglinearin
+∗ COMPARINGTHEACCURACYOFGPRANDGMR
+x .Theresultingpredictivedistribution(5)isthenamixture
+∗
+of Gaussians. The point prediction y can be obtained DatabaseHpp DatabaseCrl
+from this distribution by applying moment matching to the Method Traj.Err. ContactErr. Traj.Err. ContactErr.
+distribution in (5) to approximate it by a single Gaussian, ± ± ± ±
+and use the mean of the Gaussian as the desired output y∗, GGPMRR 192.5.339±45..6030 00..0173±00..0035 1138..0541±66..1850 00..0049±00..0024
+± ± ± ±
+see [25], [27] for details. k-NN 18.78 4.96 0.49 0.15 29.93 9.02 0.51 0.10
+2) Constructing Multi-step Motion: To use the single-
+step motion for generating multi-step motions, we have to
+transform the coordinate system at each step. Let’s ﬁrst and Ntest = 200. We applied RBF and PCA to reduce the
+assume that we have the planned sequence of contacts (i.e., dimensions of q and u with K = 60 and M = 60, as
+{ } −
+foot poses), C P 1, where C =(c ,c ) is the contacts determined empirically.
+i i=0 i li ri
+atithfootstepandP isthetotalnumberoffootsteps.Assume, We proceed as follows. First, we evaluate the accuracy
+without loss of generality, that the motion starts at zero performance of GPR and GMR in approximating the map-
+root position horizontally. The ﬁrst step can be obtained by ping f. The warm-starts generated by GPR and GPR are
+querying the single-step memory directly to move from C then compared to the cold-start in terms of the Crocoddyl
+0
+toC ,obtainingy0.TomovefromC toC ,weﬁrstneedto performance, i.e., the number of iterations until convergence
+1 1 2
+shift the coordinate system such that the current root (based and the resulting trajectory cost. Finally, we also compare
+onthelastconﬁgurationaty0)isinzerohorizontalposition. the result of warm-starts using only q to using both q and
+The motion from C to C can then be queried from the u. For all comparisons, we use both the databases Hpp and
+1 2
+memory to obtain y1, and this is iterated until C − to Crl and compare their performance.
+{ } − P 1
+obtain yi P 1. Finally, each trajectory yi is transformed
+i=0 A. Comparing GPR and GMR Accuracy
+back to the original coordinate system and concatenated as
+a single trajectory y. WetrainGPRandGMRonthereduced-dimensiondataset
+{ } − { }
+The contact sequence Ci Pi=01 can be obtained from x,yˆ for both databases Hpp and Crl with Ntrain samples.
+another planner, such as RB-PRM [12]. The alternative is The task x is deﬁned as the initial and goal foot poses,
+∗
+to also learn it from the database. In this work we assume x = [c ,c ,c∗ ] where = l for the left-leg movement
+∗ l0 r0 T
+that the contact sequence is already given, and the contact and = r for the right-leg movement. The output y is
+sequence learning will be considered in future work. deﬁned here as the joint conﬁguration trajectory q, and yˆ is
+its smaller dimension representation. For each x in the Ntest
+III. EXPERIMENTS samples,weuseGPRandGMRtopredictthecorresponding
+trajectory y, and the accuracy is evaluted against the true
+To evaluate the proposed approach, we conduct several (cid:80)
+trajectory in the database. The trajectory error (rad) is
+experiments with the humanoid robot Talos in simulation.
+calculated as the difference between the true and predicted
+The robot joint conﬁguration consists of 3 DoFs root posi- || − || (cid:80)
+trajectory, i.e. 1 Ntest yi y˜i , whereas the contact
+tion, 3 DoFs root orientation (described in quaternion), and error(m)isdeﬁNnteesdt asi=th1edifference2betweenthefootposes
+32 joint angles (D = 39), while the control input consists || − ||
+q of the true and predicted trajectory, 1 Ntest Ci C˜i .
+of 32 joint torques (Du = 32). First, HPP Loco3D is used The results can be seen in TablNeteIst (avi=er1aged over th2e
+to generate N =1200 samples of one-step motion (right-leg
+left and right leg movements). We compare against k-NN
+and left-leg movement in equal proportions), starting from
+with k = 1 as a baseline, to demonstrate that the proposed
+the initial contact (c ,c ) to the goal contact (c ,c ).
+l0 r0 { lT rT} algorithmindeedgeneralizeswellandthegoodperformance
+One sample thus consists of (c ,c ),(c ,c ),q,u .
+l0 r0 lT rT is not due to having a very dense database. GPR overall has
+These are stored as Database Hpp.3 Next, each sample is
+the lowest errors in both criteria and both databases. GMR
+optimized using Crocoddyl, and the resulting samples are
+hashighererrorsthanGPRbutstilloutperformsthebaseline
+stored as Database Crl. The cost function in Crocoddyl
+k-NN by a large margin. Some example of the motions can
+consistsofstateandcontrolregularization(aroundastanding
+befoundinFig.2.WecanseethatmotionpredictedbyGPR
+pose and zero, respectively), and contact placement. Since
+ﬁt the desired contact locations very well.
+we need high-quality database for the memory of motion,
+− Furthermore, for the subsequent results we will use the
+we use a small convergence threshold of 10 5 and the
+subscriptsHppandCrlforthefunctionapproximatorstrained
+maximum number of iterations is set to be 50. The time
+on the databases Hpp and Crl, respectively.
+interval in HPP Loco3D is 1 ms and 40 ms, respectively,
+so the HPP Loco3D data is subsampled to Crocoddyl’s
+B. Single-step Motion: Warm-start vs Cold-start
+interval for the optimization. Both databases will be used
+In this section we compare the results of warm-starting
+and the performance will be compared. The databases are
+Crocoddylusingthefunctionapproximatorsagainstthecold-
+splitintothetrainingandthetestdataset,withNtrain =1000 start, i.e., using zero initial guess. For each x in the Ntest
+samples, GPR and GMR are queried to obtain the initial
+3The database is available at https://github.com/
+MeMory-of-MOtion/docker-loco3d. guess y, deﬁned here as the joint conﬁguration trajectory
+1360
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. Fig. 2. Examples of predicting single-step motions. Warm-start produced by Top: GPR, Middle: GMR, and Bottom: k-NN. Left: left foot movement.
+Right:rightfootmovement.Thegreen,blueandredboxcorrespondtotheinitialleft,theinitialright,andthegoalcontactpose,respectively.
+TABLEII
+q. We do not predict the trajectory of the control input
+COMPARINGWARM-STARTVSCOLD-START:SINGLE-STEP
+here, but instead calculate it from q assuming quasi-static
+movement.Thiscomputedcontrolinputtrajectoryisdenoted
+Method SuccessRate Cost Num.Iteration
+as u . The initial guess is used to warm-start Crocoddyl, ± ±
+0 Cold-start 98.50 55.56 8.32 9.52 3.94
+and the result is compared against the cold-start. We also GPR 99.00 55.27±8.01 5.01±0.74
+Hpp ± ±
+compare the effect of using Database Hpp and Crl. We use GMRHpp 100.00 55.31±7.99 4.85±0.66
+a large convergence threshold (10−2) for Crocoddyl here, GGPMRRCrl 110000..0000 5555..3322±77..9999 33..0064±00..4415
+Crl
+based on the assumption that at online computation a very
+reﬁned optimal motion is not really necessary. The number
+∼
+of iterations is also limited to 20. The query time is 5ms Crl have lower number of iterations, which justify our step
+∼
+for GPR and 10ms for GMR in python implementation. of optimizing the HPP Loco3D dataset by Crocoddyl. The
+The results can be seen in Table II. The solver is consid- dataset in Crl contain motion samples that are optimal
+eredsuccessfulifitﬁndsafeasibletrajectorywithinthemax- according to Crocoddyl, and therefore they perform better
+imum number of iterations. We see from the table that the in warm-starting Crocoddyl.
+warm-starts results consistently outperform the cold-starts;
+it justiﬁes our assumption that warm-starting Crocoddyl can C. Single-stepMotion:EvaluatingWarm-startsComponents
+speed-up the computation time for online MPC. In Section III-B, we only predict the joint conﬁguration
+Although in Table I we see that the accuracy of GPR trajectory q for warm-starting Crocoddyl while the control
+outperformsGMRquitesubstantially,thewarm-startingper- trajectory u is computed based on the predicted q. In this
+formance in Table II turns out to be very similar, with GPR section we evaluate the different performances if we also
+having very slightly better performance. This is due to the predict u, or use zero control trajectory as warm-start. We
+fact that the initial guesses produced by GPR and GMR traintwodifferentGPRsfortheprediction,oneforpredicting
+still go through an optimization process in Crocoddyl, and q and the other one for predicting u.
+hence the small difference between the predictions does not TableIIIshowsthecomparisonresults.(q,u )denotesthe
+0
+affect the results much. This means that while in standard warm-startsusingthepredictedqwhilethecontroltrajectory
+regression tasks the accuracy is highly important, it may be is computed as u , the same as in the previous subsection.
+0
+less important in tasks such as producing warm-starts, as (q)denotesthewarm-startsusingonlythejointconﬁguration
+long as the predicted initial guesses are sufﬁciently close to trajectorywhilethecontroltrajectoryissettobezero.While
+the optimal solutions. thecostremainsthesame,thenumberofiterationsincreases
+Finally, we compared the results between the function when the control trajectory is omitted from the warm-starts.
+approximators trained on Database Hpp (GPRHpp, GMRHpp) (q,u) denotes the warm-starts using both predicted joint
+and Crl (GPR , GMR ). Those trained on the database conﬁgurationandcontroltrajectory,whichhassimilarresults
+Crl Crl
+1361
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. (a)
+Fig.3. Examplesofpredictingamulti-stepmotionbyGPR.
+TABLEIII TABLEIV
+COMPARINGWARM-STARTCOMPONENTS:SINGLE-STEP COMPARINGWARM-STARTVSCOLD-START:MULTI-STEP
+Method SuccessRate Cost Num.Iteration Method SuccessRate Cost Num.Iteration
+± ± ± ±
+((((Cqqquo),,)lduu-0)st)art 119990067800.....5550000000 5555555555.....0333522666±±±±87778.....1999399952 53692.....3085904323±±±±20023.....1444991564 CGGGoPMPlRRdR-HCsHrptlppaprt 111100000000....00000000 88886666....33349867±±±±22223333....10116726 6674....14257094±±±±1010....57352325
+GMR 100.00 86.51 23.22 4.71 0.70
+Crl
+to (q,u ) except for the slightly lower number of iterations. IV. CONCLUSIONANDFUTUREWORK
+0
+Finally, (u) denotes the warm-starts using only the control We have presented a framework for learning a memory of
+trajectory while the joint conﬁguration trajectory is set to
+motiontowarm-startanoptimalcontrolsolver.Theproposed
+zero, and cold-start means warm-starting using zero joint
+approach manages to reduce the average number of solver
+conﬁguration and control trajectory. ∼ ∼
+iterations from 9.5 to only 3.0 iterations for the single-
+∼ ∼
+Comparing (q,u) and (q,u ), we conclude that predict- step motion and from 6.2 to 4.5 iterations for the multi-
+0
+ing the control trajectory from the memory does not give step motion, while maintaining the solution’s quality.
+signiﬁcant beneﬁt as compared to computing it based on q. Thispapershowsapreliminaryresultofwarm-startingan
+However,controltrajectoryisstillimportanttobeincludedin optimalcontrolsolver.Inthecurrentformulation,Crocoddyl
+thewarm-starts,asomittingthemin(q)increasesthenumber does not include constraints such as torque limit or obstacle
+of iterations. Finally, comparing (q) and (u), we conclude avoidance,andweareworkingtowardsthisdirection.When
+that warm-starting using only the joint conﬁguration trajec- the optimal control formulation becomes more realistic and
+toryperformsbetterthanusingonlycontroltrajectory,which complex, the solver would need even higher computational
+has higher cost and number of iterations. time, and the proposed warm-starting approach would po-
+tentially be even more useful. The ﬁnal goal is to use the
+whole framework to control the real robot using MPC.
+D. Multi-step Motion: Warm-start vs Cold-start
+In this work, we decompose the multistep locomotion
+Finally,weusethesingle-stepmotionsasabuildingblock into single-step motions, with the initial and goal contact
+for multi-step locomotion, as described in Section II-C. We locationsasthetaskthatneedstobeprovidedbysomeother
+use HPP Loco3D to generate 50 contact sequences, each methods. Another potential strategy is to deﬁne the task to
+consists of P =3 footsteps. GPRHpp, GMRHpp, GPRCrl and be the ﬁnal root pose instead of the contact location. The
+GMR generatetheinitialguessesofthejointconﬁguration memory will then determine the contact location to reach
+Crl
+trajectory q while the control trajectory is computed based the desired root pose. This may allow more ﬂexibility in
+on q, as in Section III-B. The warm-starts are then given generatingthemulti-stepmotions,asonlytheroottrajectory
+to Crocoddyl, and the results are presented in Table IV. needs to be provided instead of the contact sequence. An-
+Interestingly the Hpp database does not perform better than otherissuewiththesingle-stepdecompositionstrategyisthat
+the cold-start (indeed, it is the opposite). This could be due the predicted motion has zero velocity at the beginning and
+to the fact that we build the motion using a concatenation theendofeachstep.Wecanincludetheinitialandgoalroot
+of three single-step motions, each step starts and ends with velocity in the task deﬁnition, but the task space and hence
+zero velocity. The nonoptimality of the Hpp database, added therequirednumberofsampleswillincrease.Whilerandom
+with the nonoptimality of the multi-step motion strategy, sampling is used in this work to generate the tasks, active
+seem to render the warm-start to be not useful at all. On the learning [28] can reduce the required number of samples.
+contrary,warm-startingusingtheCrldatabasestillspeeds-up Finally, we plan to extend the approach to include multi-
+the convergence, although not as much as in the single-step contact locomotion with both hands and legs as potential
+case (Section III-B). An example of multi-step locomotion contacts,andlocomotionwithvaryingcontacts’heights(e.g.
+warm-start produced by GPR is given in Fig. 3. climbing stairs or uneven terrains).
+1362
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [15] N. Jetchev and M. Toussaint, “Trajectory prediction: learning to
+map situations to robot trajectories,” in Proc. Intl Conf. on Machine
+[1] A. W. Winkler, C. Mastalli, I. Havoutis, M. Focchi, D. G. Caldwell,
+Learning(ICML),2009.
+and C. Semini, “Planning and execution of dynamic whole-body
+[16] D. Berenson, P. Abbeel, and K. Goldberg, “A robot path planning
+locomotionforahydraulicquadrupedonchallengingterrain,”inProc.
+frameworkthatlearnsfromexperience,”inProc.IEEEIntlConf.on
+IEEEIntlConf.onRoboticsandAutomation(ICRA),2015.
+RoboticsandAutomation(ICRA),2012.
+[2] J. Carpentier and N. Mansard, “Multicontact locomotion of legged
+[17] W.Merkt,V.Ivan,andS.Vijayakumar,“Leveragingprecomputation
+robots,”IEEETransactionsonRobotics,vol.34,2018.
+with problem encoding for warm-starting trajectory optimization in
+[3] B.Ponton,A.Herzog,A.DelPrete,S.Schaal,andL.Righetti,“On
+complex environments,” in Proc. IEEE/RSJ Intl Conf. on Intelligent
+timeoptimizationofcentroidalmomentumdynamics,”inProc.IEEE
+RobotsandSystems(IROS),2018.
+IntlConf.onRoboticsandAutomation(ICRA),2018.
+[18] M. Stolle, H. Tappeiner, J. Chestnutt, and C. G. Atkeson, “Transfer
+[4] B.Aceituno-Cabezas,C.Mastalli,H.Dai,M.Focchi,A.Radulescu,
+ofpoliciesbasedontrajectorylibraries,”inProc.IEEE/RSJIntlConf.
+D. G. Caldwell, J. Cappelletto, J. C. Grieco, G. Fernandez-Lopez,
+onIntelligentRobotsandSystems(IROS),2007.
+and C. Semini, “Simultaneous Contact, Gait and Motion Planning
+[19] O.Stasse,T.Flayols,R.Budhiraja,K.Giraud-Esclasse,J.Carpentier,
+forRobustMulti-LeggedLocomotionviaMixed-IntegerConvexOp-
+J. Mirabel, A. Del Prete, P. Soue`res, N. Mansard, F. Lamiraux, J.-
+timization,”IEEERoboticsandAutomationLetters(RA-L),2017.
+P. Laumond, L. Marchionni, H. Tome, and F. Ferro, “Talos: A new
+[5] A.DelPreteandN.Mansard,“Robustnesstojoint-torque-trackinger-
+humanoid research platform targeted for industrial applications,” in
+rorsintask-spaceinversedynamics,”IEEETransactionsonRobotics,
+Proc.IEEEIntlConf.onHumanoidRobots(Humanoids),2017.
+vol.32,2016.
+[20] J.Carpentier,A.DelPrete,S.Tonneau,T.Flayols,F.Forget,A.Mif-
+[6] S.Fahmi,C.Mastalli,M.Focchi,andC.Semini,“Passivewhole-body
+sud,K.Giraud,D.Atchuthan,P.Fernbach,R.Budhiraja,M.Geisert,
+controlforquadrupedrobots:Experimentalvalidationoverchallenging
+J. Sola, O. Stasse, and N. Mansard, “Multi-contact locomotion of
+terrain,”IEEERoboticsandAutomationLetters(RA-L),vol.4,2019.
+leggedrobotsincomplexenvironments–theloco3dproject,”inWork-
+[7] P.-B. Wieber, “Holonomy and nonholonomy in the dynamics of
+shoponChallengesinDynamicLeggedLocomotion,2017.
+articulated motion,” in Fast motions in biomechanics and robotics.
+[21] P. Fernbach, S. Tonneau, A. D. Prete, and M. Ta¨ıx, “A kinody-
+Springer,2006.
+namicsteering-methodforleggedmulti-contactlocomotion,”inProc.
+[8] R.Budhiraja,J.Carpentier,C.Mastalli,andN.Mansard,“Differential
+IEEE/RSJIntlConf.onIntelligentRobotsandSystems(IROS),2017.
+dynamic programming for multi-phase rigid contact dynamics,” in
+[22] P. Fernbach, S. Tonneau, and M. Ta¨ıx, “Croc: Convex resolution of
+Proc.IEEEIntlConf.onHumanoidRobots(Humanoids),2018.
+centroidal dynamics trajectories to provide a feasibility criterion for
+[9] J. Koenemann, A. Del Prete, Y. Tassa, E. Todorov, O. Stasse,
+themulticontactplanningproblem,”inProc.IEEE/RSJIntlConf.on
+M.Bennewitz,andN.Mansard,“Whole-bodymodel-predictivecon-
+IntelligentRobotsandSystems(IROS),2018.
+trolappliedtothehrp-2humanoid,”inProc.IEEE/RSJIntlConf.on
+[23] T. S. Lembono, A. Paolillo, E. Pignat, and S. Calinon, “Memory of
+IntelligentRobotsandSystems(IROS),2015,pp.3346–3351.
+motionforwarm-startingtrajectoryoptimization,”IEEERoboticsand
+[10] M. Neunert, F. Farshidian, A. W. Winkler, and J. Buchli, “Trajec-
+AutomationLetters(RA-L),vol.5,no.2,pp.2594–2601,April2020.
+tory optimization through contacts and automatic gait discovery for
+[24] A.Paraschos,C.Daniel,J.R.Peters,andG.Neumann,“Probabilistic
+quadrupeds,” IEEE Robotics and Automation Letters (RA-L), vol. 2,
+movementprimitives,”inAdvancesinNeuralInformationProcessing
+2017.
+Systems(NIPS),2013.
+[11] C. Mastalli, R. Budhiraja, W. Merkt, G. Saurel, B. Hammoud,
+[25] S. Calinon, “Mixture models for the analysis, edition, and synthesis
+M. Naveau, J. Carpentier, L. Righetti, S. Vijayakumar, and
+of continuous time series,” in Mixture Models and Applications,
+N. Mansard, “Crocoddyl: An Efﬁcient and Versatile Framework for
+N.BouguilaandW.Fan,Eds. Springer,2019,pp.39–57.
+Multi-ContactOptimalControl,”inProc.IEEEIntlConf.onRobotics
+[26] C. Rasmussen and C. Williams, Gaussian Processes for Machine
+andAutomation(ICRA),2020.
+Learning. Cambridge,MA,USA:MITPress,2006.
+[12] S. Tonneau, A. Del Prete, J. Pettr, C. Park, D. Manocha, and
+[27] Z. Ghahramani and M. I. Jordan, “Supervised learning from incom-
+N.Mansard,“Anefﬁcientacycliccontactplannerformultipedrobots,”
+plete data via an EM approach,” in Advances in Neural Information
+IEEETransactionsonRobotics,vol.34,2018.
+ProcessingSystems(NIPS),1994.
+[13] N. Mansard, A. Del Prete, M. Geisert, S. Tonneau, and O. Stasse,
+[28] B.Settles,“Activelearningliteraturesurvey,”UniversityofWisconsin-
+“Using a memory of motion to efﬁciently warm-start a nonlinear
+Madison, Department of Computer Sciences, Tech. Rep. TR 1648,
+predictive controller,” in Proc. IEEE Intl Conf. on Robotics and
+2009.
+Automation(ICRA),2018.
+[14] C.LiuandC.G.Atkeson,“Standingbalancecontrolusingatrajectory
+library,” in Proc. IEEE/RSJ Intl Conf. on Intelligent Robots and
+Systems(IROS),2009.
+1363
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:29 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,549 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Metrically-Scaled Monocular SLAM using Learned Scale Factors
+W. Nicholas Greene Nicholas Roy
+Abstract—We propose an efﬁcient method for monocular
+simultaneous localization and mapping (SLAM) that is capa-
+ble of estimating metrically-scaled motion without additional
+sensors or hardware acceleration by integrating metric depth
+predictions from a neural network into a geometric SLAM
+factor graph. Unlike learned end-to-end SLAM systems, ours
+doesnotignoretherelativegeometrydirectlyobservableinthe
+images. Unlike existing learned depth estimation approaches,
+ours leverages the insight that when used to estimate scale,
+learned depth predictions need only be coarse in image space.
+This allows us to shrink our network to the point that per-
+forminginferenceonastandardCPUbecomescomputationally
+tractable.
+We make several improvements to our network architecture
+and training procedure to address the lack of depth observ-
+ability when using coarse images, which allows us to estimate
+spatially coarse, but depth-accurate predictions in only 30 ms
+perframewithoutGPUacceleration.Atruntimeweincorporate
+thelearnedmetricdataasunaryscalefactorsinaSim(3)pose
+graph. Our method is able to generate accurate, scaled poses
+without additional sensors, hardware accelerators, or special
+maneuvers and does not ignore or corrupt the observable
+epipolar geometry. We show compelling results on the KITTI
+benchmark dataset in addition to real-world experiments with
+a handheld camera.
+I. INTRODUCTION
+Theﬁeldofmonocularsimultaneouslocalizationandmap-
+ping (SLAM), in which both egomotion and environmental
+Fig. 1: Metric Monocular SLAM: Our method is capable of es-
+structure are estimated from a single moving camera, has
+timating metric camera motion from monocular images without
+undergone tremendous advances over the past twenty years. additional sensors or hardware acceleration by leveraging depth
+Early ﬁlter-based approaches [2] have quickly evolved to predictionsfromasmallneuralnetwork.Toprow:Inputimagefrom
+sophisticated, hierarchical, factor graph-based optimizations, theKITTIdataset[1].Secondrow:GroundtruthdepthsfromLIDAR
+scans. Third row: Coarse depthmap predicted with our network.
+such as the methods of [3]–[7].
+Bottom row: Resulting metrically scaled trajectory (blue) versus
+Due to the projective nature of cameras, however, these
+the groundtruth (red).
+monocular systems – which rely solely on the geometric
+contentoftheimages–canonlyestimatecameraegomotion have a number of drawbacks. Beyond the additional hard-
+and environmental structure up to an arbitrary scale factor. ware that must be calibrated and time-synchronized, these
+Additional information must be exploited to resolve the algorithms are difﬁcult to implement, often require expert
+metric scale of the solution. While leveraging priors over parameter tuning, are extremely sensitive to errors in the
+the camera’s altitude or the size of known objects in the accelerometer biases, and require high-acceleration motion
+scene [8] is possible, the current most popular technique is toexcitetheIMUandmakescaleobservable.(Thelastpoint
+to fuse the images with an inertial measurement unit (IMU), is particularly troublesome for mobile robot navigation as it
+which measures linear accelerations and angular velocities can signiﬁcantly complicate the motion planning problem.)
+at metric scale. To address these limitations, methods that apply end-
+Though signiﬁcant progress has been made on this front to-end deep learning techniques to the monocular SLAM
+[9]–[13], these existing visual-inertial SLAM approaches problem have appeared in recent years, spurred by the rapid
+adoption of deep, convolutional neural networks (CNNs) for
+Computer Science and Artiﬁcial Intelligence Laboratory,
+avarietyofcomputervisiontasks[14]–[18].Althoughthese
+Massachusetts Institute of Technology, Cambridge, MA 02139
+{ }
+wng,nickroy @csail.mit.edu end-to-end SLAM systems show promise, and can output
+This material is based upon work supported by the NSF Graduate scaled solutions, their tracking performance still lags behind
+Research Fellowship under Grant Number 1122374 and by the Army
+geometric approaches and they require GPU acceleration to
+Research Laboratory under Cooperative Agreement Number W911NF-17-
+2-0181.Theirsupportisgratefullyacknowledged. perform inference.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 43
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. Given that the relative geometry of the monocular SLAM network speciﬁcally for scale estimation and can thus shrink
+problem is directly observable from the image data, we the network to allow for fast inference without hardware
+believe a more targeted application of machine learning acceleration. We show compelling results on the KITTI
+(which does not ignore directly observable quantities in the benchmarkdatasetinadditiontoreal-worldexperimentswith
+sensor data) will ultimately lead to more robust systems. a handheld camera.
+To that end, we propose a monocular SLAM solution
+that combines metric information that can be inferred using II. RELATEDWORK
+a neural network with the state-of-the-art in factor graph- Applyingmachinelearningtosolveaspectsofthemonoc-
+based geometric SLAM. We ﬁrst train a small CNN to ular SLAM problem has seen a recent resurgence in the
+regressmetricdepthfrommonocularimagesgivencalibrated literature due to the increasing expressive power of deep
+stereo frames as training data. Unlike existing learned depth neural networks. While some methods target the monocular
+estimationapproaches[19]–[21],ourtechniqueleveragesthe visual odometry problem speciﬁcally [16], [17], single-view
+insightthatwhenusedtoestimatescale,theselearnedpredic- depth estimation has seen an explosion of progress in the
+tions need only be coarse in image space. This allows us to last decade. Initial methods used explicit supervision from
+shrinkournetworktothepointthatperforminginferenceon ground truth models or LIDAR scans to regress depth from
+a standard CPU becomes computationally tractable. Simply images [22], [23], while more recent approaches use self-
+downsampling the input images and training the network supervisionintheformofcalibratedstereoimageryinorder
+to minimize photoconsistency between stereo training pairs to regress depth [19], [21]. These self-supervised networks
+yields inaccurate depths, however, as the disparity between are increasingly augmented with separate pose estimation
+theleftandrightimagesdecreaseswithimageresolution.We modules so that they can be applied directly to monocular
+make several improvements to our network architecture and video instead of calibrated stereo imagery [14], [15], [18],
+trainingproceduretoaddressthislackofdepthobservability, [20].
+while keeping the efﬁciency that comes with using coarse Our approach is most similar to the hybrid
+input images. learned/geometric methods of [24]–[26], which combine
+First, although coarse images are used as input to the learned priors with geometric SLAM. CNN-SLAM [24]
+network at test time, we train on full resolution images and uses a CNN to predict a depthmap for each frame in a
+compute additional photoconsistency loss terms in a ﬁne-to- keyframe SLAM graph, which is then iteratively reﬁned and
+coarsemanner.Incorporatingtheselosstermsattrainingtime fused into a global map. DPC-Net [25] trains a network to
+means that photoconsistency errors that are only observable provide corrections to an existing visual odometry pipeline.
+at ﬁne image scales can still be used to learn the disparity DVSO [26] predicts a hypothetical stereo image from a
+at the coarser image scales that we care about. monocular image and then uses the pair of images to drive
+Second, we provide an additional supervision signal to a stereo visual odometry system [27].
+the network by estimating a full-resolution disparity map
+III. METHOD
+using conventional block-matching stereo. Although these
+directly-computed disparity maps can be sparse and noisy, A. Notation
+they nonetheless provide a loss signal that can allow the We represent the image taken at time k by the function
+network to learn the correct disparity values at coarse image I : Ω → R over the pixel domain Ω ⊂ R2. K ∈ R3×3
+k
+scales where photoconsistency may be insufﬁcient. denotes the intrinsic camera parameters. We represent the
+Theseimprovementsallowustoestimatespatiallycoarse, pose of the camera at time k relative to frame j by Tj ∈
+but depth-accurate predictions in only 30 ms per frame on SE(3). An element of the group of 3D similarity transfokrms
+a standard CPU. At runtime we divide the SLAM problem Sim(3)isdenotedbySj.Theperspectiveprojectionfunction
+k
+into a local visual odometry (VO) module and a global pose isdenotedbyπ(x,y,z)=(x/z,y/z).Vectorsrepresentedin
+graphmodule(seeFigure3).ThelocalVOmoduleperforms homogeneouscoordinatesaredenotedbyx¯ =(x,1)∈Rn+1
+conventional monocular SLAM over a small sliding window for x∈Rn.
+of keyframes, while the global pose graph incorporates Givenrectiﬁedstereoimages,weletD :Ω→Rrepresent
+l
+metricdepthmeasurementsfromthenetworktoconstrainthe the disparity map that warps the right image I to the left
+r
+solution scale. After each iteration of solving for the camera image I such that I (u) = I (u + D (u)). Similarly we
+l l r l
+poses and landmark positions, the scale of the global pose let D represent the disparity map that warps the left image
+r
+graph can be used to warp the local VO so that metrically to the right image. A disparity map D can be converted
+scaled geometry is available for the most recent image. to inverse depthmap Z given the horizontal focal length f
+x
+Our method has notable advantages over existing ap- of the cameras and the horizontal baseline B as Z(u) =
+proaches. Unlike inertial-based systems, we do not require D(u)/(Bf ).
+x
+extra sensors or special motion to generated scaled outputs.
+B. Single-view Depth Regression
+Unlike end-to-end learning-based systems, we do not ignore
+the observable epipolar geometry present in the live images Following the self-supervised approach of Godard et
+and can take advantage of factor graph optimization. Unlike al. [19], we estimate the metric inverse depthmap Z for a
+learned monocular depth estimation methods, we target the givenimagebytreatingitastheleftimageI ofacalibrated
+l
+44
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. stereo pair and training a CNN to predict the corresponding Input  ResBlock (Stride 2)
+ResBlock (Stride 1)
+right image I via the disparity maps D and D . We Image D0 ConvTranspose (Stride 2)
+r l r BilinearUpsampler
+therefore wish to learn a function f with parameters θ that Sigmoid
+maps I to I (and vice versa) via D and D : D1
+l r l r
+(D ,D )=f(I ;θ)
+l r l D2
+I (u)=I (u+D (u)) (1)
+l r l
+Ir(u)=Il(u+Dr(u)). Level D3
+d 
+WfunitchtioandlattahsaettmoefasstuerreesothpeairqsuaDlity=of{Ithl,eIrp}rejdiacntdionas,lowses Pyrami D4
+can estimate the paramet(cid:88)ers θ by solving the following
+optimization problem: D5
+∗
+θ =argmin l(f(I ;θ),I ,I ). (2)
+l l r
+θ ∈D D6
+Il,Ir Feature  Disparity 
+1) Network Architecture: We choose f to be a convo- Extractor Estimator Disparities
+lutional neural network for the power of these models to Fig. 2: Network Architecture: Our network follows the pyramidal
+capture complex patterns in image data, while still being structure of [21] with a series of feature extractor blocks and
+practical to train. Speciﬁcally, we base our network on the disparityestimatorblocksatseveralimagescales.Eachprocessing
+pyramidal model detailed by Poggi et al. [21] augmented blockiscomprisedofresidualblocks[28]withthenumberofﬁlters
+varying depending on the pyramid level.
+withresidualblocks[28].Thisnetworksigniﬁcantlyreduces
+the number of parameters required to regress disparity com- 2) LossFunction: Wetrainournetworktoregressdispar-
+paredtotheseminalapproachesof[15],[18],[19].Sincewe ities by minimizing a loss function composed of four terms:
+are interested in scale estimation, however, we can further a photoconsistency loss l , a left-right consistency loss l ,
+p lr
+simplify the network architecture. The model is built using a disparity regularization term l , and a supervision term l ,
+r s
+three main building blocks: a feature extractor block, a deﬁned at each image(cid:88)scale:(cid:16) (cid:17)
+disparity estimator block, and an upsampler block repeated
+at multiple image scales as shown in Figure 2. 6
+The feature extractor block is built using four 3 × 3 l(f(Il;θ),Il,Ir)= λp lp(Ili,Iˆli)+lp(Iri,Iˆri) +
+(cid:0) (cid:1)
+convolutional layers with ReLU activations [29] arranged i=0
+withskipconnectionsintotworesidualblocks[28].Theﬁrst λlr(cid:0)llr(Dli,Dri)+ (cid:1) (3)
+convolutionallayerintheblockalsoperformsdownsampling λ l (Di)+l (Di)
+r r l r r
+with a stride of 2. The number of ﬁlters depends on the
+λ l (Di)+l (Di) .
+image scale. The disparity estimator block is composed of a s s l s r
+series of four 3×3 residual layers, with the ﬁrst three using The photoconsistency term l measures the photometric
+p
+ReLU activations and the ﬁnal output layer using a sigmoid
+error between the input image I and the image predicted
+activationtoensurepositivedisparities.Thenumberofﬁlters using the estimated disparity maps ˆI. Following Godard et
+per layer in this block is 96, 64, 32, and 8, respectively. The
+al.[19],wesetl tobeacombinationofstructuralsimilarity
+p
+upsamplerblockissimplyatransposeconvolutionwithstride SSIM and a simple L(cid:88)error:
+1
+2 with the same number of ﬁlters as the input.
+Given an input image of a particular resolution, we deﬁne 1 1−SSIM(I(u),ˆI(u))
+7pyramidlevelsofinterest:L0(thebaseimage)throughL6 lp(I,ˆI)= N ∈ α 2 + (4)
+(the coarsest resolution). To ensure computational efﬁciency u Ω
+on constrained hardware, we only extract features from L3 (1−α)|I(u)−ˆI(u)|,
+to L6 by stacking feature extractor blocks with 16, 32, 64,
+and 128 ﬁlters at each respective scale. At L6, we attach where N is the number of pixels in the image at a given
+a disparity estimator block directly to the feature extractor scale and α > 0 controls the weighting between the SSIM
+outputs to yield D6 – the disparity map for the coarsest and L1 terms.
+image scale. For L3 to L5 we take the features from each The left-right consistency loss llr measures the discrep-
+scaleandconcatenatethemwiththosefromthenextcoarsest ancy between the left and right disparity maps after warping
+(cid:88)
+scale after passing them through an upsampler block. These them into each other:
+concatenated features are then fed into a disparity estima-
+1
+tor block to generate D3...D5. The ﬁnest disparity maps l (D ,D )= |D (u)−D (u+D (u))|+
+D0...D2 are generated by simple bilinear interpolation for lr l r N u∈Ω l r l (5)
+efﬁciency. This simple model is expressive enough to learn |D (u)−D (u+D (u))|.
+r l r
+high-quality (but coarse) disparity maps despite having only
+2.3 million trainable parameters. The disparity regularization term l penalizes non-smooth
+r
+45
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. 3) Backend: After a new keyframe is initialized and all
+new factors are added to the graph, we enqueue a solve
+operation that will take place in a background thread. The
+ReFparocjteocrstion  MeFtraicc tSorcsale  Loop Closure total cost represented by(cid:88)G can be w(cid:0)ritten as (cid:1)
+L
+MFaarcgtionral  OdFoamctoertry  EL(KL,ML)= ||rpijk TWi ,TWj ,lki || (9)
+∈F
+Local VO Global Pose Graph i,j,k L
+Fig.3:FactorGraphs:OurmonocularSLAMbackendiscomposed
+where||·|| representstheHubernormwithparameter>0.
+oftwofactorgraphs:alocalvisualodometry(VO)graph(left)anda 
+global pose graph(right) The local VO moduleestimates unscaled Thisobjectivefunctionisa(robust)sumofsquaredresid-
+camera poses and landmarks, while the global pose graph fuses uals, which we can optimize using the Levenberg-Maquardt
+marginalizedkeyframesfromthelocalVOmodulewithmetricscale algorithm [33], [34].
+factors generated by our neural network.
+4) Marginalization: Wemarginalizeoutoldkeyframesto
+(cid:88)
+ensurereal-timeprocessing.Supposewewishtomarginalize
+disparity maps where the image gradient is low:
+out keyframe k and its child landmarks. We will denote
+lr(D)= N1 ∈ e−||∇xI(u)||∇xD(u)+ (6) tthhiesfsaecttoorsf Fvariabtlheast bcyonvnyect=v{TtoWkG,{.ljkL}e}t. vWedethneonteﬁtnhde
+u Ω sep y L x
+e−||∇yI(u)||∇ D(u). variables in VL that are connected to Fsep, but are not in
+y v . The variables v and v and the factors F form a
+This loss is applied to both the left and right disparity maps. y x y sep
+subgraph G ⊂G . The cost associated with this subgraph
+Theﬁnalsupervisionlossls measurestheHubererrorbe- is given bysep L (cid:88) (cid:0) (cid:1)
+tween the estimated dispa(cid:88)rity maps D and D and disparity
+l r
+mapsgeneratedusingtraditionalblock-matchingB andB :
+l r E (v ,v )= ||r TW,TW,lk || . (10)
+sep x y p k j k 
+1 ∈F
+l (D)= ||D(u)−B(u)|| , (7) i,j,k sep
+s N ∈ 
+u Ω Linearizing r around the current estimates of v and v
+where  > 0 is the parameter that governs when the Huber yields a quadpratic cost in the tangent space of vx and vy.
+norm switches between squared and linear error. x y
+We can then eliminate the v component of the cost via the
+y
+C. Local Visual Odometry Schur complement, leaving a quadratic factor F on v .
+δ x
+OurlocalmonocularVOpipelineisdividedintoafrontend With vy eliminated, we remove the variables vy and the
+module that builds a factor graph G = (V ,F ) from factors Fsep from GL and add the marginal factor Fδ onto
+the raw image stream and a backend mLodule thLat oLptimizes the remaining variables vx. The marginalized keyframe TWk
+variablesVL (seeFigure3).VL containskeyframeposesKL a(snedelSaencdtmioanrkIsII-lDjk)a.re then passed to the global pose graph
+and landmark map M . The factor set F is composed of
+L L
+reprojection factors r that link keyframes and landmarks.
+p
+1) Frontend: At each new frame I , we detect corners D. Global Pose Graph
+k
+using the method of [30] and track them from frame to
+frame using Lucas-Kanade [31], [32]. When the average Once a local keyframe k and its child landmarks {lk}
+j
+pixel motion of the features between the last keyframe and are marginalized out of the local VO module, we freeze
+currentimageexceedsathreshold,wecreateanewkeyframe the landmark inverse depth values ξj and insert a new pose
+wonitlhy BpousnedleTWkAdj∈ustmSEen(3t)w, iitnhitriaelsipzeecdt btoy trhuenneixnigstinmgotmioanp- SHWkere∈VGSicmon(3ta)inisntoonlaygSliomb(a3l)ppoosseegvraarpiahblGeGs.T=he(VfaGct,oFrGse)t.
+MparLam=et{elrjiiz}ecdobmypirtissepdixoeflllaoncdamtioanrkus lji∈. EΩa,cihtslainnvdemrsaerkdeljiptihs FanGdcscoanlteaifnasctroerlsa.tive odometry factors, loop closure factors,
+ξ ∈ R+, and the frame it was detejcted in i. Features that 1) RelativeOdometryFactors: Welinkthenewlyinserted
+j
+were detected in the current frame k are initialized as new pose variable k to the rest of V using a relative odometry
+G
+landmarks. Observations of pre-existing landmarks in k are factor r between k and the most recent global pose
+odom
+add2e)dRteopFroLjecatsiorneprFoajcetcotirosn: fEacatcohrs.time a landmark li is vanardiajbwlehje.nLkeitsSmˆjkardgeinnoatleizethdeouretloatfivtheetrloancasflowrmindboewtw.reen k
+j (cid:16) (cid:17) odom
+observedinanewkeyframek,weinsertareprojectionfactor is then given by
+into the graph that constrains the landmark’s inverse depth
+and the poses of the keyframes in which it was observed. r (SW,SW)=log Sj SWSˆk , (11)
+Suppose that landmark li is observed in keyframe k at odom k j W k j
+j
+pixel location p ∈ Ω. T(cid:0)he reprojection error(cid:1)r from this
+j p where log : Sim(3) → sim(3) denotes the logarithmic map
+observation is given by
+between Sim(3) and its Lie algebra sim(3). We let F
+− odom
+r (TW,TW,li)=π KTk TWK 1u¯ /ξ −p . (8) denote the set of all odometry factors.
+p i k j W i j j j
+46
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. KITTI:02 KITTI:03 KITTIOdometryBenchmark
+300
+800 250 SfMLearner[18] Monodepth2[20] DVSO[26] Ours
+Forward246000000 tSMDrfVuMotSnhLoOedaerpntehr2 Forward112050500000 tSMDrfVuMotSnhLoOedaerpntehr2 Train R0000126890un 11811tr10.019e....07361l 46344rr.....13700e81576l 11111tr37473e.....10271l 51566rr.2...2917e.79884l 00100tr.....87087e43334l 00000rr.....23222e25511l 12111tr.....16770e51101l 01000rr.....22343e72587l
+0 ours −50 ours Avg 10.4 4.11 13.8 5.56 0.89 0.23 1.39 0.33
+−200 0 200 400 600 800 1000 0 100 200 300 400
+Right Right 00 15.9 6.19 15.5 6.47 0.71 0.24 4.55 0.93
+KITTI:10 KITTI:07 03 11.1 4.52 10.2 2.93 0.77 0.18 4.72 0.21
+150
+300 tSrfuMthLearner 100 tSrfuMthLearner Test 0045 31.06.98 34..2686 1102..66 16..4561 00..3558 00..0262 128.3.86 00..2373
+Monodepth2 Monodepth2 07 12.7 5.58 10.1 3.25 0.72 0.20 1.09 0.30
+Forward 120000 DouVrSsO Forward 500 DouVrSsO TABLAEvgI: 1K3.7ITTI 5O.63dome1tr4y.4 Ben6c.h69mark:0.6H7ere0.24we3.s8h5ow0.7o3ur
+0 pipeline’s performance on the KITTI Odometry Benchmark [1].
+−50
+−100 t denotes the relative translation error averaged over 100m to
+0 200 400 600 −100−250 −200 −150 −100 −50 0 50 8r0e0lm path segments (expressed as a percent of distance traveled).
+Right Right
+Fig.4:KITTIOdometryPerformance:Ourmethodgivescompelling rrel denotes the relative rotation error averaged over the same
+path segments (expressed as degrees per 100m). The runs labeled
+performance on the KITTI odometry benchmark. The left column
+“Train” are included in the training data for both our network
+shows sequences that were included in the training data of our
+and DVSO [26], while the runs labeled “Test” are not. Note that
+metricdepthpredictionnetwork.Therightcolumnshowssequences
+ourmethodperformscompetitivelyonthebenchmarkdespiteonly
+that were not used to train the network.
+requiring a CPU.
+2) Loop Closure Factors: When local keyframe k is
+marginalized out, we compare Ik to the images correspond- IV. EVALUATION
+ing to the poses in V using a bag-of-words (BoW)-based
+G Wedemonstratetheperformanceofourapproachquantita-
+descriptorvector[35]generatedwithORBfeatures[36].Ifa
+tivelyusingtheKITTIOdometryBenchmark[1](SectionIV-
+matchisdetected,wethenmatchthefeaturesacrossthetwo
+B) and qualitatively using handheld imagery collected from
+frames and use the matches to estimate the relative Sim(3)
+an indoor environment (Section IV-C).
+transformbetweenthetwoposes.Aloopfactorr isthen
+loop
+added to F with the same form as r . We let F A. Implementation Details
+G odom loop
+denote the set of all loop factors.
+We designed our depth prediction network using Tensor-
+3) ScaleFactors: Weemploytheinversedepthestimation ﬂow[37]andsetthebaseimagesizeL0to256×512pixels.
+networkdescribedinSectionIII-Btogeneratescalemeasure- Forallourexperiments,thenetworkistrainedfor100epochs
+mentsforaposeintheglobalgraphG .Thechildlandmarks using the Adam optimizer [38] on an NVIDIA 1080Ti GPU
+G
+li of a pose SW have arbitrarily scaled inverse depths ξ . with a batch size of 8 and a learning rate of 0.0001, which
+j i j
+Usingourinversedepthestimationnetwork,wecanestimate is halved after 30 epochs and again after 40 epochs. We
+the metric inverse depth z for each landmark. The ratio of follow standard data augmentation practices by randomly
+j
+the unscaled inverse depth ξ to the metric inverse depth z ﬂipping the training images left to right and perturbing the
+j j
+is an estimate of the scale s of the pose SW. We can add image color, including gamma and brightness shifting. We
+i i
+thesemeasurementsasunaryfactorsr onthescalevariable set the weights governing the terms in the loss function as
+s
+si: λp = 1.0, λlr = 1.0, λr = 0.1, and λs = 10.0. Network
+inference is triggered at runtime using the REST API of the
+rs(SWi )=si−ξj/zj. (12) tensorflow serving package.
+Our geometric SLAM pipeline is implemented in C++
+We let Fs denote the set of all scale factors. using the Ceres solver library [39]. Disparity maps from L3
+4) Backend: Th(cid:88)e tota(cid:12)l(cid:12)cost represented(cid:12)(cid:12)by GG can then (32×64 pixels) are used generate the metric scale factors
+be written as: (cid:12)(cid:12) (cid:12)(cid:12)
+for each keyframe pose. Both network inference and SLAM
+optimizationareperformedatruntimeentirelyonanInteli7
+EG(VG)= ∈(cid:88)F (cid:12)(cid:12)(cid:12)(cid:12) rodom(SWk ,SWj(cid:12)(cid:12)(cid:12)(cid:12)) 2Σodom+ 4820K CPU.
+j,k odom
+(cid:88)∈F rloop(SWk ,SWj ) 2Σloop+ (13) B.WKeITeTvIalOuadtoemtehteryoEdvoamlueatrtyiopnerformance of our approach
+j,k loop
+quantitatively using ten video sequences from the KITTI
+||r (SW)||2
+∈F s i s Odometry Benchmark [1]. We train our depth prediction
+i s network using the common training split of the raw KITTI
+andcanbeoptimizedusingLevenberg-Marquardt[33].Here stereo data from [40], which consists of 22,600 training
+R ×
+Σ ,Σ ∈ 7 7 denote the odometry and loop noise stereo pairs, 888 validation pairs, and 697 testing pairs.
+odom loop
+covariances, respectively and  denotes the Huber noise Of the ten odometry sequences, images from runs 00,
+s
+parameter for the scale factors. 06, 08, 09, and 10 are included in the training data of the
+47
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. TrainingRuns TrainingRuns
+15.0 0.10 SfMLearner
+RelativeTranslationError[%]1102257.....05505 SMDoufVMorSsnLoOedaerpntehr2 RelativeRotationError[deg/m]0000....00002468 MDouVorSsnoOdepth2
+0.00
+200 400 600 800 200 400 600 800
+PathLength[m] PathLength[m]
+TestRuns TestRuns 5 ORB-SLAM2 30 ORB-SLAM2
+RelativeTranslationError[%]11110257257.......0505505 SMDoufVMorSsnLoOedaerpntehr2 RelativeRotationError[deg/m]0000000.......00001112468024 SMDoufVMorSsnLoOedaerpntehr2 −−−−21150050−20 ours−10 0 10 −1120000 −20 −10 0 10ours20 30
+0.0 0.00
+200 400 600 800 200 400 600 800
+PathLength[m] PathLength[m] Fig. 6: Handheld Trajectories: We demonstrate our method’s per-
+Fig.5:RelativePoseErrorvs.DistanceTraveled:Theplotsabove formanceusinghandheldcameradatafromanindoorenvironment.
+show the relative translation (left) and rotation error (right) on the Top row: Sample training images from the environment. Bottom
+training (top) and test (bottom) runs from the KITTI Odometry row:Comparisonofposesfromourapproach(blue)againstthoseof
+Benchmark [1]. Our method achieves competitive performance on StereoORB-SLAM2[42]ontwotesttrajectories.NotethatStereo
+the benchmark despite not relying on GPU acceleration. ORB-SLAM2’s poses are correctly scaled as the stereo baseline is
+known a priori. Our technique is able to generate correctly scaled
+poses using only a single monocular camera.
+depth prediction network. Runs 00, 03, 04, 05, and 06 have
+no overlap with the depth network training data. (Run 01
+captures time synchronized images at 16 Hz. The baseline
+exhibits very little texture for feature detection and was not
+betweentheleftandrightcamerasis5cm.Theenvironment
+usedtoevaluateodometry.)Exampletrajectoriesfortraining
+usedfortheexperimentisalarge,indoorlaboratorycommon
+and test runs are shown in Figure 4.
+area and student thoroughfare between classrooms.
+Quantitative performance is measured using relative pose
+We collected a total of 16,980 stereo images, 11,548 of
+error(RPE)[41]overasetofpredeﬁnedpathlengths(100m
+which were used for training our depth prediction network
+to 800 m). Table I shows the relative translation error t
+rel with 1,510 pairs used for validation. Two complete runs
+(expressed as a percent of distance traveled) and relative
+comprising 3,922 pairs were withheld to test our odometry
+rotation error r (expressed in degrees per 100m) for each
+rel performance. At runtime, the images from the left camera
+run averaged over all path lengths, while Figure 5 shows
+were used to compute our metrically scaled poses. The
+these metrics for each path length averaged over all runs.
+trajectories for the two test runs are shown in Figure 6. In
+We compare our method against two end-to-end SLAM
+theabsenceofgroundtruthposes,wecompareourmonocular
+packages (SfMLearner [18] and Monodepth2 [20]) that are
+odometryestimatesagainstthatofStereoORB-SLAM2[42],
+scaled to metric scale and a hybrid learning/geometric ap-
+a state-of-the-art geometric stereo odometry pipeline. (Note
+proach DVSO [26]. Note that SfMLearner and Monodepth2
+that as a stereo method, its poses are metrically scaled since
+are trained on runs 00-08. DVSO is trained using the same
+thebaselinebetweentheleftandrightcamerasisknown.)As
+split as our method, but uses additional supervision from
+evident in Figure 6, our method is able to produce accurate
+a sparse reconstruction method [7]. We are unable to do a
+poses at the correct metric scale despite only using a single
+fullcomparisontoDVSOastheauthorshavenotprovideda
+monocular camera.
+publicimplementationoftheirtechnique,andsowecompare
+to their published results. V. CONCLUSION
+Our method performs competitively on the benchmark,
+We have proposed an efﬁcient method for monocular
+achieving a relative translation error of 1.39 percent and a
+◦ SLAMthatiscapableofestimatingmetrically-scaledmotion
+relative rotation error of 0.33 / 100m on the training runs
+◦ without additional sensors or compute by integrating metric
+and3.85percentand0.73 /100monthetestruns.Notably,
+depth predictions from a neural network into a geometric
+all computation is performed entirely on the CPU, while
+SLAM pipeline. Our depth prediction network is designed
+other methods require GPU acceleration. Network inference
+speciﬁcallyformetricscaleestimationandthuscanbemuch
+takes approximately 30 ms per frame. For comparison, the
+smallerandfasterthancompetingsystems.Wemakeseveral
+authors of DVSO report that evaluations of their network
+improvements to our network architecture and training pro-
+take 40 ms per frame on an NVIDIA Titan X Pascal GPU.
+ceduretoaddressthelackofdepthobservabilitywhenusing
+C. Handheld Odometry Evaluation coarseimageinputthatallowsustoestimatespatiallycoarse,
+but depth-accurate predictions in only 30 ms per frame. We
+In addition to the quantitative results described in the
+show compelling results on the KITTI benchmark dataset in
+previous section, we also qualitatively validate our system
+addition to real-world experiments with a handheld camera.
+with imagery collected using a handheld stereo camera that
+48
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [18] T. Zhou, M. Brown, N. Snavely, and D. G. Lowe,
+[1] A.Geiger,P.Lenz,andR.Urtasun,“Arewereadyfor “Unsupervisedlearningofdepthandego-motionfrom
+Autonomous Driving? The KITTI Vision Benchmark video,” in Proc. CVPR, 2017.
+Suite,” in Proc. CVPR, 2012. [19] C. Godard, O. Mac Aodha, and G. J. Brostow, “Un-
+[2] A. J. Davison, “Real-time simultaneous localisation supervised monocular depth estimation with left-right
+and mapping with a single camera,” in Proc. ICCV, consistency,” in Proc. CVPR, 2017.
+2003. [20] C.Godard,O.MacAodha,M.Firman,andG.J.Bros-
+[3] G. Klein and D. Murray, “Parallel tracking and map- tow, “Digging into self-supervised monocular depth
+ping for small AR workspaces,” in Proc. ISMAR, prediction,” ArXiv:1806.01260, 2018.
+2007. [21] M. Poggi, F. Aleotti, F. Tosi, and S. Mattoccia, “To-
+[4] R. Mur-Artal, J. Montiel, and J. D. Tardos, “ORB- wards real-time unsupervised monocular depth esti-
+SLAM: A versatile and accurate monocular slam mation on CPU,” in Proc. IROS, 2018.
+system,” Trans. on Robotics, 2015. [22] A.Saxena,M.Sun,andA.Y.Ng,“Make3D:Learning
+[5] C. Forster, M. Pizzoli, and D. Scaramuzza, “SVO: 3D scene structure from a single still image,” Trans.
+Fastsemi-directmonocularvisualodometry,”inProc. PAMI, 2008.
+ICRA, 2014. [23] F. Liu, C. Shen, G. Lin, and I. Reid, “Learning depth
+[6] J. Engel, T. Scho¨ps, and D. Cremers, “LSD-SLAM: from single monocular images using deep convolu-
+Large-scale direct monocular slam,” Proc. ECCV, tional neural ﬁelds,” Trans. PAMI, 2015.
+2014. [24] K. Tateno, F. Tombari, I. Laina, and N. Navab, “Cnn-
+[7] J. Engel, V. Koltun, and D. Cremers, “Direct sparse slam: Real-time dense monocular slam with learned
+odometry,” ArXiv:1607.02565, 2016. depth prediction,” in Proc. CVPR, 2017.
+[8] D.Ga´lvez-Lo´pez,M.Salas,J.D.Tardo´s,andJ.Mon- [25] V. Peretroukhin and J. Kelly, “DPC-Net: Deep pose
+tiel, “Real-time monocular object SLAM,” Robotics correction for visual localization,” IEEE Robotics and
+and Autonomous Systems, 2016. Automation Letters, 2018. DOI: 10.1109/LRA.
+[9] A. I. Mourikis and S. I. Roumeliotis, “A multi- 2017.2778765.
+state constraint Kalman ﬁlter for vision-aided inertial [26] N. Yang, R. Wang, J. Stueckler, and D. Cremers,
+navigation,” in Proc. ICRA, 2007. “Deepvirtualstereoodometry:Leveragingdeepdepth
+[10] S.Leutenegger,S.Lynen,M.Bosse,R.Siegwart,and prediction for monocular direct sparse odometry,” in
+P. Furgale, “Keyframe-based visual–inertial odometry Proc. ECCV, 2018.
+using nonlinear optimization,” IJRR, 2015. [27] R.Wang,M.Schworer,andD.Cremers,“StereoDSO:
+[11] C.Forster,L.Carlone,F.Dellaert,andD.Scaramuzza, Large-scale direct sparse visual odometry with stereo
+“IMUPreintegrationonManifoldforEfﬁcientVisual- cameras,” in Proc. ICCV, 2017.
+Inertial Maximum a Posteriori Estimation,” in RSS, [28] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual
+2015. learningforimagerecognition,”inProc.CVPR,2016.
+[12] T.J.Steiner,R.D.Truax,andK.Frey,“Avision-aided [29] V. Nair and G. E. Hinton, “Rectiﬁed linear units im-
+inertialnavigationsystemforagilehigh-speedﬂightin proverestrictedboltzmannmachines,”inProc.ICML,
+unmapped environments,” in Proce. IEEE Aerospace 2010.
+Conference, 2017. [30] J. Shi and C. Tomasi, “Good features to track,” in
+[13] T.Qin,P.Li,andS.Shen,“VINS-Mono:Arobustand Proc. CVPR, 1994.
+versatile monocular visual-inertial state estimator,” [31] B. D. Lucas, T. Kanade, et al., “An iterative image
+ArXiv:1708.03852, 2017. registration technique with an application to stereo
+[14] S.Wang,R.Clark,H.Wen,andN.Trigoni,“DeepVO: vision.,” in IJCAI, 1981.
+Towards end-to-end visual odometry with deep recur- [32] S. Baker and I. Matthews, “Lucas-Kanade 20 years
+rent convolutional neural networks,” in Proc. ICRA, on: A unifying framework,” IJCV, 2004.
+2017. [33] D. W. Marquardt, “An algorithm for least-squares
+[15] R. Li, S. Wang, Z. Long, and D. Gu, “UnDeepVO: estimation of nonlinear parameters,” Journal of the
+Monocular visual odometry through unsupervised societyforIndustrialandAppliedMathematics,1963.
+deep learning,” ArXiv:1709.06841, 2017. [34] J. Nocedal and S. Wright, Numerical optimization.
+[16] R. Clark, S. Wang, H. Wen, A. Markham, and Springer Science & Business Media, 2006.
+N. Trigoni, “Vinet: Visual-inertial odometry as a [35] R. Muoz-Salinas and R. Medina-Carnicer,
+sequence-to-sequence learning problem.,” in AAAI, “UcoSLAM: Simultaneous localization and mapping
+2017. by fusion of keypoints and squared planar markers,”
+[17] G.Iyer,J.K.Murthy,G.Gupta,K.M.Krishna,andL. Feb. 2019. DOI: 10.13140/RG.2.2.31751.
+Paull,“Geometricconsistencyforself-supervisedend- 65440.
+to-end visual odometry,” ArXiv:1804.03789, 2018. [36] E. Rublee, V. Rabaud, K. Konolige, and G. Bradski,
+“Orb: An efﬁcient alternative to SIFT or SURF,” in
+Proc. ICCV, 2011.
+49
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. [37] M. Abadi, A. Agarwal, P. Barham, E. Brevdo, Z.
+Chen, C. Citro, G. S. Corrado, A. Davis, J. Dean,
+M. Devin, S. Ghemawat, I. Goodfellow, A. Harp, G.
+Irving, M. Isard, Y. Jia, R. Jozefowicz, L. Kaiser, M.
+Kudlur, J. Levenberg, D. Mane´, R. Monga, S. Moore,
+D.Murray,C.Olah,M.Schuster,J.Shlens,B.Steiner,
+I. Sutskever, K. Talwar, P. Tucker, V. Vanhoucke,
+V. Vasudevan, F. Vie´gas, O. Vinyals, P. Warden, M.
+Wattenberg, M. Wicke, Y. Yu, and X. Zheng, Tensor-
+ﬂow: Large-scale machine learning on heterogeneous
+systems,Softwareavailablefromtensorﬂow.org,2015.
+[Online]. Available: http://tensorflow.org/.
+[38] D. P. Kingma and J. Ba, “Adam: A method for
+stochastic optimization,” ArXiv:1412.6980, 2014.
+[39] S. Agarwal, K. Mierle, and Others, Ceres solver,
+http://ceres-solver.org.
+[40] D. Eigen, C. Puhrsch, and R. Fergus, “Depth map
+prediction from a single image using a multi-scale
+deep network,” in Advances in neural information
+processing systems, 2014.
+[41] J. Sturm, N. Engelhard, F. Endres, W. Burgard, and
+D.Cremers,“AbenchmarkfortheevaluationofRGB-
+D slam systems,” in Proc. IROS, 2012.
+[42] R. Mur-Artal and J. D. Tardo´s, “ORB-SLAM2: An
+open-sourceSLAMSystemforMonocular,Stereoand
+RGB-D cameras,” Trans. on Robotics, 2017.
+50
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:51:51 UTC from IEEE Xplore.  Restrictions apply. 

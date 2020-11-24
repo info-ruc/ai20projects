@@ -1,0 +1,509 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+RISE: A Novel Indoor Visual Place Recogniser
+Carlos Sa´nchez-Belenguer1, Erik Wolfart1 and V´ıtor Sequeira1
+Abstract—This paper presents a new technique to solve In the last years Deep Learning has revolutionized many
+the Indoor Visual Place Recognition problem from the Deep disciplines. Particularly, in the Computer Vision ﬁeld, Con-
+Learningperspective.Itconsistsonanimageretrievalapproach
+volutional Neural Networks (CNNs) have achieved state-of-
+supported by a novel image similarity metric. Our work uses
+the-art performance on several recognition and classiﬁca-
+a 3D laser sensor mounted on a backpack with a calibrated
+spherical camera i) to generate the data for training the tion tasks. The key idea behind CNNs is their ability to
+deep neural network and ii) to build a database of geo- automatically learn high-level global features, in contrast
+referenced images for an environment. The data collection with hand-crafted ones like GIST. Similarly to the rest of
+stage is fully automatic and requires no user intervention
+machine learning approaches, CNN-based place recognisers
+for labelling. Thanks to the 3D laser measurements and the
+require large sets of training data to perform properly. For
+spherical panoramas, we can efﬁciently survey large indoor
+areasinaveryshorttime.Theunderlying3Ddataassociatedto this reason, researchers working in this ﬁeld dedicate lots of
+themapallowsustodeﬁnethesimilaritybetweentwotraining time and resources to the data collection stage [12][13].
+images as the geometric overlap between the observed pixels. The ﬁrst approach exploiting CNNs in visual place recog-
+WeexploitthissimilaritymetrictoeffectivelytrainaCNNthat
+nitionproblemswas[14].Itcombinedtheautomaticlearning
+mapsimagesintocompactembeddings.Thegoalofthetraining
+of features together with other ﬁlters to effectively solve
+is to ensure that the L2 distance between the embeddings
+associated to two images is small when they are observing the the localization problem. Subsequent works using CNNs
+sameplaceandlargewhentheyareobservingdifferentplaces. for solving place recognition problems have mostly focused
+After the training, similarities between a query image and the their efforts on urban outdoor environments [3][15][16][17].
+geo-referenced images in the database are efﬁciently retrieved
+The reason for that is probably related to the availability
+by performing a nearest neighbour search in the embeddings
+of training data: acquiring outdoor geo-referenced training
+space.
+imagescanbeeasilyachievedwithaconsumerGPS-enabled
+I. INTRODUCTION camera. Additionally, the accuracy of the ground-truth pose
+Recognizing places from visual information is a well estimation plays a critical role in narrow environments (e.g.
+known problem that has been present in the literature for 0.5m error in the camera pose when facing a building can
+a long time. In the last decade, visual place recognition has be negligible, whilst in an indoor environment it can mean a
+gained increasing attention due to the vast amount of geo- differentroom).Thereareplentyofpublicdatasetsavailable
+localizedimagedatasets[1][2][3][4],theincreaseofportable on-line with urban outdoors imagery [18][19][20][21] or
+acquisition devices (i.e. mobile phones) and the limitations natural landscapes [4][22] and most of the papers train and
+of GPS localization systems in indoors and cluttered urban compare themselves using them.
+environments. However, when it comes to the visual indoor localization
+Visual place recognition is a challenging problem due to problem,boththenumberofpapersandpublicdatasetsdrops
+three major facts: (1) the appearance of a place can change signiﬁcantly. The most common dataset used to train and
+drastically over time, (2) places are not always observed evaluate performance of indoor localization approaches is
+from the same viewing point and (3) cameras are strongly the 7-Scenes [23], collected using an RGB-D Kinect sensor.
+affected by light conditions. It can be used for a wide range The main problem of using such a low-range sensor is that
+of applications like loop detection in SLAM approaches [5] the area covered during the acquisition is limited. Similarly,
+or autonomous navigation [6]. workslike[24]or[25]relyontheirownRGB-Dacquisitions
+Traditional approaches facing this topic relied either on facing the same problem. Alternatively, approaches like [26]
+global methods (e.g. [7]), which process the image as a collect larger amounts of data but rely only on high-level
+whole using global descriptors, like GIST [8], or on local annotations (e.g. building, sub-building).
+methods that extract selectively parts of the image using In general terms, almost all CNN-based visual place
+local-invariant feature extractors (such as SURF [9], or recognisers face the problem in an indirect manner: having
+SIFT [10]) and match them using Bag-Of-Words [11] or a database of geo-localized images and a query image, the
+votingschemes.Eventhoughbothmethodsdifferintheway goalofthesystemistoretrievesimilarimagestogetherwith
+they approach the problem, they share a common feature: their associated poses (image retrieval). Assuming that the
+descriptors used to characterize sets of pixels are always querywasresolvedcorrectly,thecamerahastobenearbythe
+hand-crafted. reported poses. Alternatively [27][28][29] face the problem
+in a direct manner: given a query image, authors present a
+1 Carlos Sa´nchez-Belenguer, Erik Wolfart and V´ıtor Sequeira with the
+CNN that is able to regress the pose of the camera in 6
+European Commission, Joint Research Centre (JRC), Via Enrico Fermi
+2749,Ispra(VA),Italy.[name.surname]@ec.europa.eu degrees of freedom.
+978-1-7281-7395-5/20/$31.00 ©2020 European Union 265
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. II. METHOD
+Localization is always performed w.r.t. an internal repre-
+sentation ofthe world:a map. Thismap providesa common
+reference frame for expressing the different poses of the
+sensor in time. For generality, we map the world in a 3D
+coordinate system, so poses are deﬁned as 6 degrees of
+freedom variables. In order to create the map, we use a
+3D laser sensor mounted on a backpack that, using SLAM
+techniques, generates a 3D point cloud of the environment.
+Thecollectionoftrainingdataisperformedusingthesame
+backpack with a calibrated spherical camera. In this case,
+instead of using the laser sensor for mapping, we load the
+previouslygeneratedmapandlocalizeourselvesinreal-time
+withcentimetreaccuracy.Oncegeo-localizedpanoramasare
+available, we use them to synthesize standard perspective
+images in order to perform the training.
+The implementation of our place recognizer is inspired
+by FaceNet [30]. In the original work, a mapping function
+Fig.1. Diagramoftheproposedsystem from face images to compact descriptors (embeddings) was
+learned. These compact representations could be compared
+usingtheEuclidiandistance:twoimagesfromthesameface
+A. Overview
+were producing very similar embeddings (small distance)
+In this paper we cast the visual place recognition problem
+whilst two images from different faces had very different
+as a Deep Learning one. More speciﬁcally, we focus our
+embeddings (large distance).
+efforts in the data collection stage and the training strategy, The main difference of our approach w.r.t. FaceNet is
+leaving the details of neural network architecture and ﬁne related to the loss function: when training a neural network
+tuning of parameters for future works. to recognize faces, labels are discrete (two faces are either
+Considering that the quality of the results provided by from the same person or from a different one). However,
+machinelearningalgorithmsiscloselyrelatedtothequantity when it comes to places, two images can be partially
+and quality of the training data, we emphasize in this partic- observing the same space. This distinction makes necessary
+ular aspect. To do so, we present an indoor data collection to formally deﬁne a similarity metric between images that
+pipeline where no user interaction is needed in order to allowsevaluatinghowwelltheneuralnetworkisperforming
+retrieve and label training images. during training and to provide it meaningful feedback. Next
+Figure1showsoursystem.Weusealasersensormounted sub-sections will cover these points in detail.
+on a backpack to generate a 3D reference map using SLAM
+techniques.Then,usingthesamebackpackintrackingmode A. Data collection
+with a calibrated spherical camera on top, we survey the Mapping and geo-localized data collection is performed
+environment retrieving 360 panoramas with their associated using a backpack equipped with a 3D spinning laser sensor,
+poses. These data are used for two purposes: (1) to train a an inertial measurement unit and a calibrated spherical
+CNN that maps images into compact embeddings and (2) to camera on top. It can work in two different modes: (1)
+buildadatabaseofgroundtruthimageswiththeirassociated mapping, where a full SLAM pipeline is implemented [31]
+poses. In our database, images are not stored as bitmaps andagloballyconsistent3Dpointcloudisproducedand(2)
+but as the embeddings extracted by our trained CNN. This tracking, where a reference map is loaded and an accurate
+way, when the user acquires a new image (with no 3D pose real-timeposeisprovidedinthemap’sreferenceframe[32].
+associated), its embeddings are extracted using the same Our backpack was originally developed for nuclear safe-
+CNN and queried to the database. The query is resolved guards applications, e.g. design information veriﬁcation and
+by similarity in the embeddings space and the 3D poses change monitoring, but it has been used in many other
+associated to the most similar database images are returned. domains for the last two years. It was awarded with the ﬁrst
+This paper presents the foundations of a more ambitious placeinthe2015MicrosoftIndoorLocalizationCompetition
+research project that aims to solve the general indoor local- andusedforrefereeinginthe2016,2017and2018editions.
+izationproblemusingonlyvisualinformation(RISE:Robust Once the 3D map of the environment has been produced,
+Indoor Localisation in Complex Scenarios). In this sense, the same place gets re-visited several times with the back-
+majorcontributionsare:(1)anautomaticacquisitionpipeline pack in tracking mode, using the camera to collect images
+that builds a 3D reference map and collects labelled images of the same places in different conditions, e.g. lighting,
+without the need of user interaction, (2) a loss function that distribution of furniture, people moving around etc.
+◦
+allowsdeﬁningthesimilaritybetweentwoimagesinaformal The spherical camera produces 360 equi-rectangular im-
+way. ages in Full HD resolution. To avoid precision loss when
+266
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. geo-referencing them two factors have to be considered: (1)
+the camera has to be time-calibrated with the lidar’s internal
+clock and (2) the extrinsic calibration between the camera
+and the lidar sensor, Γl, has to be estimated so:
+c
+Γm =ΓmΓl
+c l c
+where Γm is the pose of the camera in the map’s reference
+c
+frame and Γm is the pose reported by our system in the
+l
+map’s reference frame, located in the lidar’s optical centre.
+B. Image similarity
+The ﬁnal goal of our approach is to train a CNN that
+learns a mapping function between images of places and
+Fig. 2. Overlap between two images. Given a map (thick black line),
+compact embeddings. Two images observing the same place itsassociatedvoxels(thinsquares)andtwogeo-referencedimages(I1 and
+have to produce similar embeddings, so the Euclidean dis- I2), the visible voxels for each image are calculated (red/green squares).
+tance between them is close to zero. Ideally, two images TheoverlapbetweenI1andI2istheratioofsharedvisiblevoxels(dashed
+squares)w.r.t.thetotalnumberofvisibleones(namedsquares).
+observing different places should produce different ones, so
+the Euclidean distance between both embeddings is large. the equi-rectangular panorama into the image plane of a
+Totrainsuchasystem,andgivenapairoftrainingimages, perspective projection. For the depth component calculation,
+we have to deﬁne a distance function that represents how we re-project the 3D map into the perspective image plane.
+similar they are. We express our similarity function in terms If two 3D points fall in the same position, the closest one
+of geometric overlap. To do so, we proceed in three steps, prevails. We can use the resulting depth map at a later step
+illustrated in Figure 2: (together with the pose of the camera and the projection
+parameters) to compute the global 3D position of each pixel
+1) Create a 3D map of the environment using the back-
+in the image and retrieve the voxel that contains it. Figure 3
+pack in mapping mode (thick black L-shaped polygon
+shows an example of this process.
+in Figure 2) and voxelize the environment, assigning
+an identiﬁer to each full voxel (squares in Figure 2).
+2) For each spherical image that was acquired in track-
+ing mode, synthesize multiple calibrated perspective
+images (I and I in Figure 2) and retrieve the set
+1 2
+of full voxels that are visible from the reference map
+(red/green named squares, respectively).
+3) Given two images, their overlap is the ratio be-
+tween the number of common voxels (named dashed
+{ }
+squares in Figure 2: v ...v ) w.r.t. the total num-
+3 7
+ber of observed voxels (named squares in Figure 2:
+{ }
+v ...v ).
+1 10
+Given two images, I and I , and their associated sets
+1 2
+of visible voxels, V((cid:110)1) and V(2) respe(cid:111)ctively, we deﬁne the
+overlap as:
+(cid:110) (cid:111)
+V(1) = v(1),v(1)...v(1)
+1 2 n
+V(2) = v(2),v(2)...v(2)
+1 2 m
+∩ { } ∈ ∧ ∈
+V(1) V(2) = v ,v ...v :v V(1) v V(2)
+1 2 p i i
+2p
+overlap(I ,I )= (1)
+1 2 n+m
+Synthesizingperspectiveimagesfromsphericalpanoramas
+allows us to boost the coverage and the data collection rate
+of a survey: a single spherical view of the environment can
+produce plenty of perspective images just by using different
+Fig.3. Perspectiveimagesynthesisfromequi-rectangularpanoramas(top)
+projectionparameters(yaw,pitch,rollandﬁeldofview).For
+and re-projection of the map (bottom). (middle-right) color component
+each perspective image we synthesize, the colour and the of a perspective image extracted from the panorama. (middle-left) depth
+depth components are efﬁciently calculated using the GPU. componentofeachpixelcalculatedbyre-projectingthemapintotheimage
+plane(higherhuevaluesrepresentmoredistantpoints).
+The colour component calculation is a straight forward
+process: it re-maps the spherical coordinates of pixels in
+267
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. Fig.4. Trainingoverview.Giventwoimages(I1 andI2 ontheleft),a3Dmap(right),the6DoFposesoftheimagesandtheprojectionparameters,we
+computethedepthofeachpixelbyre-projectingthemapintobothimageplanes(D1 andD2,respectively).Then,wecomputetheratioofoverlapping
+points(labeledas3Doverlap).ThegoalofthetrainingstageistooptimizetheweightsofaCNN(withtwoinstancesinasiameseconﬁguration)thatmaps
+−
+eachimageintoacompactvector(embedding).TheL2normofthetwoembeddings(labeledaspredicteddisimilitude)hastobeequalto(1 overlap).
+C. Training and place recogniser search is performed in the high-dimensional embedding
+space. This is efﬁciently resolved by using a kd-tree pre-
+We propose a deep CNN that maps images into compact
+allocated with all the embeddings present in the database.
+embeddings. Given two RGB images, I and I , and their
+1 2
+associated embeddings, e1 and e2, respectively, we deﬁne III. RESULTS
+the dissimilitude between the two images, d(I ,I ), as:
+1 2 Tovalidateourapproachinarealisticway,weselectedthe
+(cid:107) − (cid:107)
+d(I ,I )= e e (2) JRC Visitors Centre as a testbed. It has more than 1000m2
+1 2 1 2
+with a large exhibition area spread over multiple spaces
+During the training stage we aim to learn the weights that
+together with a restaurant area and a meeting room.
+minimize the following error function:
+Our experiments target two speciﬁc aspects of our ap-
+− − proach: on the one side, we validate our data acquisition
+E =[d(I ,I ) (1 overlap(I ,I ))]2 (3)
+1 2 1 2 and processing pipeline comparing it with other approaches
+where overlap(I ,I ) is calculated according to (1). and existing databases. On the other side, we asses the per-
+1 2
+To train the CNN we proceed similarly to [30] and as formanceofourtrainingprocedure(relyingonoursimilarity
+illustrated in Figure 4: we deﬁne two instances of the same metric) and compare it against [24].
+CNN in a siamese conﬁguration (forcing weights to be
+A. Data collection
+equal in both instances). Then, we feed the system with
+two different training images and compute the estimated Figure 5 shows the reference map generated with the
+dissimilarity between their embeddings using (2) (left side backpack.Theacquisitiontookonly15:13minutesinwhich
+of Figure 4). Simultaneously, we compute the ground truth 926m were walked (orange line in Figure 5-top). Along
+overlap between both images using (1) (right side of Fig- the trajectory, 13,695 panoramas were acquired at full HD
+×
+ure 4). Finally, we evaluate the error function using (3) and resolution (1920 1080 pixels per image).
+back-propagate to optimize the weights of both instances of To evaluate the camera calibration (both in time and ex-
+the CNN simultaneously. trinsically),weprojectedthepanoramasoverthepointcloud.
+Once the CNN is trained, to use it for place recognition Figure 5-bottom shows the result of this test. Notice how
+purposes, we populate a database with the set of geo- ﬁnal colors match accurately their corresponding 3D points:
+referenced images. To do so, instead of storing all pixel paintingsinthewallsareclearlydelimitedandfurnituredoes
+intensities, we feed the images into the trained CNN and not create artifacts in the edges due to calibration issues.
+compute their associated embeddings. Each entry of the Additionally, Figure 4 and Figure 3 show a different map
+(cid:104) (cid:105)
+database consists on a pair of values e ,Γ , where e is coloured in the same way, with no visible artifacts.
+i i i
+the embedding and Γ is the associated pose. Once a reference map was available, we performed 4
+i
+During the localisation phase, as the camera moves inside additional acquisitions in order to collect training data (se-
+the environment, new images are acquired with no pose quences 1, 2, and 3) and evaluation data (sequence 4). We
+information. For each of them the corresponding embedding spaced those acquisitions over time and ensured to capture
+is calculated using the pre-trained CNN. To retrieve similar the environment under different lightning conditions.
+imagesfromthedatabase(e.g.observingthesameplace)and Perspective images, together with their associated depth
+their associated poses in the map a nearest neighbour radius component, were synthesized in the following manner: we
+268
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. Turk. This service provides human workforce on-demand
+for well-deﬁned tasks. In the original paper, authors explain
+the strategies that were designed to assess the correction of
+annotations in order to ensure the ﬁnal data quality.
+From these approaches, two main differences w.r.t. ours
+have to be highlighted: (1) our system produced 192,444
+geo-referenced images in a GPS-denied environment with
+less than 29 minutes of user interaction. (2) Given the
+proven robustness of our backpack when tracking the sensor
+pose and the formally deﬁned overlap between images, the
+training data we generate ensures the absence of labeling
+errors without the need of human supervision.
+If we compare our training dataset against 7-Scenes [23]
+two major differences arise: (1) the area we are able to
+cover is orders of magnitude larger and (2) the performance
+collecting images is considerably boosted. The ﬁrst point
+Fig.5. Mapgenerationandcameracalibration.(top)3Dmapgenerated,
+togetherwiththeestimatedtrajectoryforthecamera(orangeline).(bottom) is related to the laser sensor used: ours has a longer range
+projectionofthecamerapanoramasoverthe3Dmaptovalidatecalibration. (100m vs 10m) and a full 360◦ ﬁeld of view, enabling
+the user to move freely inside large environments without
+divided each trajectory into segments of 50cm. For each
+compromising the SLAM/tracking processing pipelines. The
+segment we selected only the panorama corresponding to
+second point is related to the camera: using a spherical one
+the most static pose of the sensor, in order to reduce image
+enables our pipeline to synthesize many perspective images
+blurriness. Selected panoramas were then used to produce
+from a single geo-referenced panorama.
+64 perspective images each, setting randomly the projection
+parameters in the following ranges:
+B. Training
+∈ − ◦ ◦ ∈ − ◦ ◦ ∈ ◦ ◦
+We start by pre-computing pairs of training images and
+θ [ 5 ,5 ] θ [ 10 ,20 ] θ [0 ,360 ]
+x y z
+∈ ◦ ◦ their associated overlap, using a voxel size of 20cm and
+f [60 ,70 ]
+sequences1to3,leavingsequence4forevaluationpurposes.
+where f is the ﬁeld of view of the perspective camera, Since we want to ensure that training data is visually
+roll, θ , and pitch, θ , angular ranges were small because meaningfulforlocalizationpurposes,selectedimagesforthe
+x y
+we consider a camera placed coarsely vertical and yaw, θ , training should be descriptive enough (e.g. an image staring
+z
+covers the full 360 degrees. at a white wall does not describe the environment). To do
+The following table provides an overview of the data so, we automatically selected a total of 7,922 source images
+collection results showing, for each sequence, the lightning from all three sequences ensuring that the average depth of
+conditions, the acquisition duration, trajectory length and the pixels is always above 3.5m. This way, only relatively
+numberofperspectiveimagessynthesizedforeachsequence. generalviewpointspassedthetest.Foreachsourceimagewe
+created 250 pairs with the most overlapping images in the
+Lightning Duration Length Images
+full set and another 250 pairs with no overlapping images.
+(min) (m) (#)
+By doing so we pre-computed 3,961,000 training samples.
+Sequence 1 morning 6:06 310 36,479
+The CNN we used for our experiments is based on the
+Sequence 2 afternoon 6:30 383 44,415
+VGG-16architecturepre-trainedwiththeimageNetdatabase
+Sequence 3 evening 12:00 668 77,567
+[33]. In our architecture, the last 4 layers (softmax + 3 fully
+Sequence 4 noon 4:13 294 33,983
+connected)arereplacedbyasingle1x1x128fullyconnected
+It is important to note that, during the entire process, layer with L2 normalization (embeddings output layer). The
+there was no need for user intervention (only carrying the trainingwasperformedinmini-batchesof16samples,where
+backpack during the acquisitions). The data processing was each batch included 8 training pairs with high overlap and
+performed automatically and took around two hours in total. another 8 training pairs with no overlap.
+We can compare the performance of our data acquisition We trained our system for 48 hours on a nVidia GeForce
+pipelinewith[13]and[12].In[13]authorscollectedtraining GTX 1070 GPU. After the process was completed, our
+×
+data by dividing very large buildings into a grid of 60cm system was predicting overlaps with an error below 1% in
+60cm. Then, they manually collected images by taking 10 a small evaluation set that was left out of the training data
+pictures with a phone inside the delimited area of each cell for feedback purposes. Then, we populated a database with
+pointing in a ﬁxed direction. Alternatively, in [12] authors the embeddings extracted from all three training sequences
+built a database of images for training place recognizers and used sequence 4 for evaluation (33,983 images).
+named Places Database. To do so, after downloading enor- Using so many images for the database ensures a very
+mous amounts of images from on-line search engines, man- rich characterization of the environment: for each image in
+ual annotations were produced using Amazon Mechanical sequence 4 we computed the ground-truth overlap with the
+269
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. images of the database. On average, for each query image Figure 8 shows the implications of the two cost func-
+there is a counterpart in the database with 90% overlap or tions using the same query image: in our case (top), since
+more,23imageswith80%overlapormore,347imageswith we consider geometry of the environment, all our training
+60%overlapormoreandmorethan1,500imageswith40% samples gather around the query image and in the same
+overlap or more. Figure 6 illustrates overlap values. room. In the case of RelocNet (bottom), since they only
+consider the volume of the camera frustum, several wrong
+associations are created between images of two different
+roomsandlabeledwithhighoverlapvalues.Obviously,these
+wrong associations are expected to have an impact in the
+effectiveness of the training process, as Figure 7 shows.
+Fig.6. Givenaqueryimage(left-most),exampleofvariouscounterparts
+inthedatabasewiththeirassociatedground-truthoverlap.
+After evaluating the complete sequence 4 to assess the
+behaviour of our trained CNN, we achieved an average
+error of 64cm with the ﬁrst image returned by the system.
+This error increases as we retrieve more candidates, but we
+visually observed that candidate poses tend to be distributed
+aroundthegroundtruthposeofthesensor.Figure7(orange)
+shows the average positional error of our system depending
+on how many images are retrieved.
+We compared our approach against RelocNet [24], a
+state-of-the-art technique that improved previous approaches
+like PoseNet [27] and its subsequent geometric extensions
+Fig.8. Trainingpairscomputedwiththesamequeryimageusingourcost
+[28][29].RelocNetfacestheplacerecognitionproblemfrom function(top)andtheonepresentedinRelocNet(bottom).
+the same perspective of our paper (CNN based image re-
+trieval approach), but the cost function that authors present
+IV. CONCLUSIONANDFUTUREWORKS
+differs from ours: they deﬁne the overlap as the intersection
+We have presented an effective pipeline that exploits
+between the frusta of the two images being compared.
+3D information to train an indoor visual place recogniser.
+We ﬁnd our approach more complete in the sense that we
+Using a 3D laser sensor and a spherical camera, our system
+takeintoconsiderationthegeometricalcomponent.Also,our
+is able to automatically map an environment and retrieve
+approachisparameter-free,whilstinRelocNetthemaximum
+largeamountsofgeo-referencedpanoramas.Wehaveshown
+distance of the frustum has to be set in order to perform the
+that our system is capable of labelling data automatically
+intersection between two ﬁnite volumes.
+and synthesize training images without the need of user
+In order to conﬁrm this hypothesis, we set the frustum
+intervention. Thanks to a novel image similarity metric that
+maximum distance to 8m and repeated the same training
+takesintoconsiderationthegeometryoftheenvironment,we
+changing only the cost function. As Figure 7 shows, the
+have presented a full training pipeline that covers the end-
+ﬁrst result returned by RelocNet is, on average, 89cm away
+to-endlearningofanindoorplacerecognitionsystem.Using
+from the real pose of the camera and, as we retrieve more
+only images (i.e. no 3D data), our system can then localise
+results, the positional error increases much faster than the
+same system trained using our cost function. This is a clear the camera inside a large building with errors below 1m.
+Wehaveshownthat,incomparisonwithotherapproaches,
+consequenceof thegeneralizationproblems ofthe CNNdue
+thedataacquisitionrateofoursystemisordersofmagnitude
+to the presence of miss-labeled training samples.
+faster. Also, given the robustness of our 3D tracking algo-
+rithm,thequalityoftheautomaticlabelingisensured.Com-
+paredtocurrentindoordatasets,oursystemhasproventobe
+morescalable,allowingtoacquirelargeindoorenvironments
+in a robust manner. Results have demonstrated the beneﬁts
+ofconsideringthegeometriccomponentinthecostfunction,
+improving the accuracy of state-of-the-art techniques.
+Future works will aim to (1) reﬁne the pose estimation
+by using, for example, classic computer vision approaches
+and (2) increase robustness of the place recogniser by dis-
+ambiguating the pose of the camera over time using, for
+Fig.7. Comparisonbetweenourapproach(RISE)andRelocNet.Average
+positionalerrorintheposeestimationw.r.t.thenumberofimagesretrieved. example, particle ﬁlters or recurrent neural networks.
+270
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [21] J.-L.Blanco,F.-A.Moreno,andJ.Gonza´lez,“Acollectionofoutdoor
+roboticdatasetswithcentimeter-accuracygroundtruth,”Autonomous
+Robots, vol. 27, no. 4, pp. 327–351, November 2009. [Online].
+[1] M.T.Islam,C.Greenwell,R.Souvenir,andN.Jacobs,“Large-Scale
+Available:http://www.mrpt.org/Paper:MalagaDataset2009
+Geo-Facial Image Analysis,” EURASIP Journal on Image and Video
+[22] J. Brejcha and M. Cˇad´ık, “Geopose3k: Mountain landscape dataset
+Processing(JIVP),vol.2015,no.1,p.14,2015.
+for camera pose estimation in outdoor environments,” Image and
+[2] T. Weyand, I. Kostrikov, and J. Philbin, “Planet - photo geolocation
+Vision Computing, vol. 66, pp. 1 – 14, 2017. [Online]. Available:
+with convolutional neural networks,” in Computer Vision – ECCV
+http://www.sciencedirect.com/science/article/pii/S0262885617300963
+2016, B. Leibe, J. Matas, N. Sebe, and M. Welling, Eds. Cham:
+[23] B. Glocker, S. Izadi, J. Shotton, and A. Criminisi, “Real-
+SpringerInternationalPublishing,2016,pp.37–55.
+time rgb-d camera relocalization,” in International Symposium
+[3] R. Arandjelovic´, P. Gronat, A. Torii, T. Pajdla, and J. Sivic,
+on Mixed and Augmented Reality (ISMAR). IEEE, October
+“NetVLAD: CNN architecture for weakly supervised place recogni-
+2013. [Online]. Available: https://www.microsoft.com/en-us/research/
+tion,”inIEEEConferenceonComputerVisionandPatternRecogni-
+publication/real-time-rgb-d-camera-relocalization/
+tion,2016.
+[24] V.Balntas,S.Li,andV.A.Prisacariu,“Relocnet:Continuousmetric
+[4] N. Su¨nderhauf, P. Neubert, and P. Protzel, “Are we there yet? chal-
+learningrelocalisationusingneuralnets,”inTheEuropeanConference
+lengingseqslamona3000kmjourneyacrossallfourseasons,”Proc.
+onComputerVision(ECCV),September2018.
+ofWorkshoponLong-TermAutonomy,IEEEInternationalConference
+[25] Y. Chen, R. Chen, M. Liu, A. Xiao, D. Wu, and S. Zhao, “Indoor
+onRoboticsandAutomation(ICRA),p.2013,012013.
+visual positioning aided by cnn-based image retrieval: Training-free,
+[5] X. Zhang, Y. Su, and X. Zhu, “Loop closure detection for visual
+3dmodeling-free,”inSensors,2018.
+slam systems using convolutional neural network,” in 2017 23rd
+[26] F.Zhang,F.Duarte,R.Ma,D.Milioris,H.Lin,andC.Ratti,“Indoor
+InternationalConferenceonAutomationandComputing(ICAC),Sep.
+space recognition using deep convolutional neural network: A case
+2017,pp.1–6.
+studyatmitcampus,”102016.
+[6] Y. N. Kim, D. W. Ko, and I. H. Suh, “Visual navigation using [27] A. Kendall, M. Grimes, and R. Cipolla, “Posenet: A convolutional
+placerecognitionwithvisuallinewords,”in201411thInternational network for real-time 6-dof camera relocalization,” in Proceedings
+Conference on Ubiquitous Robots and Ambient Intelligence (URAI), of the IEEE international conference on computer vision, 2015, pp.
+Nov2014,pp.676–676. 2938–2946.
+[7] P.Taddei,C.Sa´nchez,A.L.Rodr´ıguez,S.Ceriani,andV.Sequeira, [28] A.KendallandR.Cipolla,“Geometriclossfunctionsforcamerapose
+“Detecting ambiguity in localization problems using depth sensors,” regressionwithdeeplearning,”072017,pp.6555–6564.
+in3DV,2014. [29] ——,“Modellinguncertaintyindeeplearningforcamerarelocaliza-
+[8] A. Oliva and A. Torralba, “Building the gist of a scene: The role of tion,”052016,pp.4762–4769.
+globalimagefeaturesinrecognition,”Progressinbrainresearch,vol. [30] F. Schroff, D. Kalenichenko, and J. Philbin, “Facenet: A uniﬁed
+155,pp.23–36,2006. embeddingforfacerecognitionandclustering,”2015IEEEConference
+[9] H.Bay,A.Ess,T.Tuytelaars,andL.VanGool,“Speeded-uprobust on Computer Vision and Pattern Recognition (CVPR), pp. 815–823,
+features(surf),”Computervisionandimageunderstanding,vol.110, 2015.
+no.3,pp.346–359,2008. [31] S. Ceriani, C. Sa´nchez, P. Taddei, E. Wolfart, and V. Sequeira,
+[10] D.G.Lowe,“Objectrecognitionfromlocalscale-invariantfeatures,” “Poseinterpolationslamforlargemapsusingmoving3dsensors,”in
+in Computer Vision, IEEE International Conference on, vol. 2. IntelligentRobotsandSystems(IROS),2015IEEE/RSJInternational
+Los Alamitos, CA, USA: IEEE Computer Society, sep 1999, Conferenceon,Sept2015,pp.750–757.
+p. 1150. [Online]. Available: https://doi.ieeecomputersociety.org/10. [32] C. Sa´nchez, P. Taddei, S. Ceriani, E. Wolfart, and V. Sequeira,
+1109/ICCV.1999.790410 “Localizationandtrackinginknownlargeenvironmentsusingportable
+[11] J. Sivic and A. Zisserman, “Video google: A text retrieval approach real-time3dsensors,”Comput.Vis.ImageUnderst.,vol.149,no.C,
+toobjectmatchinginvideos,”innull. IEEE,2003,p.1470. pp.197–208,Aug.2016.
+[12] B. Zhou, A. Lapedriza, J. Xiao, A. Torralba, and A. Oliva, [33] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei,
+“Learningdeepfeaturesforscenerecognitionusingplacesdatabase,” “ImageNet:ALarge-ScaleHierarchicalImageDatabase,”inCVPR09,
+in Proceedings of the 27th International Conference on Neural 2009.
+InformationProcessingSystems-Volume1,ser.NIPS’14. Cambridge,
+MA, USA: MIT Press, 2014, pp. 487–495. [Online]. Available:
+http://dl.acm.org/citation.cfm?id=2968826.2968881
+[13] Z. Liu, L. Zhang, Q. Liu, Y. Yin, L. Cheng, and R. Zimmermann,
+“Fusion of magnetic and visual sensors for indoor localization:
+Infrastructure-free and more effective,” IEEE Transactions on Mul-
+timedia,vol.19,no.4,pp.874–888,April2017.
+[14] Z. Chen, O. Lam, A. Jacobson, and M. Milford, “Convolutional
+neural network-based place recognition,” CoRR, vol. abs/1411.1509,
+2014.[Online].Available:http://arxiv.org/abs/1411.1509
+[15] A.Gordo,J.Almazan,J.Revaud,andD.Larlus,“End-to-endlearning
+of deep visual representations for image retrieval,” International
+JournalofComputerVision,vol.124,no.2,pp.237–254,2017.
+[16] H. J. Kim, E. Dunn, and J.-M. Frahm, “Learned contextual feature
+reweightingforimagegeo-localization,”in2017IEEEConferenceon
+ComputerVisionandPatternRecognition(CVPR). IEEE,2017,pp.
+3251–3260.
+[17] F. Radenovic´, G. Tolias, and O. Chum, “Cnn image retrieval learns
+frombow:Unsupervisedﬁne-tuningwithhardexamples,”inEuropean
+conferenceoncomputervision. Springer,2016,pp.3–20.
+[18] A. Babenko and V. S. Lempitsky, “Aggregating deep convolutional
+features for image retrieval,” CoRR, vol. abs/1510.07493, 2015.
+[Online].Available:http://arxiv.org/abs/1510.07493
+[19] A.Torii,J.Sivic,M.Okutomi,andT.Pajdla,“Visualplacerecognition
+withrepetitivestructures,”IEEETransactionsonPatternAnalysisand
+MachineIntelligence,vol.37,no.11,pp.2346–2359,Nov2015.
+[20] A.Torii,R.Arandjelovic´,J.Sivic,M.Okutomi,andT.Pajdla,“24/7
+place recognition by view synthesis,” IEEE Transactions on Pattern
+Analysis and Machine Intelligence, vol. 40, no. 2, pp. 257–271, Feb
+2018.
+271
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:20 UTC from IEEE Xplore.  Restrictions apply. 
