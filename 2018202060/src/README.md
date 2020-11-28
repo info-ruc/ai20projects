@@ -2,19 +2,13 @@
 
 ## Files
 
-\* `ResNet.py` trains a ResNet-101 model on the dataset.
-
-\* `DenseNet.py` trains a DenseNet-121 model on the dataset.
-
-\* `dataset.py` creates a new train/test dataset by preprocessing the raw dataset.
-
-\* `utils.py` helps do some of the hardcore image processing in dataset.py.
-
-\* `averagemeter.py` helps keep track of a bunch of averages when training.
-
-\* `leafsnap-dataset-images.csv` is the CSV file corresponding to the dataset.
-
-\* `requirements.txt` contains the pip requirements to run the code.
+- `ResNet.py` trains a ResNet-101 model on the dataset.
+-  `DenseNet.py` trains a DenseNet-121 model on the dataset.
+-  `dataset.py` creates a new train/test dataset by preprocessing the raw dataset.
+-  `utils.py` helps do some of the hardcore image processing in dataset.py.
+-  `averagemeter.py` helps keep track of a bunch of averages when training.
+-  `leafsnap-dataset-images.csv` is the CSV file corresponding to the dataset.
+-  `requirements.txt` contains the pip requirements to run the code.
 
 
 
