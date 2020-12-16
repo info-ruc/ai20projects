@@ -1,0 +1,472 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+FG-GMM-based Interactive Behavior Estimation for Autonomous
+∗
+Driving Vehicles in Ramp Merging Control
+Yiwei Lyu1, Chiyu Dong2, and John M. Dolan3
+Abstract—Interactive behavior is important for autonomous
+driving vehicles, especially for scenarios like ramp merging
+whichrequiresigniﬁcantsocialinteractionbetweenautonomous
+driving vehicles and human-driven cars. This paper enhances
+our previous Probabilistic Graphical Model (PGM) merging
+control model for the interactive behavior of autonomous
+driving vehicles. To better estimate the interactive behavior
+for autonomous driving cars, a Factor Graph (FG) is used
+to describe the dependency among observations and estimate
+othercars’intentions.Realtrajectoriesareusedtoapproximate Fig. 1: Ramp merging scenario. The host car (green) is an
+themodelinsteadofhuman-designedmodelsorcostfunctions. autonomousvehicle,runningonthemainroad;themergecar(red)
+Forgetting factors and a Gaussian Mixture Model (GMM) are is a human driven car, running on the ramp.
+alsoappliedintheintentionestimationprocessforstabilization,
+interpolation and smoothness. The advantage of the factor
+graphisthattherelationshipbetweenitsnodescanbedescribed
+by self-deﬁned functions, instead of probabilistic relationships
+as in PGM, giving more ﬂexibility. Continuity of GMM also
+provides higher accuracy than the previous discrete speed
+transition model. The proposed method enhances the overall
+performance of intention estimation, in terms of collision rate
+andaveragedistancebetweencarsaftermerging,whichmeans Fig.2: Afactorgraphrepresentationfortherampmergingintention
+it is safer and more efﬁcient. estimation. S− , S− , S and S are factor nodes which take
+t 2 t 1 t t+1
+velocity observation and time-stamps; I− , I− , I and I are
+t 2 t 1 t t+1
+I. INTRODUCTION latent variables which denote intentions over time; P is a prior
+factor, which denotes the effect of prior intention.
+Since autonomous driving vehicles cannot replace all
+human driven-cars in the near future, they must share roads
+withhumandrivers.Therefore,understandinghumandrivers’
+probabilities. By taking advantage of the independence and
+intentionsisessentialforsafeautonomousdriving,especially
+conditionalindependencethatholdamongrandomvariables,
+in interactive scenarios. Ramp merging is one of the most
+the representational and computational bottlenecks are alle-
+important and typical scenarios where autonomous vehicles
+viated.
+interact with human-driven cars. An autonomous vehicle
+However, one of the major drawbacks of PGM is that the
+may collide if it can’t correctly predict human drivers’
+relationship between nodes in PGM has to be probabilistic,
+intentions given a complicated situation. Human-driven cars
+i.e.,alltransitionmodelsshouldintegratetoone.Inaddition,
+can introduce signiﬁcant uncertainty in autonomous-human
+PGM cannot treat historical data with different attentions.
+driving interactions, so it is challenging to estimate their
+Inthispaper,amethodthatisbasedonFactorGraphs[2],
+intentions.
+[3] is proposed. Our main contributions are: 1) using factor
+Currentautonomousdrivingvehiclesarenotabletounder-
+graphs to better explain the relationship between variables
+stand social behavior properly. Instant speed measurements
+over time; 2) using forgetting factor to pay more attention
+via RADAR make it straightforward to obtain the kinematic
+on the latest observations; 3) using Gaussian Mixture Model
+information of an object, but it is hard to understand the in-
+(GMM) to generalize the statistics which gives a smooth
+tentionofacar.Inaddition,theoutputofRADARintroduces
+transition model.
+largenoisethatresultsinseriousestimationoscillation.This
+task is more challenging if there is no V2X communication II. RELATEDWORK
+system. In our previous research, a probabilistic graphical
+Thereareseveralworksthataddressthemergingproblem.
+model (PGM) [1] is proposed to model uncertainty with
+Adaptive Cruise Control (ACC) is one approach which is
+∗ beingwidelycommercialized.Forexample,GM’sFullSpeed
+ThisworkwassupportedbyNSFREUfunding.
+Range ACC and Audi’s ”STOP and GO” ACC make it
+1Yiwei Lyu is with the Robotics Institute, Carnegie Mellon University,
+Pittsburgh,PA15213USA. possible for cars to follow other cars in dense trafﬁc with
+2ChiyuDongiswiththeDepartmentofElectricalandComputerEngi- low speed. ACC is also used by Mercedes-Benz in its lane
+neering,CarnegieMellonUniversity,Pittsburgh,PA15213USA.
+departure prevention system and Tesla in ”Autopilot” to
+3JohnM.DolaniswiththeRoboticsInstitute,CarnegieMellonUniver-
+sity,Pittsburgh,PA15213USA. perform higher-speed autonomous driving. However, these
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1250
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 11:45:59 UTC from IEEE Xplore.  Restrictions apply. methods cannot help vehicles generate social behaviors to Ourmodelassumesthathumanintentiondoesnotoscillate
+interact with other cars properly. asfastastheprogram’supdaterate.Therefore,oneintention
+Slot-based approaches are proposed by Marinescu et al. node will affect the next few n speed nodes. A few speed
+[4] and Baker et al. [5], for cooperative intelligent vehicles nodes can reﬂect an instant intention consistently. These n
+inon-ramporintersectiontrafﬁcmerging.Theircontribution speed nodes keep track of the target vehicle’s speed during
+includespreventingcongestionunderheavytrafﬁcconditions the last n cycles. Both past states (speed) and last intention
+by predicting the time to arrival to the merging point accu- will decide the intention. We also assume that the required
+rately.However,theirdecisionisbasedoncurrentstatesand model inputs, including speed and distance to the host
+nohistoricaldataareconsidered,whichcanleadtofailuresin vehicle of surrounding merging vehicles, can be accurately
+somecases.Nilssonetal.[6]andLiuetal.[7]formulatedthe obtained via sensors and systems.
+cooperative planning problem as Model Predictive Control
+|
+(MPC). However, a driver model is also required in the P(I I ,V − ,...,V ) (1)
+t+1 t t n t
+optimization-based approaches. Wei et al. [8] used a hard-
+coded distribution and cost function to estimate merging where I is the last intention, and V − , ..., V are the past
+t t n t
+intention. They proposed an intention-integrated framework n+1 velocities. Alternatively, Equation 1 can be written as,
+to enable an autonomous car to perform cooperative social
+behavior, but only instantaneous acceleration is considered. It+1 =argmaxf(It+1,It,Vt−n,...,Vt) (2)
+It+1
+The lack of historical data leads to instability in estimated
+where f(I ,I ,V − ,...,V ) is a factorization of current
+intention, which results in oscillation or delayed reaction to t+1 t t n t
+intention, last intention, and the past n+1 velocities.
+theautonomousvehicle.Galceranetal.[9]usedaMDP-like
+There are two kinds of effects on future intention estima-
+framework for lane-change or merge-in. The method is the-
+tion from other nodes/edges in the factor graph.
+oretically sound, but maytake along timeto convergeif the
+1) State (speeds) Effect: The state effect is indicated in
+scenario has not been solved before. Kueﬂer et al. [10] used
+Equation 3, which takes historical speed data into consid-
+GenerativeAdversarialNetworks(GAN)mostlyforhighway
+eration during the future intention estimation process. The
+single-lane interactive driving and distance keeping. Zhan et
+forgetting function ω(i) is included in the factor nodes and
+al.[11]usedasetofprototypetrajectorieswithprobabilities
+assigned to historical speed data. The forgetting function is
+to represent the prediction and safety guarantees.
+an exponential term with predeﬁned parameters with respect
+However, estimating the full trajectory is not always nec-
+to the frame timestamps of historical speed data we take
+essaryinsomescenariosandalsotakescomputationalpower.
+into consideration. Each frame of selected historical speed
+Deep Reinforcement Learning (DRL) is also applied to the
+datawillaffectthecurrentintentionestimationwithdifferent
+interactive behavioral planning. Isele et al. [12] and Qiao
+weight assigned by the forgetting function. The forgetting
+et al. [13] mainly focus on intersection control. The DRL
+functionmakesitpossiblethatthecloserthehistoricalspeed
+framework may be limited by speciﬁc setup of a scenario,
+is to the current one, the larger effect it will have on current
+e.g., the size and shape of an intersection. Dong et al. [1]
+intention estimation.
+proposedaPGMlearning-basedmethodforintentionestima- (cid:89)
+tion. The main contribution is that the model is trained and
+validated by real trajectories, and shows great improvement n
+g(S )= ω(i)f(V ,V− ) (3)
+whenvalidatedbyadesignedmergingstrategyinsimulation t+1 i i 1
+compared with previous methods. However, the model only i=1
+takes speed and time as factors in the process of intention wheref(V ,V− )describestheprobabilistictransitionfrom
+i i 1
+estimation. In addition, the transition models trained from the last velocity to the current one, given a certain intention
+| ·
+data still rely on the Markov assumption. hypothesis. f(V ,V− ) = P(V V− ,I ), and g() denotes
+i i 1 i i 1 i
+Weuseafactorgraphwhichisconvertedfromtheoriginal the discounted inﬂuence that the state (i.e., the intention)
+probabilisticgraphicalmodel(PGM)todescribedependency applies to the change of speeds. S consists of the past n
+t
+among observed data and estimate other car intentions. Real speeds alone with their timestamps.
+driving data are used to parameterize this model instead of Here (V ,...,V ,V ) correspond to the last n+1 frames of
+n i 0
+manually designed parameters. The social behavior estima- past velocity (V ,V − ,...,V − ). The transitional relation-
+t t 1 t n
+tion can be extended to various cooperation situations, such ship for each current-past velocity pair is gained from the
+as lane changing, stop sign traversal and ramp merging. In Speed Transition Model, which is introduced in a previous
+this paper, we focus on ramp merging. paper [1].
+2) LastIntentionEffect: Thisisthepriorintention’seffect
+III. FACTORGRAPH-BASEDINTENTIONESTIMATION
+on the future intention estimation, which is indicated in
+A. Structure of Factor Graphs
+Equation 4. The b(I ) and b(I ) in Equation 4 are a
+t t+1
+Factor graphs are widely used in perception [14] and ”Blurring function”, which makes the discrete intention a
+motion planning [15]. We here adapt them to behavioral es- continuousvaluerangingfrom0to1.TheBlurringfunctions
+timation.Afactorgraphrepresentationfortherampmerging help to smooth the estimated intention and encourage the
+intention estimation is shown in Fig. 2. stability of intentions over time.
+1251
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 11:45:59 UTC from IEEE Xplore.  Restrictions apply. || − ||
+{− b(I ) b(I )) 2}
+m(I )=exp t+1 t (4)
+t σ
+where m(I ) denotes the effect that the last estimated inten-
+t
+tionappliestothecurrentprediction.σ isthevarianceofthe
+Gaussian Distribution.
+TheFactorizationF=f(I ,I ,V − ,...,V )isexpressed
+t+1 t t n t
+as:
+(cid:89) ·
+F =g(S ) m(I )
+t+1 t
+n ·
+=(cid:89)ω(i)f(V ,V− ) m(I )
+i i 1 t
+i=1 || || || || Fig. 3: The aerial photograph above shows the extent of the US
+n − ∆V(I ) 2 · − ∆b(I ) 2 101 study area in relation to the building from which the digital
+= ω(i)exp( t+1 ) exp( t+1 )
+videocamerasweremountedandthecoverageareaforeachofthe
+σ σ
+i=1 eightcameras.Theschematicdrawing[16]onthebottomshowsthe
+(5)
+numberoflanesandlocationoftheon-rampatVenturaBoulevard
+(cid:44) − (cid:44) and the off-ramp at Cahuenga Boulevard within the US 101 study
+where ∆−V(It+1) V(It+1) V(It), and ∆b(It+1) area.
+b(I ) b(I ).
+t+1 t
+B. Evaluation of Factor Graph
+For the forgetting functions in the State effect, we deﬁne
+exponentialfunctionstoassigndifferentweightstohistorical
+data. This has two main advantages:
+1) Prevent Underﬂow: With exponential forgetting func-
+tions, the original product expression is converted to a
+summation. In the product expression, with tiny values, it’s Fig. 4: Time overlap example for a host-leading pair, and multiple
+host-merging pairs. Three different colors, green, red and yellow
+easy to have an underﬂow situation, in which the absolute
+indicatethreeclassesofvehicles,theleadvehicle,thehostvehicle,
+value of the number is too close to zero for the computer
+andmergingvehicles.Thelengthofthecoloredlinesindicatestheir
+to represent it. Using exponential terms instead, every term correspondingstarttimeandendtimeforappearanceinthecamera.
+will be added up together, allowing efﬁcient calculation and
+preventing the underﬂow.
+2) Reduce Computation: Converting the original product
+betweenhostandmergingvehicles.Thedatasetwasobtained
+expression to a summation with exponential terms requires
+from overhead cameras near the US-101 and I-80’s entrance
+less computation (summation vs. multiplication).
+ramps respectively in the Los Angeles area and Emeryville
+C. Intention Estimation Procedure areas. Cars were ﬁlmed and tracked during morning rush
+hours (7:50 am to 8:35 am for US101, 4:00 am to 5:30
+The last 20 frames of historical speed data before the
+am for I80). The road segment consists of 5 lanes and one
+merging point (V ,V − ,...,V − ) are selected to be taken
+t t 1 t 19 entrancerampatthebeginningforUS-101,asshowninFig.
+into state effect consideration. Forgetting decay functions
+3 [16]. And the road segment consists of 6 lanes and one
+are assigned to each frame’s historical speed datum. The
+entrance ramp at the beginning for I-80.
+estimated intention I is affected by the 20 frames of
+t+1 Vehicles in the right-most lane on the main road are
+historical data, last intention I , and the prior term P which
+t considered host vehicles, and counterparts on the entrance
+assigns weight to the last intention effect.
+ramp are considered merging vehicles. We preprocessed the
+Ifthemergingvehicle’sestimatedintentionis’NotYield’,
+datatoﬁlteroutunrelatedcarsthatrunininnerlaneswithout
+it will tend to speed up and reach the merging point before
+interacting with merging vehicles, and used only those from
+the host vehicle. Then the host vehicle activates a distance-
+the right-most lane and the entrance ramp.
+keeping model to keep a desired safe longitudinal distance
+Host vehicles are paired with merging vehicles that are
+to the merging car on the ramp. On the other hand, if its
+close to and temporally overlapped with the host, as shown
+estimated intention is ’Yield’, the host car will ignore the
+in Fig. 4. There were 647 host-merging vehicle pairs in
+merging car and accelerate to the speed limit.
+the dataset. We classify merging vehicles into two classes:
+IV. TRAININGFROMDATA 1) yield; 2) not yield, based on which car reaches the
+In[8],predictionofthemergingcar’sbehaviorwasbased merging point ﬁrst. From group 1, the distribution of
+|
+on hard-coded cost functions and assumptions about the P(V I =Y)canbeestimated;fromgroup2,thedistribution
+|
+probability distribution of acceleration. of P(V I =N) can be estimated.
+We instead use the US-101 and I-80 freeway real-world We use 1/3 of the US-101 dataset for training, and the
+dataset NGSIM to extract a model of cooperative behavior remaining2/3oftheUS-101datasetandthefullI-80dataset
+1252
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 11:45:59 UTC from IEEE Xplore.  Restrictions apply. for real-data testing. V. EXPERIMENTALRESULTS
+We run simulations on reacting to merging vehicles with
+A. Speed Transition Model
+real-data trajectories which are extracted from datasets. The
+The goal of the training is to estimate the conditional host car will estimate the merging vehicles’ intention and
+probability of intentions given historical speed information, make the decision by observing their state.
+|
+i.e., P(I V). The two classes of data are used to train the Vehicles on the main road and ramp have the same task:
+speed transition model. Fig. 5 show the speed transition they should cooperate to merge together safely and efﬁ-
+probability distributions for given speeds and intentions. ciently. Therefore, regardless of the main/ramp road geom-
+The x-axis V − indicates the previous speed of merging etry, the ramp merging problem is topologically symmetric,
+t 1
+vehicles, and the y-axis V indicates the current speed of so there is no difference if we make the main road or the
+t
+merging vehicles. The darkness of the color zone shows the ramp vehicle autonomous. In our experiments, we put the
+probability of a particular speed transition occurring. autonomous vehicle on the main road.
+The main difference between the two ﬁgures is in the The host car uses Factor Graph and Gaussian Mixture
+zone 15 feet/second ≤ V(t − 1) ≤ 35 feet/second and Model (FG-GMM) for intention estimation and ACC for
+15 feet/second ≤ V(t) ≤ 35 feet/second. The darker parts distance keeping, and we apply real trajectories to the
+indicatethedifferencesbetweenthesetwodistributions(like- merging cars.
+lihood), i.e., the change of speeds given a certain intention.
+A. Validity Test of FG-GMM Model
+In the case of “Not Yield”, cars are more likely to run at
+higher speeds; in the case of ”Yield”, they are more likely ToprovethevalidityofourFG-GMMmodel,simulations
+torunatlowerspeeds.Ifthemergingcar’sdriverdecidesnot are run on single datasets of I80 and US101.
+to yield to the host, it has higher probability to accelerate; 100 host-merging pairs extracted from the I-80 dataset
+andthemergecarismorelikelytodecelerateifitdecidesto with time range from 05:15 am to 05:30 am and 100 host-
+yield to the host. These results are consistent with intuition. merging pairs extracted from the US-101 dataset with time
+Additionally, each speed has speciﬁc transition probabilities range from 07:50-08:05 were used for testing.
+under different intentions. We conducted three sets of experiments: 1) Intention
+estimationwithoutFGandGMM(PGM-G);2)Intentiones-
+B. Gaussian Mixture Model (GMM) timation with FG but without GMM; 3) Intention estimation
+with both FG and GMM.
+The speed transition model is also used in the previous
+The experimental results for validity tests for FG-GMM
+PGM-based method. However, there are several shortcom-
+are shown in TABLE II. Collision rate is calculated as the
+ings of the speed transition model:
+rate of total collided pair counts among all tested pairs.
+1) Inefﬁcient Computation Process: In the speed transi-
+From TABLE II, by comparing the ﬁrst and second
+tionmodel,givencurrentandpastspeed,aclosestcoordinate
+columns, we ﬁnd that the collision rate without FG and
+issearchedinthetwospacesanditsprobabilityofoccurrence
+GMM, which is the collision rate of PGM-G, is higher than
+is taken for comparison between ’Yield’ or ’Not Yield’. The
+the one only without GMM. The addition of FG decreases
+searching process takes time and is inefﬁcient.
+the chance for collision by an average of eight percent for
+2) Missing Data: In some cases, an existing point close
+thetwodatasets,whichprovesthattheFGiseffective.Com-
+tothetargetcoordinatemaynoteasilybefound.Inthespeed
+pared with previous methods, FG uses forgetting factors to
+transition model, surrounding points’ average probability of
+assign different weights to past velocity observations, which
+occurrence are calculated. This may also lead to inaccuracy.
+provides better description of past velocity information. For
+To tackle the problems above, a Gaussian Mixture Model
+example,whentakingpastvelocityinformationintoaccount,
+[17] is used to approximate the speed transition probability
+adriverwillnotvaluethevelocitytensecondsagoashighly
+distribution. A 2-component GMM is built, as shown in
+asthevelocityonesecondago.Theeffectofoldervelocities
+TABLE I.
+becomes smaller, which also matches reality well.
+We assume the distribution of speed transitions as a
+By comparing the second and third columns, we ﬁnd that
+mixtureoftwosingleGaussianmodels.Meansµ,covariance the collision ratewithout GMM is much higher than the one
+σ,andweightsω gottenfromtheGMMareusedtocalculate with GMM. The presence of GMM decreases the chance
+(cid:88)
+the probability for yield and not yield:
+for collision by another seven percent on both of the two
+|| − || datasets.Comparedwiththepreviousspeedtransitionmodel,
+x µ 2
+P(I)= A exp i , (6) one of the features of the two-component GMM is that we
+i σ
+i assume the probability distribution for speed transition pairs
+i
+is a mixture of two single Gaussian Models for the binary
+where
+decision, yield or not yield. This ﬁlls the gap of possible
+√ω wrong decisions caused by missing points in the previous
+A = i (7)
+i 2πσ speed transition model. These test results indicate that the
+i
+GMM greatly improves the accuracy of estimated intention.
+1253
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 11:45:59 UTC from IEEE Xplore.  Restrictions apply. Fig.5:Speedtransitiondistributionforgivenspeedand‘Yield’/‘NotYield’intention.Noticethedifferentlocationswherehighprobability
+yields in two situations.
+TABLE I: 2-component Gaussian Mixture Model parameters w.r.t. different intentions.
+Yield NotYield
+Means [[17.5917.58][43.5143.50]] Means [[44.0244.01][17.8717.87]]
+Covariance [[64.0464.00][106.53106.77]] Covariance [[106.96107.20][66.2566.20]]
+Weights [0.570.42] Weights [0.430.56]
+TABLE II: Collision Rate Comparison
+Dataset Num.ofPairs CollisionRate(w/oFG,GMM) CollisionRate(w/oGMM) CollisionRate(w/GMM)
+I-80(05:15-05:30) 100.0 23.0 14.0 7.0
+US-101(07:50-08:05) 100.0 20.0 13.0 6.0
+TABLE III: Statistical results for different methods
+In conclusion, the FG-GMM model we propose achieves
+improvedperformanceinintentionestimationforself-driving
+US-101 I-80 Cycle
+cars. Method Data Data rate
+% D(m) % D(m) ms
+B. Comparison of FG-GMM and previous methods ACC 17.6 22.2 16.5 7.0 0.05
+Tests are run on the remaining 2/3 of the US101 dataset Slot 14.8 22.8 10.4 10.3 N/A
+iPCB 19.3 23.7 15.8 13.7 0.20
+andthefullI80dataset.Wecompareournewalgorithmwith
+PGM-G 20.1 24.3 11.3 14.6 0.51
+the following methods: PGM 8.7 25.8 7.6 16.4 0.08
+FG-GMM 7.3 23.3 7.0 14.7 0.08
+1) ACCmerging,anon-cooperativemethodthatdistance-
+keeps to the merging car if it is closer to the merging
+point;
+2) Slot checking, which is adopted from the Urban Chal- FG-GMM’s collision rate was 1.4% lower than PGM on the
+lenge [4]. US-101datasetand0.6%loweronI80.Therefore,FG-GMM
+3) iPCB, which is proposed in [8]. with the lowest collision rate is the safest one among all the
+4) PGM-G, which uses the proposed PGM structure, methods. The D(m) columns in the second halves of the
+but assumes a Gaussian Distribution for the speed “US-101 Data” and the “I-80 Data” columns show average
+transition probability, like iPCB. distance between the host cars and the closest merging cars
+We use two criteria to verify the performance of these when the host car reaches the merging point. FG-GMM’s
+algorithms: 1) failure rate based on number of collision average distance is 9.6% shorter than PGM on US-101 and
+scenarios; 2) average minimum distance between the host 10.3% shorter on I-80. Comparing with PGM, FG-GMM
+and nearest merging car when the host reaches the merging has shorter average distance in both datasets, which means
+point. The ﬁrst criterion deals with safety, and the second that it has the higher degree of trafﬁc efﬁciency. Though
+one deals with efﬁciency. The comparison result is shown in its average distance is higher than ACC, Slot, iPCB, and
+TABLE III. PGM-G,consideringthecollisionratesofthesemethodsare
+The collision rates are shown in TABLE III in the ﬁrst morethantwotimesofFG-GMM,FG-GMMstillhasagood
+halves of the “US-101 Data” and the “I-80 Data” columns. overall safe performance.
+1254
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 11:45:59 UTC from IEEE Xplore.  Restrictions apply. isnotrobustenough,andtheplanningalgorithmcannotwork
+without the prediction under uncertainty. Future goals are
+to enhance the accuracy of the prediction and to develop
+a framework that can combine the planning and prediction
+intoaclosed-loopsystemforfuturecooperativeautonomous
+planning. We will also extend our method to estimate long-
+termmotionofmergingvehicles,inscenariosthathavemore
+than one merging car, and take advantage of a broader set
+of training data.
+ACKNOWLEDGMENTS
+The authors would like to thank Junqing Wei and Wenda
+Xu, who contributed to previous ideas of ramp merging.
+Fig. 6: Collision rates v.s. different number of speed nodes.
+REFERENCES
+[1] C.Dong,J.M.Dolan,andB.Litkouhi,“Intentionestimationforramp
+In conclusion, FG-GMM achieves better experimental
+mergingcontrolinautonomousdriving,”in2017IEEE28thIntelligent
+results than previous methods, in terms of collision rate, VehiclesSymposium(IV’17),Jun.2017,pp.1584–1589.
+average distance and overall performance. Since I-80 has a [2] H.-A. Loeliger, “An introduction to factor graphs,” IEEE Signal
+ProcessingMagazine,vol.21,no.1,pp.28–41,2004.
+longermergingrampthanUS-101,thehostvehiclehasmore
+[3] F.R.Kschischang,B.J.Frey,andH.-A.Loeliger,“Factorgraphsand
+time to interact with the merging vehicle, and the controller thesum-productalgorithm,”IEEETransactionsoninformationtheory,
+alsohasenoughtimetoadjustthevehicletoacertainspeed. vol.47,no.2,pp.498–519,2001.
+[4] D.Marinescu,J.Cˇurn,M.Bouroche,andV.Cahill,“On-ramptrafﬁc
+This may explain why the experimental results on I-80 are
+mergingusingcooperativeintelligentvehicles:Aslot-basedapproach,”
+slightly better than those on US-101. inIntelligentTransportationSystems(ITSC),201215thInternational
+IEEEConferenceon. IEEE,2012,pp.900–906.
+C. Collision Rates vs. Number of Speed Nodes [5] C. R. Baker and J. M. Dolan, “Trafﬁc interaction in the urban
+challenge: Putting boss on its best behavior,” in Intelligent Robots
+In order to determine the proper number of speed nodes, and Systems, 2008. IROS 2008. IEEE/RSJ International Conference
+the proposed method was applied to the dataset, with a on. IEEE,2008,pp.1752–1758.
+[6] J. Nilsson, M. Brannstrom, E. Coelingh, and J. Fredriksson, “Lane
+varying number of speed nodes. Fig. 6 shows the collision
+Change Maneuvers for Automated Vehicles,” IEEE Transactions on
+rate as we increase the number of speed nodes. For FG- IntelligentTransportationSystems,pp.1–10,2016.
+GMM, the collision rate ﬁrstly decreases from 1 to 45, [7] C. Liu, C.-Y. Lin, Y. Wang, and M. Tomizuka, “Convex feasible set
+algorithmforconstrainedtrajectorysmoothing,”inAmericanControl
+keeping the same from 45 to 64, and then slightly go up
+Conference(ACC),2017. IEEE,2017,pp.4177–4182.
+after 64. It is no surprise that more speed information helps [8] J. Wei, J. Dolan, and B. Litkouhi, “A prediction-and cost function-
+the decision making. However, excess past information can basedalgorithmforrobustautonomousfreewaydriving,”inIntelligent
+VehiclesSymposium,2010.
+reduce sensitivity to the present dynamic changes, which
+[9] E.Galceran,A.G.Cunningham,R.M.Eustice,andE.Olson,“Multi-
+is the reason why the collision rates increase as we use policydecision-makingforautonomousdrivingviachangepoint-based
+more than 64 nodes. Thus, choosing a proper number of behavior prediction: Theory and experiment,” Autonomous Robots,
+2017,inPress.
+speed nodes is a trade-off between robustness, sensitivity
+[10] A. Kueﬂer, J. Morton, T. Wheeler, and M. Kochenderfer, “Imitating
+and computational efﬁciency. Therefore, 45 speed nodes are driver behavior with generative adversarial networks,” in Intelligent
+preferredto64.Notethateachnodecapturesonespeedmea- VehiclesSymposium(IV),2017IEEE. IEEE,2017,pp.204–211.
+[11] W. Zhan, L. Sun, Y. Hu, J. Li, and M. Tomizuka, “Towards a
+surement whose update rate is 10Hz. Thus 45 nodes require
+fatality-awarebenchmarkofprobabilisticreactionpredictioninhighly
+4.5spastmeasurementsforestimates.Comparingtotheplain interactive driving scenarios,” in 2018 21st International Conference
+PGM plot of Collision rate vs. number of speed nodes in onIntelligentTransportationSystems(ITSC). IEEE,2018,pp.3274–
+3280.
+previouswork[1],thecollisionratekeepsdecreasinginstead
+[12] D.Isele,A.Cosgun,K.Subramanian,andK.Fujimura,“Navigating
+ofsigniﬁcantlygoingupbeforereachingtheoptimizednodes intersections with autonomous vehicles using deep reinforcement
+number, and the optimized range also moves towards zero, learning,” CoRR, vol. abs/1705.01196, 2017. [Online]. Available:
+http://arxiv.org/abs/1705.01196
+whichmeansitapproachestheconvergenceinafasterspeed.
+[13] Z. Qiao, K. Muelling, J. M. Dolan, P. Palanisamy, and P. Mudalige,
+This is the result of using forgetting factors in FG-GMM. “Automaticallygeneratedcurriculumbasedreinforcementlearningfor
+autonomous vehicles in urban environment,” in Intelligent Vehicles
+VI. CONCLUSION Symposium(IV),2018IEEE. IEEE,2018,pp.1233–1238.
+[14] F. Dellaert, M. Kaess et al., “Factor graphs for robot perception,”
+Real data test results show that the proposed FG-GMM Foundations and Trends(cid:13)R in Robotics, vol. 6, no. 1-2, pp. 1–139,
+method has the lowest collision rate comparing to previous 2017.
+methods,includingACC,Slot,i-PCB,andPGM,FG-GMM. [15] J. Dong, M. Mukadam, F. Dellaert, and B. Boots, “Motion planning
+asprobabilisticinferenceusinggaussianprocessesandfactorgraphs.”
+It has the best overall performance, therefore, Factor Graph inRobotics:ScienceandSystems,vol.12,2016.
+is safer and more efﬁcient. [16] V. Alexiadis, J. Colyar, J. Halkias, R. Hranac, and G. McHale,
+In the future, we will test the generality of our algorithm “Thenextgenerationsimulationprogram,”InstituteofTransportation
+Engineers.ITEJournal,vol.74,no.8,p.22,2004.
+against a different merging behavior through a manually [17] N.M.Nasrabadi,“Patternrecognitionandmachinelearning,”Journal
+designedmergingstrategy.Currently,thebehaviorprediction ofelectronicimaging,vol.16,no.4,p.049901,2007.
+1255
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 11:45:59 UTC from IEEE Xplore.  Restrictions apply. 

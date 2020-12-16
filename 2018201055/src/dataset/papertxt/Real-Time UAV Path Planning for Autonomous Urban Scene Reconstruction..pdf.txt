@@ -1,0 +1,546 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Dynamic SLAM: The Need For Speed
+Mina Henein1, Jun Zhang1, Robert Mahony1 and Viorela Ila2
+Abstract—The static world assumption is standard in most
+simultaneous localisation and mapping (SLAM) algorithms.
+Increased deployment of autonomous systems to unstructured
+dynamic environments is driving a need to identify moving
+objects and estimate their velocity in real-time. Most existing
+SLAM based approaches rely on a database of 3D models of 54.72 km/hr 50.76 km/hr
+objects or impose signiﬁcant motion constraints. In this paper,
+we propose a new feature-based, model-free, object-aware
+dynamic SLAM algorithm that exploits semantic segmentation
+Fig. 1. Results of our object-aware dynamic SLAM on KITTI Sequence0003.
+to allow estimation of motion of rigid objects in a scene
+Centroidsofeachobjectareobtainedbyapplyingourmotionestimatestotheﬁrst
+withouttheneedtoestimatetheobjectposesorhaveanyprior ground-truthobjectcentroid.Speedestimatesarealsoextractedforeachobject.
+knowledge of their 3D models. The algorithm generates a map
+of dynamic and static structure and has the ability to extract
+velocitiesofrigidmovingobjectsinthescene.Itsperformanceis
+avoidance [10] and adaptive cruise control [11]. The key
+demonstratedonsimulated,syntheticandreal-worlddatasets.
+innovationinthepaperisanovelposechangerepresentation
+I. INTRODUCTION usedtomodelthemotionofacollectionofpointspertaining
+to a given rigid body and the integration of this model into
+SLAM is an established research ﬁeld in robotics. While
+a SLAM optimisation framework. The resulting algorithm is
+many accurate and efﬁcient solutions to the problem exist,
+agnostic to the underlying 3D-model of the object as long
+most of the existing techniques heavily rely on the static
+asthesemanticdetectionandsegmentationoftheobjectcan
+worldassumption[1].Thisassumptionlimitsthedeployment
+be tracked. To the best of our knowledge, this is the ﬁrst
+ofexistingalgorithmstoawiderangeofincreasinglyimpor-
+workabletoestimate,alongwiththecameraposes,thestatic
+tantrealworldscenariosinvolvingdynamicandunstructured
+and dynamic structure, the full SE(3) pose change of every
+environments. Advances in deep learning have provided
+rigid object in the scene, extract object velocities and be
+algorithms that can reliably detect and segment classes of
+demonstrable on a real-world outdoor dataset.
+objects at almost real time [2], [3]. To incorporate such
+information in a geometric SLAM formulation then either a II. RELATEDWORK
+3D-modeloftheobjectmustbeavailable[4],[5]orthefront
+Establishing the spatial and temporal relationships be-
+end must explicitly provide pose information in addition to
+tween a robot, stationary and moving objects in a scene
+detectionandsegmentation[6],[7],[8].Therequirementfor
+serves as a basis for scene understanding [12] and the
+accurate 3D-models severely limits the potential domains of
+problems of simultaneous localisation, mapping and mov-
+application, while to the best of our knowledge, multiple
+ing object tracking are mutually beneﬁcial. In the SLAM
+object tracking and 3D pose estimation remain a challenge
+community,informationassociatedwithstationaryobjectsis
+tolearningtechniques.Thereisaclearneedforanalgorithm
+considered positive, while information drawn from moving
+that can exploit the powerful detection and segmentation
+objects is seen as degrading the algorithm performance.
+capabilities of modern deep learning algorithms without
+SLAMsystemseithertreatdatafrommovingobjectsasout-
+relyingonadditionalposeestimationormotionmodelpriors.
+liers[13],[14],[15],[16],[17]ortheytrackthemseparately
+Inthispaper,weproposeanovelmodel-free,object-aware
+using multi-target tracking [18], [19], [20], [21]. Bibby and
+point-based dynamic SLAM approach that leverages image-
+Reid’s SLAMIDE [22] estimates the state of 3D features
+based semantic information to simultaneously localise the
+(stationary or dynamic) with a generalised EM algorithm
+robot, map the static structure, estimate a full SE(3) pose
+wheretheyusereversibledataassociationtoincludedynamic
+changeofmovingobjectsandbuildadynamicrepresentation
+objects in a single framework SLAM. Wang et al. [12]
+oftheworld.Wealsofullyexploittherigidobjectmotionto
+developed a theory for performing SLAM with Moving
+extract velocity information of objects in the scene (Fig. 1),
+Objects Tracking (SLAMMOT). In the latest version of
+an emerging task in autonomous driving which has not yet
+their SLAM with detection and tracking of moving objects,
+been thoroughly explored [9]. Such information is crucial to
+the estimation problem is decomposed into two separate
+aidautonomousdrivingalgorithmsfortaskssuchascollision
+estimators(movingandstationaryobjects)tomakeitfeasible
+1MinaHenein,JunZhang, andRobertMahonyarewiththe Collegeof to update both ﬁlters in real time. Kundu et al. [21] tackle
+Engineering and Computer Science, Australian National University, 0200 the SLAM problem with dynamic objects by solving the
+Canberra,Australia.firstname.lastname@anu.edu.au problems of Structure from Motion (SfM) and tracking of
+2Viorela Ila is with the School of Aerospace, Mechanical and
+movingobjectsinparallel.Reddyetal.[23]usesopticalﬂow
+Mechatronic Engineering, University of Sydney, 2006 Sydney, Australia
+viorela.ila@sydney.edu.au and depth to compute semantic motion segmentation. They
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 2123
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. kk−−11Ok B. Motion Model Of A Point On A Rigid Body
+Lli kk−−11Hk Lli kkHk+1 k−{X1zkki−−11} 0k−1Hkj {kXzkik} kk{OXkk++11} theLceoto{r0d}inadteenofrtaemteheasrseofecrieantecdetcooaormdionvaitnegfrraigmide,baonddy.{WL}e
+0Lk−1 0lki−1 0L0klki 0lki+1 Lli 0Xk−10lki−1 0lki0lki+1 0Xk 0kHkj+1k+1zki+1 wtoobrjitethecet,thrleeefteprLoelsniec∈e0ILRfkr3a∈mdeeSnE{o(0t3e}).thoFeforcthoaeorrfdiegianitdaut-rebesodooybfstewhriivstehdproeoisnnpteaicnnt
+{0} 0Lk+1 {0} 0Xk+1 the object frame. We write 0lki for the coordinates of the
+(a) (b) same point expressed in the reference frame {0} at time k.
+Note that for rigid bodies in motion, Lli is constant for all
+Fig.2. (a):Coordinatesoftherigidbodyinmotion.ThepointsLliarerepresented
+relativetotherigidbodypose{L}ateachstep.(b):Robotposes,movinglandmark theobjectinstances,whileboth0Lk and0lki aretimevarying.
+positions(black)andthemeasurements(red)atthreedifferenttimesteps. The point coordinates are related by the expression:
+isolate static objects from moving objects and reconstruct Ll¯i= 0L−10l¯i (1)
+k k
+them independently, before using semantic constraints to
+improvethethe3Dreconstruction.Dewanetal.[24]presents where the bar indicates homogeneous coordinates.
+a model-free approach for detecting and tracking dynamic The relative motion of the object L from k−1 to k is
+objectsin3DusingLiDARscans.Juddetal. [25]estimates represented by a rigid-body transformation Lk−1H ∈SE(3)
+k−1 k
+the full SE(3) motion of both the camera and rigid objects calledthebody-ﬁxedframeposechange.Theindicesindicate
+in the scene by applying a multi-motion visual odometry that the transformation maps a base pose 0Lk−1 (lower left
+(MVO)multimodelﬁttingtechnique.Althoughthisapproach index) to a target pose 0Lk (lower right index), expressed in
+does not require prior knowledge of the environment or coordinates of the frame 0Lk−1 (upper left index):
+object 3D models, they parameterise the motion transforms Lk−1H =0L−1 0L (2)
+non-incrementally (with respect to the ﬁrst observed frame) k−1 k k−1 k
+which might introduce severe linearisation errors and only Fig. 2a shows this transformations for three consecutive
+show results on one lab-environment experiment, with no object poses. The new rigid body coordinates are given by
+evaluation on any existing datasets. A very recent work by the incremental pose transformation:
+YangandScherer[26]presentsamethodforsingleimage3D
+cuboiddetection,andmulti-viewobjectSLAMforbothstatic 0Lk=0Lk−1Lkk−−11Hk (3)
+and dynamic environments. Their main interest, however, Consider a point Lli in the object frame {L}. Writing the
+is the camera pose and object detection accuracy and they
+expression (1) for two consecutive poses of the object at
+provide no evaluation of the object pose estimation. time k−1 and k and using the relative motion of the object
+in (3), the motion of this point can written as:
+III. ACCOUNTINGFORDYNAMICOBJECTSINSLAM
+The problem considered is one in which there are rela- 0l¯ki = 0Lk−1Lkk−−11Hk0Lk−−110l¯ki−1. (4)
+tively large rigid objects moving within the sensing range
+We observe that (4) relates the same point on the rigid
+of the robot that is undertaking the SLAM estimation. The
+body in motion at different time steps by a transfor-
+SLAMfront-endisabletoidentifyandassociatepointsfrom
+the same potentially moving object at different time steps. mation k−01Hk= 0Lk−1Lkk−−11Hk0Lk−−11, where k−01Hk∈SE(3).
+According to [29], this equation represents a frame change
+These points share an underlying motion constraint that can
+of a pose transformation, and shows how the body-ﬁxed
+beexploitedtoimprovethequalityoftheSLAMestimation.
+frame pose change in (2) relates to the reference frame pose
+A. Problem Formulation change. The point motion in the reference frame becomes:
+The SLAM with dynamic objects estimation problem is
+0l¯i = 0H 0l¯i . (5)
+modelled using factor graphs [27], and the goal is to obtain k k−1 k k−1
+the static and dynamic 3D structure and the robot poses
+This formulation is key to the proposed approach since it
+that maximally satisfy a set of measurements and pose eliminatestheneedtoestimatetheobjectpose0L andallows
+k
+change constraints. Assuming Gaussian noise, this problem us to work directly with points 0l¯i in the reference frame.
+becomes a non-linear least squares (NLS) optimisation over k
+Linearvelocityextraction: Othervehiclevelocityisacru-
+a set of variables [28]: the robot poses x={x ...x }, with
+0 nx cialpieceofinformationinautonomousdrivingapplications.
+x ∈SE(3) where k∈0...n and n is the number of steps,
+k x x Given vehicle’s rigid body pose change in inertial frame
+andthe3Dpointfeaturesintheenvironmentseenatdifferent 0H ,itslinearvelocityvectorin( 1 .m)canbecomputed:
+timesteps:l={l1...lnl}whereli ∈IR3 andi∈1...n isthe k−1 k fps s
+0 nx k l
+ulannidqmuearlakns.dmThaerksientdoexf laannddmnlairsktsh,elt=otall∪nulm,bceornotafidnesteactseedt v=k−01tk−(I3−k−01Rk)ck−1 (6)
+s d
+of static landmarks l and a set of moving object landmarks and its speed is the magnitude of this vector, where 0R ∈
+s k−1 k
+l . The same point on a moving object is represented using SO(3) and 0t ∈IR3 the rotation and translation compo-
+d k−1 k
+a different variable at each time step, i.e. li and li are the nents of the vehicle’s pose change in inertial frame 0H
+k−1 k k−1 k
+samephysicalithpointseenattimesk−1andk,respectively. respectively,I3 istheidentitymatrix,andck−1 istheobject’s
+2124
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. p0 x0 x1 x2 p0 x0 x1 x2 Static & dynamic 
+RGB + Depth feature tracks
+l1 l02 l12 l22 l3 l1 l02 l12 l22 l3 Feature 
+Extraction 
+& Tracking
+0H11 1H21 H1 Instance-level Mask image
+(a) (b) Object  Back-End
+Segmentation
+Dynamic 
+SLAM   
+Solution
+Fig.3. Back-end(a):Factorgraphrepresentationofaproblemwithmultiplepose
+changeverticesforthesameobject.(b):Factorgraphrepresentationofaproblemwith
+auniqueposechangevertexforthesameobject.
+Fig. 4. System overview. Input images are used into an instance level object
+segmentationalgorithmtoprovideobjectsmasks.Thealgorithmthendetectsandtracks
+featuresonpotentiallymovingobjects.Potentiallydynamicfeaturesalongwithtracked
+centroid position at time k−1. As our algorithm is sparse, staticfeaturesareusedtobuildthegraph,thatisthenfedintoaback-endoptimisation.
+we do not have access to the object’s centroid but rather
+approximate it by the 3D centroid of features detected on
+the advantage that it allows for efﬁcient implementations
+the object. The derivation of (6) is detailed in the appendix
+of batch [27] [30] and incremental [31], [32], [33] solvers.
+and for more explanation, we refer the reader to [29].
+It has been shown that in dynamic SLAM, knowing the
+type of motion of the objects in the environment is highly
+C. Motion factors in dynamic SLAM
+valuable[12].Inthisworkweevaluatetwoscenarioswithout
+The proposed approach estimates the camera poses, the
+and with constant motion model :
+static and dynamic structure and the motion of the dynamic
+• In city scenarios, where the objects motions are subject to
+structure. To achieve this, motion factors along with the
+changes (acceleration, deceleration, etc.) modelling the mo-
+odometry obtained from the robot’s proprioceptive sensors,
+tionischallenging.Therefore,weallowfortheestimationof
+and the landmarks observations are optimised jointly:
+anewposechangeateverytimestep.Fig.3ashowsafactor
+θθθ∗=argminn∑mk ρ ((h(x ,li)−zi)⊤Σ−1(h(x ,li)−zi))+ graphrepresentationofsuchscenariowherethemotionofthe
+h k k k wk k k k same object is estimated using two motions vertices for two
+θθθ k=1
+differenttimetransitions.Apossibleconstraintistominimise
+mi
+i∑=1ρh((f(xk−1,xk)−ok)⊤Σ−vk1(f(xk−1,xk)−ok))+ t•heAchhiagnhgweabyestcweeneanrioth,ewsehemreoteivoenryesvtiemhiactlees.maintains a con-
+∑msρ ((g(li ,li, 0Hj)⊤Σ−1(g(li ,li, 0Hj)o stant motion. Fig. 3b shows the factor graph representation
+h k−1 k k−1 k q k−1 k k−1 k where a single motion is estimated per object.
+i,j
+Further we show that if the body-ﬁxed frame pose change
+(7)
+is constant then the reference frame pose change is constant
+where ρh is the Huber function, h(xk,lki) is the 3D point too. For any k−1,k′−1 time indices, the constant motion
+measurement model with Σwk the point measurement co- in the body-ﬁxed pose change is:
+variance matrix; z={z ...z }|z ∈IR3 is the set of all m
+3D point measurement1s atmkallktime steps, f(xk−1,xk) iks Lkk−−11Hk=C=Lkk′′−−11Hk′ ∈SE(3). (9)
+the odometry model with Σvk odometry covariance matrix We rescale (3) and use (9) to obtain: 0Lk =0 Lk−1C which
+aFnigd. o2b=s{hoo1w...somthi}e tmheeasseutreomfemntisoidnomreedt.ricg(mliea,sluir,em0eHntjs). we replace in k−01Hk= 0Lk−1C0Lk−−11 to obtain:
+k−1 k k−1 k
+is the motion model of points on dynamic objects with Σ 0H =0L C0L−1= 0H (10)
+q k−1 k k k k k+1
+motion covariance matrix and m is the total number of
+s
+Itfollowsthatthereferenceframeposechangeforaspeciﬁc
+motion factors. The motion of any point on a detected rigid
+object j: 0Hj=0Hj= 0Hj ∈SE(3) holds for any k,k′
+object jcanbecharacterisedbythesameposetransformation k−1 k k′ k′+1
+0Hj∈SE(3) given by (5) and the corresponding factor is: timeindicesandthefactorin (8)ischangedaccordingly.The
+k−1 k constantmotionassumptioncanbeusedtohandleocclusions
+g(li ,li, 0Hj)=0li − 0Rj0li − 0tj+q (8) by keeping hypothesis of previously detected objects and
+k−1 k k−1 k k−1 k−1 k k−1 k−1 k sj
+reviving those based on re-observations of occluded objects.
+where q ∼N (0,Σ ) is the normally distributed zero-mean
+s q
+Gaussian noise. The factor in (8) is a ternary factor which IV. SYSTEMOVERVIEW
+we call the motion model of a point on a rigid body (orange The system pipeline shown in Fig. 4 assumes a robot
+factors in Fig.3). All the variables are grouped in θθθ =x∪l∪ equippedwithanRGB-Dcameraandproprioceptivesensors
+H, where H is the set of all the variables characterising the (e.g. odometers, IMU). Our feature-based object-aware dy-
+objects’ motions. namic SLAM back-end estimates the robot poses, the static
+and dynamic structure and pose transformations for every
+D. The factor graph
+detected object in the scene. To ensure features are being
+We model the dynamic SLAM problem as a factor graph. detectedonmovingobjects,weemployaninstance-levelob-
+The factor graph formulation is highly intuitive and has jectsegmentationalgorithmtoproduceobjectsmasks.Object
+2125
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. segmentationconstitutesanimportantpriorinstatic/dynamic
+object classiﬁcation and tracking of dynamic objects. The
+front-end then makes use of object masks to detect features
+on potentially-moving objects and on static background.
+Feature tracking is a crucial module for the success of our
+approach.Throughobjectsegmentationandfeaturetracking,
+the SLAM front-end is able to identify and associate points
+on the same rigid-body object at different time steps. These Fig.5. Comparisonofopticalﬂowanddescriptormatchingforfeaturetracking.
+points share an underlying motion model that we exploit
+to achieve simultaneous localisation, mapping and moving
+objecttracking.Thealgorithmdoesnotrequirethefront-end that are entering/exiting the camera ﬁeld of view and which
+to estimate the objects’ pose or use any geometric model makes their motion estimates inaccurate. This threshold is
+of the objects. The static and dynamic 3D measurements set to 6% for vKITTI, and 2% for KITTI.
+along with the measurements from proprioceptive sensors a) Depth error: We evaluate the performance of our
+are integrated into the back-end to simultaneously estimate algorithmusingGTobjectsegmentation,andfeaturetracking
+the camera motion, the static and dynamic structure and the with odometry and varied point measurement noise. The
+SE(3) pose transformations of detected objects in the scene. noiselevelsaddedare5%fortranslationalodometryineach
+axis, and 10% for rotational odometry around each axis.
+V. EXPERIMENTSANDRESULTS Threedifferentnoiselevels,drawnfromanormaldistribution
+A. Error Metrics with zero mean and standard deviation σ1=0.02, σ2=0.04,
+and σ =0.06 m in each axis per observation, were tested.
+The accuracy of the solution is evaluated vs ground-truth 3
+These noise levels correspond to commercially available
+(GT)bycomparingtheRelativeTranslationalError(RTE)in
+LiDAR system, and a stereo-camera rig respectively and a
+%, that is the translational component of the error between
+thirdhighervalue.Thisisconceptuallythesameasreplacing
+the estimated and GT robot pose changes. Similarly, the
+Relative Rotational Error (RRE) in ◦/m is the rotational thedepthinputinthefront-endwithastereodepthestimation
+algorithm e.g. SPSS [35] or a single image depth estimation
+component of the same error. We also evaluate the Relative
+for a monocular system e.g. [36]. Point measurement noise
+Structure Error (RSE) in % for all static and dynamic
+is kept at σ for further tests in this subsection.
+landmarks, as the error between the corresponding relative 1
+positions of the estimated and GT structure points in the b) Object segmentation error: This test aims at evalu-
+simulated experiments. We also provide an evaluation of the ating the effect of the object segmentation while using GT
+objectpose changeestimates; theObject MotionTranslation featuretrackingwithaddedodometryandpointmeasurement
+Error (OMTE) in %, the Object Motion Rotational Error noise. We employ MASK-RCNN [3], learning based model,
+(OMRE)in◦/mandfordrivingscenarios,theObjectMotion for instance-level object segmentation. We perform evalua-
+Speed Error (OMSE) in %. tion tests of MASK-RCNN on all sequences of vKITTI and
+KITTI.Resultsformeanaverageprecision(mAP)andmean
+B. Virtual KITTI Dataset intersection over union for predictions only (mIOU Pred) of
+Description: Virtual KITTI [34] is a photo-realistic syn- the ‘car’ class are 0.513 and 0.557 for vKITTI and 0.413
+thetic dataset that provides RGB-D videos from a vehicle and 0.632 for KITTI. Numbers show good performance,
+driving in an urban environment. Frames are fully annotated however,testingtheeffectoncameraandobjectposechange
+at the pixel level with unique object tracking identiﬁers estimation is crucial.
+(needed for errors calculations). GT information about cam- c) Feature tracking error: As our algorithm is sparse
+eraandobjectposesisalsoprovidedwhichmakesitaperfect feature-based, feature tracking is an essential component of
+dataset to test and evaluate the proposed technique. the front-end. In order to test the effect of feature tracking,
+Goal: We make use of the GT data to test the effect of we ﬁrst conduct tests on the quantity and quality of feature
+each component in the front-end on the performance of the matches using 1) PWC-Net [37] and 2) feature descriptor
+algorithm and the accuracy of the pose change estimation matching. Fig. 5 shows the number of total and object
+for the camera and moving objects in the scene. The three matches and their corresponding end-point error (EPE),
+aspectsstudiedareerrorsin:a)depth/3Dpointmeasurement, and then extends this test to show these values for “good
+b) object segmentation, and c) feature tracking. matches”; matches with less than 3 pixels EPE.
+Implementation: Due to the fact that our algorithm is Discussions: As shown in Fig. 6, the feature tracking is
+sparse-based, object pose change estimation is affected by the most crucial component of the front-end and dictates
+the distribution of the extracted features on moving objects. the performance of our feature-based algorithm. Fig. 5 and
+Anotherimportantaspectisthepercentageoftheobjectmask 6 show better performance of optical ﬂow over descriptor
+in the image. In the experiments reported in this paper, we matching in terms of quantity and quality of features. For
+onlyestimateforobjectswhosesegmentationmasksamount the remainder of this paper, optical ﬂow is used for feature
+to a certain percentage of the total image. This threshold trackingandweaimtolookatimprovingthefeaturetracking
+ensures to exclude far-away and partially observed objects in a future work by utilising the object motion estimates.
+2126
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. TABLEII
+RESULTSOFAPPLYINGOUROBJECT-AWAREDYNAMICMOTION
+INTEGRATIONONKITTI
+Seq.007 Seq.006 Seq.0001 Seq.0003 Seq.0005 Seq.0000
+Error SOtantliyc SOtantliyc Ours SOtantliyc Ours SOtantliyc Ours SLMAOMT+ Ours Ours
+RTE(%) 0.039 0.000 0.000 0.248 0.248 0.016 0.016 0.022 0.025 0.020
+RRE(◦/m) 0.003 0.001 0.001 0.017 0.017 0.002 0.002 0.003 0.003 0.001
+OMTE(%) – – 11.646 – 10.525 – 6.0/59.5 23.608 23.653 42.7/63
+OMRE(◦/m) – – 0.254 – 0.555 – 0.2/1.0 0.472 0.473 1.2/5.0
+OMSE(%) – – 10.587 – 5.561 – 2.5/2.7 11.809 11.809 20.7/22
+enough static structure, both algorithms yield very similar
+Fig.6. StudyevaluatedonvKITTIoftheeffectofdifferentfront-endcomponents
+results as shown in the next section.
+onthecamera/objectsposechangeestimationaccuracy.
+D. KITTI dataset
+TABLEI
+RESULTSOFAPPLYINGOUROBJECT-AWAREDYNAMICMOTION Description: KITTI [38] has been a standard benchmark
+INTEGRATIONONASIMULATEDDATA suiteforanumberofchallengingreal-worldcomputervision
+tasks. We make use of the KITTI tracking dataset as it
+Error SLAM+MOT Ours
+provides GT object poses in camera coordinate frame.
+RTE(%) 4.426 3.804
+RRE(◦/m) 1.34 0.486 Goal: This experiment is designed to evaluate the perfor-
+RSE(%) 8.019 4.177 mance of our algorithm on real-world challenging outdoor
+OMTE(%) 20.946 4.018
+OMRE(◦/m) 0.349 0.055 scenarios. In relevant dataset sequences, we compare our
+results with classical static only SLAM (where dynamic
+objects are considered outliers) and SLAM+MOT solutions.
+Object segmentation appears to have the least effect on the Todemonstratethegeneralityoftheapproachandthefact
+estimation quality. Errors in the camera and object motion that the proposed framework performs well in any type of
+estimation due to the use of MASK-RCNN compared to GT scenarios, we consider three different cases:
+segmentation appear to be minimal. a)ClassicalSLAM:AmovingrobotequippedwithanRGB-
+D camera in a static environment. Sequence0007 represents
+C. Simulated Data
+thiscaseandshowsthatouralgorithmperformsequallywell
+Description: This experiment features a single simulated inaclassicalscenariowithnodynamicsandrequiresnoprior
+ellipsoid-shaped object tracked by a robot as it follows a knowledge or makes any prior assumptions of the scene.
+circular motion in an environment with no static structure. b) Multi-object tracking: A static camera in a dynamic en-
+TheobjectissimulatedtohaveaconstantSE(3)posechange, vironment as shown in Sequence0006. For this speciﬁc data
+and the estimation makes use of this piece of information sequence, we consider a constant pose change assumption.
+to constraint the problem as explained in Subsection III- Note that camera pose change errors for this sequence are
+D. The simulation corresponds to a scenario where only reported in meters and degrees.
+moving structure is visible, e.g. a vehicle on a bridge or c) Dynamic SLAM: Amoving robot equipped with anRGB-
+inside a tunnel occluded by other vehicles driving alongside D camera in a dynamic environment. In here we do the
+and failing to track static structure. distinction between two sub-scenarios:
+Goal: This experiment is designed to show that our • A highway scenario, represented by Sequence0005, where
+approach provides good solutions in cases where existing every vehicle is assumed to have constant motion. This
+approaches to dynamic SLAM might fail. We compare our allows us to constraint the problem by assuming a constant
+algorithm(oneframeworkjointestimation)vs.paralleltrack- pose change model for each detected object in the scene.
+ing and mapping, e.g. SLAM + Multiple Object Tracking •Sequence0001,Sequence0003andSequence0000represent
+(MOT)[18],[19],[20],[21].Thisclassofalgorithmsdepend anintersectionandothercitydrivingscenarios,wheremotion
+on the quality of the returned map, and will perform poorly models are difﬁcult to impose. In here, the factor graph
+in environments with insufﬁcient number of reliable static formulation allows for the estimation of a new pose change
+structure such as the examples given above. vertex every time step. Some insights on how to improve
+Discussions: Camera motion in the case of parallel the estimation in such scenarios is provided in Section VI.
+SLAM+MOT is basically a direct integration of odometric Sequence0003 and Sequence000 contain two objects each,
+measurements. Results in Table I show the clear advantage thereforetheobjectmotionerrorresultsareshownseparated
+of our algorithm that jointly estimates the camera and rigid by a ‘/’. Sequence0000 consists of a “van” and a “cyclist”
+object pose transformations. Improvements are in the range which slightly violates the rigidity assumption, yet our
+of 80-85% in object pose change estimation. In an extreme approach still provides fairly good results.
+case, where no static structure is observed, our algorithm Implementation: The three variants of SLAM: classical,
+not only improves the object motion estimates but also the SLAM+MOT,anddynamicarerunusingthefront-endintro-
+camera pose estimation. However, in an environment with ducedinSection IVandimplementedinGTSAM[39].The
+2127
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. z (m)
+40
+ static structure
+35   vcaycnlist
+30
+25
+z (m) x (m) z (m)1250
+10
+5
+0
+x (m) (b) Sequence0006frames40-140.MOTwitha -20 -10x (m) 0 10
+(a) Sequence0007frames15-510.StaticSLAM. staticcamera. (c) Sequence0000frames0-60.DynamicSLAM.
+z (m)
+z (m)
+m)
+m) x (
+x (
+(d) Sequence0003frames0-40results.DynamicSLAM. (e) Sequence0005frames185-229results.DynamicSLAM.
+Fig.7. SampleresultsonKITTIvarioussequences.
+trackingdatasetisthoughtforcamera-onlybasedapplication, semantic depth from single image or a purely monocular
+therefore GPS and IMU measurements are fused and further setup in the future. An important issue to be analysed, is the
+corrupted with noise to simulate odometric measurements computational complexity of SLAM with dynamic objects.
+available in a robotic (self-driving cars) scenario. The noise Inlong-termapplications,differenttechniquescanbeapplied
+values are the same as the ones explained in Subsection V- to limit the growth of the graph [40], [41]. The estimation
+B.0.a,exceptSequence0007,wheretwicethenoiseisadded. could be further enhanced by assuming a constant motion
+In autonomous driving, the literature normally distinguishes withinatemporalwindowandusethisassumptiontohandle
+between different depth ranges for velocity estimation [9]: occlusions and reduce the problem size. Another possible
+near (d < 20 m), medium (20 m ≤ d < 45 m) and far extensionistousetheSLAMback-endestimatestoimprove
+range (d > 45 m). In all KITTI experiments presented here, the tracking accuracy of the front-end.
+we only consider objects < 22 m of distance to the camera
+(near and early medium range).
+APPENDIX
+Discussions: All results show high accuracy in the esti-
+mation of pose change transformations and speeds of mov- Toseethat(6)isthesamequantityin3Dasthetranslation
+ing objects. Results in Table II show a speed estimation vector from the origin of the object pose at time {k−1} to
+accuracy in the range of 78-97.5%. The second objects in itsheoriginoftheobjectposeattime{k}asseenin{0},we
+Sequence0003 and Sequence0000 are particularly hard to start by writing the object pose change in {0} and substitute
+process. In Sequence0003, the second object only occupies for Lk−1H by its deﬁnition in (2)
+k−1 k
+a small part of the image, dominated by its wheels having
+a different motion than the vehicle, yet its speed estimate is k−01Hk= 0Lk−1Lkk−−11Hk0Lk−−11= 0Lk0Lk−−11 (11)
+reasonable. Sequence0000 consists of a van and a cyclist
+Assuming 0R ∈SO(3) and 0t ∈IR3 the rotation and
+turning at very low speeds (< 5.5 m/s). Their motion Lk−1 Lk−1
+estimation is particularly hard because of association errors translation components of 0Lk−1, and 0RLk, 0tLk their corre-
+spondingattimek,thetranslationandrotationpartsof 0H
+andthefactthatacyclistisanon-rigidobjectmostlyformed k−1 k
+can be expressed as 0t −0R 0R⊤ 0t and 0R 0R⊤ .
+by wheels not obeying the motion model of the object. Lk Lk Lk−1 Lk−1 Lk Lk−1
+Substituting these two quantities into (6), we get
+Although speed errors seem high in percentage, they only
+account for an average speed error of 0.16 m/s for the van v= 0t −0R 0R⊤ 0t −(I −0R 0R⊤ )0t (12)
+Lk Lk Lk−1 Lk−1 3 Lk Lk−1 Lk−1
+and 0.063 m/s for the cyclist.
+which reduces to v= 0t −0t which is the translation
+Lk Lk−1
+VI. CONCLUSIONANDFUTUREWORK vector from the origin of the object pose at time {k−1} to
+In this paper we proposed a novel framework that ex- the origin of the object pose at time {k} as seen in {0}.
+ploits semantic information in the scene with no additional
+knowledge of the object pose or geometry, to achieve si- ACKNOWLEDGMENT
+multaneous localisation, mapping and tracking of dynamic
+objects.Thealgorithmshowsconsistent,robustandaccurate This research was supported by the Australian Research
+results in various scenarios. Although the method presented Council through the “Australian Centre of Excellence for
+here is applied to RGB-D/stereo images, we plan to explore Robotic Vision” CE140100016.
+2128
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. REFERENCES InternationalConferenceonComputerVision(ICCV),2011. IEEE,
+2011,pp.2080–2087.
+[1] A. Walcott-Bryant, M. Kaess, H. Johannsson, and J. J. Leonard,
+[22] C. Bibby and I. Reid, “Simultaneous Localisation and Mapping in
+“Dynamic pose graph SLAM: Long-term mapping in low dynamic
+DynamicEnvironments(SLAMIDE)withreversibledataassociation,”
+environments,”in2012IEEE/RSJInternationalConferenceonIntel-
+inProceedingsofRobotics:ScienceandSystems,2007.
+ligentRobotsandSystems. IEEE,2012,pp.1871–1878.
+[23] N. D. Reddy, P. Singhal, V. Chari, and K. M. Krishna, “Dynamic
+[2] R. Girshick, I. Radosavovic, G. Gkioxari, P. Dolla´r, and K. He,
+body vslam with semantic constraints,” in IEEE/RSJ International
+“Detectron,”https://github.com/facebookresearch/detectron,2018.
+ConferenceonIntelligentRobotsandSystems(IROS),2015. IEEE,
+[3] K. He, G. Gkioxari, P. Dolla´r, and R. Girshick, “Mask R-CNN,” in
+2015,pp.1897–1904.
+IEEE International Conference on Computer Vision (ICCV), 2017.
+[24] A.Dewan,T.Caselitz,G.D.Tipaldi,andW.Burgard,“Motion-based
+IEEE,2017,pp.2980–2988.
+detectionandtrackingin3dlidarscans,”in2016IEEEInternational
+[4] R. F. Salas-Moreno, R. A. Newcombe, H. Strasdat, P. H. Kelly, and
+Conference on Robotics and Automation (ICRA). IEEE, 2016, pp.
+A.J.Davison,“SLAM++:SimultaneousLocalisationandMappingat
+4508–4513.
+the Level of Objects,” in IEEE Conference on Computer Vision and
+[25] K. M. Judd, J. D. Gammell, and P. Newman, “Multimotion visual
+PatternRecognition(CVPR),2013. IEEE,2013,pp.1352–1359.
+odometry (mvo): Simultaneous estimation of camera and third-party
+[5] D.Ga´lvez-Lo´pez,M.Salas,J.D.Tardo´s,andJ.Montiel,“Real-time
+motions,” in 2018 IEEE/RSJ International Conference on Intelligent
+monocular object slam,” Robotics and Autonomous Systems, vol. 75,
+RobotsandSystems(IROS). IEEE,2018,pp.3949–3956.
+pp.435–449,2016.
+[26] S.YangandS.Scherer,“Cubeslam:Monocular3-dobjectslam,”IEEE
+[6] A. Milan, L. Leal-Taixe´, I. Reid, S. Roth, and K. Schindler,
+TransactionsonRobotics,2019.
+“MOT16:Abenchmarkformulti-objecttracking,”arXiv:1603.00831
+[27] F. Dellaert and M. Kaess, “Square Root Sam: Simultaneous local-
+[cs], Mar. 2016, arXiv: 1603.00831. [Online]. Available: http:
+ization and mapping via square root information smoothing,” The
+//arxiv.org/abs/1603.00831
+InternationalJournalofRoboticsResearch,vol.25,no.12,pp.1181–
+[7] A.ByravanandD.Fox,“Se3-nets:Learningrigidbodymotionusing
+1203,2006.
+deepneuralnetworks,”inIEEEInternationalConferenceonRobotics
+[28] L. Polok, M. Solony, V. Ila, P. Smrz, and P. Zemcik, “Efﬁcient
+andAutomation(ICRA),2017. IEEE,2017,pp.173–180.
+implementationforblockmatrixoperationsfornonlinearleastsquares
+[8] P.WohlhartandV.Lepetit,“Learningdescriptorsforobjectrecogni-
+problems in robotic applications,” in IEEE International Conference
+tionand3dposeestimation,”inProceedingsoftheIEEEConference
+onRoboticsandAutomation(ICRA),2013. IEEE,2013,pp.2263–
+onComputerVisionandPatternRecognition,2015,pp.3109–3118.
+2269.
+[9] M. Kampelmu¨hler, M. G. Mu¨ller, and C. Feichtenhofer, “Camera-
+[29] G.S.Chirikjian,R.Mahony,S.Ruan,andJ.Trumpf,“Posechanges
+basedvehiclevelocityestimationfrommonocularvideo,”2018.
+from a different point of view,” in Proceedings of the ASME Inter-
+[10] R.Aufre`re,J.Gowdy,C.Mertz,C.Thorpe,C.-C.Wang,andT.Yata,
+national Design Engineering Technical Conferences (IDETC) 2017.
+“Perceptionforcollisionavoidanceandautonomousdriving,”Mecha-
+ASME,2017.
+tronics,vol.13,no.10,pp.1149–1161,2003.
+[30] S.Agarwal,K.Mierle,andOthers,“Ceressolver,”http://ceres-solver.
+[11] R. K.Jurgen, “Adaptivecruise control,”SAE TechnicalPaper, Tech.
+org.
+Rep.,2006.
+[12] C.-C.Wang,C.Thorpe,S.Thrun,M.Hebert,andH.Durrant-Whyte, [31] M. Kaess, H. Johannsson, R. Roberts, V. Ila, J. J. Leonard, and
+“Simultaneouslocalization,mappingandmovingobjecttracking,”The F. Dellaert, “iSAM2: Incremental smoothing and mapping using
+International Journal of Robotics Research, vol. 26, no. 9, pp. 889– the bayes tree,” The International Journal of Robotics Research, p.
+916,2007. 0278364911430419,2011.
+[13] D. Hahnel, D. Schulz, and W. Burgard, “Map building with mobile [32] L. Polok, V. Ila, M. Solony, P. Smrz, and P. Zemcik, “Incremen-
+robotsinpopulatedenvironments,”inIEEE/RSJInternationalConfer- tal Block Cholesky Factorization for Nonlinear Least Squares in
+enceonIntelligentRobotsandSystems,2002.,vol.1. IEEE,2002, Robotics,” in Proceedings of Robotics: Science and Systems, Berlin,
+pp.496–501. Germany,June2013.
+[14] D. Hahnel, R. Triebel, W. Burgard, and S. Thrun, “Map building [33] V. Ila, L. Polok, M. Sˇolony, and P. Svoboda, “SLAM++-A highly
+withmobilerobotsindynamicenvironments,”inIEEEInternational efﬁcient and temporally scalable incremental SLAM framework,”
+ConferenceonRoboticsandAutomation,2003.Proceedings.ICRA’03, International Journal of Robotics Research, vol. Online First, no. 0,
+vol.2. IEEE,2003,pp.1557–1563. pp.1–21,2017.
+[15] D. F. Wolf and G. S. Sukhatme, “Mobile robot simultaneous local- [34] A.Gaidon,Q.Wang,Y.Cabon,andE.Vig,“VirtualWorldsasProxy
+izationandmappingindynamicenvironments,”AutonomousRobots, forMulti-ObjectTrackingAnalysis,”inCVPR,2016.
+vol.19,no.1,pp.53–65,2005. [35] K.Yamaguchi,D.McAllester,andR.Urtasun,“Efﬁcientjointsegmen-
+[16] H.Zhao,M.Chiba,R.Shibasaki,X.Shao,J.Cui,andH.Zha,“SLAM tation, occlusion labeling, stereo and ﬂow estimation,” in European
+in a dynamic large outdoor environment using a laser scanner,” in ConferenceonComputerVision. Springer,2014,pp.756–771.
+IEEE International Conference on Robotics and Automation, 2008. [36] H. Ren, M. El-khamy, and J. Lee, “Deep robust single image depth
+ICRA2008. IEEE,2008,pp.1455–1462. estimationneuralnetworkusingsceneunderstanding,”arXivpreprint
+[17] B. Besco´s, J. M. Fa´cil, J. Civera, and J. Neira, “Dynslam: Track- arXiv:1906.03279,2019.
+ing, mapping and inpainting in dynamic scenes,” arXiv preprint [37] D.Sun,X.Yang,M.-Y.Liu,andJ.Kautz,“Pwc-net:Cnnsforoptical
+arXiv:1806.05620,2018. ﬂowusingpyramid,warping,andcostvolume,”inProceedingsofthe
+[18] C.-C. Wang, C. Thorpe, and S. Thrun, “Online simultaneous local- IEEEConferenceonComputerVisionandPatternRecognition,2018,
+ization and mapping with detection and tracking of moving objects: pp.8934–8943.
+Theory and results from a ground vehicle in crowded urban areas,” [38] A. Geiger, P. Lenz, and R. Urtasun, “Are we ready for autonomous
+inIEEEInternationalConferenceonRoboticsandAutomation,2003. driving?thekittivisionbenchmarksuite,”inConferenceonComputer
+Proceedings.ICRA’03,vol.1. IEEE,2003,pp.842–849. VisionandPatternRecognition(CVPR),2012.
+[19] I. Miller and M. Campbell, “Rao-blackwellized particle ﬁltering for [39] F. Dellaert, “Factor graphs and gtsam: A hands-on introduction,”
+mapping dynamic environments,” in IEEE International Conference GeorgiaInstituteofTechnology,Tech.Rep.,2012.
+onRoboticsandAutomation,2007. IEEE,2007,pp.3862–3869. [40] H.Strasdat,A.J.Davison,J.M.Montiel,andK.Konolige,“Double
+[20] J. G. Rogers, A. J. Trevor, C. Nieto-Granda, and H. I. Christensen, windowoptimisationforconstanttimevisualSLAM,”inIEEEInter-
+“SLAMwithexpectationmaximizationformoveableobjecttracking,” nationalConferenceonComputerVision(ICCV),2011. IEEE,2011,
+in IEEE/RSJ International Conference on Intelligent Robots and pp.2352–2359.
+Systems(IROS),2010. IEEE,2010,pp.2077–2082. [41] V.Ila,J.M.Porta,andJ.Andrade-Cetto,“Information-basedcompact
+[21] A. Kundu, K. M. Krishna, and C. Jawahar, “Realtime multibody poseSLAM,”IEEETransactionsonRobotics,vol.26,no.1,pp.78–
+visual slam with a smoothly moving monocular camera,” in IEEE 93,2010.
+2129
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:12:22 UTC from IEEE Xplore.  Restrictions apply. 

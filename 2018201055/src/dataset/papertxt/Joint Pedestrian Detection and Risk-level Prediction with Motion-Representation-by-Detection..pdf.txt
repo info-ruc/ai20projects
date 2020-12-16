@@ -1,0 +1,589 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Aerial Regrasping: Pivoting with Transformable Multilink Aerial Robot
+Fan Shi1, Moju Zhao1, Masaki Murooka1, Kei Okada1, Masayuki Inaba1
+Abstract—Regraspingisoneofthemostcommonandimpor-
+Transformable Multilink Aerial Robot  Aerial Transformation 
+tant manipulation skills used in our daily life. However, aerial
+regrasping has not been seriously investigated yet, since most
+oftheaerialmanipulatorlacksdexterousmanipulationabilities
+except for the basic pick-and-place. In this paper, we focus on
+pivotingalongbox,whichisoneofthemostclassicalproblems
+among regrasping researches, using a transformable multilink
+aerial robot. First, we improve our previous controller by
+compensatingfortheexternalwrench.Second,weoptimizethe
+joints conﬁguration of our transformable multilink drone for Pivoting the Long Box 
+stable grasping form under the constraints of thrust force and
+jointseffort.Third,wesequentiallyoptimizethegraspingforce
+in the pivoting process. The optimization goal is to generate
+continousgraspingforcewhilstmaximizingthefrictionforcein
+caseofthedownwash,whichwouldinﬂuencethegraspedobject
+and is difﬁcult to model. Fourth, we develop the impedance
+controllerinjointspaceandadmittancecontrollerintaskspace. (a)  (b)  (c) 
+As far as we know, it is the ﬁrst research to achieve extrinsic
+Fig. 1. The pivoting task is demonstrated with an aerial trans-
+contact-aware regrasping task on aerial robots.
+formable multilink robot named HYDRUS (HorizontallY Deformable
+aerial Robot with two-dimensional mUltilinkS). Experiment video:
+I. INTRODUCTION https://fanshi14.github.io/me/icra20.html
+A. Motivation
+With the development of aerial robots, interaction with
+the physical environment becomes a popular research ﬁeld. In manipulation community, regrasping has been thor-
+Aerial manipulation is one of the most practical [1]. In most oughly investigated among robot hand [16]–[18], manipula-
+researches, drone is attached with a light gripper underneath tor arm [19]–[22] and humanoid robot [23], [24]. The robot
+therobotbasetoachieveanagilepick-and-placetask[2],or could conduct in-hand object rotating, dual-arm components
+evendirectlywithacablesuspendedtothesmallpayload[3]. assembling, and even heavy bookshelf pivoting to achieve
+Forlargeobjects,researchersattachdual-armmanipulator[4] the dexterous interaction with physical environment.
+or team up several drone to transport cooperatively [5]–[7] In this paper, we introduce a novel aerial pivoting method
+Recently, there is a new type of drone which could trans- to lift up a long box. The extrinsic dexterity [20] is utilized
+form its shape during ﬂying [8]–[12]. It could implement bykeepingtheendofboxincontactwithground.Exceptfor
+several manipulation tasks, such as whole-body grasping theaccomplishmentofre-orientationtarget,otheradvantages
+[9]–[11] with its body link. The advantage is to reduce of aerial pivoting, comparing to simple gripping, lie in it
+extraweightanddownwasheffectbecausetheattachedextra saving almost half of strength and causing less center-of-
+manipulator arm is no longer required. mass (CoM) shift with the help of ground support. Robot
+Comparing the previous aerial robot researches to ma- would be more stable during the pivoting.
+nipulation community, aerial robots could already achieve
+accurate pick-and-place [2], [4], [9]–[11] and even peg-in- B. Related Work
+hole task [13]–[15].
+However, for more dexterous manipulation skills such as AerialRegrasping:Aerialregraspingﬁrstlyappearsinour
+regrasping[16]–[24],aerialrobotshavenotbeenfullyinves- previous work to present an active dynamic regrasping [25].
+tigated yet. Regrasping actually is very common in human’s The HYDRUS robot throws and re-catches a long box in
+daily life, such as re-orienting an in-hand smartphone to put the simulation to achieve re-orientation target. However, it
+it into pocket, or pivoting a heavy box from the ground. In requires extremely aggressive performance with large accel-
+industriesespeciallyfactoriesandconstruction,regraspingis eration,whichistoodifﬁcultanddangeroustoimplementon
+veryimportantaswellinchangingtheorientationofdifferent thephysicalrobot.Forotherliterature,sinceaerialregrasping
+components actively for further assembling process. isstillachallengingtask,theonlyrelatedresearchwecould
+ﬁnd is lifting up a bar with manipulator attached hexarotor
+1 F. Shi, M. Zhao, M. Murooka, K. Okada and M. Inaba [26] . Because the bar is customized with a passive rotation
+are with Department of Creative-Infomatics, The University
+joint on the end side, pivoting problem is simpliﬁed as an
+of Tokyo, 7-3-1 Hongo, Bunkyo-ku, Tokyo 113-8656, Japan
+shifan@jsk.t.u-tokyo.ac.jp ﬂight control problem with estimated external disturbance.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 200
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. The mechanics and constraints in general pivoting problem B. Pivoting Task
+are not discussed.
+Pivoting could be regarded as a primitive strategy in
+Optimal Conﬁguration of Transformable Drone: Since
+regrasping community. The target of pivoting task in this
+transformable drone is a novel ﬁeld, most of the previous
+paper is to re-orient a long box from lying on the ground to
+researches focus on ﬂight controller and have not optimized
+being perpendicular against the ground.
+the maneuvering conﬁguration in [10]–[12]. The singular
+BasedonthepivotinganalysisinSec.I-B,ourapproachis
+form of transformable drone is analyzed by [9] with geom-
+to utilize extrinsic contact to lift up the long box. As Fig. 1,
+etry constraints. One of the most intuitive singularity cases
+the end of the box would keep in contact with ground and
+is robot losing controllability when all the rotor is aligned
+thefrontwouldbegraspedbytheendeffectorsofourrobot.
+in a straight line. [27] develops efﬁcient motion primitive
+approachtooptimizethejointstrajectoryavoidingunfeasible
+cwicsnioooonnIinrnnﬁtkrttg,oaeeuslrrtarhaoa[cec2tfttii8iooood]nnp–nrto[it3dnmaC1usei]krozisnenaitdtsgnarrdostcatsloiqnlnulfoﬁraifaongdgmurAilolraeatecrotrekiritoaaacnoilbntflitefnReiognroravtbecettnootrsiantto:iniugnssnaTfewtotihxaoriepsmtnhke.a.icnbhtetIlueendmradactchrnotoielonlsiinnee- 𝜃𝑁−1 𝐹𝑇𝐹3{ ,𝑇𝐶𝑟𝑀𝑁𝑜𝑦𝑀𝑁,𝑇}𝑀 3 {𝐶 𝑇𝑜 {𝑟𝑀𝐶𝑁𝑥𝑜 }𝜃𝑟𝑁 𝑀 𝑦2} 3 {  𝐶𝑜 𝑟𝑀𝑥}3 Y { 𝐶{𝐶𝑜𝑜 𝑀𝑟𝑀𝐹𝑥X}𝑇}2  2  ,𝑀{𝐶{ 𝑜𝑇𝐶𝑟𝑀𝐹2𝑜 𝑦𝜃𝑟𝑀}𝑇 2 𝑥11} 1 ,  𝑀𝑇1{𝐶 𝑜 𝑟𝑀𝑦}1   Sboafltl    (b)  6-axis sfoenrcseo/rt orque 
+[26], [32] or cooperation with other drone in [6], [7]. The
+Right end  Left end 
+external wrench is estimated with basic onboard sensors, effector  effector 
+andadmittancecontrollerisdevelopedintheseresearchesto
+(a)  (c) 
+responseinthepassiveway.Foractiveinteractiontaskssuch
+Fig.2. HYDRUSrobotwithendeffector.(a)showsthekinematicmodel,
+as peg-in-hole and valve turning, the impedance controller
+(b)showstherealrobotisdeployedwithtwogrippers,and(c)showstheend
+is developed in [12], [13], [33], [34]. The compliant force effectorequippedwith6-axisFTsensorandsoftballtoincreasefriction.
+control is achieved in these researches.
+Pivoting Planning through Contact: There are three
+III. MODELINGANDCONTACTWRENCH
+main strategies in pivoting tasks, including utilizing gravity
+COMPENSATION
+[35], inertia force [36] and extrinsic contact [17], [22]–[24].
+Sinceaerialrobothaslimitedagilityandpayloadcomparing In our previous research [9], a Linear Quadratic Integral
+to manipulator arm, utilizing extrinsic contact is the best (LQI) controller is implemented to keep stability during
+approach.[17]designstwoﬁngerstopivotaboxonthetable, maneuvering. In this paper, we extend LQI controller with
+and simpliﬁes the problem by requiring contact points and compensation for contact wrench in end effectors.
+objectCoMareinthesameline.[22]improvestheapproach
+A. System Model
+withoutco-linearconstraintsandpivotsascrewwithparallel
+gripper. [23], [24] focus on task planner to pivot the heavy We assume joints motion being slow during transforma-
+cabinet to a target position. tion, the robot could be approximated to be a single-rigid-
+body model at each time point. Considering the external
+C. Contribution 2 3
+wrench implemented on both end effectors, 2the transl3ational
+The contribution of this paper is threefold: and rotational equati6on would7be modiﬁed as:
+(i). we develop the conﬁguration optimization for trans- 6 7 4 5
+4 5
+formableaerialrobotininteractiontasksbyoptimizingrotor ∑0
+0
+thr(uiis)t.fwoercdeeavnedlopjotihnetsfoerfcfoerptluanndneerrfcoornataecritaclopnivsotrtainingtst.askto MfWgr(cid:127) =2fWgRfCoMg 40 3 +fWgfext+ (cid:0)0 (1)
+generatecontinousgraspingforceanddiminishtheinﬂuence 66 ∑ i=1FTi 77 Mg
+6 7
+of(diioiw).nwweasdhe.velop the impedance controller on joint space 666 ∑4 fCoMgpyiFTi 777
+apnivdotaindgmaittlaonncgebcooxntwroitlhlerHYonDRtaUskS rsopbaocte., and succeed in fCoMg(Iw_)=4 (cid:0)i=14∑fCoMgpxiFTi 5+fCoMg(cid:28)ext(cid:0)fCoMgw(cid:2)fCoMg(Iw)
+To our best knowledge, it is the ﬁrst research to achieve i=1
+4
+extrinsic contact-aware regrasping with aerial robots. cF
+i Ti
+i=1 (2)
+II. PROBLEMFORMULATION f g f g
+where and denote center of mass and world
+CoM 2W
+A. Transformable Aerial Robot
+reference frame, r(cid:127) R3 denotes the linear accelerati2on of
+In this paper, we utilize HYDRUS, a two-dimensional CoM, FT2i denotes thrust force of i-th rotor, fext R3
+transformableaerialrobotdevelopedinourpreviousresearch and (cid:28) R3 denote the sum of external wrench in end
+ext
+[9]. We attach an end effector on both head and tail link, effectors, p and p correspond to robot conﬁguration and
+xi yi
+equipped with 6-axis force/torque (FT) sensor and a sphere denote the distance between rotor and CoM, c denote drag
+i
+soft gripper with large friction coefﬁcient. moment coefﬁcient of i-th rotor.
+201
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. B. Contact Wrench Compensation the translational and rotational equation in (1) and (2),
+The compensated wrench are updated from force plan- the hovering state implies that all the linear and angular
+ner which would be introduced in Sec. V. The system velocity/acceleration to be 0[. In graspin]g task, two more
+architecture is as Fig. 3. Based on robot conﬁguration, the constraintsonconﬁgurationarerobotendeffectorsincontact
+compensated torque could be computed in the body frame with object and conﬁguration being symmetrical.
+2 (cid:0) 3
+and force in the world frame. (cid:0)
+Thepreviouswork[9]utilizesintegraltermtocompensate FT =Q6 1 (cid:0)(cid:28)ext 7 (3)
+6 Mg f 7
+forcontactwrenchinobjectgrasping.Themaindisadvantage 4 extz 5
+is that the contact is not carefully modeled and robot would (cid:0)py1 (cid:0)py2 (cid:0)py3 (cid:0)py4
+p p p p
+cause dangerous drift when grasping state changes. subjectto Q= x1 x2 x3 x4
+c c c c
+Instead of from FT sensors directly, we update the com- 1 2 3 4
+1 1 1 1
+pensated wrench from force planner and react with admit-
+S(p ;p )=0; D(p ;p ;object)=0
+tance controller. Since the unneglectable ground effect and x2i yi xi yi
+downwash in aerial robots, contact force varies frequently where F R4 denotes the thrust force of each rotor,
+T
+in unexpected way. During grasping, robot is expected to p and p imply the joint conﬁguration, S(p ;p ) = 0
+xi yi xi yi
+be stable with less vibration, otherwise it is easy to break denotes the symmetry constraints, D(p ;p ;object) = 0
+xi yi
+the contact between end effector and contact surface. Con- denotes the contact constraints, and all the variables are in
+sequently,wedevelopanadmittancecontrolleralongcurrent CoM reference frame.
+position/attitude controller to react to the external force. Considering the downwash inﬂuence on object, the basic
+idea is to make it farthest counteract with itself under ap-
+propriate conﬁguration. Since HYDRUS robot is in modular
+Pivoting Force  𝐹𝑑  Contact Wrench 
+Planner  Compensation  design with almost same weight and rotor in each link,
+𝐹𝑑,𝑝𝑑  𝐹𝑑,𝜏𝑑  the symmetrical conﬁguration is the best strategy and the
+Admittance  𝑝 ,𝑝    Position  𝑎   Attitude  𝐹 𝑇  Rotors  downwash perpendicular to symmetry axis could be farthest
+Controller  Controller  Controller  counteracted. The constraint is denoted as S(p ;p )=0.
+xi yi
+𝑞 ,𝑞    In contact constraints, D(p ;p ;object) calculates the
+Configuration  𝜏𝑑,𝑞𝑑  Impedance  𝑞 ,𝑞    Servo  distancebetweenendeffectoraxnidpyriesetgraspingpoint.The
+Optimizer  Controller  Motors 
+function value would be 0 while being in contact.
+Based on the above two constraints, all the potential
+Fig. 3. The system architecture of whole framework. Position and
+attitude controller is developed in our previous work [9]. Contact wrench grasping conﬁguration could be generated. Note that there
+compensation is in Sec. III, conﬁguration optimizer in Sec. IV, pivoting aretwokindsofinfeasibleconﬁgurationinourtransformable
+forceplannerinSec.V,admittanceandimpedancecontrollerinSec.VI.
+aerial robot, including matrix Q not being invertible, or Q
+being invertible but the thrust force in saturation.
+IV. OPTIMALGRASPINGCONFIGURATION
+B. Flight Controller Stability in Interaction Task
+Since our HYDRUS robot could change its shape during
+For grasping task, we evaluate the aerial stability mainly
+the ﬂight, there are a large number of potential grasping
+in two components. One is the recovering ability when in
+conﬁgurationasFig.4.Theimportantproblemistooptimize
+external disturbance, the other is the maximum momentum
+the optimal grasping conﬁguration, considering not only
+could be generated when being commanded.
+rotorthrustlimit,andalsojointstorquelimit.Inthissection,
+The ﬁrst term could be approximated by variance value
+theevaluationofstabilityinﬂightcontrollerandjointstorque
+ofthedistributedrotorthrustforce.Thelargevariancevalue
+effort in interaction task would be introduced to optimize
+infers there is at least one rotor being close to its saturation
+grasping conﬁguration.
+state. External disturbance could easily make drone lose
+the controllability. On the contrary, the low variance value
+implies the robot has stronger ability to resist disturbance
+during the task.
+The second term is also important in manipulation tasks
+(a) (b) (c)
+andreﬂectsthepotentialsinmanipulationability.Itcouldbe
+Fig. 4. Examples of potential grasping conﬁguration. (a) and (b) are denoted by calculating the maximum residual momentum in
+symmetricalinjointspace,(c)isanasymmetricalexample.
+three axes.
+A. Thrust in Grasping Conﬁguration The optimization function for stability in ﬂight controller
+would be:
+In HYDRUS robot, different conﬁguration would vary
+(cid:0)
+obviously in thrust force distribution and maximum torque max( (cid:21) var(F (q))+(cid:21) mt(q)) (4)
+var T mt
+generation. Since the rotor thrust force could not exceed its q
+subjectto constraintsin(3);
+upper bound, several of conﬁguration is even infeasible.
+(cid:20) (cid:20)
+In order to analyze the force distribution of each rotor, Thrust F Thrust
+mi2n Ti max
+we assume the robot is in hovering state. Considering q =C (cid:0)
+self collision
+202
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. 2
+wtohethree qconﬁRgu3radteinoonteosfHroYbDoRt,UvSarjo()intdsenanogtelse wthheicvharrieafnecres  𝒇𝑬𝒇𝒍  𝐹𝑅  𝑧  𝑧 
+ 𝝉𝟏 
+functioninstatistics,mt()denotesthefunctionofmaximum
+mtfhooermmsaeetlnifot-ucnmo.lFlgioderendeerxcaaotminoﬁpngledu,ercaifltaioarelnldwtahhbeiocjvohei,nisCtsisnealfnfe(cid:0)galcseoilbliilsseiolnfaordgreetnrtaohntaesns-  𝝉𝟐   𝝉𝟑  𝒇𝑬𝒇𝒓  𝑚𝑔  𝐹𝑒  𝑥  𝑥 
+◦ (a)  (b)  (c) 
+90 ,therotorprotectorofHYDRUSrobotwouldcollideinto
+Fig.5. Theanalysisofmechanicsingraspingandpivotingtask,andthe
+each other and cause undesired damages.
+concept of sequential force planner. (a) shows grasping analysis in Sec.
+IV, denoting the realtionship between joints effort and contact force from
+C. Joints Effort in Interaction Task
+theendeffectors.(b)showsthesimpliﬁed2DpivotingprobleminSec.V,
+In grasping task, another important item to consider is to includingthegraspingjoinforce,objectgravityandgroundappliedforce.
+(c)showstheconceptofsequentialgraspingforceoptimizationinSec.V-C.
+keep joints effort in a reasonable range. For transformable
+aerial robot like HYDRUS robot, the design is the combi-
+nation of manipulator arm and mutlirotor robot. The system
+couldbeapproximatedtobestaticinmanipulationstatesince V. PIVOTINGFORCEPLANNER
+the translational and rotational motion of CoM is in slow
+Thereareseveralapproachesinre-orientinganlongobject
+speed. Joints effort could be analyzed separately under the
+as being perpendicular against the ground surface, such as
+framework of manipulator arm.
+liftingittohighplacethenutilizinggravitytonaturallymake
+Consequently,wesimplifythetaskintoatwo-dimensional
+itvertical,throwingandre-catching,orutilizinginertiaforce
+grasping problem with the assumption of all the force in z
+to swing the box like the inverted pendulum.
+axis being compensated by ﬂight controller, and robot being
+Considering the features of aerial robots being underac-
+ﬂat with attitude in roll and pitch axis being 0. The force
+tuated and lightweight with limited payload and agility, our
+compensated by rotor thrust consists of gravity of robot and
+pivoting strategy is to rotate the object along the edge of
+grasping[force in]z axis applied to the object. Therefore,
+its base surface. It could make the best use of the contact
+themanipulationmechanicsofHYDRUSrobotwith3joints
+forcewithgroundtoeasetherotorfrombeingsaturated.The
+could be described as:
+robot only requires almost half of the strength by carefully
+04 +JT f +JT f =0 (5) optimized pivoting. It is especially efﬁcient to deal with the
+(cid:28)joints Efl Efl Efr Efr 4+3 heavy objects. Also low rotational friction beneﬁts.
+2 2
+wfEhferre2(cid:28)jRoi2ntsde2noRte3(cid:2)thdeencootnetsacjotifn2otsrceto(cid:2)roqnuel,efftEafnld rigRh2t aenndd A. 2D Pivoting Problem
+effector, JEfl R2 7 and JEfr R2 7 denote the reduced When grasping an object, the conﬁguration of HYDRUS
+Jacobian matrix of two end effector. robot being symmetrical and end effectors in same contact
+The contact force of two end effector could be the prior
+forceisthebeststrategy.Asdescribedabove,thedownwash
+knowledge which is optimized by force planner in Sec.
+inﬂuence applied on object could be less compared to a
+V based on the friction coefﬁcients between effector and
+random conﬁguration. Also, the same contact force from
+object. Therefore, in order to obtain the optimal grasping
+end effectors could balance the momentum and diminish the
+conﬁguration, the joints effort should also be optimized as:
+undesirable rotation in z axis.
+min((cid:21) (cid:28)T (cid:28) +(cid:21) var((cid:28) )) (6) Consideringthejoinofideallysymmetricalgraspingforce,
+q sum joints joints (cid:28) joints for the long box with respectively short width, our problem
+subjectto constraintsin(5); could be approximated as a 2-dimensional pivoting task as
+(cid:20)
+(cid:28) Torque Fig. 5(b). There are only 2 contact force to analyze, namely
+join2tsi max
+q =C (cid:0) the contact between box and ground, box and end effector,
+self collision
+since the latter is symmetrically applied on the object.
+where var() denotes the variance function in statistics,
+Cself(cid:0)collision denotes the self-collided conﬁguration as the B. Pivoting Mechanics
+previous deﬁnition.
+Inthisresearch,weadoptthequasi-staticassumption[20]
+D. Discussion where the inertia force, Coriolis force and centrifugal force
+In the end, the above optimization target (4) and (6) would not be included.
+wouldbeputtogetherintoonefunctiontoobtaintheoptimal In most of the extrinsic pivoting tasks, the pivoting is in
+grasping conﬁguration. Evidently, it is difﬁcult to compute slow speed to not break the static friction. Consequently,
+the analytical solution in this optimization problem since it the mechanics could be analyzed as an equilibrium model
+is complex and highly non-linear. But in numerical way, the at each time point. In each equilibrium state, the force and
+optimal results could be conveniently computed by discritiz- momentum could be denoted as:
+ing robot conﬁguration in joint space. These computation (cid:0)
+wouldbeimplementedofﬂineandprovideresultastheprior (cid:2) fR+f(cid:2)e m(cid:0)g =(cid:2)0 (7)
+knowledge to the following pivoting task. p f +p f p mg =0 (8)
+R R e e g
+203
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. 2 2
+where fR R2 and fe R2 d2enote the2total grasping2force Algorithm1SequentialGraspingForceOptimization(GFO)
+and ground applied force, p R2, p R2 and p R2 1: procedure SEQUNTIALGFO
+R e g  
+denote the moment arm of each force. Since the robot is 2: PrevOptForce 0
+  ◦ ◦
+assumed to stay in equilibrium state, the equation of force 3: for BoxRotati onAngle 0 to 90 do
+and torque are equal to zero on its right side. 4: OptForce SingleGFO( PrevOptForce;
+We assume the contact between box and ground follow- BoxRotationAngle) ▷ SingleGFO() is function in (11)
+ 
+ing Coulomb friction constraints. The contact force lies in 5: PrevOptForce OptForce
+friction cone as: [ ] 6: end for
+(cid:21) 7: end procedure
+Cf 0 (9)
+e(cid:0)
+1 (cid:22)
+C = (10)
+1 (cid:22) A. Impedance Controller in Joint Space
+where (cid:22) is the Coulomb friction coefﬁcient. As the analysis in Sec. IV, given a grasping task, robot
+conﬁguration is optimized with feasible joints effort. Given
+C. Force Planner with Airﬂow Resistance
+the target joint state, we build the impedance controller [40]
+Different from pivoting tasks in manipulator arm or hu- in joint space to keep end effector in contact with object.
+manoid robot, there is one more challenge for aerial robot (cid:0) (cid:0) (cid:0) (cid:0)
+which is the airﬂow inﬂuence during the whole regrasping (cid:28)d (cid:28)^=K(cid:28)(qd q^)+D(cid:28)(q_d q^_)+M(cid:28)(q(cid:127)d q^(cid:127))
+2 2
+process [37]. wh2ere q R3 denotes joints rotation angle, (cid:28)d R3 and
+Compared to ordinary airﬂow inﬂuence such as ground (cid:28)^ R3 denotethe2desi(cid:2)redandmeasuredjointsofHYDRUS
+effect in quadrotor robots, pivoting task is more complex robot, K;D;M R3 3, denote the stiffness, damping and
+where the shape of grasped object would also affect the air- inertia matrix of impedance controller. In our grasping task,
+ﬂow. What is worse, the object would vary a lot in different q_ and q(cid:127) keep 0 for stable contact.
+d d
+manipulationtasks.Althoughthereareseveralofrecentwork
+B. Admittance Controller in Task Space
+shows impressive performance with landing and taking off
+As force planner described in Sec. V, robot would re-
+[29],[38],theairﬂowestimationduringmanipulationtaskis
+ceive discrete force and position command depending on
+still an open question.
+its pivoting state. Since there are inevitable modeling errors
+Considering the unquantiﬁable and unneglectable airﬂow
+and evident external disturbance, exactly precise force and
+effect,ourstrategyistomaximizefrictionforcewithrespect
+position tracking is impossible. Inspired by [6], [7], [26],
+to the different period to minimize its inﬂuence.
+[29], [32], [41], we build an admittance controller for state
+Therefore, to diminish the inﬂuence of airﬂow, robot un-
+tracking in the task space as follow:
+deractuation and payload limitation, our optimization target
+(cid:0) (cid:0) (cid:0) (cid:0)
+including maximizing the friction residual term, minimizing M p^(cid:127) D p^_+K (p (t) p^)=f (t) f^
+x x x d d
+the variation of grasping force between adjacent equilibrium
+wherep (t)andf (t)areobtainedfromtheresultsofforce
+state and minimizing total grasping force. d d
+(cid:0) plannerinSec.V-C,Kx;Dx;Mx denoteadmittancespring,
+min( V ϵ +fT W f +(cid:14)fT W (cid:14)f ) (11) damping gain and inertia matrix.
+fRi ϵi i Ri Ri Ri(cid:21) Ri (cid:14)i(cid:21) Ri Sinceourpivotingtaskistwo-dimensional,theadmittance
+subjectto Cf(cid:0)ei ϵi; ϵi 0 controller reacts for the motion in x and z axis. Considering
+(cid:14)fRi =fRi fRi(cid:0)1 the steady state velocity introduced in [29] and combined
+structureofadmittancecontrollerandpreviouspositioncon-
+equilibriumconstraintsin (7)and(8)
+troller,wepickM =0andgeneratereferencepositionand
+x
+whereaconstrainedquadraticprogramming(QP)problemis velocitycommandtoHYDRUSpositioncontrollerasFig.3.
+formed and could be solved with efﬁcient algorithm [39].
+C. Discussion
+We decompose the whole pivoting procedure into several
+states, depending on the rotation angle of box and ground. We implement an impedance controller in joint space and
+◦ ◦
+As concept in Fig. 5(c), the angle starts from 0 to 90 with admittance controller in task space for aerial pivoting task.
+ﬁxed interval. The procedure is summarized in Alg.1. Comparedtojointspace,therearelargemodelingerrorsof
+contactandstrongexternaldisturbancecausedbydownwash
+VI. INTERACTIONCONTROLLER in task space. The admittance controller being in passive
+Based on the optimal grasping conﬁguration and pivoting fashion and controlling motion after force [41] is more
+force planner, the target state in joint space and task space beneﬁcial for our task.
+is optimized and to be integrated into robot controller. Another advantage for ﬂight controller is admittance con-
+In this section, we would introduce the impedance con- troller could be implemented outside of the existing position
+troller in joint space and admittance controller in task space controller as Fig. 3 without large replacement. Since the
+to follow the target state. The implementation of two con- position controller is the basic component for most of the
+troller and further discussion about selection reasons would multirotor robot, the whole framework could be easier to
+be introduced in next three subsection. transfer between different platform.
+204
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. VII. EXPERIMENT ouroptimizationtargetinforceplannerincludesmaximizing
+the friction force between object and ground, the error of
+In this chapter, we validate our framework by implement-
+tracking force could be tolerated to prevent the box from
+ing the pivoting experiment with HYDRUS robot.
+breaking contact.
+A. Flight Controller Compensation We conduct several groups of pivoting experiments, and
+We conduct the experiment by suddenly adding and re- more details could be referred in attached video.
+moving contact under the ﬂight controller with or without
+contact compensation. As shown in the attached video, 1900 R   o  t  o rr1x P  W     M        cyro2 m   m     a   n  zdr3:              r4  PWM upper bound 
+when adding or removing contact, there is evident drift in
+1800 
+controller without compensation. The drift is caused by the 1700 
+lagging of integral term in LQI controller when balancing (1)  1600 
+1500 
+the unmodeled term.
+1400 
+1300  Object  
+1200  Taking off  Admittance control  release 
+12’  (2)  10  20  30  (a)  40  50  sec 
+External force:  
+N  x       z              
+2 Ta  r  g  e  t xfo  r c e   d zif f. :              
+0 
+(a)  (d)  (3)  -2 
+17’  -4 
+-6 
+-8  Object  
+Taking off  Admittance control  release 
+(4)  10  20  30  40  50  sec 
+(b) 
+(b)  (e) 
+20’  Fig. 7. Plots of pivoting experiment. There are 3 main steps inside
+the process, including robot taking off and hovering (1)-(2), admittance
+controllerworkingtocompletepivoting(2)-(3),andﬁnallyrobotreleasing
+object (3)-(4). (a) showsrotor PWM command (denoting the thrust force)
+duringwholeprocess,(b)showstheexternalforceonendeffectorsandthe
+(c)  (f)  deviationwithtargetforcefrompivotingplanner.
+Fig. 6. Experiments of ﬂight controller compensation and interaction
+control.(a)isﬂightcontrollerwithcompensationwhenobjectissuddenly
+released. (b), (c) are ﬂight controller without compensation, where there VIII. CONCLUSIONSANDFUTUREWORK
+is evident drift in position. (d)-(f) are interaction control veriﬁcation in
+cooperationtask. In this paper, we introduce an aerial pivoting framework
+under the analysis of mechanics and constraints with ex-
+trinsic contact. The difference between aerial robot and hu-
+B. Interaction Controller
+manoidorothermanipulatoristheformerhasaerodynamics
+As shown in video, we validate the admittance controller inﬂuence such as downwash on the object and are highly
+in x axis with a cooperative transportation task. Different underactuated with limited agility. The advantage is aerial
+from pivoting task, we pick K = 0 to guarantee human robots have no constraint on the height, which enables them
+x
+could move robot freely. to pivot longer box compared to common manipulator arm
+or humanoid robot. Considering the limited payload ability
+C. Pivoting Experiment
+ofaerialrobots,pivotingalsoenablesthemtomanipulatethe
+In pivoting task, we build a box with 1:08-m height and respectivelyheavyobjectswiththehelpofgroundcontact.In
+0:26-m square base. The total mass is 1:06 kg, close to the theend,weshowtheexperimentofHYDRUSrobotrobustly
+payload upper bound (1:2 kg) of HYDRUS robot. Weattach pivoting a long box close to its payload upper bound.
+asoftballoneachendeffectorandpasteantiskidtapeonbox For the future work, we will show the scalability of
+to increase contact friction. This paper focuses on planner this framework with multiple robots to achieve cooperative
+and controller so that perception is not integrated yet. The regrasping, such as two robots pivoting the box in the air.
+rotation angle of box is estimated based on robot position Our ﬁnal goal is to explore all the aerial manipulation skills
+and box geometry. to build motion primitives, and combine them to achieve
+ThepivotingprocessisasFig.7.Admittancecontrolleris aerial dexterous manipulation ability in architecture, rescue
+switchedafterhovering.Comparedtotheopen-looppivoting and even manufacturing scenarios.
+during taking off, the admittance controller could quickly
+adjust the external force to be in reasonable range with the ACKNOWLEDGMENTS
+tracking keeps error no more than 2N. The errors come The author would like to thank Weiwei Wan in Osaka
+from several uncertainties in this experiment, including the Univ.,YifanHouinCarnegieMellonUniv.,KeweiXuinThe
+position offset of grasping point, downwash inﬂuence on Univ. of Miami, Yuanxin Shen in Georgia Tech, Zhonghui
+the box. For example, in the end of pivoting, the box is Zhu in Princeton Univ., Hironori Yoshida in The Univ. of
+vertical with largest windward surface as Fig. 7(4). Since Tokyo for their thoughtful discussions and suggestion.
+205
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [19] Pierre Tournassoud, Toma´s Lozano-Pe´rez, and Emmanuel Mazer.
+Regrasping. InProceedings.1987IEEEInternationalConferenceon
+RoboticsandAutomation,Vol.4,pp.1924–1928.IEEE,1987.
+[1] Fabio Ruggiero, Vincenzo Lippiello, and Anibal Ollero. Aerial
+[20] NikhilChavanDaﬂe,AlbertoRodriguez,RobertPaolini,BoweiTang,
+manipulation: A literature review. IEEE Robotics and Automation
+Siddhartha S Srinivasa, Michael Erdmann, Matthew T Mason, Ivan
+Letters,Vol.3,No.3,pp.1957–1964,2018.
+Lundberg,HaraldStaab,andThomasFuhlbrigge. Extrinsicdexterity:
+[2] JustinThomas,JoePolin,KoushilSreenath,andVijayKumar. Avian-
+In-handmanipulationwithexternalforces.In2014IEEEInternational
+inspired grasping for quadrotor micro uavs. In ASME 2013 in-
+Conference on Robotics and Automation (ICRA), pp. 1578–1585.
+ternational design engineering technical conferences and computers
+IEEE,2014.
+and information in engineering conference. American Society of
+[21] WeiweiWanandKensukeHarada. Developingandcomparingsingle-
+MechanicalEngineersDigitalCollection,2014.
+arm and dual-arm regrasp. IEEE Robotics and Automation Letters,
+[3] PhilippFoehn,DavideFalanga,NaveenKuppuswamy,RussTedrake,
+Vol.1,No.1,pp.243–250,2016.
+andDavideScaramuzza.Fasttrajectoryoptimizationforagilequadro-
+[22] Yifan Hou and Matthew T Mason. Robust execution of contact-
+tormaneuverswithacable-suspendedpayload. InRobotics:Science
+rich motion plans by hybrid force-velocity control. arXiv preprint
+andSystems,pp.1–10,2017.
+arXiv:1903.02715,2019.
+[4] E.Cataldi,F.Real,A.Suarez,P.A.DiLillo,F.Pierri,G.Antonelli,
+[23] Eiichi Yoshida, Mathieu Poirier, Jean-Paul Laumond, Oussama Ka-
+F.Caccavale,G.Heredia,andA.Ollero.Set-basedinversekinematics
+noun,FlorentLamiraux,RachidAlami,andKazuhitoYokoi. Regrasp
+control of an anthropomorphic dual arm aerial manipulator. In 2019
+planningforpivotingmanipulationbyahumanoidrobot.In2009IEEE
+International Conference on Robotics and Automation (ICRA), pp.
+InternationalConferenceonRoboticsandAutomation,pp.2467–2472.
+2960–2966,May2019.
+IEEE,2009.
+[5] Nathan Michael, Jonathan Fink, and Vijay Kumar. Cooperative ma-
+[24] MasakiMurooka,ShintaroNoda,ShunichiNozawa,YoheiKakiuchi,
+nipulationandtransportationwithaerialrobots. AutonomousRobots,
+KeiOkada,andMasayukiInaba. Manipulationstrategydecisionand
+Vol.30,No.1,pp.73–86,2011.
+executionbasedonstrategyprovingoperationforcarryinglargeand
+[6] AndreaTagliabue,MinaKamel,SebastianVerling,RolandSiegwart,
+heavy objects. In 2014 IEEE International Conference on Robotics
+and Juan Nieto. Collaborative transportation using mavs via passive
+andAutomation(ICRA),pp.3425–3432.IEEE,2014.
+force control. In 2017 IEEE International Conference on Robotics
+[25] Fan Shi, Moju Zhao, Weiwei Wan, Kei Okada, and Masayuki In-
+andAutomation(ICRA),pp.5766–5773.IEEE,2017.
+aba. Aerial regrasping: Exploring active dynamic regrasps with
+[7] Marco Tognon, Chiara Gabellieri, Lucia Pallottino, and Antonio
+transformable multilink drone. In ICRA 2019 Workshop on Toward
+Franchi.Aerialco-manipulationwithcables:Theroleofinternalforce
+OnlineOptimalControlofDynamicRobots.Citeseer,2019.
+forequilibria,stability,andpassivity. IEEERoboticsandAutomation
+[26] NicolasStaub,DavideBicego,QuentinSable´,VictorArellano,Subodh
+Letters,Vol.3,No.3,pp.2577–2583,2018.
+Mishra, and Antonio Franchi. Towards a ﬂying assistant paradigm:
+[8] MojuZhao,TomokiAnzai,FanShi,XiangyuChen,KeiOkada,and Theothex. In 2018IEEE International Conferenceon Robotics and
+Masayuki Inaba. Design, modeling, and control of an aerial robot Automation(ICRA),pp.6997–7002.IEEE,2018.
+dragon: A dual-rotor-embedded multilink robot with the ability of
+[27] Fan Shi, Moju Zhao, Tomoki Anzai, Keita Ito, Xiangyu Chen, Shu-
+multi-degree-of-freedom aerial transformation. IEEE Robotics and
+nichi Nozawa, Kei Okada, and Masayuki Inaba. Multi-rigid-body
+AutomationLetters,Vol.3,No.2,pp.1176–1183,2018.
+dynamicsandonlinemodelpredictivecontrolfortransformablemulti-
+[9] Moju Zhao, Koji Kawasaki, Tomoki Anzai, Xiangyu Chen, Shintaro linksaerialrobot. AdvancedRobotics,pp.1–14,2019.
+Noda, Fan Shi, Kei Okada, and Masayuki Inaba. Transformable [28] StevenBellens,JorisDeSchutter,andHermanBruyninckx. Ahybrid
+multirotor with two-dimensional multilinks: Modeling, control, and pose/wrenchcontrolframeworkforquadrotorhelicopters.InRobotics
+whole-bodyaerialmanipulation.TheInternationalJournalofRobotics andAutomation(ICRA),2012IEEEInternationalConferenceon,pp.
+Research,Vol.37,No.9,pp.1085–1112,2018. 2269–2274.IEEE,2012.
+[10] B.Gabrich,D.Saldaa,V.Kumar,andM.Yim.Aﬂyinggripperbased [29] Teodor Tomic´, Christian Ott, and Sami Haddadin. External wrench
+oncuboidmodularrobots. In2018IEEEInternationalConferenceon estimation, collision detection, and reﬂex reaction for ﬂying robots.
+RoboticsandAutomation(ICRA),pp.7024–7030,May2018. IEEETransactionsonRobotics,Vol.33,No.6,pp.1467–1482,2017.
+[11] DavideFalanga,KevinKleber,StefanoMintchev,DarioFloreano,and [30] Kostas Alexis, Georgios Darivianakis, Michael Burri, and Roland
+DavideScaramuzza. Thefoldabledrone:Amorphingquadrotorthat Siegwart. Aerial robotic contact-based inspection: planning and
+can squeeze and ﬂy. IEEE Robot. Autom. Lett., Vol. 4, No. 2, pp. control. AutonomousRobots,Vol.40,No.4,pp.631–655,2016.
+209–216,April2019. [31] FanShi,MojuZhao,TomokiAnzai,XiangyuChen,KeiOkada,and
+[12] HyunsooYang,SangyulPark,JeongseobLee,JoonmoAhn,Dongwon MasayukiInaba.Externalwrenchestimationformultilinkaerialrobot
+Son,andDongjunLee.Lasdra:Large-sizeaerialskeletonsystemwith bycenterofmassestimatorbasedondistributedimusystem. In2019
+distributedrotoractuation.In2018IEEEInternationalConferenceon IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+RoboticsandAutomation(ICRA),pp.7017–7023.IEEE,2018. May2019.
+[13] Marko Car, Antun Ivanovic, Matko Orsag, and Stjepan Bogdan. [32] Federico Augugliaro and Raffaello D’Andrea. Admittance control
+Impedance based force control for aerial robot peg-in-hole insertion for physical human-quadrocopter interaction. In Control Conference
+tasks. In 2018 IEEE/RSJ International Conference on Intelligent (ECC),2013European,pp.1805–1810.IEEE,2013.
+RobotsandSystems(IROS),pp.6734–6739.IEEE,2018. [33] F.Forte,R.Naldi,A.Macchelli,andL.Marconi.Impedancecontrolof
+[14] Sangyul Park, Jeongseob Lee, Joonmo Ahn, Myungsin Kim, Jong- anaerialmanipulator. In2012AmericanControlConference(ACC),
+beomHer,Gi-HunYang,andDongjunLee.Odar:Aerialmanipulation pp.3839–3844,June2012.
+platform enabling omnidirectional wrench generation. IEEE/ASME [34] VincenzoLippielloandFabioRuggiero. Cartesianimpedancecontrol
+Transactionsonmechatronics,Vol.23,No.4,pp.1907–1918,2018. of a uav with a robotic arm. IFAC Proceedings Volumes, Vol. 45,
+[15] Markus Ryll, Giuseppe Muscio, Francesco Pierri, Elisabetta Cataldi, No.22,pp.704–709,2012.
+GianlucaAntonelli,FabrizioCaccavale,DavideBicego,andAntonio [35] YiannisKarayiannidis,ChristianSmith,DanicaKragic,etal.Adaptive
+Franchi. 6d interaction control with aerial robots: The ﬂying end- control for pivoting with visual and tactile feedback. In 2016 IEEE
+effector paradigm. The International Journal of Robotics Research, International Conference on Robotics and Automation (ICRA), pp.
+Vol.38,No.9,pp.1045–1062,2019. 399–406.IEEE,2016.
+[16] J Kenneth Salisbury and B Roth. Kinematic and force analysis of [36] YifanHou,ZhenzhongJia,AaronMJohnson,andMatthewTMason.
+articulatedmechanicalhands. JournalofMechanisms,Transmissions, Robustplanardynamicpivotingbyregulatinginertialandgripforces.
+andAutomationinDesign,Vol.105,No.1,pp.35–41,1983. In Workshop Algorithmic Found. Robot., 12th, San Francisco, Dec,
+[17] YasumichiAiyama,MasayukiInaba,andHirochikaInoue. Pivoting: Vol.18,p.20,2016.
+Anewmethodofgrasplessmanipulationofobjectbyrobotﬁngers.In [37] Derrick Yeo, Elena Shrestha, Derek A Paley, and Ella M Atkins.
+Proceedingsof1993IEEE/RSJInternationalConferenceonIntelligent An empirical model of rotorcrafy uav downwash for disturbance
+RobotsandSystems(IROS’93),Vol.1,pp.136–143.IEEE,1993. localization and avoidance. In AIAA Atmospheric Flight Mechanics
+[18] AntonioBicchi. Handsfordexterousmanipulationandrobustgrasp- Conference,p.1685,2015.
+ing:Adifﬁcultroadtowardsimplicity.IEEETransactionsonrobotics [38] Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar
+andautomation,Vol.16,No.6,pp.652–662,2000. Azizzadenesheli, Animashree Anandkumar, Yisong Yue, and Soon-
+206
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. JoChung. Neurallander:Stabledronelandingcontrolusinglearned
+dynamics.In2019InternationalConferenceonRoboticsandAutoma-
+tion(ICRA),pp.9784–9790.IEEE,2019.
+[39] H.J. Ferreau, C. Kirches, A. Potschka, H.G. Bock, and M. Diehl.
+qpOASES: A parametric active-set algorithm for quadratic program-
+ming. Mathematical Programming Computation, Vol. 6, No. 4, pp.
+327–363,2014.
+[40] NevilleHogan.Impedancecontrol:Anapproachtomanipulation:Part
+i-theory. Journalofdynamicsystems,measurement,andcontrol,Vol.
+107,No.1,pp.1–7,1985.
+[41] Arvid QL Keemink, Herman van der Kooij, and Arno HA Stienen.
+Admittancecontrolforphysicalhuman-robotinteraction.TheInterna-
+tionalJournalofRoboticsResearch,Vol.37,No.11,pp.1421–1444,
+2018.
+207
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:54:02 UTC from IEEE Xplore.  Restrictions apply. 

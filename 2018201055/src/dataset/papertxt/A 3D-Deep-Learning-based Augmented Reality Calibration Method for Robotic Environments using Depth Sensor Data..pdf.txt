@@ -1,0 +1,468 @@
+   
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Internally-Balanced Magnetic Mechanisms Using a Magnetic Spring 
+for Producing a Large Amplified Clamping Force 
+Tori Shimizu*, Kenjiro Tadakuma*, **, Masahiro Watanabe, Eri Takane, Masashi Konyo, and Satoshi Tadokoro 
+  Abstract—To detach a permanent magnet using a control 
+force  much  smaller  than  its  original  attractive  force,  the 
+internally-balanced magnetic unit (IB Magnet) was invented. It 
+has been applied to magnetic devices such as wall-climbing 
+robots, ceiling-dangling drones, and modular swarm robots. In 
+contrast to its significant reduction rate with regard to the 
+control force, the IB Magnet has two major problems in its 
+nonlinear spring, which serves the purpose of cancelling out the 
+internal  force  on  the  magnet.  These  problems  include  the 
+complicated design procedure and the trade-off relationship 
+between  balancing  the  precision  and  the  volume  of  the 
+mechanism. This paper proposes a principle for a new balancing 
+method for the IB Magnet. This method uses a like-pole pair of 
+magnets as a magnetic spring, whose repulsive force should 
+equal the attractive force of an unlike-pole pair. To verify the 
+proposed principle, a prototype of the IB Magnet was designed 
+using a magnetic spring and verified through experiments such 
+that its reduction rate is comparable to those of conventional IB   
+Magnets.  Moreover,  a  robotic  clamp  was  developed  as  an  Figure 1.  Proof-of-concept model of the proposed Internally-Balanced 
+application example that contains the proposed IB Magnets as  Magnetic Unit (IB Magnet) using a magnetic spring.  
+its internal mechanism. 
+B.  Internally-Balanced Magnetic Unit 
+Keywords: Mechanism Design of Manipulators, Force Control 
+To detach a permanent magnet with a control force much 
+I.  INTRODUCTION 
+smaller  than  its  original  attractive  force,  the  internally-
+A.  Research Background   balanced magnetic unit (IB Magnet) in Fig. 2 was invented [7] 
+and has been applied to magnetic devices. Some examples 
+A  permanent  magnet  is  typically  more  effective  for 
+include being a magnetic pad for climbing walls, an anchor for 
+reducing  electricity  consumption  and  thus  maximizing 
+ceiling-dangling drones, and a connection unit for modular 
+operation time in comparison to an electromagnet  when a 
+swarm robots [8-11]. 
+robot uses a magnetic force to adhere to ferromagnetic surfaces. 
+However, as  its  name  suggests,  the  attractive force  of a  The mechanism is composed of a permanent magnet for 
+permanent  magnet  is  exerted  permanently;  therefore,  a  attraction held by the control rod, and a nonlinear spring for 
+permanent magnet requires a large control force for it to be  internal balancing held by the control rod𝐹 a(n𝑥d) the mechanism 
+detached from the target object. This characteristic enables it  frame. The spring is designed in such a wa(cid:2928)y that it has a force-
+to be attached to the target without consuming any power.  displacement 𝐹re(p𝑥u)ls=ion− 𝐹ch(a𝑥r)acteristic   identical,  but 
+opposite  in  s(cid:2923)ign,  to  t(cid:2928)he  force-displacement  attraction 
+There are many ways for detaching a magnet, especially 
+characteristic  𝐹  o(𝑥f )th=e m𝐹a+gn𝐹et. As a result, the 
+when used for locomotion. These include: applying a control 
+sum  of  these  force-displa(cid:2919)c(cid:2924)e(cid:2930)(cid:2915)m(cid:2928)ent  cha(cid:2928)racte(cid:2923)ristics,  which  is 
+force originally large enough or reduced enough to exceed the 
+named the internal force   exerted on th𝑥e 
+attractive  force  by  a powerful  actuator  [1-3];  inserting a 
+control rod, is determined to be zero. Because the control rod 
+separator between the magnet and the target object to decrease 
+is then at the equilibrium point of force at any displacement   
+the attractive force gradually [4]; canceling out the magnetic 
+from the  target object, Ideally zero control force is required 
+flux of the magnet by using an electromagnet (which is called 
+for shifting the control rod to attach and detach the magnet. 
+an  electro-permanent  magnet)  [5];  and  disconnecting  the 
+Meanwhile, the whole mechanism is still attracted to the target 
+magnetic circuit from the target object by switching the yoke 
+object by the counterforce exerted on the frame by the spring. 
+[6]. These methods require an actuator with a high torque, a 
+gear box with a high reduction ratio, or a large current input  C.  Research Purpose 
+for the electromagnet. Unfortunately, the advantage of the 
+Even though its control force reduction is effective, the IB 
+permanent magnet and its ability to  conserve energy for 
+Magnet has not been applied widely owing to problems in the 
+sustaining attraction is ruined in these applications. 
+nonlinear  spring.  This  is  due  to  its  complicated  design 
+T. Shimizu, K. Tadakuma, M. Watanabe, E. Takane, M. Konyo, and S.  procedure and the trade-off relationship between the precision 
+Tadokoro are with the Graduation School of Information Sciences, Tohoku  of the compensation and the volume of the mechanism. This 
+University, Sendai, Japan (phone: 022-795-7025; fax: 022-795-7023; 
+e-mail: shimizu.tori@rm.is.tohoku.ac.jp, tadakuma@rm.is.tohoku.ac.jp,  paper proposes a new internal balancing method that solves 
+watanabe.masahiro@rm.is.tohoku.ac.jp, eri.takane@rm.is.tohoku.ac.jp,  these difficulties. A prototype model has been developed to 
+konyo@rm.is.tohoku.ac.jp, tadokoro@rm.is.tohoku.ac.jp, respectively). 
+prove the proposed principle; in addition, a robotic clamp has 
+* These authors contributed equally to this work. ** Corresponding authors   
+been elucidated herein as its application example. 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1840
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply.    
+   
+Figure 2.  Principle diagram of the conventional Internally-Balanced  Figure 3.  Principle diagram of the proposed Internally-Balanced Magnetic 
+Magnetic Unit (IB Magnet) and the characteristics of its nonlinear spring.   Unit (IB Magnet) and the characteristics of its magnetic spring.  
+II.  METHODS TO ACHIEVE INTERNAL FORCE  ①  Measure the attnraction characteristics of the magnet. 
+COMPENSATION  ②  Define the stroke of the mechanism and thΔe𝐸 number of 
+linear springs ( ) to use. The more springs that are used, 
+A.  Conventional Method 
+the higher the balancing precision (smaller  ) that winll 
+The conventional nonlinear spring is composed of multiple  be achieved.   𝑥
+linear springs (leaf springs, for example) as illustrated in  Fig.  ③  Draw a characteristic graph of the spr𝐾ing by plac(cid:2924)ing   
+2. The state transition is controlled by the displacement of the  tangent lines to the characteristic of the m(cid:2924)agnet at   and 
+control rod. To trace the force-displacement characteristics of 
+calculate the𝑘ir inclination equivalent to  . 
+the magnet that is decreased inversely proportional to the 
+④  Determ𝑘ine th(cid:2924)e linear springs with spring constants that 
+square of the distance, the cam on the frame reduces the 
+are close(cid:2924) to   and𝑥 measure their free length. 
+number of linear springs that exerts the force as the rod gets 
+⑤  Using 𝑋 , provide fe(cid:2924)edback to the graph to determine the 
+pulled out further. The spring can be regarded as a mean of 
+starting (cid:2924)positions   of the springs and calculate the 
+storing attraction work as elastic energy, which gets released 
+depth  of the cam on the frame. 
+as repulsion work when the control rod is pulled out to detach 
+the magnet from the target object.  Furthermore, it is difficult to design a nonlinear spring that 
+is both compact and precisely balanced because of the trade-
+Δ𝐸To optimize the nonlinear spring, optimization should be 
+off relationship between the compensation precision and the 
+conducted using the following equations. The loss of energy 
+volume of the mechanism. More kinds of linear springs are 
+ from attraction work to elastic edn𝑥ergy is calculated by the 
+required to make the characteristics of the spring smoother.  
+a𝑥tt=rac0tion work via Eq. (1). This integrates th𝑥e o=ut𝑥-of-balance 
+This  causes  the  characteristics  of  the  magnet  to  have  a 
+force at every unit of displacΔe𝐸ment   from the targ(cid:2897)e(cid:2885)t (cid:2908)surface 
+decreased deviation while making the whole mechanism larger 
+𝐾 (𝐾  t=o 0th)e maximum strok𝑋e o(𝑋f th<e 𝑋rod, ,𝑋 =0) . This 
+and heavier. Thus, this mechanism becomes unsuitable, since 
+op(cid:3041)tim(cid:2868)ization minimizes the   (cid:3041)by (cid:3041)choosi(cid:3041)n(cid:2879)g(cid:2869) sp(cid:2868)ring co𝑥nstants  this reduces the control force that needs to be exerted in a 
+ at tangent points   (cid:2924)for the  robotic wheel, robotic arm, or a drone with small actuators. 
+characteris𝐾tics of t𝐾he magnet and so(l0v,e𝑥s E)q. (2) to find  . This 
+is the interse(cid:3041)ction w(cid:3041)h(cid:2879)e(cid:2869)re the tangent line(cid:2924)s meet with𝑘 the spring  B.  Proposed Method: Magnetic Spring 
+constants   and  . The range   defines the(cid:3041) stroke of  To solve the abovementioned problems, a new internal 
+a  single  linear  spring  with  a  spring  constant    that  is  balancing method was designed using a magnetic spring [12-
+calculatΔed𝐸 b=y u(cid:3505)si(cid:3051)n(cid:3145)g(cid:3133) (cid:3156)E(cid:3421)q𝐹. (3()𝑥 a)n−d ((cid:3533)4). 𝑘 𝑥 (𝑥 ≤𝑥 )(cid:3425)d𝑥 (1) 13] as depicted in Fig. 3. This magnetic spring uses properties 
+of a pair of magnets: the repulsive force characteristic of a like-
+(cid:2923) (cid:3041) (cid:3041)
+(cid:2868) (cid:3041)   pole pair, which is called a magnetic spring, is identical, but 
+(𝐾 𝑋 −𝐾 𝑋 )+{𝐹 (𝑋 )−𝐹 (𝑋 )} opposite in sign, to the attractive force of an unlike-pole pair. 
+𝑥 =   (2)
+(cid:3041) (cid:3041) (cid:3041)(cid:2879)(cid:2869) (cid:3041)(cid:2879)𝐾(cid:2869) −𝐾(cid:2923) (cid:3041) (cid:2923) (cid:3041)(cid:2879)(cid:2869) By aligning two pairs of magnets in the same distance, the sum 
+(cid:3041)
+d𝐹 (cid:3041)(𝑥) (cid:3041)(cid:2879)(cid:2869)   of their force always equals zero for any displacement. The 
+proposed magnetic spring does not have a more complicated 
+𝐾 = (cid:4708) =(cid:3533)𝑘 (3)
+d(cid:2923)𝑥 design procedure than a conventional spring:  
+(cid:3041) (cid:3041)
+𝑘 =𝐾 −(cid:3025)(cid:3289)𝐾 (cid:3041)  (4)  ①  Measure  the  attraction  characteristics  for  a  pair  of 
+magnets. 
+(cid:3041) (cid:3041) (cid:3041)(cid:2879)(cid:2869)
+  ②  Define the stroke of the mechanism, which is equal to the 
+maximum displacement of the springs for the magnetic 
+The IB Magnet enables a significant reduction rate of the  spring. 
+control force; however, its nonlinear spring has a serious 
+The  proposed  IB  Magnet  using  a  magnetic  spring  is 
+problem owing to its complicated design procedure. As shown 
+innovative since it is composed of identical magnets. However, 
+above, the nonlinear spring is composed of multiple linear 
+it significantly simplifies the design of the basic structure 
+springs. This requires an optimization process that cannot be 
+while  sustaining  or  even  improving  the  compensation 
+achieved via a hand calculation. As a result, there is difficulty 
+precision. The contactless and point-symmetric features also 
+in developing a practical mechanism for this. The design 
+give the magnetic spring an advantage of endless rotatability 
+procedure of the spring can be described as follows: 
+of the control rod relative to the frame.   
+1841
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply.    
+III.  EMBODIMENT OF THE PROTOTYPE MODEL  Fig.  6 and 7  shows  the  5-time  average result  of the 
+measurements. (a) When the ascending T-shape hook touches 
+A.  Conceptual Design 
+the  jig that  is  connected  to  the frame,  the control force 
+Based  on  the  proposed  principle,  a  proof-of-concept  suddenly reaches the highest net value of 8.4 N. This is 
+prototype  of  the  IB  Magnet  using  a  magnetic  spring  is  identical to the maximum attractive force of the original 
+presented in Table I and Fig. 4. Ring magnets were selected so  magnet. Afterwards, the detached magnets gradually decreases 
+that a tube-like rod and dry bearings can be placed through the  the  control force  so it matches  the  weight of  the whole 
+holes for lubrication and future expandability. This includes  mechanism and the jig. (b) When the jig is connected to the 
+controlling the rod by the side of the attraction magnet, rotating  control rod, the control force likely increases; however, the 
+the control rod relative to the frame and/or target surface, and  highest net value 1.1 N is apparently reduced to 13.0% of the 
+ducting fluids. Their surface to the corresponding surface (its  value during frame pulling. The control force then decreases 
+pair magnet or the target object) is shielded by a cover with a  to the total weight with one rising edge when the rod touches 
+thickness of 1 mm to avoid the ferromagnetic sand. The stroke  the frame at its maximum stroke. The control force reduction 
+was defined as 7.5 mm, where a material testing machine  ratios of conventional springs are reported to be 11.8% for six 
+(Instron, 3343) measured the attractive force between the two  kinds of coil springs and 15.4 % for a rubber spring [14]. This 
+magnets. This force was small enough (0.5 N) so that the  experiment successfully validated the effectiveness of the 
+covered condition was the same as the prototype model.  proposed magnetic spring and likely reduced the ratio with a 
+simpler structure and an easier design procedure. 
+B.  Building the Prototype Model 
+Fig. 1 displays the embodied proof-of-concept principle 
+The interference between the magnet for attraction and the 
+prototype of the proposed IB Magnet using a magnetic spring. 
+one for the frame was not strictly considered bu×t was regarded 
+Even though it is stiff enough for the proof of concept, a 3D-
+as weak× enough since the shortest distance of 20 mm between 
+printed acrylic material (Keyence, AR-M2) is used for the 
+them results in a magnetic force of less than 2.0 10-3 N, which 
+entire structure, which includes the rod for the sake of rapid 
+is  2.3 10-2  %  of  the  maximum  attractive  force.  By 
+prototyping.  Materials  with  a  higher  stiffness  such  as 
+magnetically isolating them from each other using magnetic 
+polycarbonate and aluminum can be used in future research. 
+shields, the interference can be effectively eliminated. 
+TABLE I.   SPECIFICATION OF THE PROTOTYPE MODEL OF THE 
+PROPOSED IB MAGNET USING A MAGNETIC SPRING 
+ 
+ 
+Figure 5.  Setting of the experiment for evaluating the internal force 
+compensation effect of the proposed IB Magnet using a magnetic spring. 
+ 
+Figure 4.  Design sketch of the proposed IB Magnet using a magnetic spring. 
+IV.  FUNDAMENTAL EXPERIMENT 
+To prove and evaluate the internal force compensation 
+   
+effect of the proposed IB Magnet using a magnetic spring, this  Figure 6.  Results of the transition of the control force of the proposed IB 
+study conducted an examination using the material testing  Magnet using a magnetic spring and distance-force characteristics. 
+machine as illustrated in Fig. 5. The IB Magnet was placed on 
+and attached to a target acrylic plate with the target magnet 
+buried 1 mm deep. The T-shape hook was attached to the 
+machine to pull up the pulling jig connected either to the frame 
+or to the control rod at the rate of 0.5 mm/sec and to the 
+maximum displacement of 15 mm (twice the stroke). Thus, the 
+values of the control force required to detach the IB Magnet by 
+ 
+pulling its frame and its control rod were measured.  Figure 7.  A direct comparison of the net maximum control forces. 
+1842
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply.    
+V.  APPLICATION OF THE PROPOSED IB MAGNET   To solve these problems, this study proposes a clamping 
+TO A ROBOTIC CLAMPING MECHANISM  mechanism as displayed in Fig. 8 (b). This requires the IB 
+Magnet to clamp a target by the attraction movement between 
+A.  Application Concept 
+itself when extended as an active finger and the ferromagnetic 
+This investigation proposed the idea of an “equilibr𝐹iu(m𝑥)- surface extended as a fixed finger. Since the magnet enlarges 
+floating force-displacement converter.” This is a me𝐹ch(a𝑥n(cid:3046)i)sm=  its attractive force spontaneously and gradually as it becomes 
+t−h𝐹at (i𝑥s )composed of a spring with a sprin𝐹g chara(c𝑥te)r=ist(cid:3002)i𝐹c(cid:3020) (𝑥)+  closer to the ferromagnetic surface, the mechanism can exert 
+a𝐹nd(cid:3046)( a𝑥n) “inverse-spring” with a spring cha(cid:3010)r(cid:3015)a(cid:3021)c(cid:3006)te(cid:3019)ristic  (cid:3046) a clamping force arbitrarily and a continuous value by shifting 
+(cid:3002)(cid:3020)  to balance the internal force  in and out the control rod of the IB Magnet. This corresponds 
+ exerted on the connection point of these springs. It is  to the displacement by using one linear actuator without the 
+capable of adjusting the force exerted on each end of the  extra control force. The actuator requires minimal backlash 
+springs by shifting the equilibrium point with a minimal  and a large stiffness so that it can control its own displacement 
+control force [15]. In other words, the force of a small,  precisely, even if the magnet is close to the ferromagnetic 
+lightweight, and minimal actuator can be amplified to a much  surface and the attractive force significantly changes.  
+larger force by inputting a parallel displacement. The IB 
+Magnet  can  be  counted  among  the  force-displacement  The clamping force can be predicted by the compression 
+converters by𝐹 re(g𝑥a)rding the 𝐹at(t𝑥ra)ction 𝐹mag(n𝑥e)t and contr𝐹ol (ro𝑥d)  length of the spring of the IB Magnet after its frame contacts 
+as the inverse(cid:3020)-spring and e(cid:2928)quilibrium(cid:2885) (cid:2903)point of the f(cid:2923)orce,  the ferromagnetic surface. Since the springs are fixed to the 
+respectively.   is now   and   becomes    control  rod,  which  is  separated  from  the  frame,  the 
+in this view. The end of the inverse-spring corresponds to the  compression length is adjusted independently from the size of 
+attractive force exerted on the frame. This is equal to the  the target object and the distance between the fingers. The 
+weight of the ferromagnetic object so the IB Magnet can lift  clamping force changes the thickness of the target object 
+up  at  that  point  for  the  stroke  of  the  rod.  During  this  reduction of thickness during clamping. The gripper can still 
+experiment, it was decided that the IB Magnet needs to be  produce enough clamping force by shifting the control rod 
+embedded, especially the one using a proposed magnetic  until the attractive force sufficiently exceeds the elastic force 
+spring to make the design simpler. This mechanism requires  produced by the deformation. This is because the deformation 
+control by a large force that includes the attraction target  width does not change after the frames of facing the IB 
+inside the mechanism itself.  Magnets have contacted each other. Since the attractive force 
+is a known function of the displacement, a variable can be 
+B.  Clamping Mechanism using the IB Magnet  measured and controlled by the encoder of the linear actuator. 
+A direct measurement of the attractive force is not required. 
+Owing to their response time, operation time, and power 
+consumption,  ideal  robotic  grippers  (i.e.,  actuator-driven 
+clamps  or  vises)  used  in  industry  and  disaster  rescue 
+operations should switch the reduction state by one degree of 
+freedom. This can be a high-speed state until the finger 
+touches the object to complete the clamping quickly and a 
+high-torque state after the finger touches the object to sustain 
+the  clamping  position  firmly.  Conventionally,  this  state 
+transition has been achieved by using sensors that provide 
+information regarding the existence of the clamping object 
+between the fingers and the regulating current for the actuator 
+driving an active finger. This electronic method, however, 
+requires  a  certain  processing  load  and  a  variable  power 
+consumption of the robotic system.  
+To  reduce  the  complexity of  the  control,  spontaneous 
+reduction mechanisms have been proposed that can be driven 
+passively by a linear actuator, such as a screw with a nut, with 
+a constant extra load (ideally as small as possible) at any 
+displacement of the finger caused by the addition of the 
+reduction mechanism [16-18]. As featured in Fig. 8 (a), such 
+mechanisms use mechanical joints, like toggle and clutch, to 
+restrict the further movement of the actuator position by 
+placing them to the dead center when the finger touches the 
+object. The detection of the load or displacement triggers the 
+switch of reduction state of the actuator. However, they used 
+to be not capable of adjusting the clamping force because   
+these switching mechanisms allow only a binary state of 
+Figure 8.  Problems of a conventional mechanical clamp and the proposed 
+clamping: either zero or maximum force. This is troublesome  clamp mechanism using the IB Magnet. 
+when the robotic system needs to handle heavy and fragile 
+objects without damaging and dropping them. 
+1843
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply.    
+ 
+Figure 11.  Demonstration of how to use the enlarged version of the IB 
+Magnet using a magnetic spring to a plate of 15.4 kg) as a target object. 
+ 
+Figure 9.  Enlarged version of the IB Magnet using a magnetic spring. 
+C.  Enlargement of the IB Magnet using a magnetic spring  
+The authors created a stronger IB Magnet using a magnetic 
+spring as displayed in Fig. 9 and 10 and Table 2 to embed in 
+ 
+the mechanical clamp. The structure and the control rod are 
+Figure 12.  A direct comparison of the net maximum control forces of the 
+composed of 3D-printed polymer (Stratasys, ABS-P430) and  enlarged version of the IB Magnet using a magnetic spring. 
+non-magnetic steel (SUS304), respectively. The interfering 
+magnetic force between the magnet on the frame for the  VI.  EMBODIMENT AND EXPERIMENT OF THE PROPOSED IB 
+spring and the magnet for attraction was measured to be  MAGNET CLAMPING MECHANISM 
+3.4×10-3 N, which is 1.1×10-3 % of the maximum attractive 
+A.  Conceptual Design 
+force. The measurement described in Fig. 12 was conducted 
+under the same condition as Chapter IV. This showed that the  Based on the proposed principle, a hand-powered proof-of-
+magnetic spring is even valid for a larger scale but with a  concept  prototype  of  the  proposed  IB  Magnet  clamping 
+lower compensation precision.  mechanism was designed as depicted in Fig. 13. The clamping 
+width is fixed to 35 mm, the height of a loadcell (Kyowa 
+To avoid the sudden and unintended release phenomenon  Sangyo,  LUR-A-2KNSA),  for  the  latter  experiment.  The 
+of the control rod that results in the forced separation of the  mechanism contains the IB Magnet of Fig. 9. The IB Magnet 
+mechanism and the target object, which occasionally happens  can be shifted upward for more than its stroke to fit to objects 
+since the internal force is too balanced to be easily shifted by  that are thicker than the designed clamping width. 
+a small shake or vibration, a lock mechanism was installed in 
+B.  Building the Prototype  
+this version as demonstrated in Fig. 11 (d). This ensures not 
+Fig.  14  shows  the  proof-of-concept  prototype  of  the 
+only the complete attraction state, but also the complete 
+proposed IB Magnet clamping mechanism. 
+detached state of the magnet to and from the target object. A 
+bearing inserted between the rod and the repulsion magnet 
+makes the attraction magnet independent of the  rotation.  
+TABLE II.   SPECIFICATIONS OF THE ENLARGED VERSION OF THE IB 
+MAGNET USING A MAGNETIC SPRING. 
+ 
+Figure 13.  Design sketch of the proposed IB Magnet clamping mechanism 
+embedding the enlarged version of the IB Magnet using a magnetic spring. 
+ 
+   
+Figure 14.   Proof-of-concept prototype of the proposed IB Magnet 
+Figure 10.  Design sketch of the enlarged version of the IB Magnet using a 
+clamping mechanism that uses a magnetic spring. 
+magnetic spring. 
+1844
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply.    
+C.  Clamping Experiment  larger.  The  authors  will  conduct  a  static  magnetic  field 
+To prove and evaluate the spontaneous reduction effect of  analysis to comprehend  this while  introducing  additional 
+the proposed IB Magnet clamping mechanism, an examination  internal force adjustment mechanisms. This includes an offset 
+was conducted using the prototype model as featured in Fig.  displacement or a constant force for the attraction magnet so 
+15 and the results are presented in Fig. 16. The fixed finger of  the  internal  force  can  be  set  to  zero  at  the  origin  and 
+the bottom is substituted by a plate 4 mm thinner than the  acceptably small for the actuator at the other displacement. 
+magnetic plate and the attraction target of the IB Magnet is 
+raised 5 mm by inserting an aluminum plate. The mechanism  The repulsive force of the magnetic spring always exceeds 
+thus clamps an target object 1 mm thicker than its minimum  the attractive force between the attraction magnet and the 
+inter-finger distance so that the active finger can touch the  target ferromagnetic object other than the identical magnet 
+object properly to exert a clamping force on it.  used in this mechanism. To reduce the control force, an offset 
+on the distance between magnets for the magnetic spring can 
+This experiment occurred as follows: (b) The loadcell was  be added so that the repulsive force decreases. In that sense, 
+inserted between the parallel fingers, (c) and the initial load on  the merit of a magnetic spring for the IB Magnet can be 
+the loadcell exerted by the weight of the active finger was  summarized as the coexistence of simplicity and the balancing 
+measured to be 12.9 N, which is the gravity bias of the  precision, especially for applications that can embed a magnet 
+clamping  force.  (d)  The  maximum  control  force  94.9  N 
+inside the attraction target.  
+(represented as a mass of 9.68 kg) was required to shift the 
+control rod up and down. This was applied on the rod in the 
+VIII.  CONCLUSION AND FUTURE PROSPECTS 
+fully pulled-out state. The net clamping force without the 
+spontaneous reduction was measured to be 18.5 N. (e) The  This study proposes the principle for a new balancing 
+control rod was shifted down by hand. (f) The net clamping  method that uses a magnetic spring to solve the problems of 
+force with the spontaneous reduction by the magnet was  the conventional nonlinear spring used for the IB Magnet. 
+measured  to be  36.9  N, which  is  2.0  times the  original  These problems included a complicated design procedure and 
+clamping  force  (d).  This  shows  that  the  experiment  a trade-off relationship between the volume of the mechanism 
+successfully validated the effectiveness of the proposed IB  and the force compensation precision. To verify the proposed 
+Magnet clamping mechanism.  principle, a prototype of the IB Magnet using a magnetic 
+spring was developed. An experiment was conducted to show 
+that its reduction rate is comparable to those of conventional 
+IB Magnets while its structure was simpler. The authors then 
+enlarged the proposed IB Magnet to embody a robotic clamp 
+embedding it as an equilibrium-floating force-displacement 
+converter. Its effectiveness as a clamping force amplifier was 
+verified for the spontaneous force reduction effect. 
+For future studies, the authors are planning to improve the 
+  proposed IB Magnet clamping mechanism. By arranging a 
+Figure 15.  The clamping experiment for evaluating the spontaneous 
+pair of opposing IB Magnets with inverse magnetization, both 
+reduction effect of the proposed IB Magnet clamping mechanism. 
+fingers will be active and the deviation of the target object 
+from the center of the clamping point will aquire a larger 
+acceptance. In addition, a load-sensitive spring will be needed 
+to compensate the self-weight component on the internal force 
+that differs by the orientation of the mechanism. Furthermore, 
+  an adjustment mechanism of the clamping width between the 
+Figure 16.  Results for evaluating the spontaneous reduction effect of the 
+finger and the frame will be implemented. This will be done 
+proposed IB Magnet clamping mechanism. 
+to adapt to changes in the thickness of the target object so that 
+VII.  DISCUSSION  the gripper becomes useful in a situation where it needs to 
+handle variable objects with a significantly different thickness. 
+The proof-of-concept prototype of the proposed IB Magnet 
+This  width-adjustment  function  should  be  passive  and 
+using a magnetic spring shows a measurable compensation 
+included in the load-sensitive spring so that the active degree 
+impreciseness that results in a non-zero control force and a 
+of freedom remains as one, a single linear actuator that drives 
+larger deviation of the balance at its enlarged state. It is 
+the opposing IB Magnets. 
+hypothesized that the cause of this phenomenon could be the 
+difference between the shape of the magnetic circuits. As a  ACKNOWLEDGEMENT 
+result, the exerted magnetic force for a like-pole pair of 
+This work was partially supported by the “Impulsing 
+magnets and an unlike-pole pair of magnets are at the range 
+Paradigm Change through Disruptive Technologies Program 
+in which the compression length is almost at its maximum. 
+(ImPACT)”, a research division designed by the Council for 
+The  deviation  between  the  attraction  and  repulsion  Science, Technology, and Innovation of Japan. This was 
+characteristics around the origin may have become larger and  consigned via the Japan Science and Technology Agency. 
+more apparent as the volume and the magnetic flux became  The authors are grateful for their kind financial support. 
+1845
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply.    
+REFERENCES 
+[1]  A. H. Slocum, S. Awtar, and J. Hart, “Magnebots – A Magnetic 
+Wheels Based Overhead Transportation Concept,” IFAC Proc. 
+Vol., vol. 35, no. 2, pp. 761–766, Dec. 2002. 
+[2]  W. Shen, J. Gu, and Y. Shen, “Proposed wall climbing robot 
+with permanent magnetic tracks for inspecting oil tanks,” in 
+IEEE International Conference Mechatronics and Automation, 
+2005, 2005, vol. 4, pp. 2072–2077. 
+[3]  L. P. Kalra, J. Gu, and M. Meng, “A Wall Climbing Robot for 
+Oil Tank Inspection,” in 2006 IEEE International Conference 
+on Robotics and Biomimetics, 2006, pp. 1523–1528. 
+[4]  S. Lee, “Moving robot using magnetic-force and cleaning robot 
+for window having the same,” KR20160090711A, 22-Jan-2015. 
+[5]  H. Yaguchi, S. Sakuma, and T. Kato, “A New Type of Magnetic 
+Actuator Capable of Wall-Climbing Movement Using Inertia 
+Force,” J. Eng., vol. 2014, pp. 1–6, Oct. 2014. 
+[6]  T. Go, T. Osawa, T. Ogawa, and T. Nakamura, “Development 
+of  Traveling  Wave Type Omni-directional  Wall  Climbing 
+Robot Using an Adhesion Device with Permanent Magnet,” 
+Trans. Soc. Instrum. Control Eng., vol. 51, no. 5, pp. 282–289, 
+2015. 
+[7]  S. Hirose, M. Imazato, Y. Kudo, Y. Umetani, "Internally-
+balanced magnet unit", Advanced Robotics, Volume 1, Issue 3, 
+pp. 225-242, 1986. 
+[8]  K. Tadakuma and T. Tanaka, “IBM Wheel: Mechanism of 
+Internal Balanced Magnetic Wheel - Basic Concept and the 
+First Prototype Model,” in 2014 JSME Conference on Robotics 
+and Mechatronics, 1P2-O01, 2014. 
+[9]  M. Ozawa et al., “Internally Balanced Magnetic Crawler”, in 
+SICE SI2018 Annual Conference, 1D5-08, 2017, pp. 1078-1080. 
+[10] K. Yanagimura et al., “Hovering of MAV by Using Magnetic 
+Adhesion and Winch Mechanisms”, Proceedings of the 2014 
+IEEE International Conference on Robotics & Automation, 
+pp.6250-6257, Hong Kong, China, 2014. 
+[11] S.  Murata  et  al.,  “M-TRAN:  self-reconfigurable  modular 
+robotic system,” IEEE/ASME Trans. Mechatronics, vol. 7, no. 
+4, pp. 431–441, Dec. 2002. 
+[12] T. Shimizu, et al., “Internally-Balanced Magnet Mechanisms 
+Using Magnet Springs,” in SICE Tohoku Research Forum No. 
+313, 313-5, 2017. 
+[13] T.  Shimizu,  et  al.,  “Magnetic  adhesion  device”,  Patent 
+Application 2018-106656, 2018/06/01. 
+[14] M. Suzuki, K. Tsuru, and S. Hirose, “Design of Nonlinear 
+Spring and Mechanism for Internally-balanced Magnetic Unit,” 
+J. Robot. Soc. Japan, vol. 27, no. 4, pp. 460–469, 2009. 
+[15] T. Fujimoto et al., “Floating Displacement-Force Conversion 
+Mechanism - Intensifying mechanism utilizing movement of 
+equilibrium point -,” in 2018 JSME Conference on Robotics and 
+Mechatronics, 2P1-G14, 2018. 
+[16] T. Takaki and T. Omata, “Linear Motion Mechanism with 
+Grasp Force Magnification,”  Journal of the Robotics Society of 
+Japan, vol. 25, no. 2, pp. 299-305, 2007. 
+[17] T. Takayama, S. Makita and T. Omata, “Development of a 
+Parallel Jaw Gripper with Bidirectional Force Magnification 
+Mechanism”,  in  Transactions  of  the  Japan  society  of 
+mechanical engineers. C., vol. 76, no. 772, pp.3542-3548, 2010. 
+[18] Gordon R. Schulz, “End effector with load-sensitive digit 
+actuation mechanisms”, U.S. Patent US5280981A, 1991. 
+1846
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:03:29 UTC from IEEE Xplore.  Restrictions apply. 

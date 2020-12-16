@@ -1,0 +1,582 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Grounding Language to Landmarks in Arbitrary Outdoor
+Environments
+∗ ∗
+Matthew Berg , Deniz Bayazit , Rebecca Mathew, Ariel Rotter-Aboyoun, Ellie Pavlick, Stefanie Tellex1
+Abstract—Robots operating in outdoor, urban environments
+need the ability to follow complex natural language com-
+mands which refer to never-before-seen landmarks. Existing
+approaches to this problem are limited because they require
+training a language model for the landmarks of a particular
+environment before a robot can understand commands refer-
+ring to those landmarks. To generalize to new environments
+outsideofthetrainingset,wepresentaframeworkthatparses
+references to landmarks, then assesses semantic similarities
+betweenthereferringexpressionandlandmarksinapredeﬁned
+semantic map of the world, and ultimately translates natural
+language commands to motion plans for a drone. This frame- Fig.1:SimulatedSkydioR1inTulsa,Oklahoma.Thismap
+work allows the robot to ground natural language phrases to
+was not shown during training and the model succeeds at
+landmarks in a map when both the referring expressions to
+landmarks and the landmarks themselves have not been seen performing76.19%ofthetestednaturallanguagecommands
+during training. We test our framework with a 14-person user in this environment.
+evaluationdemonstratinganend-to-endaccuracyof76.19%in
+an unseen environment. Subjective measures show that users
+ﬁnd our system to have high performance and low workload.
+These results demonstrate our approach enables untrained In this paper, we present a system that allows a person to
+users to control a robot in large unseen outdoor environments command a drone with natural language in an environment
+with unconstrained natural language.
+never-before-seen to the drone. The system is capable of
+I. INTRODUCTION interpreting natural language commands, including refer-
+ences to nearby landmarks, with no training data for the
+As autonomous systems improve on outdoor robots, such
+environment. Our system is constructed from a language
+as self-driving vehicles and drones, it becomes increas-
+model and planning model. In the language model, natural
+ingly necessary to develop models that translate high-level,
+language is parsed into a structured logical form necessary
+often ambiguous instructions to low-level inputs for the
+for planning. We use Linear Temporal Logic (LTL), which
+autonomoussystem.Forexample,apassengermightinstruct
+represents atomic propositions over a linear timeline. We
+aself-drivingvehicleto“Avoidtheredbridgeonthewayto
+exclusivelyusetheLTLatomsforourlogicalform,allowing
+the ofﬁce” or to “Go through the red bridge before heading
+the natural language to stay in its unstructured state, such
+to CVS.” Such natural language commands present multiple
+as “Go to the big blue bear but avoid the main green”
+structural and semantic layers that the robot’s autonomous ∧ ¬
+grounding to F(big blue bear main green). Keeping
+system cannot understand.
+natural language in the logical form allows us to lever-
+Existing approaches to this translation problem assume a
+age more ﬂexible neural models better suited to resolving
+languagemodeltrainedoveramapoftheexactenvironment
+ambiguous language while simultaneously maintaining a
+in which the robot will be deployed [1, 2, 3, 4]. This lack
+structuredcommandrepresentationin theplanner.Critically,
+of generality prevents the robot from navigating to areas on
+this retention of natural language reduces the predeﬁned
+the map where the language model has not been trained.
+predicatesoursystemrequirestologicaloperators(e.g.AND,
+In addition, current approaches require grounding all of the
+NOT). As a result, our model can seamlessly handle unseen
+natural language to a predeﬁned, ﬁxed set of possible pred-
+referring expressions to landmarks, allowing it to generalize
+icates, which is overly strict and limits generalization. Such
+to entirely novel environments and commands.
+approaches also focus towards training a language model on
+In the planning model, the grounded LTL formulae are
+alimitedvocabularythatisspeciﬁctoagivenmap,forgoing
+supplied to a planner that has access to a predeﬁned se-
+the highly developed semantic depth of publicly available
+mantic map of the robot’s environment, generated from
+global mapping data. This limitation curbs the user’s ability
+OpenStreetMap (OSM) [5]. The landmarks names from the
+torefertolandmarksbyusingsemanticdescriptors,like“red
+LTLformulaeareresolvedtonavigationalcoordinates.These
+bridge” or “ice cream store.”
+coordinates become part of a motion plan that is uploaded
+∗
+Theseauthorscontributedequallytothiswork. to a simulated Skydio R1 drone.
+1 Brown University, Providence, RI, 02912, USA. Emails:
+{ We perform both a user evaluation and corpus-based
+matthewberg, denizbayazit, rebeccamathew, arielrotter-aboyoun,
+elliepavlick}@brown.edu,steﬁe10@cs.brown.edu evaluation of this model. Our in-person user evaluation
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 208
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. demonstrates an accuracy of 76.19% in an environment etal.[17]directlyparsesthenaturallanguagecommandinto
+not shown during training and a mean NASA-Task Load alogicalformofﬁgure(subjectofsentence),verb,landmark,
+Index (NASA-TLX) performance score of 14.85 points out andspatialrelation.Ourworkispositionedbetweenthetwo,
+of 20 points. For the corpus-based approach, we present coupling a goal-based logical form with landmarks directly
+1540 challenging natural language commands collected on parsed from the natural language command.
+AmazonMechanicalTurk(AMT)whichdescribetrajectories
+containing one or two landmarks from 22 unique maps1.
+III. APPROACH
+Using this data, we show an accuracy of 45.91%.
+Our system allows a person to command a drone with
+II. RELATEDWORK
+natural language in a never-before-seen environment. The
+Naturallanguagepresentsanintuitivemeansofcommuni- system can interpret natural language commands, including
+cationwithrobots,particularlythosewithautonomysystems references to nearby landmarks, with no training data for
+that rely on higher-level human guidance. There has been theenvironment.Agraphicalrepresentationofoursystemis
+extensiveworkondevelopingmodelswhichtranslatenatural shown in Figure 2.
+language to lower-level input for these autonomy systems. The language model grounds natural language commands
+Previous work has focused on grounding the complete natu- to LTL formulae. The LTL structure is created by CopyNet
+ral language command into a symbolic form for the motion [20],aSeq2Seqmodelcapableofcopyingoutofvocabulary
+planner [6, 7, 8, 9]. To handle complex instructions, Tellex (OOV) words. To ground natural language landmark refer-
+et al. [1] created a probabilistic graphical framework for ring expressions to landmarks in a map unseen to the lan-
+grounding natural language commands to landmarks and guagemodel,weusearesolutionmodelthatdrawssemantic
+other entities in a map. In addition, neural sequence-to- informationfromamappingdatabase.Theﬁnaloutputofthe
+sequence (Seq2Seq) models that ground natural language to language model is an LTL formula with natural language in
+∧
+symbolic forms have been proposed [4, 10, 11]. However, the logical form, e.g. F(CVS F(red bridge)).
+theseapproachesmakethedualassumptionthatthereexistsa
+The LTL formula is then passed to the planning model.
+smallnumberoflandmarksinthemapandthatthelanguage
+The planning model uses a map generated from OSM,
+modelcanbetrainedontheselandmarksdirectly.Incontrast,
+partitionedintoVoronoicells[21].Thepartitionedmapalong
+ourapproachusesamapwithmillionsoflandmarksanddoes
+with the LTL formula are supplied to the AP-MDP planner
+not assume that a language model can be trained on all of
+[4].ThisplannerextractsgoalsandconstraintsfromtheLTL
+them.
+formula to create a motion plan as a series of latitude and
+Importantly, natural language can refer to entities not longitude points.
+only via explicit names, but also via general descriptions.
+For example, one might say “Go to the medicine store”
+A. Linear Temporal Logic
+instead of “Go to CVS.” There exists a body of work
+on grounding semantic information in natural language to
+As our language model is not constrained to any map
+logical forms [2, 12, 13, 14, 15]. To create more domain-
+region or landmarks, it is necessary to encode goals and
+independent groundings, Cheng et al. [12] demonstrates
+constraints of the natural language command in a domain-
+a neural semantic parser that uses an intermediate form
+independent way. To accomplish this, we turn to LTL, a
+containing natural language. Misra et al. [13] presents a
+domain-independent formalism whose syntax can encode
+framework for grounding novel verbs to logical forms by
+goals and constraints of the robot’s path. By allowing for
+leveraging available information in the environment. Similar
+encoding of both the present and future states of the robot,
+totheseworks,weusenaturallanguageinalogicalformand
+LTL supports the inherent non-Markovian nature of uncon-
+leverage information in the map to ground unknown words.
+strained natural language commands, such as “Move to the
+However,ourapproachincludesnaturallanguageinthefully
+medicine store without going over the red bridge.” We use
+grounded logical form, and leverages semantic utterances
+LTL to determine if a discrete trajectory satisﬁes the goals
+withinformationinthemaptogroundnovellandmarks.This
+and constraints of the natural language command. LTL has
+combination allows us to interpret references to landmarks
+the following grammatical syntax:
+that the robot’s model has never seen during training while
+|¬ | ∧ | ∨ |G |F | U |N
+also grounding complex commands with constraints and φ:=p φ φ ψ φ ψ φ φ φ ψ φ
+subgoals. ∈ P
+A variety of approaches exist for combining natural where p ¬ ∧is an at∨omic proposition, φ and ψ are LTL
+formulae, , , and denote logical “not,” “and,” and
+language with robot instruction following in a map with G F U
+“or,” denotes “globally,” denotes “ﬁnally,” denotes
+landmarks [16, 17, 18, 19]. Dzifcak et al. [18] presents a N
+“until,” and denotes “next.” Semantic interpretations of
+framework for grounding natural language commands into
+these operations are included in Manna and Pnueli [22]. For
+a logical form representing goals and actions, while Kollar
+example, a command such as “Go to the big blue bear but
+avoid the main green” would have an LTL expression of
+1https://github.com/h2r/Language-to-Landmarks- ∧ ¬
+Data F(big blue bear main green).
+209
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. LANGUAGEMODEL
+Landmark resolution output:
+NL command input: CopyNet output: 1. F ( cvs )
+“Go to the medicine store.” F ( lm( medicine store )lm ) 2. F ( medical research lab )
+.
+.
+.
+AP-MDP planner output: Lookup table in OSM:
+Voronoi map generation
+[ (lat, lon) ; ... ] cvs := (lat, lon)
+PLANNINGMODEL
+Fig. 2: End-to-End System Pipeline. Natural language is given to the language model, which returns a grounded LTL
+formula. The planning model then creates a motion plan which satisﬁes the LTL formula.
+B. CopyNet then divide these landmarks into unique datasets containing
+landmarksfromnorthcampusandsouthcampus.Inaddition,
+To translate natural language commands into logical
+forms, current approaches use a Seq2Seq model [4, 10, 11]. we wrap references to landmarks with lm( and )lm as
+shown in step two of Fig. 2, simplifying extraction of
+Seq2Seq models learn how to translate input sequences into
+landmark referring expressions for the landmark resolution
+output sequences. However, existing Seq2Seq models learn
+model. Finally, we limit the dataset to the following three
+a mapping from a ﬁxed input language to a ﬁxed output
+LTL structures:
+language, and require all symbols in the output language
+to have appeared at training time. In contrast, our language F | F ∧F | F ∧¬
+(φ) (φ (ψ)) (φ ψ)
+model generalizes to any region, and thus needs the ability
+to understand words and commands the language model
+C. Landmark Resolution Model
+has not been trained on. In particular, it is essential that
+we extract unseen landmark referring expressions from the 1) Mapping Database: A key focus of our framework is
+naturallanguagecommand.Forexample,giventhecommand the language model that grounds language to landmarks, as
+“Go to the medicine store” our model needs to correctly humansﬁndlandmarksimportantfornavigationinstructions,
+identifythat“medicinestore”isthereferringexpressionand particularly for unfamiliar environments [26]. Landmarks
+thecorrespondingLTLformulawouldbeF(medicinestore). are geographic objects important to human spatial cognition
+We approach this challenge with CopyNet [20], which [27]. Following previous work [28, 29] we use OSM as our
+is developed for cases when the output contains many landmark database.
+subsequences from the input. CopyNet introduces a copy-
+OSMisaglobalopen-sourcemapwhereanyusercanadd
+attentionmechanismatopthetraditionalSeq2Seqframework
+landmarks and information about the landmarks. Critically,
+[23]. This copy mechanism is fundamental to our language
+this information can be semantic in nature, such as the type
+model,allowingforamoredomain-generalmodelevenwith
+of cuisine for a restaurant or the function of a building.
+a small training set.
+We leverage OSM’s extensive semantic database as the
+WhencomparingCopyNettoapurelygenerativerecurrent
+foundation of our language model, enabling groundings of
+neural network with the LCSTS dataset [24], Gu et al.
+semantic referring expressions to landmarks.
+demonstrates that CopyNet improves production of readable
+Two building blocks of the OSM database are NODES
+output for out-of-vocabulary (OOV) words. We selected
+and WAYS. NODES are points with a latitude, longitude,
+CopyNet because it was accessible in multiple open-source
+anduniquenumericalID. NODES commonlyrepresentland-
+implementations. We use Adam Klezcweski’s implementa-
+marks such as statues, benches, and trees. WAYS are lists
+tion of CopyNet2 with the addition of pre-trained GloVe
+of NODES, commonly representing larger landmarks like
+embedding vectors [25]. We use mjc92’s dataset3 to validate
+buildings, roads, and greens. Closed WAYS have a polygon
+Klezcweski’s model.
+geometry. Both NODES and WAYS can be tagged with key-
+To train our model, we use a corpus of 668 natural
+value pairs about their appearances, functions, or other
+language navigation instructions collected by Oh et al. [4]
+semantic information.
+Each command has a corresponding LTL formula, making
+2) Landmark Resolution Model: Given all the possible
+this dataset well-suited for training a Seq2Seq model like
+landmark candidates in the map, the model needs to resolve
+CopyNet. We augment the data by replacing goal locations
+the user’s referring expression to the correct landmark. The
+withBrowncampuslandmarknamesscrapedfromOSM.We
+landmark resolution model ﬁnds the maximally probable
+candidatebycalculatingthesimilaritiesbetweenthereferring
+2https://github.com/adamklec/copynet
+3https://github.com/mjc92/CopyNet expression and each landmark’s semantic information.
+210
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. ThelandmarkresolutionmodelreceivestheCopyNetout- [4] partitions a hard-coded map into a grid of ﬂyable zones
+put of an LTL formula with the user’s referring expression. and target landmarks. However, since other real-world ge-
+While any arbitrary model could resolve this expression ometriescanbelargeandcomplex,amoreﬂexibleapproach
+given textual descriptions, images, or robot sensor data, we to map partitioning is required.
+present a model that uses word embeddings to resolve the Our approach uses Voronoi cells [21]. We query OSM for
+user’s referring expression to the landmark name. landmarksina300meterradiussquarearoundacenterpoint,
+Themodelusesthedatabase’ssemanticinformationabout creating holes for each WAY polygon and ﬁve meter radius
+each landmark to ﬁnd the intended landmark. However, the squareholesaroundeachNODE.Then,werandomlygenerate
+user’s referring expression may not lexically align with the points inside the solid region, which are used to partition
+landmark database. For example, we would expect “store” the map into Voronoi cells as shown in Fig. 3. We have
+and “shop” to have similar meaning, even if OSM’s data observed the Voronoi cells can enable faster planning over
+model only supports key:shop. To resolve these lexical largedistances.Whencomparingourresultsinthepredeﬁned
+conﬂicts, we use word embeddings, which represent words map by Oh et al. [4], Voronoi-based planning between two
+±
+or phrases as vectors in a high-dimensional vector space landmarks 48.28 meters apart ran in 37.08 6.43 seconds,
+±
+[25, 30, 31, 32, 33]. High-dimensionality allows us to use whereasthegrid-basedapproachranin90.49 0.27seconds
+cosine similarity (the cosine of the angle between vectors) (over three runs).
+to compare semantic referring expressions. Further, the AP-MDP planner understands landmarks as a
+A referring expression may fall into one or more of three single latitude and longitude coordinate, not a polygon. As
+possible categories: name, address, and general description. such, we represent WAYS in the planner by choosing one
+An example of a command using more than one category corner NODE as its representative point.
+wouldbe“FlytoCVSpharmacy,”whichincludesnameand To align with limitations of both natural language and
+description. ourframework,weﬁltercertainlandmarks.Landmarksneed
+name: Our model exclusively uses the OSM key name. to be named for the purposes of natural language com-
+address: Our model exclusively uses addr:house mands, so they must have a key:name. We exclude any
+number and addr:street. landmarkcontainingthekeyhighway,railway,place,
+descriptions: Our model uses keys we observed to be se- boundary, or waterway, because it is difﬁcult to use a
+mantically signiﬁcant in natural language commands, singular representative point for very large landmarks.
+such as amenity, shop, and leisure.
+IV. EVALUATION
+For each category we gather the key values into lists.
+We test that our system accurately grounds natural lan-
+Then, to handle multiple categories of values, we create all
+guage commands with references to landmarks, without
+possible combinations of these lists. For each combination,
+being trained on those landmarks. We conduct an end-to-
+we compute the average of their word vectors. We then
+end user evaluation where participants give natural language
+calculatethecosinedistancebetweeneachoftheseaveraged
+commands to the drone and observe the robot’s actions in
+vectors and the phrase vector for the referring expression.
+simulation. In addition, we perform a corpus-based evalu-
+Finally, we use the minimum cosine distance to identify the
+ation on a diverse set of maps to test the limits of our
+referred landmark. We evaluate this approach against other
+framework. Finally, we demonstrate the system acting in a
+models in Section IV-B.2. The cosine distance between two
+real outdoor domain4.
+vectorsisdeﬁnedasthedifferencebetween1andtheircosine
+similarity.
+A. User Evaluation
+D. Voronoi Maps and Planning To test end-to-end performance on a map unseen to
+the language model during training, we ran an in-person
+user evaluation with 14 voluntary student participants. Each
+studentgavethreespokennaturallanguagecommandstoour
+system and evaluated the resulting behavior of a Skydio R1
+drone in a simulated outdoor map of Tulsa, Oklahoma.
+The simulator is built in Unity [34], using outdoor envi-
+ronments generated with the Mapbox SDK [35] (Fig. 1).
+Using ROS and ROS# [36, 37], the simulator and plan-
+ner communicate about the drone’s ﬂight status and ﬂight
+trajectories. The simulator allows the participant to view
+Fig. 3: Map partitioned into Voronoi cells. White holes
+the trajectory the drone takes given the participant’s natural
+represent regions containing landmarks.
+language command.
+AsshowninTableI,ourmodelaccuratelygroundsnatural
+We use the AP-MDP planner to convert grounded LTL languagecommandstoLTLandformedcorrectmotionplans
+formulae to high-level motion plans, and leave lower-level
+motion planning to the drone’s autonomy system. Oh et al. 4https://youtu.be/a-JGems7fzs
+211
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. for 76.19% of user commands. In this table, we also break 53.49% of commands containing two unseen landmarks to
+downfailurecases.Weobservechallengeswithtwoformsof the correct LTL structure (Table III). CopyNet errors are
+natural language commands: commands that include spatial principally attributed to not copying enough words from
+language, such as “Go to l near l ”; or commands with input to output.
+1 2
+verbs or unexpectedly long phrases that CopyNet has not
+been sufﬁciently trained on. Spatial language phrases cause Number of Seen (%) 1 Seen, Unseen (%)
+CopyNet to not copy enough words, resulting in improper Landmarks 1 Unseen (%)
+groundings or improper LTL structures. We hypothesize ± ±
+One 100.00 0.00 N/A 74.50 2.88
+± ± ±
+that CopyNet failures are due to the limited use of spatial Two 99.48 0.20 69.18 2.52 53.49 2.95
+language in CopyNet’s training dataset, and that a more
+TABLE III: CopyNet accuracy
+representativetrainingdatasetwouldaddresstheseproblems.
+Also, planner errors were due to an indexing bug that we
+resolved post-evaluation. 2) Landmark Resolution Evaluation: We compare our
+After using our system, users answered the NASA-TLX landmark resolution model to other models, as shown in
+questionnairetomeasureworkloadonascaleof0to20(least Table IV. We create the following baselines to evaluate the
+to most) [38]. On average, users reported high performance effectiveness of our landmark resolution model. The Name
+and low workload (Table II). Additionally, we use the Sys- model represents a landmark by just its name phrase vector,
+tems Usability Scale (SUS) [39] to understand system ease an average of word embedding vectors for every word in its
+of use. We report a mean SUS score of 76.25 with standard name. The Uniform model represents a landmark by assign-
+deviationof18.39,whichisabovetheaverageSUSscoreof ing equal weight to every OSM semantic feature (including
+68 [40]. thenameofthelandmark)andaveragestheirphrasevectors.
+Thetermfrequency-inversedocumentfrequency(tf-idf)[41]
+model weighs each semantic feature’s phrase vector with its
+Percentage (%)
+tf-idfscore,ametrictodownweighfrequentoruninformative
+Speech-to-text errors 4.76
+words by document, where each map is a document. All
+Incorrect grounding (Landmark Resolution) 2.38
+Planner errors 4.76 modelsuseminimumcosinedistancetoidentifythereferred
+Improper LTL (CopyNet) 11.90 landmark.
+Succeeded 76.19 Landmark names often contain proper nouns, which may
+be OOV. We evaluate if using morphological information
+TABLE I: System performance accuracy for in-person user
+(e.g. preﬁxes, sufﬁxes, roots, etc.) helps the model process
+evaluation
+OOV words by comparing fastText [31, 33], which uses
+such information, to larger word embedding models like
+Word2Vec and GloVe [25, 30].
+Raw NASA-TLX (pts) We evaluate on 129 references collected from seven re-
+±
+Performance 14.85 05.38 searchers in the Brown University Humans to Robots Lab.
+±
+Mental demand 03.50 02.42 We showed each person OSM landmark information from
+±
+Physical demand 02.83±04.49 a single map and asked for different landmark referring
+Temporal demand 01.50 01.50
+± expressions by type(s): name, address, and description.
+Effort 03.40 03.17
+Frustration 05.50±05.08 We deﬁne the grounding accuracy to be the percentage
+of landmarks returned by our language model that matches
+TABLE II: Raw NASA-TLX scores on a 20 point scale theintendedreference.Wecalculategroundingaccuracyand
+mean reciprocal rank (MRR) of every landmark resolution
+model and word embedding combination. MRR is deﬁned
+B. Component Evaluation
+as the average of the reciprocal rank scores across multiple
+We analyze the performance of individual components queries. The reciprocal rank score of a query (a user’s
+of our language pipeline to understand failure modes and semanticreference)isthemultiplicativeinverseofthecorrect
+potential improvements to our end-to-end system. landmark’s ranking. For example, if the landmark resolution
+1) CopyNet Evaluation: We trained two models to eval- model ranks the true landmark corresponding to a user’s
+uate CopyNet. The ﬁrst is trained on natural language semantic reference as third-most likely, the reciprocal rank
+commands with a single landmark, the second on natural would be 1/3 (assuming the list is three landmarks long).
+language commands with two landmarks. We trained with a Table IV shows that our landmark resolution model per-
+learning rate of 0.001 over 8 epochs for the single landmark forms best with GloVe, which we attribute to its large
+model and 15 epochs for the two landmark model. The vocabulary.
+models were then evaluated against phrases with seen and
+C. Corpus-Based Evaluation
+unseen landmarks as shown in Table III. For two landmark
+commands, we observe on average that CopyNet grounds We test our language model’s ability to both identify the
+69.18% of commands containing one unseen landmark and appropriate LTL structure and properly extract landmarks
+212
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. Name Uniform tf-idf OurModel City Name Number of Landmarks Accuracy (%)
+Accuracy fastText 41.86 43.41 51.94 58.14 Jacksonville #2 16 17.14
+(%) Word2Vec 42.64 45.74 54.26 58.91 Boston 39 20.00
+Glove840B 44.96 48.06 55.81 68.99 New York #1 71 30.00
+MRR fastText 47.72 61.73 49.15 66.84 Chicago #2 26 35.71
+(%) Word2Vec 51.22 63.51 54.38 68.97 Charlotte #1 24 35.71
+Glove840B 51.39 65.22 54.38 76.35 Seattle 119 37.14
+Denver #1 27 40.00
+TABLEIV:LandmarkgroundingaccuracyandMRRresults Philadelphia #1 21 44.29
+for different landmark resolution and word embedding Indianapolis 10 45.71
+models Denver #2 21 45.71
+Jacksonville #1 19 47.14
+Los Angeles #1 60 48.57
+Los Angeles #2 62 52.86
+Columbus #2 26 52.86
+Chicago #1 22 54.29
+Houston 32 54.29
+New York #2 73 54.29
+Philadelphia #2 90 55.71
+San Diego #1 41 55.71
+San Diego #2 31 55.71
+Charlotte #2 15 57.14
+Columbus #1 10 70.00
+±
+Average 38.86 45.91 12.70
+Fig.4:AMT trajectory example.AnOSMregionwithtra-
+TABLE V: Corpus-based language pipeline accuracy
+jectory that corresponds to F(lm(l )lm & F(lm(l )lm))
+1 2
+from unseen commands by collecting a test set of challeng- landmarks. We further present an improved planning model
+ing natural language commands from AMT. We collected for Linear Temproal Logic(LTL) expressions over large and
+commands for 22 urban American regions. (Table V). complex geometries. Last, we provide the collected corpus
+AMT workers viewed a screenshot of a region in OSM of 1540 natural language to LTL trajectory commands.
+with an overlaid trajectory (Fig. 4). Trajectories allow us to Futureworkcanfocuseitheronimprovingcomponentsof
+ask AMT workers for natural language commands without our framework, such as improving the copying mechanism
+extensivelanguageprompting.Atthestartofeachtask,AMT oraddingavisionmoduletoourlandmarkresolutionmodel.
+workers saw an example map and related example com- We can also direct work towards expanding the model’s
+mands.Wefurtherprovidedadetailedtaskdescriptiontoen- reach beyond navigation with OpenStreetMap. Search and
+sureAMTworkersrespondedwithhigh-levelcommands,not rescue operations require responders to refer to dynamic
+low-level, action-oriented instructions. Every AMT worker entities, like people or cars, which are not listed in most
+was given semantic information about each landmark to maps. Incorporating a probabilistic spatial distribution could
+allow for ﬂexibility in landmark referring expressions. We accountforreferringtothesedynamiclandmarks(e.g.“Find
+providedGooglesearchcardswithoutthelandmark’saddress the car behind the building”). Finally, the user’s location
+as to not bias the AMT workers with OSM semantic data. couldbeusedtoresolveambiguitybetweenmultiplesuitable
+We have published 1540 collected commands, each formed landmark candidates.
+byauniqueAMTworker.Compensationwas$0.50pertask.
+ACKNOWLEDGMENTS
+Weachievea45.91%meanaccuracyofgroundingnatural
+language to correct fully-formed LTL. Some inaccuracies in This work is supported by the National Aeronautics and
+the corpus-based evaluation may be due to unclear AMT Space Administration under grant number NNX16AR61G,
+instructions, which would lead to incorrect AMT worker the US Army under grant number W911NF1920145, and
+annotations. with support from the Sloan Foundation. The authors would
+like to thank Nakul Gopalan and Thao Nguyen for their
+V. CONCLUSIONS feedback and support.
+We present a framework for grounding complex, unseen
+naturallanguagecommandstomotionplansforarobotoper- REFERENCES
+atinginoutdoorenvironments.Fora14-participantusereval- [1] S. Tellex, T. Kollar, S. Dickerson, M. R. Walter, A. G.
+uation,oursystemshoweda76.19%end-to-endaccuracyand Banerjee, S. Teller, and N. Roy, “Approaching the
+ameanNASA-TaskLoadIndex(TLX)performancescoreof symbol grounding problem with probabilistic graphical
+14.85 out of 20 points. In addition, we demonstrate a mean models,” AI Magazine, vol. 32, no. 4, p. 64, 2011.
+accuracy of 45.91% for resolving a challenging corpus of [2] Y. Artzi and L. Zettlemoyer, “Weakly supervised
+natural language referring expressions to previously-unseen learning of semantic parsers for mapping instructions
+213
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. to actions,” Transactions of the Association for on Natural Language Processing (Volume 1: Long
+Computational Linguistics, vol. 1, pp. 49–62, 2013. Papers). Beijing, China: Association for Computa-
+[Online]. Available: https://www.aclweb.org/anthology/ tional Linguistics, Jul. 2015, pp. 992–1002. [Online].
+Q13-1005 Available: https://www.aclweb.org/anthology/P15-1096
+[3] R. Paul, A. Barbu, S. Felshin, B. Katz, and N. Roy, [14] M. Damonte, R. Goel, and T. Chung, “Practical
+“Temporal grounding graphs for language understand- semantic parsing for spoken language understanding,”
+ing with accrued visual-language context,” ArXiv, vol. CoRR, vol. abs/1903.04521, 2019. [Online]. Available:
+abs/1811.06966, 2018. http://arxiv.org/abs/1903.04521
+[4] Y. Oh, R. Patel, T. Nguyen, B. Huang, E. Pavlick, and [15] P.Yin,C.Zhou,J.He,andG.Neubig,“Structvae:Tree-
+S. Tellex, “Planning with state abstractions for non- structured latent variable models for semi-supervised
+markovian task speciﬁcations,” in Robotics: Science semantic parsing,” CoRR, vol. abs/1806.07832, 2018.
+and Systems, 2019. [Online]. Available: http://arxiv.org/abs/1806.07832
+[5] OpenStreetMap contributors, “Planet dump [16] M.MacMahon,B.Stankiewicz,andB.Kuipers,“Walk
+retrieved from https://planet.osm.org ,” https: the talk: Connecting language, knowledge, and action
+//www.openstreetmap.org, 2017. in route instructions,” The Twenty-First National Con-
+[6] T. Kollar, S. Tellex, D. Roy, and N. Roy, “Ground- ference on Artiﬁcial Intelligence and the Eighteenth
+ing verbs of motion in natural language commands Innovative Applications of Artiﬁcial Intelligence Con-
+to robots,” Experimental Robotics Springer Tracts in ference, vol. 2, no. 6, p. 4, 2006.
+Advanced Robotics, p. 31–47, 2014. [17] T. Kollar, S. Tellex, D. Roy, and N. Roy, “Toward un-
+[7] S. Tellex, T. Kollar, S. Dickerson, M. R. Walter, A. G. derstanding natural language directions,” in HRI 2010,
+Banerjee,S.Teller,andN.Roy,“Understandingnatural 2010.
+langugagecommandsforroboticnavigationandmobile [18] J. Dzifcak, M. J. Scheutz, C. Baral, and P. W. Scher-
+manipulation,” in National Conference on Artiﬁcial merhorn, “What to do and how to do it: Translating
+Intelligence. Association for the Advancement of natural language directives into temporal and dynamic
+Artiﬁcial Intelligence, 2011. logic representation for goal management and action
+[8] A.S.Huang,S.Tellex,A.Bachrach,T.Kollar,D.Roy, execution,” 2009 IEEE International Conference on
+and N. Roy, “Natural language command of an au- Robotics and Automation, pp. 4163–4168, 2009.
+tonomous micro-air vehicle,” in Intelligent Robots and [19] J. Andreas and D. Klein, “Alignment-based
+Systems (IROS), 2010 IEEE/RSJ International Confer- compositional semantics for instruction following,”
+ence on. IEEE, 2010, pp. 2663–2669. CoRR, vol. abs/1508.06491, 2015. [Online]. Available:
+[9] C. Matuszek, D. Fox, and K. Koscher, “Following http://arxiv.org/abs/1508.06491
+directions using statistical machine translation,” in [20] J. Gu, Z. Lu, H. Li, and V. O. K. Li, “Incorporating
+Proceedings of the 5th ACM/IEEE International copyingmechanisminsequence-to-sequencelearning,”
+Conference on Human-robot Interaction, ser. HRI ’10. ArXiv, vol. abs/1603.06393, 2016.
+Piscataway, NJ, USA: IEEE Press, 2010, pp. 251–258. [21] G. Voronoi, “Nouvelles applications des parame`tres
+[Online]. Available: http://dl.acm.org/citation.cfm?id= continusa`lathe´oriedesformesquadratiques.deuxie`me
+1734454.1734552 me´moire. recherches sur les paralle´lloe`dres primitifs.”
+[10] N. Gopalan, D. Arumugam, L. L. S. Wong, and Journalfu¨rdiereineundangewandteMathematik,vol.
+S. Tellex, “Sequence-to-sequence language grounding 134, pp. 198–287, 1908.
+of non-markovian task speciﬁcations,” in Robotics: [22] Z. Manna and A. Pnueli, The Temporal Logic of Re-
+Science and Systems, 2018. active and Concurrent Systems. Berlin, Heidelberg:
+[11] L.DongandM.Lapata,“Languagetologicalformwith Springer-Verlag, 1992.
+neural attention,” CoRR, vol. abs/1601.01280, 2016. [23] D.Bahdanau,K.Cho,andY.Bengio,“Neuralmachine
+[Online]. Available: http://arxiv.org/abs/1601.01280 translation by jointly learning to align and translate,”
+[12] J. Cheng, S. Reddy, V. Saraswat, and M. Lapata, CoRR, vol. abs/1409.0473, 2014.
+“Learning structured natural language representations [24] B. Hu, Q. Chen, and F. Zhu, “Lcsts: A large scale
+for semantic parsing,” in Proceedings of the 55th chinese short text summarization dataset,” in EMNLP,
+Annual Meeting of the Association for Computational 2015.
+Linguistics (Volume 1: Long Papers). Vancouver, [25] J. Pennington, R. Socher, and C. Manning, “Glove:
+Canada: Association for Computational Linguistics, Globalvectorsforwordrepresentation,”inProceedings
+Jul. 2017, pp. 44–55. [Online]. Available: https: of the 2014 Conference on Empirical Methods
+//www.aclweb.org/anthology/P17-1005 in Natural Language Processing (EMNLP). Doha,
+[13] D. K. Misra, K. Tao, P. Liang, and A. Saxena, Qatar: Association for Computational Linguistics,
+“Environment-driven lexicon induction for high- Oct. 2014, pp. 1532–1543. [Online]. Available:
+level instructions,” in Proceedings of the 53rd https://www.aclweb.org/anthology/D14-1162
+Annual Meeting of the Association for Computational [26] K. L. Lovelace, M. Hegarty, and D. R. Montello,
+Linguistics and the 7th International Joint Conference “Elements of good route directions in familiar and
+214
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. unfamiliar environments,” in International conference [40] J. Sauro, “Sustisﬁed? little-known system usability
+onspatialinformationtheory. Springer,1999,pp.65– scale facts user experience magazine,” 2011. [Online].
+82. Available: https://uxpamagazine.org/sustiﬁed/
+[27] K.-F. Richter and S. Winter, Introduction: What Land- [41] C. Sammut and G. I. Webb, Eds., TF–IDF. Boston,
+marks Are, and Why They Are Important. Springer MA: Springer US, 2010, pp. 986–987. [Online].
+International Publishing, April 2014, pp. 1–25. Available: https://doi.org/10.1007/978-0-387-30164-8
+[28] A. Rousell, S. Hahmann, M. Bakillah, and A. Mobash- 832
+eri, “Extraction of landmarks from openstreetmap for
+use in navigational instructions,” in Association of Ge-
+ographic Information Laboratories in Europe, 2015.
+[29] M. Drager and A. Koller, “Generation of landmark-
+based navigation instructions from open-source data,”
+in Proceedings of the 13th Conference of the European
+Chapter of the Association for Computational Linguis-
+tics, 2012.
+[30] T. Mikolov, I. Sutskever, K. Chen, G. Corrado, and
+J. Dean, “Distributed representations of words and
+phrases and their compositionality,” in Proceedings
+of the 26th International Conference on Neural
+Information Processing Systems - Volume 2, ser.
+NIPS’13. USA: Curran Associates Inc., 2013,
+pp. 3111–3119. [Online]. Available: http://dl.acm.org/
+citation.cfm?id=2999792.2999959
+[31] P. Bojanowski, E. Grave, A. Joulin, and T. Mikolov,
+“Enriching word vectors with subword information,”
+arXiv preprint arXiv:1607.04606, 2016.
+[32] A. Joulin, E. Grave, P. Bojanowski, and T. Mikolov,
+“Bag of tricks for efﬁcient text classiﬁcation,” in Pro-
+ceedingsofthe15thConferenceoftheEuropeanChap-
+ter of the Association for Computational Linguistics:
+Volume 2, Short Papers. Association for Computa-
+tional Linguistics, April 2017, pp. 427–431.
+[33] E. Grave, P. Bojanowski, P. Gupta, A. Joulin, and
+T.Mikolov,“Learningwordvectorsfor157languages,”
+inProceedingsoftheInternationalConferenceonLan-
+guage Resources and Evaluation (LREC 2018), 2018.
+[34] Unity Technologies, “Unity.” [Online]. Available:
+https://unity.com/
+[35] Mapbox, “Mapbox unity sdk.” [Online]. Available:
+https://github.com/mapbox/mapbox-unity-sdk
+[36] M. Quigley, J. Faust, T. Foote, and J. Leibs, “ROS:
+An open-source robot operating system,” in IEEE In-
+ternational Conference on Robotics and Automation
+Workshop on Open Source Software, 2009.
+[37] Siemens, “ROS#,” 2017, https://github.com/siemens/
+ros-sharp, [Accessed: 2018].
+[38] S. G. Hart and L. E. Staveland, “Development
+of nasa-tlx (task load index): Results of
+empirical and theoretical research,” in Human
+Mental Workload, ser. Advances in Psychology,
+P. A. Hancock and N. Meshkati, Eds. North-
+Holland, 1988, vol. 52, pp. 139 – 183.
+[Online]. Available: http://www.sciencedirect.com/
+science/article/pii/S0166411508623869
+[39] J. Brooke, “SUS-a quick and dirty usability scale,”
+Usability Evaluation in Industry, vol. 189, no. 194, pp.
+4–7, 1996.
+215
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 10:53:59 UTC from IEEE Xplore.  Restrictions apply. 

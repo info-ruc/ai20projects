@@ -1,0 +1,468 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Enhancing Grasp Pose Computation in Gripper Workspace Spheres
+M. Sorour, K. Elgeneidy, M. Hanheide, M. Abdalmjed, A. Srinivasan, and G. Neumann
+Abstract—In this paper, enhancement to the novel grasp
+planning algorithm based on gripper workspace spheres is
+presented.Ourdevelopmentrequiresaregisteredpointcloudof
+the target from different views, assuming no prior knowledge
+of the object, nor any of its properties. This work features
+a new set of metrics for grasp pose candidates evaluation, as
+well as exploring the impact of high object sampling on grasp
+successrates.Inadditiontogripperpositionsampling,wenow
+perform orientation sampling about the x, y, and z-axes, hence
+the grasping algorithm no longer require object orientation
+estimation. Successful experiments have been conducted on
+a simple jaw gripper (Franka Panda gripper) as well as a
+complex, high Degree of Freedom (DoF) hand (Allegro hand)
+as a proof of its versatility. Higher grasp success rates of
+76% and 85.5% respectively has been reported by real world
+experiments.
+Index Terms—grasping, manipulation.
+I. INTRODUCTION
+Geometricbasedmethods[1]–[4]alongsidedeeplearning
+[5]–[9] can be considered the two most successful ap-
+proaches in grasp planning problem, specially for unknown
+objects among others [10]–[13]. On the one hand, deep
+Fig. 1: Gripper workspace spheres (right), for the Franka panda
+learning is able to model very complex systems, and has
+gripper (upper) and the Allegro right hand (lower), featuring 10
+become more affordable thanks to advances in hardware
+spheres per ﬁnger with the color code: thumb(red), index(green),
+computationalpowerandindeedhighgraspsuccessrateshas middle(blue),andpinky(grey).Therealhardwareshowntotheleft,
+beenreported[14].However,thisapproachrequireextensive ﬁtted with the Intel Realsense d435 depth camera.
+ofﬂine processing and sufﬁciently large training data sets,
+and at the moment, versatility to different gripper structures different kinds of multi-ﬁngered hands, while in [19], fast
+[15] remains a challenge, where most of the available works shape reconstruction algorithm is presented as means of
+focus on simple parallel jaw grippers. On the other hand, improving grasping algorithms. Other geometric approaches
+geometry based approaches generally provide no sacriﬁce areusedtosynthesizeforcebalancedgraspsasin[15],[20],
+on generality or success rates. [21], however the work is mainly focusing on 2 ﬁngered
+Grasp planning of unknown objects from point cloud data grippers, the same issue can be found in [4], where a grasp
+ispresentedin[1],usinggeometricinformationtocategorize plannerisdesignedtoﬁtonlyajawgripperbysearchingfor
+objects into shape primitives, with predeﬁned strategies for two parallel line segments in the object image. In [22], the
+each. Success rate of 82% is achieved. This approach is authors presented a grasp planner using single depth image
+similar to the pioneering work in [2], [16] with the later of a non-occluded object. Their work, however, is limited to
+employingmachinelearningingraspselection.In[17],sim- 2 ﬁngered grippers as well as the geometry based planner in
+ilar approach is employed, more suitable for generalization, [23]. Recently, the authors in [24] proposed a grasp planner
+however, only simulations are provided with no real world based on similarity metric of local surface features between
+experiments.In[18],asetofcontactpointsthatfulﬁllcertain object and gripper’s ﬁnger surfaces. Experiments on heap of
+geometric conditions are computed for unknown objects in objectsweresuccessfullyconducted,howeverusingonlya2
+point cloud, these are ranked to ﬁnd the most stable grasp. ﬁngered gripper. Similar approach is presented in [25], with
+The algorithm is limited to 2 ﬁngered grippers, and no data rather more freedom to modify gripper shape to match that
+regarding grasping success rate is presented. of the object.
+In [3], object shape reconstruction is performed online Few authors presented grasping algorithms suitable for
+from successive image data, their method is general for different gripper structures. In [26], a two-step cascaded
+deep networks were used to detect grasping rectangle on
+LincolnCenterforAutonomousSystems(L-CAS),SchoolofComputer
+objects, the results were applied on 2 grippers, but both
+Science, University of Lincoln, Brayford Pool, LN6 7TS Lincoln, United
+Kingdom.msorour@lincoln.ac.uk are of parallel jaw structure. Grasp success reported was
+978-1-7281-7395-5/20/$31.00 ©2020 Crown 1539
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. 84% with average per-object trials of 4, which is quite few. II. GRASPINGALGORITHM
+In [27], learning based algorithm is developed and applied
+In this section, we brieﬂy describe the grasping algorithm
+to a parallel jaw gripper and a 2 DoF prosthetic hand, the
+detailedin[29].Figure2showsthecoordinateframesofthe
+latter being controlled in 1 DoF treated as a complex shape
+system components used in this development, namely the
+parallel jaw. Experiments were focusing on clearing a table
+F F F F
+camera , end-effector , gripper , object , table
+andemptyingabasketwithsuccessrateswithin87%to94%. F c E F g oF
+frames, and the arm base frame. The frames and
+For single object grasp, a success rate of 92% is reported Ft 0 F c
+are ﬁxed with respect to the end-effector frame , but
+for a set of 10 objects with only 50 trials in total, which we g E
+are justiﬁed, where the object point cloud is obtained in
+believeisquitelowforevaluation.Thesuccessratedropsto
+F
+, the gripper point cloud and special ellipsoids are more
+85% using the multi-DoF hand. In [28], a geometry based c F
+convenientlydevelopedin .Inwhatfollows,matricesand
+grasping algorithm is presented, the development includes g
+vectors will be designated by bold uppercase and lowercase
+some empirically tuned parameters, tailored for 2 ﬁngered
+C
+letters respectively. Point clouds shall be indicated by the
+grippers (grasp planning for 2 contact points), with adap-
+S E
+symbol. Sphere and special ellipsoid clouds with and
+tation for multi-ﬁngered hands. This adaptation, however,
+limits the performance of complex hands by treating it as respectively, each is a point cloud containing the 3D offset
+2 ﬁngered. An average success rate of 86% was reported. point, in addition to the 1D radius for a sphere, or the 3D
+In this work, we present further enhancements to the principal semi-axes parameters for a special ellipsoid (SE).
+novel grasp planning algorithm previously introduced by the The left superscript shall indicate the frame of reference.
+authors in recent work [29], resulting in a boost of the
+grasp success rate up to 76%, and 85.5% for multi-DoF A. Preface
+hand (Allegro hand), and the parallel jaw gripper (Franka
+The grasping algorithm consists of few ofﬂine computa-
+panda gripper) respectively. Our algorithm, based on gripper
+tions, that is done only once, per gripper, where ﬁrst, the
+workspace spheres (depicted in Fig. 1), takes an all-around
+3D CAD model is used to generate a downsampled gripper
+point cloud of the object (by registering 3 partial view point C ∈R ×
+clouds from various poses) as input, and outputs a 6D grasp point cloud g g ng 3, where ng is the number of cloud
+points. Second a set of special ellipsoids are constructed
+pose.Theobjectboundingboxdimensionsarecomputedand E ∈ R ×
+sampled into uniformly distributed points in x, y, and z-axes g g ne 6, with ne denoting the number of gripper
+special ellipsoids, acting as shape approximation of the
+serving as position anchors, where the gripper workspace
+gripper as seen in Fig. 3 (d,e). Third, to generate a point
+centroid is placed. At each of these positions, orientation
+cloud (sampling) of the workspace of each ﬁnger of the
+angles about x, y, and z-axes are sampled to provide further S ∈R ×
+orientation sampling, which serves as a new feature in the gri∈pp{er, and ﬁ}ll it with a set of spheres g f nsp 4, with
+f 2...n denoting the gripper ﬁnger index, and n ,
+current development. For each of these position/orientation f sp
+n , the number of spheres and ﬁngers respectively.
+sample pair, the gripper pose is collision checked against f
+In this work, we approximate cuboid like shapes using
+both the object plane (table) as well as the object itself.
+what we call ”special ellipsoid”, this is a variation of the
+Various evaluation metrics, newly introduced in this work,
+are used to give each collision free gripper postures a
+total score, the one with highest value is then selected for
+execution.
+The contribution of the work presented in this paper is
+twofold:
+• New evaluation metrics: speciﬁcally introducing the
+grippersupport regions,which increasedthe graspcon-
+tact area and as such resulted in more stable grasps.
+• Exploringhighersampling:withintroducingorientation
+samples in x, y, and z-axes instead of orientation about
+the object major axis (in previous work). As such we
+no longer require an estimate of the object orientation,
+which is both difﬁcult to obtain as well as meaningless
+for irregular/complex shaped objects.
+Thesecontributionshadadirectimpactonboostingthegrasp
+success rate from 65% to 76%, and 85.5% for the Allegro
+hand, and the Franka gripper respectively.
+The paper is organised as follows: section II provides
+a summary of the grasping algorithm. Newly developed
+evaluation metrics are detailed in section III. Experimental
+results, discussion, and future work are reported in section
+IV. Conclusions are ﬁnally given in section V. Fig. 2: System frames used in our algorithm.
+1540
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. (a) (b) (c) (d) (e)
+Fig. 3: Grasping algorithm described in this work. Object downsampled point cloud is shown in Magenta. Blue dots in (b,c) represent
+object position samples, Allegro hand downsampled cloud shown in Cyan in (c), whereas in (d), gripper special ellipsoid representation
+is shown in black, best gripper pose in (e) showing the active ﬁnger’s workspace spheres.
+ellipsoid equation, given by: to such addition, we no longer require estimation of the
+− − − object orientation that is usually inaccurate, as well as being
+(x x )l (y y )l (z z )2
+0 + 0 + 0 =1, (1) meaningless for objects with irregular geometry.
+al bl c2
+In a ﬁrst step: for each position/orientation sample pair,
+where a, b, c are the principal semi axes of the ellipsoid, the gripper point cloud tC is checked against the table
+and x0, y0, z0 denote the offset from origin. As the power l special ellipsoid tEt usinggEvalSE(tEto,tEtp,tCg,l), this
+increases, better cuboid approximation is obtained. Equation is done in the table coordinate frame (as evident by the
+(1) will be referred to in the sequel for convenience by: left superscript) where the table special ellipsoid is deﬁned.
+E E C If any point of the gripper cloud lies inside the table SE,
+EvalSE( , , ,l), (2)
+o p this means collision with table at this pose sample of the
+E E C
+where , , denote the special ellipsoid offset and semi- gripper,thisisthecaseshowninFig.3(c).Inasecondstep:
+o p C
+principal vectors, and the cloud point(s) whose belonging for each gripper pose sample, the object point cloud g is
+E E E o
+to the SE parameterized by , is to be evaluated checkedagainstthegrippersetofspecialellipsoidsg using
+o p E E C g
+respectively.Theseareusedtoapproximatethegrippershape EvalSE(g ,g ,g ,l) in the gripper coordinate frame.
+go gp o
+as well as the table as depicted in Fig. 3 and Fig. 4. Ifanypointoftheobjectcloudliesinsideanyofthegripper
+SE, this means collision with object at this pose sample of
+B. Object sampling
+the gripper, this is shown in Fig. 3 (d).
+A complete point cloud is required by our algorithm, this
+is done during experiments by registering a 3 view point III. EVALUATIONMETRICS
+cloud of the object from different view angles. The object
+If the gripper pose sample doesn’t collide with either
+cloudisthensegmentedfromthetableusingrandomsample
+the table or the object, then it is considered a grasp pose
+consensus(RANSAC)[30],[31].andbotharedownsampled
+candidate, to be evaluated against several evaluation metrics
+(see Fig. 3 (a)). The bounding box of the object is then
+andreceiveatotalscore,thatisinturncomparedwiththatof
+computed, which is then uniformly sampled into a sampling
+C ∈R × otherposecandidates.Theonewithhighestscoreisselected
+cloudo s ns 3,withpredeﬁnednumberofsamplepoints for execution. Evaluation metrics used are listed in what
+ns, theFse are visible as blue dots in Fig. 3 (b). A coordinate follows.
+frame is assigned to the table point cloud, this is easily
+t
+done, by assuming the z-axis along the longest dimension, A. Distance to object centroid
+perpendiculartowhichisthex-axis(sameplane),theny-axis
+Theﬁrstmetricmeasureshowclosethegripperworkspace
+is constructed to conclude the frame according to the right
+centroid point (visible as solid yellow sphere in Fig. 4 (a,b)
+hand screw rule. As such the y-axis is always perpendicular
+for allegro hand and franka gripper respectively) to that of
+to the table plane, along which the table special ellipsoid
+E ∈R × the object point cloud (visible as solid cyan sphere in Fig.
+t 1 6 is constructed.
+t 4 (a-d)). A higher score is given for gripper pose candidates
+C. Collision check nearer to the object centroid, computed as:
+eacThheitearlagtoiorinth,mthethgernipspeearrcwhoesrkfsopratcheecbeensttrogirdasppoiningtp(voissei,balet (cid:113) ψ1 = d 1+δ , (3)
+oc 1
+as yellow sphere in Fig. 4 (a,b) for allego hand, and franka
+gproiipnpteirnrtehsepescatmivpellyin)giscltoruadnslCat.edFotor etahcehreosfptehcetsiveepsoasmitipolne doc = (pxoc−pxgwc)2+(pyoc−pygwc)2+(pzoc−pzgwc)2
+s
+samples, several orientation sub-samples, with predeﬁned where ψ is the ﬁrst metric value, d is the Euclidean
+1 oc
+number n are then applied and tested, each orientation distance between object centroid point p and that of the
+os oc
+sub-sample represents a small increment in angle about gripper workspace p , and δ is a small positive scalar
+gwc 1
+one axis. An orientation samples of n = 64 means 90o limiting factor for the maximum values that can be obtained
+os
+incrementsoforientationangleaboutx,y,andz-axes,thanks from (3).
+1541
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. (a) (b) (c) (d) (e) (f)
+Fig. 4: Grasp pose candidate evaluation metrics. The gripper whole workspace centroid is shown as solid yellow sphere in (a,b). Finger
+workspacecentroidisshownassolidred,green,blue,andblackspheresin(c),andasgreen,redspheresin(d)fortheAllegrohandand
+Franka gripper respectively. Active workspace spheres depicted in (e), while gripper support regions are colored Orange in (f).
+B. Object points in workspace spheres Fig. 4 (f) (upper) and Fig. 4 (f) (lower) for allegro hand and
+frankagripperrespectivelyinorangecolor,canbeformulated
+The second metric measures the number of points of the (cid:88)
+as follows:
+objectcloudthatresidetheworkspacespheresofeachﬁnger.
+Incontrasttoourpreviousdevelopment,wherethealgorithm nsr
+forced the selection of grasp poses where at least one point ψ3 = n(on)+ξ, (5)
+of the object cloud resides in the workspace of each ﬁnger, n=1
+here, we relax this constraint, where an object with smaller where ψ is the metric value, n(n) is the number of object
+size can be grasped with(cid:88)out all ﬁngers having access to it. cloudpoi3ntsresidinginsupportreogionn,thisisevaluatedus-
+This metric is formulated as: E E C
+ing(1)asEvalSE(g ,g ,g ,l),whileξ isthemulti-
+sro srp o
+∗ support region reward factor, computed using Algorithm 1.
+ψ2 = nfo nfsp, (4) In (5) we can observe, higher reward is obtained for gripper
+f poses where multiple support regions are in contact with
+{ }
+with ψ being the metric value, f = t,i,m,p , f = object, this can be very useful in ﬁnding poses that fulﬁll
+{ }2
+rf,lf istheﬁngerindexvectorforallegrohandandfranka local geometric similarity.
+gripper(rf andlf forrightandleftﬁngers)respectively,nf
+isthenumberofpointsinobjectcloudaccessibletoﬁngerfo, D. Object centroid encapsulation
+and nf , the number of active spheres in ﬁnger f, these are The fourth metric encourages gripper poses that maintain
+sp
+theonesthathasatleastoneobjectpointinside.Theformula symmetry between the object and gripper workspace in
+in (4) will give more reward for more ﬁngers to have more case of multi-DoF hands, where the object centroid point
+thanonecontactsolutiontotheobject.Theactiveworkspace is required to be positioned between the thumb workspace
+spheres as well as the object points laying within are shown spheres centroid (solid red sphere in Fig. 4 (c)) and those
+in Fig. 4 (e) (upper) and Fig. 4 (e) (lower) for the allegro of the index, middle and pinky ﬁngers (solid green, blue,
+hand and franka gripper respectively. and black spheres respectively in the same ﬁgure). This is
+achieved along the z-axis in the gripper frame, as well as
+C. Object points in gripper support regions
+pushing for poses close to the palm of the hand, by giving
+Thismetricgivesmorerewardifmoreobjectpointsarein more reward for poses moving along x-axis in the gripper
+
+contact with the gripper base or the palm in case of robotic frame. 
+hand, since this allows for more contact area between the
+gripperandtheobject,whichinturnresultsinamorestable 1, if cond#1
+grasps. This is implemented as a set of special ellipsoids ∧
+E ∈R × ψ = 2, if cond#1 cond#2. (6)
+g sr nsr 6, designated by ”support regions,” depicted in 4 0, if otherwise
+Algorithm 1: Multi-support region reward algorithm ∧
+cond#1:pz >pz pz <pz
+1: i=0 oc ∧ twc oc ∧iwc
+2: for each support region n in nsr do ≤ pzoc <∧pzmw≤c pzoc <pzpwc,
+3: if n(n) then cond#2:px px px px
+o oc ∧ twc≤ oc ∧iwc ≤
+4: i=i+1 px px px px ,
+5: end if oc mwc oc pwc
+6: end for where ψ4 is the fourth metric value, ptwc, piwc, pmwc, and
+7: ξ =ii ppwc denotethethumb,index,middle,andpinkyworkspace
+centroid points respectively. The same metric formula is
+1542
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. Fig.5:Screenshotsfromallegrohandgraspingexperiments,featuringtheobjects:yellowpepper,toiletpaperroll,softball,realsensebox,
+plant pot, croutons and bake rolls packages, apple in order from right to left. Upper screenshots show the pre-grasp pose output of the
+algorithm, while the lower show the objects after the execution of a successful grasp.
+appliedtothe2ﬁngeredfrankagripper,withonlythethumb volume of each gripper while maintaining considerable vari-
+and index ﬁngers active. Finally, the total metric score ψ is ation in size/shape/texture. An almost complete point cloud
+(cid:88)
+evaluated as follows: of the object is constructed from 3 view points using the
+Intel RealSense-D435 depth camera [33], then the grasping
+4
+algorithm computes a grasping pose based on the generated
+ψ = λ ψ , (7)
+i i pointcloudaswellasthegrippermodeltobeused.Thearm
+i=1
+movestothisposeatanapproachdistanceof10cminz-axis,
+whereλ1...4 denotepositivescalarvaluestoprovidedifferent thegripperthenapproachestheobjectbeforeperformingthe
+weights for the corresponding metrics.
+graspingaction.Thegraspingactionusedinbothgrippersis
+a simple position control to a closed ﬁngers conﬁguration.
+IV. EXPERIMENTS To conclude each experiment, the arm moves upward for 20
+In this section, the experimental results of the enhanced cm. An object is marked as grasped if it remains in static
+grasping algorithm are presented and discussed, using the condition inside the gripper for more than 10 seconds.
+system parameters provided in Table I. Two sets of exper- A sample of the objects used in experiments is shown in
+iments have been performed, one per gripper type. Each Fig. 6, screenshots of which in the pre-grasp pose generated
+gripper was mounted to the Franka Emika arm (7 DoF), by the algorithm as well as after being grasped for the
+controlled in real-time with Franka control interface. The Allegro right hand is shown in Fig. 5 (upper), Fig. 5 (lower)
+communication between the robot controller, the realsense respectively. Screenshots for the same objects being grasped
+camera, and the grippers is done through ROS. Motion by the Franka gripper are shown in Fig. 7 (upper), Fig. 7
+planning is achieved using MoveIt! [32] based on the pose (lower) as well.
+targets generated by our algorithm. The algorithm is written
+in C++, running on standard labtop with 8th generation core A. Discussion
+i7 processor with no GPU. The results of the experiments conducted is provided in
+Experiments feature 20 objects to be grasped with both TableIIforbothgrippertypes,withaveragesuccessratesof
+the Allegro right hand, and the Franka 2 ﬁnger gripper, the
+objects we selected such that they are within the grasping
+TABLE I: Grasping algorithm parameters
+Parameter AllegroHand FrankaGripper
+ne (specialellipsoids) 7 5
+ns (positionsamples) 1000 1000
+n (ﬁngers) 4 2
+f
+nsp (workspacespheres) 10 10
+ng (grippercloudsizeinpoints) ≤500 ≤500
+no (objectcloudsizeinpoints) 500 500
+nos (orientationsamples) 5832 64
+nsr (supportregions) 4 2
+λ1 (metric#1weight) 10−00 10−00
+δ1 (metric#1limitingfactor) 10 5 10 5
+λ2 (metric#2weight) 1.0 1.0
+λ3 (metric#3weight) 1000 1000
+λ4 (metric#4weight) 2000 2000 Fig.6:Thesetofobjectsusedinevaluatingthegraspingalgorithm.
+1543
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. Fig. 7: Screenshots from franka gripper grasping experiments featuring the same objects in Fig. 5.
+76% and 85.5% for the Allegro hand and Franka gripper object, resulting in failures. This is visible in the video
+respectively. The results show the positive impact of the submitted with this paper. The Franka gripper showed high
+improvedevaluationmetricsandmoreimportantlytheeffect grasping success rates for most of the objects except for the
+ofusinghighersamplinginthequestforthemostsuccessful ”Mug” where the algorithm generated grasp poses for the
+grasp pose as compared to the results reported in [29]. The mug handle, given the low friction material of the gripper
+downsideisindeedthecomputationtime,thatcanrangefrom alongwiththetorquegenerated(duetomug’sweight)while
+5to15minutes,dependingontheobjectcloudsizeaswellas grasping from such location, grasp failure was the outcome.
+thegrippertype.InTableII,wecanseethatouralgorithmis
+B. Future Work
+capable of grasping rigid/deformable objects like bake rolls,
+croutons and cookies packages, these are inherently rigid Following the successful validation of the impact of high
+objects but packed in loose packaging material thanks to sampling on grasp success rate, the authors would like to
+adopting ”closure till force balance” grasp policy. explore even higher sampling, with future goals of imple-
+menting a deep convolution neural network to act as a
+It can be observed that the Allegro hand has higher
+function approximator for the development in hand. The
+grasp success rates for bulky objects, although very good
+input to which is the object point cloud as well as the
+grasp poses are generated for small objects as well. This
+gripper type, with the grasp pose serving as the output.
+happensduethefactthatsimpleﬁngerclosuretoapredeﬁned
+As such, once tuned, the network would solve the problem
+positions is limiting its capabilities and won’t be suitable
+of large computation time. Once the grasp success rate of
+for all object sizes. Also increasing the force applied per
+ﬁnger to obtain more stable grasps, requires higher value the grasping algorithm reaches 95%, we plan to generate
+automatically training data from simulation.
+for position control gains which results in oscillations in
+In order to leverage the true potential of our algorithm
+the thumb conﬁguration, that can sometimes displace the
+withhighDoFhands,extensionsmustbeaddedforplanning
+grasp points on objects. This is hardly needed for simple
+TABLE II: Grasp success rate per gripper for different objects
+jawgrippers,andassuchwasavoidedtomaintainalgorithm
+Object Characteristic A.Hand F.Gripper generality, an action the authors plan to withdraw in future
+Storagebin rigid 70% 80% work.
+Toothpaste rigiddeformable 30% 100%
+Dishbrush rigiddeformable 0% 100% V. CONCLUSION
+Plantpot rigiddeformable 100% 80%
+Handlesscup rigid 90% 60% In this work, successful enhancement to the novel grasp-
+Toiletpaperroll soft 90% 90% ing algorithm based on ﬁnger workspace spheres has been
+Realsensebox rigid 100% 100% presented. Positive impact in terms of grasp success rate
+Airduster rigid 60% 70%
+Apple(large) rigid 90% 80% has been reported, being applied to a complex hand with
+Banana(medium) soft 20% 100% 16 DoF as well as a simple jaw gripper with 2 DoF,
+Cerealsbox rigiddeformable 70% 100% maintainingthealgorithmversatility.Successfulexperiments
+Coffeejar rigid 80% 90%
+Mug rigid 70% 0% have shown better results with the newly proposed grasp
+Sandbucket rigiddeformable 90% 100% candidate evaluation metrics and higher sampling in terms
+Cookiespackage rigiddeformable 90% 100% of candidate position and orientation.
+Bakerolls rigiddeformable 90% 80%
+Pepper(yellow) soft 100% 100%
+ACKNOWLEDGMENTS
+Croutonspack rigiddeformable 100% 100%
+Softballtoy soft 90% 80% This work is funded by EPSRC under grant agreement
+Ketchupbottle soft 90% 100%
+EP/R02572X/1, UK National Center for Nuclear Robotics
+Average 76% 85.5%
+initiative (NCNR).
+1544
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [22] T. Suzuki and T. Oka, “Grasping of unknown objects on a planar
+surface using a single depth image,” in 2016 IEEE International
+[1] S. Jain and B. Argall, “Grasp detection for assistive robotic manip- Conference on Advanced Intelligent Mechatronics (AIM), July 2016,
+ulation,” in 2016 IEEE International Conference on Robotics and pp.572–577.
+Automation(ICRA),May2016,pp.2015–2021. [23] Y. Lin, S. Wei, and L. Fu, “Grasping unknown objects using depth
+[2] A.T.Miller,S.Knoop,H.I.Christensen,andP.K.Allen,“Automatic gradientfeaturewitheye-in-handrgb-dsensor,”in2014IEEEInter-
+grasp planning using shape primitives,” in 2003 IEEE International nationalConferenceonAutomationScienceandEngineering(CASE),
+ConferenceonRoboticsandAutomation(ICRA),Sep.2003,pp.1824– Aug2014,pp.1258–1263.
+1829vol.2. [24] M. Adjigble, N. Marturi, V. Ortenzi, V. Rajasekaran, P. Corke, and
+[3] V. Lippiello, F. Ruggiero, B. Siciliano, and L. Villani, “Visual grasp R. Stolkin, “Model-free and learning-free grasping by local contact
+planning for unknown objects using a multiﬁngered robotic hand,” moment matching,” in 2018 IEEE/RSJ International Conference on
+IEEE/ASMETransactionsonMechatronics,vol.18,no.3,pp.1050– IntelligentRobotsandSystems(IROS),Oct2018,pp.2933–2940.
+1059,June2013. [25] C. Eppner and O. Brock, “Grasping unknown objects by exploiting
+[4] J. Baumgartl and D. Henrich, “Fast vision-based grasp and delivery shapeadaptabilityandenvironmentalconstraints,”in2013IEEE/RSJ
+planning for unknown objects,” in ROBOTIK 2012; 7th German International Conference on Intelligent Robots and Systems (IROS),
+ConferenceonRobotics,May2012,pp.1–5. Nov2013,pp.4000–4006.
+[5] J. Bohg, A. Morales, T. Asfour, and D. Kragic, “Data-driven grasp [26] I.Lenz,H.Lee,andA.Saxena,“Deeplearningfordetectingrobotic
+synthesis ;a survey,” IEEE Transactions on Robotics, vol. 30, no. 2, grasps,”TheInternationalJournalofRoboticsResearch,vol.34,no.
+pp.289–309,April2014. 4-5,pp.705–724,2015.
+[6] D. Kappler, J. Bohg, and S. Schaal, “Leveraging big data for grasp [27] D. Fischinger, A. Weiss, and M. Vincze, “Learning grasps with
+planning,” in 2015 IEEE International Conference on Robotics and topographicfeatures,”TheInternationalJournalofRoboticsResearch,
+Automation(ICRA),May2015,pp.4304–4311. vol.34,no.9,pp.1167–1194,2015.
+[7] A. ten Pas, M. Gualtieri, K. Saenko, and R. Platt, “Grasp pose [28] B.S.Zapata-Impata,P.Gil,J.Pomares,andF.Torres,“Fastgeometry-
+detection in point clouds,” The International Journal of Robotics based computation of grasping points on three-dimensional point
+Research,vol.36,no.13-14,pp.1455–1473,2017. clouds,”InternationalJournalofAdvancedRoboticSystems,vol.16,
+[8] Z.Abderrahmane,G.Ganesh,A.Crosnier,andA.Cherubini,“Haptic no.1,pp.1–18,2019.
+zero-shot learning: Recognition of objects never touched before,” [29] M. Sorour, K. Elgeneidy, A. Srinivasan, M. Hanheide, and G. Neu-
+RoboticsandAutonomousSystems,vol.105,pp.11–25,2018. mann, “Grasping unknown objects based on gripper workspace
+[9] Z.Abderrahmane,G.Ganesh,A.Crosnier,andA.Cherubini,“Adeep spheres,” in 2019 IEEE/RSJ International Conference on Intelligent
+learningframeworkfortactilerecognitionofknownaswellasnovel RobotsandSystems(IROS),Nov2019,pp.1541–1547.
+objects,”IEEETransactionsonIndustrialInformatics,vol.16,no.1, [30] R. B. Rusu, “Semantic 3d object maps for everyday manipulation
+pp.423–432,Jan2020. inhumanlivingenvironments,”Ph.D.dissertation,ComputerScience
+[10] J. K. Salisbury, J. K., “Kinematic and force analysis of articulated department, Technische Universitaet Muenchen, Germany, October
+mechanical hands,” Journal of Mechanisms, Transmissions, and Au- 2009.
+tomationinDesign,vol.105,no.1,pp.35–41,1983. [31] R.B.RusuandS.Cousins,“3Dishere:PointCloudLibrary(PCL),”in
+[11] V.-D.Nguyen,“Constructingforceclosuregrasps,”TheInternational IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+JournalofRoboticsResearch,vol.7,no.3,pp.3–16,1988. Shanghai,China,May9-132011.
+[32] I. A. Sucan and S. Chitta, “Moveit!” [Online] Available:
+[12] C. Ferrari and J. Canny, “Planning optimal grasps,” in Proceedings
+http://moveit.ros.org.
+1992 IEEE International Conference on Robotics and Automation,
+[33] Intel.com,“Intelrealsensedepthcamera,”https://click.intel.com/intelr-
+May1992,pp.2290–2295.
+realsensetm-depth-camera-d435.html.
+[13] R.M.Murray,S.S.Sastry,andL.Zexiang,AMathematicalIntroduc-
+tion to Robotic Manipulation, 1st ed. Boca Raton, FL, USA: CRC
+Press,Inc.,1994.
+[14] J. Mahler, J. Liang, S. Niyaz, M. Aubry, M. Laskey, R. Doan,
+X.Liu,J.A.Ojea,andK.Goldberg,“Dex-Net2.0:DeepLearningto
+PlanRobustGraspswithSyntheticPointCloudsandAnalyticGrasp
+Metrics,”May2018,toappearatRobotics:ScienceandSystems2017.
+[Online].Available:https://hal.archives-ouvertes.fr/hal-01801048
+[15] Q.Lei,J.Meijer,andM.Wisse,“Fastc-shapegraspingforunknown
+objects,” in 2017 IEEE International Conference on Advanced Intel-
+ligentMechatronics(AIM),July2017,pp.509–516.
+[16] K. Huebner and D. Kragic, “Selection of robot pre-grasps using
+box-based shape approximation,” in 2008 IEEE/RSJ International
+ConferenceonIntelligentRobotsandSystems(IROS),Sep.2008,pp.
+1765–1770.
+[17] M.Przybylski,T.Asfour,andR.Dillmann,“Unionsofballsforshape
+approximation in robot grasping,” in 2010 IEEE/RSJ International
+ConferenceonIntelligentRobotsandSystems(IROS),Oct2010,pp.
+1592–1599.
+[18] B.S.Zapata-Impata,“Usinggeometrytodetectgraspingpointson3d
+unknownpointcloud,”inProceedingsofthe14thInternationalCon-
+ferenceonInformaticsinControl,AutomationandRobotics(ICINCO).
+SciTePress,2017,pp.154–161.
+[19] A.H.Quispe,B.Milville,M.A.Gutie´rrez,C.Erdogan,M.Stilman,
+H. Christensen, and H. B. Amor, “Exploiting symmetries and extru-
+sions for grasping household objects,” in 2015 IEEE International
+ConferenceonRoboticsandAutomation(ICRA),May2015,pp.3702–
+3708.
+[20] Q.LeiandM.Wisse,“Fastgraspingofunknownobjectsusingforce
+balanceoptimization,”in2014IEEE/RSJInternationalConferenceon
+IntelligentRobotsandSystems(IROS),Sep.2014,pp.2454–2460.
+[21] Q. Lei, J. Meijer, and M. Wisse, “A survey of unknown object
+grasping and our fast grasping algorithm-c shape grasping,” in 2017
+3rd International Conference on Control, Automation and Robotics
+(ICCAR),April2017,pp.150–157.
+1545
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:02:51 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,524 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Scaling Local Control to Large-Scale Topological Navigation
+Xiangyun Meng, Nathan Ratliff, Yu Xiang and Dieter Fox
+Abstract(cid:151)Visual topological navigation has been revitalized Local Controller
+recently thanks to the advancement of deep learning that sub-
+stantially improves robot perception. However, the scalability
+goal
+and reliability issue remain challenging due to the complexity
+andambiguityofrealworldimagesandmechanicalconstraints
+of real robots. We present an intuitive approach to show that
+Reachability Estimator
+by accurately measuring the capability of a local controller,
+…
+large-scale visual topological navigation can be achieved while
+being scalable and robust. Our approach achieves state-of-the- start
+art results in trajectory following and planning in large-scale
+environments. It also generalizes well to real robots and new
+environments without retraining or (cid:2)netuning. Fig. 1: Overview of our method. The local controller drives the
+vehicletowardsagiventargetimage,andthereachabilityestimator
+I. INTRODUCTION plansapathbycombiningmultipleexperiences(coloredarrowson
+There has been an emergence of cognitive approaches themap)toprovidethecontrollerasequenceoftargetobservations
+(bottom left) to follow. The vehicle is able to navigate robustly in
+[1], [2], [3], [4], [5] towards navigation thanks to the ad-
+the real environment (right) while avoiding unseen obstacles (red
+vancementofdeeplearningthatsubstantiallyimprovesrobot
+rectangle and circle). The model is trained entirely in simulation.
+perception.Comparedtothetraditionalmapping,localization
+and planning approach (SLAM) [6], [7] that builds a metric local reactive navigation, whereas the reachability estimator
+map, cognitive navigation uses a topological map. This measuresthe capability ofthe controllerfor landmarkselec-
+eliminates the need of meticulously reconstructing an envi- tionandlong-termprobabilisticplanning.Toachievethis,we
+ronmentwhichrequiresexpensiveorbulkyhardwaresuchas leverage the Riemannian Motion Policy (RMP) framework
+a laser scanner or a high-resolution camera. Moreover, the [9] for robust reactive control and deep learning for learning
+fact that humans are able to navigate effortlessly in large- thecapabilityofthecontrollerfromdata.Weshowthatwith
+scale environments without a metric map is intriguing. By bothcomponentsworkinginsynergy,arobotcani)navigate
+adding this cognitive spatial reasoning capability to robots, robustly with the presence of nonholonomic constraints,
+we could potentially lower the hardware cost (i.e., using actuation noise and obstacles; ii) build a compact spatial
+low-resolution cameras), make them work more robustly in memory through adaptive experience sparsi(cid:2)cation and iii)
+dynamic environments and bring insights to more complex planinthetopologicalspaceprobabilistically,allowingrobot
+tasks such as visual manipulation. to generalize to new navigation tasks.
+Whilecognitivenavigationhasdrawnsigni(cid:2)cantattention We evaluate our approach in the Gibson simulation en-
+recently, the problem remains challenging because i) it does vironment [10] and on a real RC car. Our test environ-
+not scale well to the size of experiences ii) it is fragile due ments contain a diverse set of real-world indoor scenes
+to actuation noise and dynamic obstacles and iii) it lacks with presence of strong symmetry and tight spaces. We
+probabilistic interpretation, making it dif(cid:2)cult to plan with show that our approach generalizes well to these unseen
+uncertainty. These problems are exacerbated when using a environments and surprisingly well to real robots without
+RGB camera in indoor environments, where partial observ- (cid:2)netuning. Scalability-wise, our spatial memory grows only
+ability makes it dif(cid:2)cult to control a robot to follow a single whennewexperiencesareunseen,makingthesystemspace-
+path [3], [8]. ef(cid:2)cient and compute-ef(cid:2)cient.
+In this paper, we present a simple and intuitive solution
+II. RELATEDWORK
+for topological navigation. We show that by accurately mea-
+Cognitive spatial reasoning has been extensively studied
+suringthecapabilityofalocalcontroller,robustvisualtopo-
+both in neuroscience [11], [12], [13], and robotics [14],
+logical navigation can be achieved with sparse experiences
+[15], [16]. The Spatial Semantic Hierarchy [16] divides the
+(Fig.1).Inourapproach,wedonotassumetheavailabilityof
+cognitive mapping process into four levels: control, causal,
+aglobalcoordinatesystemorrobotposes,nordoweassume
+topological and metric. In our method, the local controller
+noise-free actuation or static environment. This minimalistic
+operatesonthecontrollevel,whereasthereachabilityestima-
+representation only has two components: a local controller
+torreasonsaboutcausalandtopologicalrelationshipbetween
+andareachabilityestimator.Thecontrollerisresponsiblefor
+observations. We omit metric-level reasoning since we are
+Xiangyun Meng and Dieter Fox are with the Paul G. Allen School of not concerned about building a metric map.
+Computer Scifence & Engineering, Ugniversity of Washington, Seattle, WA Experience-drivennavigationconstructsatopologicalmap
+98195,USA xiangyun, fox @cs.washington.edu
+for localization and mapping [15], [17], [18], [19], [4]. Un-
+NathanRatliff,YuXiangandDieterFoxarewithNVIDIA,Seattle,WA
+f g
+98105,USA nratliff, yux, dieterf @nvidia.com likeSLAMthatassumesastaticenvironment,theexperience
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 672
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. Topological Map Path Follow
+Dense trajectory RE
+C Build Plan
+Train RE Sparsify RE ogoal ocurrent RE Conﬁdent? ocurrent oactive
+RE Sparsiﬁed trajectory CWP
+Waypoint
+C action
+RMP
+C RE RE
+Fig. 2: System overview. Given a controller , we train a reachability estimator . is used for sparsifying incoming trajectories,
+C RE
+building a compact topological map and planning a path. and work in synergy to robustly follow the planned path.
+graphcanalsobeusedfordealingwithlong-termappearance The map is a directed graph, with vertices as observations
+changes[20].Thislineofworksmostlyfocusonappearance- and edges encoding traversability. Then, given its current
+based localization and ignore the control aspect of naviga- observation ocurrent and goal oG, robot searches for a path
+tion, and assume that a robot can always follow experiences on the graph and follows that path to reach G. Our setup is
+robustly. This does not usually hold in unstructured indoor similartothatofSPTM[1].Thedifferenceisthatwedesign
+environments, where it is crucial to design a good controller our system to make it generalize to real robots and scale to
+while considering its capability. real environments.
+Semi-ParametricTopologicalMemory(SPTM)[1],[21]is For such a navigation system to work, we (cid:2)rst need
+arecentworkthatadoptsdeeplearningintotopologicalnavi- a target-conditioned Local Controller C. C takes current
+gation.SimilartoSPTM,webuildatopologicalmapthrough observation and a target observation, and outputs an action
+C
+past experiences. Unlike SPTM that uses image similarity a = (ocurrent;otarget) to drive robot towards the target. The
+as a proxy for reachability, we measure the reachability of action is executed for a small time step to get an updated
+a controller directly. This signi(cid:2)cantly improves robustness ocurrent andtheprocessisrepeateduntilocurrent matchesotarget.
+and opens opportunities for constructing sparse maps. Given a path (a sequence of observations) computed by a
+There have been recent works studying visual trajectory planner, robot uses C to follow the path progressively to
+following that handles obstacles [8], [22], actuation noise reach its (cid:2)nal destination.
+[3], or with self-supervision [23]. Our approach differs from In practice, robot’s experience pool can be large and
+them in that our trajectory follower extends seamlessly to grow inde(cid:2)nitely, thus the key issue is to build a sparse
+probabilistic planning. Our method also handles obstacles and scalable representation of an environment given dense,
+and actuation noise well, thanks to the RMP controller that unstructured trajectories. Clearly, adjacent observations in a
+models local geometry and vehicle dynamics. trajectory is highly correlated and it would be wasteful to
+Recent works on cognitive planning [24], [25] show that keep every observation. One ad-hoc approach to sparsify a
+a neural planner can be learned from data. However, as- trajectory is to take every nth observation. However, this
+sumptions such as groundtruth camera poses are available assumes that target n steps away is always reachable, which
+with perfect self-localization are unrealistic. The use of grid is not necessarily true. For example, without occlusion, an
+map also limits its (cid:3)exibility. Another line of research uses observation far away can be con(cid:2)dently reached (e.g., in
+reinforcementlearningtolearnalatentmap[26],[27],butit a straight hallway), whereas an observation nearby may be
+isdata-inef(cid:2)cientandcannotbeeasilyappliedtorealrobots. hidden (thus not reachable) if it is blocked by obstacles.
+In contrast, our planner is general and can adapt to new Moreover, motion constraints, sensor (cid:2)eld of view, motor
+environments quickly. It bears a resemblance to feedback noise, etc. can all affect the reachability of a target.
+motion planning system such as LQR-Trees [28], where Ourintuitionisthatthesparsi(cid:2)cationofatrajectoryshould
+planning is performed on the topological map connecting adapttothecapabilityofthecontroller.Weproposelearning
+reachable state spaces with visual feedback control. a Reachability Estimator RE that predicts the probability
+C RE
+III. METHOD of sujccessfully reaCching a targetR:E (ocurrent;otarget) =
+A. Overview P(reachocurrent;otarget; ). We use as a probabilistic
+metric throughout the system, illustrated by Fig. 2. Given
+Weconsiderthegoal-directednavigationproblem:arobot a controller C, we train a corresponding RE. The incoming
+is asked to navigate to a goal G given an observation o trajectories are (cid:2)rst sparsi(cid:2)ed by RE and then interlinked to
+G
+tbauktenweataGss.uRmoeboitt dhoaesscnoolltehcatevde aamseatpooffttrhaejeecntovriireosnm(ee.ngt.,, fleovrmeraagecoRmEpatoctptloapnoalopgricoablabmilaipst.icGpivaethn aoncudrreunsteanCdaonGd,RwEe
+via self-exploration or following language instructions) as in synergy to follow the planned path robustly.
+its experiences. Each trajectory is a dense sequence of
+B. Designing a Robust Local Controller
+observations o ;o ;:::;o recorded by its on-board camera.
+1 2 N
+Using its experiences, robot decides the next action to take Real-world robots are subject to disturbances such as mo-
+in order to reach G. The action space is continuous (e.g., tor noise and moving obstacles, which can cause a robot to
+velocity and steering angle) and robot could be affected by deviate from planned path and fail. Hence our (cid:2)rst objective
+actuation noise and unseen obstacles. is to design a suf(cid:2)ciently robust local controller. Contrary to
+We approach this problem from a cognitive perspective. directly predicting low-level controls, we split our controller
+Robot (cid:2)rst builds a topological map from its experiences. intotwostages:high-levelwaypointpredictionandlow-level
+673
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. ocurrent our design, we ra(cid:0)ndomly sample ocurrent from a trajectory
+64 Regressor Waypoint RMP Controller and otarget being 1:0m behind to 3:0m ahead of ocurrent
+x,y in 4 unseen environments, and run each controller to see
+oi k T PairEncoder ConvEncoder 10245122 L2 Loss if robot reaches the target. Table I compares the success
+…
+64ooccuurrrree…onntti 5 x 5 x 9 x 64 stride 25 x 5 x 64 x 128 stride 25 x 5 x 128 x 256 stride 25 x 5 x 256 x 512 stride 1 2k+151…2 (2k+1) x 512 x 1024 RR1024eegg512rreess2ssoorr HPCRcroeroocasuxsd(srim ir nEeigntn y ttd)r o,ifpfsteiyarn reLg(noe cstes, )reguTorlnaalryji z Fuinosgell dotr wafoienrr ing r(ldroafoiowtrbeeruewcosrttalfsyruetdomaccacamhcepcsapcsepoilrnenagrittmareiotmiatlohlgaenaegrns.aeDnsotoduitroreshtlctwioetglweoyhr--ieslpnret-rgavlegeedvvelieecadlltoceitncasiigiobtgynslnt)sor.,warCwce-tsoleiuemov(cid:2)lntpenssladircsneioutdncmmhtwruooicatrlhhess
+64 10245122 Rtarget current waypoints, and then map waypoints to low-level controls
+Cross Entropy Loss
+oi+k T C RE using a representation (e.g., RMP) that explicitly models
+Fig. 3: Architecture of WP. The architecture of is similar, environmental geometry and robot dynamics.
+except that it regresses to a single probability and is supervised
+with cross-entropy loss. C. Learning the Reachability Estimator
+Control(k=0) Ours(k=0) Ours(k=2) Ours(k=5)
+TableIsuggeststhatcontrollerdesignandparametrization
+Success% 46% 88% 91% 95%
+can heavily affect target reachability. Unlike [1] that uses
+TABLE I: Success rate for each controller.
+image similarity as a proxy, we learn reachability by explic-
+reactive control. The high-level controller CWP predicts a itly predicting the execution outcome of C. During training,
+waypoint x;y (in robot’s local coordinate system) for the ocurrent and otarget are randomly sampled from demonstration
+low-level controller. The waypoint needs not be precise, but trajectories (Sec. IV) and C is used to drive the robot from
+only serves as aChint for the low-level controller to make ocurrent to otarget to get a binary outcome. The criteria for
+progress.Hence WP isagnostictorobotdynamics(e.g.,can success is that robot reaches the target within time limit
+be trained with A* waypoints as supervision) and absorbs de(cid:2)ned as tmax = A*(ocurrent;otarget)=vmin, where A*((cid:1);(cid:1))
+the effects of actuation noise. For the low-level controller, computes the A* path length and vmin is the minimum
+we adopt the RMP representation [29] as a principled way velocity. Hence RE measures the probability of C reaching
+for obstacle avoidance and vehicle control. Hence we have the target ef(cid:2)ciently, which is independent of the temporal
+C C C
+(ocurrent;otarget)=C RMP( WP(ocurrent;otarget)).Notethatthis and physical distance between ocurrent and otarget. This idea
+allows the same WP to be applied to different robots by has an interesting connection to feedback motion planning
+replacing the low-level controller. systems[28],asREcanbeseenasestimatingvisualfunnels
+C
+Fig. 3 illustrates the design of WP. The robot state is that are locally stable.
+represented by its current observation ocurrent. Denote ith The design of RE is almost identical to C, except that
+observation in a trajectory as o . We represent the corre- it predicts a single probability and is trained with a binary
+i
+sponding otarget at oi as a sequence of neighbor observations classi(cid:2)cation loss.
+centered at o :
+i
+D. Sparsifying a Trajectory
+oi(cid:0)k(cid:1)T;oi(cid:0)(k(cid:0)1)(cid:1)T;:::;oi;:::;oi+(k(cid:0)1)(cid:1)T;oi+k(cid:1)T; For any observation o in a dense trajectory, if
+RE RE i
+wherek controlscontextlengthand(cid:1)T (setto3)isthegap (oi;oi+1);:::; (oi;oi+k+1) are suf(cid:2)cientlyChigh, we
+between two observations. The past frames expand the (cid:2)eld could con(cid:2)dently discard o ;:::;o because does not
+i+1 i+k
+ofviewofoi whichhelpscontrollertodovisualclosed-loop need them to reach oi+k+1. Hence a greedy approach to
+control. The future frames encode intention at o , allowing a choose the next anchor is
+i
+controllertoadjustitswaypointinadvanceinordertofollow
+max j
+subsequent targets smoothly and reliably. RE 8 (cid:20)
+Technically,weextractafeaturevectorbyfeedingstacked s.t. (oi;ok)>psparsify; k;i<k j
+(cid:0)
+[ocurrent;oi(cid:0)k(cid:1)T;ocurrent oi(cid:0)k(cid:1)T] into a sequence of convo- where i is previous anchor’s position and psparsify is the
+lutions, followed by combining the 2k +1 feature vectors probability threshold that controls sparsity. Hence a dense
+through one convolution and multiple fully-connected layers trajectory is converted to a sequence of contexti(cid:2)ed anchor
+to predict a waypoint x;y. We (cid:2)nd this design works much observations o^ ;:::;o^ . One may argue that contexti(cid:2)cation
+1 m
+better than featurizing each image or stacking all images reduces the effective sparsi(cid:2)cation ratio. Since the time and
+together. Additionally, the network predicts the heading space complexity is a function of the number of anchors, in
+difference between ocurrent and oi to help the network anchor practice it signi(cid:2)cantly saves computation during planning
+the target image in the sequence. Finally, in order to reason and following a trajectory, allowing our system to run on a
+C
+about proximity to a target (Sec.III-H), WP predicts mutual robot in real time.
+image overlap. Image overlap is a ratio that represents the
+E. Building a Compact Probabilistic Topological Map
+percentage of content in one image that is visible in another
+image. Hence mutual image overlap is a pair of ratios Ourtopologicalmapisaweighteddirectedgraph(Fig.4a).
+(Rcurrent!tarCget;Rtarget!current). Vertice(cid:0)s areRanEchor observations and edge weight from o^i to
+Wetrain WPinasupervisedfashion(Sec.IV).Toevaluate o^j is log (o^i;o^j). Construction is incremental: for an
+674
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. T1 o(cid:246)1 o(cid:246)2 o(cid:246)1 o(cid:246)2 o(cid:246)1 o(cid:246)2 distinct. See Sec. IV-C.4 for an example. In the worst case
+where such distinctive anchor is absent, robot might follow
+T2 o(cid:246)1 o(cid:246)2 o(cid:246)3 o(cid:246)1 o(cid:246)2 o(cid:246)3 o(cid:246)1 o(cid:246)3 a cycle of anchors without making progress. The solution is
+(a) (b) (c)
+to count how many times the robot has visited an anchor
+Fig. 4: A topological map containing two trajectories. (a) densely
+connected graph. (b) after pruning low-probability edges. (c) after (i.e.,bycollectingstatisticsfromlastvisitedanchor).Cyclic
+reusing nodes. behavior can be detected so that the robot can break the
+incomingtrajectory,wecreatepairwiseedgesbetweenevery loop by biasing its choice in future planning. We leave the
+vertex in the graph and every anchor in the new trajectory. handling of this extreme case as future work.
+Comparedtoagraphconstructedwithdenseobservations,
+H. Following a Trajectory
+a graph built from sparsi(cid:2)ed observations has less than 1/10
+Our trajectory follower constantly updates and tracks an
+of the vertices and 1/100 of the edges. To further improve
+active anchor to make progress, while performing dead
+scalability, we propose the following two optimizations to
+reckoningtocounterlocaldisturbances.Speci(cid:2)cally,givena
+make the graph grow sublinearly to the number of raw
+observations,andeventuallythesizeofthegraphconverges: sequenceofanchorobservationso^1;o^2;:::;o^m,thetrajectory
+Edge pruning. Low-probability edges with RE(o^;o^)< follower acts as a state machine:
+pnaedvVgieegraattreieoxndrie(sFuciasger.d.e4Idtb)iss.incocemmthoeyn fcoornttrwibouttreajleitcttloeriteosstuocibceesjpsfaur-l aprsegSamrechaa,rxcioth2:sfeo^tr1so;:b:o^:o;(cid:3)o^tmagsseRcaEurcr(rhoeecnsutrreafncot;triov)et.haeInfcbheoRsrtEo^(aaocncticuvrhereonartn;:od^(cid:3)o^e)(cid:3)nte=>rs
+Follow state, otherwise it gives up and stops.
+tiallyoverlappedandstoringthisoverlappingpartrepeatedly
+iwseucnhneecckesisfartyh.erHeeenxciestswahevneratdexdino^gsuacnhchtohrato^Ri Ein(too^ a g;ro^a)p>h, CWFPo(lolocuwrre:nt;roo^abcotivte)coanmdpuutseess itthetonderxivtewCaRyMpPo.inMt exa;nywhi=le
+RE i(cid:0)1 it tracks and updates the following two values:
+preuse and (o^;o^i+1) > preuse. I!f the conditio!n holds, we last visited anchor. Robot uses the predicted mutual
+discard o^ and add edges o^ o^ and o^ o^ , as (cid:15)
+illustratediin Fig. 4c. i(cid:0)1 i+1 imageoverlaptomeasuretheproximitybetweenocurrent
+The graph will converge because for any static environ- and anchors close to o^active. The closest anchor is set as
+ment of (cid:2)nite size, there is a maximum density of anchors. olastvisited. This is a form of approximate localization.
+RE
+Anyadditionalanchorwillpassthevertexreusecheckandbe (cid:15) active anchor. If (ocurrent;o^active+1) > pfollow and is
+discarded. Practically however, an environment may change within proximity, it advances o^active to o^active+1, other-
+over time. The solution is to timestamp every observation wise o^active =olastvisited+1. The intuition is to choose an
+and discard outdated observations using RE. We leave the o^active that is neither too close nor too far away.
+handling of long-term appearance change as future work. NormallyrobotstaysinFollowstate.Butifmovingobstacles
+RE
+oractuationnoisecause (ocurrent;o^active)<pfollow,itenters
+F. Planning
+Dead reckoning state.
+We add anedge (weighted by itsnegative log probability) Dead reckoning:robottracksthelastwaypointcomputed
+C
+from ocurrent to every vertex in the graph, and from every intheFollowstateandusesthewaypointtodrive RMP.The
+vertex in the graph to o . The weighted Dijkstra algorithm assumptionisthatdisturbancesaretransientwhichtherobot
+G
+computes the path with the lowest negative log probability could escape by following the last successfully computed
+(i.e., the path that robot is most con(cid:2)dent). Robot then waypoint. Waypoint tracking can be done by an odometer
+decides whether the probability is high enough and may run and needs not be very accurate. While in this state, robot
+RE
+the trajectory follower proposed in Section III-H. keeps checking if (ocurrent;o^active)>pfollow and returns to
+Follow state if possible.
+G. Mitigating Perceptual Aliasing
+Practically, ocurrent may correspond to different locations IV. EXPERIMENTS
+C RE
+of similar appearances. Traditional approaches usually for- We trained , and all baselines in 12 Gibson
+WP
+mulate this as a POMDP problem [6] and try to resolve the environments. 100k training trajectories were generated by
+ambiguity by maintaining beliefs over states. This requires running an A(cid:3) planner (used to provide waypoints) with a
+havingauniquestate(e.g.,globalpose)associatedwitheach laser RMP controller similar to [29]. Simulation step size is
+C
+observation which is dif(cid:2)cult to implement since we do not 0:1. We use the laser RMP controller as RMP mostly for
+have any metric information. ef(cid:2)ciency, but in practice an image-based RMP controller
+C
+We use two techniques to resolve ambiguity. The (cid:2)rst is can also be used [29]. was trained by randomly sam-
+WP
+to match a sequence of anchors during search and graph pling two images on the same trajectory with certain visual
+C
+construction. In practice the probability of two segments overlap, with the A(cid:3) waypoint as supervision. After
+WP
+RE
+having similar appearances is much lower than two single was trained, we trained by sampling two images that
+observations. Additionally we let robot re-plan a new path either belong to the same trajectory (prob 0.6) or different
+C
+if it detects discrepancy (entering Dead reckoning state for trajectories (prob 0.4), and ran a rollout with to get a
+(cid:2)
+too long) while following the previous path. The intuition is binary outcome. Image size is 64 64 with 120(cid:14) horizontal
+thatthelocationwhererobotdetectsthediscrepancyislikely (cid:2)eld of view. We augmented the dataset by jittering robot’s
+675
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. 1 2 3 4 5 6 7 1.0
+Ours-k5
+0.9 Ours-k2
+Ours-k0
+0.8 SPTM-k5
+7 65 sagtnoacarhtlor success rate0000....4567 pspar0SSsPPi.f9TTyMM--kk20
+0.95
+0.3 0.97
+4 0.2 0.99
+CCClkka==se52r 3 2 1 0.0 0.2 0.4 sparsit0y.6 0.8 1.0 01..9095
+Fig. 5: Trajectory sparsi(cid:2)cation. Fig. 6: Following a 23m Fig. 7: Trajectory following cover rate in 5 test environments.
+Blue dots: dense observations. long trajectory. Blue trace: Number after k indicates the context length. Data points for Ours-
+Images correspond to numbered groundtruth trajectory. Orange k5 and Ours-k2 are marked with psparsify.
+locations. 1D laser scans are vi- trace is generated by following
+sualized from the top view. the anchor points.
+starting location and orientation to improve generalization.
+C RE
+About 1.5M samples were used to train and . Our
+WP
+training setup models a real vehicle similar to [30], so that
+the same model can be used for real experiments.
+We present quantitative results in 5 unseen Gibson envi-
+aGibsonhouse24 bArealenvironment
+ronmentswithdiverseappearances.Ourbaselineisbasedon
+Fig.8:Exampletopologicalmapsbuiltfromsparsi(cid:2)edtrajectories.
+SPTM. Since SPTM is designed for small synthetic mazes
+Each trajectory is assigned a different color.
+withdiscreteactionspace,itsoriginalversionwouldperform
+poorly in our setting. For a fair comparison, we let SPTM dense trajectory. To change sparsity, we vary psparsify for
+usethesamecontrollerandtrajectoryfollowinglogicasours. our models. For SPTM we select every nth frame and vary
+The main differences between SPTM and ours are thus: i) n. Fig. 7 plots cover rates for varying sparsity conditions.
+how reachability is learned and ii) how graph is constructed Controllers with contexts (*-k2, *-k5) achieve higher than
+and used. Our ablation study will thus be in the form of 95% cover rate, better than controllers without context (at
+evaluating trajectory following and planning performance in most 90%). This indicates that having contextual frames can
+the following sections. improve robustness. But since contextual frames are used,
+more observations have to be kept so storage-wise it is not
+A. Trajectory Sparsi(cid:2)cation
+as ef(cid:2)cient as (*-k0).
+Fig. 5 compares sparsi(cid:2)cation results of three controllers.
+SPTM performs comparably to ours when using a strong
+C C
+Thetwovisualcontrollers , differintheircontext
+k=2 k=5 controller (*-k5), but for all controllers it starts to degrade
+length. To show that our model is general, we also trained a
+before ours as sparsity lowers. Due to its (cid:2)xed-interval
+C
+laser-based controller by modifying the input layer in
+laser subsampling,itdoesnotadapttocontrollers’capabilitywell,
+Fig. 3 to take 64-point 240(cid:14) 1D depth as input. as can be seen by the increasing gap between ours and the
+Fig. 5 shows placement of anchors with psparsify = 0:99. SPTM counterparts when less contextual frames are used
+C C
+Comparing with , requires denser anchors. Since
+C k=5 k=2 (*-k2, *-k0).
+uses a shorter context, it is more (cid:147)local(cid:148) and has to
+k=2 We also evaluated performance under noisy actuation by
+keep more anchors to follow a path robustly. Nonetheless, (cid:24)N
+multiplying a random scaling factor s (1:0;0:33) to the
+anchors are more densely distributed in tight spaces and
+control output. No noticeable difference was found. This is
+cornersforbothcontrollers,indicatingthatoursparsi(cid:2)cation
+expectedbecausethelocalcontrollerrunsatahighfrequency
+strategyadaptswelltoenvironmentalgeometry.Interestingly,
+(10 Hz) and uses visual feedback for closed-loop control.
+C
+shows a more uniform distribution pattern. Since
+laser
+laser scans have a much wider (cid:2)eld of view and measures
+C. Planning
+geometry directly, it is not heavily affected by tight spaces
+1) Navigation between Places: We built one topological
+and large viewpoint change.
+map for each environment (Fig. 8a). A map is constructed
+B. Trajectory Following from 90 trajectories connecting 10 locations in a pairwise
+We randomly generated 500 trajectories in the test envi- fashion. The locations are selected to make the trajectories
+ronments (Fig. 6) with an average length of 15 m. When cover most of the reachable area.
+following a trajectory, we stop the robot when it diverges Robot starts at one of the locations (with jittered position
+fromthepathorcollideswithobstacles.Wereportthecover and orientation) and is given an goal image taken at one of
+rate,thepercentageoftotallengthoftrajectoriessuccessfully theother9destinations.Robothasnopriorknowledgeofits
+followed by robot. For our trajectory followers, psearch = initiallocation.Were-implementedSPTM’splanneranduses
+pfollow =0:92. the best trajectory follower SPTM-k5 (SecIV-B) to make it
+Sparsityistheaverageratioofnumberofimagesinaspar- a competitive baseline. We set the sub-sampling ratio to 20
+si(cid:2)edtrajectorytothenumberofimagesinthecorresponding and (cid:1)T = 1 to prevent the graph from getting too large.
+l
+676
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. space8 house24 house29 house75 house79 G1 G2 1
+Area 460m2 207m2 270m2 403m2 205m2 G4 2
+Images 30,342 31,167 28,679 39,788 33,617 G3 2a 1 1a
+SPTM 1,648/3,201 1,688/3,668 1,560/3,960 2,116/4,115 1,808/4,756 G1
+48.1% 40.2% 45.6% 51.3% 47.2% G4 goal
+1a
+Ours 974/1,482 900/1,348 901/1,467 1,454/2,275 909/1,524 2 2a
+86.9% 94.3% 91.2% 84.6% 95.7% Fig. 11: Plans a path Fig.12:Onlineplanning.Arrowsindicate
+TABLE II: Planning success rate, with #vertices/#edges shown from G1 to G!4 by headings. 1a and 2a are the next anchor
+above. Success rate is the outcome of 1,000 navigation trials. combinin!g G1 G2 observations for the two paths respec-
+and G G tively.
+1.0 1.0 3 4
+0.9
+0.8 a result, it plans a new path (green) whereby it successfully
+0.8
+0.7 reaches the goal.
+e e
+at0.6 at
+success r00000.....12345 0.5 0.6 0.7 0.8 0.9 1.0 success r000...246 0.2 0.4 0.6 hhhhs0poooo.8auuuucsssseeeee8227749591.0 # vertices234000000000 shhhhpooooauuuucsssseeeee822774959 tttahoiboal5ntet)sh,tmeoSmcalapnaalurkagmisbneiibzgleieetnsryov:uigorrorfFonaiwpmgrap.ewrsno1uta3sboc.lhbiInsstheesaoracvlwraslalyos--
+1000
+path probability keep ratio shows that map size is adaptive
+Fig. 9: Comparing path probability to Fig. 10: Success rate with 0 to an environment. Since house75
+empiricalsuccessrate.Eachbaristhe prunedgraphs.Dottedline 0 10000200003000040000 has more complex geometry and
+average success rate of paths whose shows no-generalization # observations
+exhibits more rendering artefacts,
+probabilities fall into that range. for reference. Fig. 13: Dotted lines show
+denser samples are kept to stay
+10xand20xtemporalsub-
+Weperformedahyperparametersearchtosetsshortcut =0:99. sampling for reference. conservative.
+For our method, we set preuse =pedge =0:99. D. Testing in a Real Environment
+Table II presents the success rate for each environment
+compared to SPTM. Our method outperforms SPTM with Our model trained in simulation generalizes well to real
+muchsparsermaps.GraphsbuiltbySPTMhaveunweighted images without (cid:2)netuning. To map a real environment, we
+edges and do not reuse vertices. SPTM also does explicit manually drove the RC car to collect 7 trajectories, totalling
+localization which sometimes causes planning failure. This 3,200 images. The (cid:2)nal map contains 206 vertices and 215
+results in worse scalability and reliability compared with edges (Fig.8b). The car is able to plan novel paths between
+our approach. Note that the slightly lower success rates in locations and follow the path while avoiding obstacles not
+space8 and house75 are mostly caused by strong symmetry seen during mapping (Fig.1). We refer the interested reader
+and rendering artefacts. to the video supplementary material for more examples.
+2) Comparing Trajectory Probabilities to Empirical Suc-
+V. CONCLUSION
+cess Rate: To show that path probability is a reasonable
+indicator of empirical outcome, we let a robot start at a In this work, we show that by learning the capability of a
+random location (anywhere in a map), plan a path to one of local controller, robust and scalable visual topological navi-
+the 10 destinations, and follow the path. 1,000 trajectories gation can be achieved. Due to the simplicity and (cid:3)exibility
+were collected in each environment. Fig. 10 shows that path of our framework, it can be extended to support non-visual
+probability strongly corresponds to empirical success rate. sensorsandappliedtootherroboticsproblems.Futureworks
+This allows a robot to assess the risk before executing a includecombiningmultiplesensorstoimprovethecontroller,
+plan, and ask for help if necessary. Note that SPTM does developingbetteralgorithmstoresolveambiguity,improving
+not provide any uncertainty measure. generalization, and extending to manipulation tasks.
+3) Generalizing to New Navigation Tasks: To test the The hyperparameters in our approach are mostly proba-
+generalizability of our planner, we randomly pruned the bility thresholds, which are easy to interpret and tune. One
+graphs to contain only a subset of the trajectories, and important scenario our approach does not handle is when
+repeated the experiment in IV-C.1. Fig. 10 shows that with robot deviates too much from all vertices in the navigation
+only 60% ofthe trajectories, robot alreadyperforms close to graph, where it would fail to (cid:2)nd a plausible path. A self-
+itspeaksuccessrate.Inotherwords,robotisabletocombine exploratory model can help here, and it can also be used for
+existing trajectories to solve novel navigation tasks. Fig. 11 autonomous map construction.
+shows an example.
+4) Resolving Ambiguity: Fig. 12 illustrates how percep- VI. ACKNOWLEDGEMENTS
+tualaliasingisresolvedinenvironmentswithstrongsymme- This work was funded in part by ONR grant 63-6094
+try. Robot initially starts at an ambiguous location (marked and by the Honda Curious Minded Sponsored Research
+(cid:147)1(cid:148))andplansawrongpath(redpath).Whilefollowingthis Agreement. We thank NVIDIA for generously providing a
+path, robot detects the discrepancy at (cid:147)2(cid:148) by realizing what DGX used for this research via the NVIDIA Robotics Lab
+is expected to be an of(cid:2)ce room is actually a hallway. As and the UW NVIDIA AI Lab (NVAIL).
+677
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [25] S. Gupta, D. Fouhey, S. Levine, and J. Malik, (cid:147)Unifying map and
+landmarkbasedrepresentationsforvisualnavigation,(cid:148)arXivpreprint
+[1] N.Savinov,A.Dosovitskiy,andV.Koltun,(cid:147)Semi-parametrictopolog- arXiv:1712.08125,2017.
+icalmemoryfornavigation,(cid:148)inInternationalConferenceonLearning
+[26] P.Mirowski,M.Grimes,M.Malinowski,K.M.Hermann,K.Ander-
+Representations(ICLR),2018. son, D. Teplyashin, K. Simonyan, A. Zisserman, R. Hadsell, et al.,
+[2] Y. Wu, Y. Wu, A. Tamar, S. Russell, G. Gkioxari, and Y. Tian, (cid:147)Learningtonavigateincitieswithoutamap,(cid:148)inAdvancesinNeural
+(cid:147)Bayesian relational memory for semantic visual navigation,(cid:148) in InformationProcessingSystems,2018,pp.2419(cid:150)2430.
+InternationalConferenceonComputerVision(ICCV),2019.
+[27] P.Mirowski,R.Pascanu,F.Viola,H.Soyer,A.J.Ballard,A.Banino,
+[3] A. Kumar, S. Gupta, D. Fouhey, S. Levine, and J. Malik, (cid:147)Visual M. Denil, R. Goroshin, L. Sifre, K. Kavukcuoglu, et al., (cid:147)Learning
+memoryforrobustpathfollowing,(cid:148)inAdvancesinNeuralInformation to navigate in complex environments,(cid:148) International Conference on
+ProcessingSystems,2018,pp.765(cid:150)774. LearningRepresentations(ICLR),2018.
+[4] F.Blochliger,M.Fehr,M.Dymczyk,T.Schneider,andR.Siegwart,
+[28] R.Tedrake,I.R.Manchester,M.Tobenkin,andJ.W.Roberts,(cid:147)Lqr-
+(cid:147)Topomap:Topologicalmappingandnavigationbasedonvisualslam trees:Feedbackmotionplanningviasums-of-squaresveri(cid:2)cation,(cid:148)The
+maps,(cid:148)inIEEEInternationalConferenceonRoboticsandAutomation InternationalJournalofRoboticsResearch,vol.29,no.8,pp.1038(cid:150)
+(ICRA),2018.
+1052,2010.
+[5] K.Chen,J.P.deVicente,G.Sepulveda,F.Xia,A.Soto,M.Vazquez,
+[29] X. Meng, N. Ratliff, Y. Xiang, and D. Fox, (cid:147)Neural autonomous
+and S. Savarese, (cid:147)A behavioral approach to visual navigation with navigation with riemannian motion policy,(cid:148) in IEEE International
+graph localization networks,(cid:148) Robotics Science and Systems (RSS), ConferenceonRoboticsandAutomation(ICRA),2019.
+2019.
+[30] (cid:147)MITracecar,(cid:148)2018.[Online].Available:https://mit-racecar.github.io/
+[6] S.Thrun,W.Burgard,andD.Fox,Probabilisticrobotics. MITpress,
+2005.
+[7] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardos, (cid:147)Orb-slam: a
+versatile and accurate monocular slam system,(cid:148) IEEE Transactions
+onRobotics,vol.31,no.5,pp.1147(cid:150)1163,2015.
+[8] N. Hirose, F. Xia, R. Martn-Martn, A. Sadeghian, and S. Savarese,
+(cid:147)Deepvisualmpc-policylearningfornavigation,(cid:148)IEEERoboticsand
+AutomationLetters,vol.4,no.4,pp.3184(cid:150)3191,2019.
+[9] N.D.Ratliff,J.Issac,andD.Kappler,(cid:147)Riemannianmotionpolicies,(cid:148)
+CoRR,vol.abs/1801.02854,2018.
+[10] F. Xia, A. R. Zamir, Z. He, A. Sax, J. Malik, and S. Savarese,
+(cid:147)Gibson env: Real-world perception for embodied agents,(cid:148) in IEEE
+InternationalConferenceonComputerVisionandPatternRecognition
+(CVPR),2018,pp.9068(cid:150)9079.
+[11] J. O’keefe and L. Nadel, The hippocampus as a cognitive map.
+Oxford:ClarendonPress,1978.
+[12] T. Hafting, M. Fyhn, S. Molden, M.-B. Moser, and E. I. Moser,
+(cid:147)Microstructure of a spatial map in the entorhinal cortex,(cid:148) Nature,
+vol.436,no.7052,p.801,2005.
+[13] C.F.Doeller,C.Barry,andN.Burgess,(cid:147)Evidenceforgridcellsina
+humanmemorynetwork,(cid:148)Nature,vol.463,no.7281,p.657,2010.
+[14] S.Thrun,(cid:147)Learningmetric-topologicalmapsforindoormobilerobot
+navigation,(cid:148)Arti(cid:2)cialIntelligence,vol.99,no.1,pp.21(cid:150)71,1998.
+[15] M.J.Milford,G.F.Wyeth,andD.Prasser,(cid:147)Ratslam:ahippocampal
+model for simultaneous localization and mapping,(cid:148) in IEEE Interna-
+tionalConferenceonRoboticsandAutomation(ICRA),vol.1,2004,
+pp.403(cid:150)408.
+[16] B. Kuipers, (cid:147)The spatial semantic hierarchy,(cid:148) Arti(cid:2)cial intelligence,
+vol.119,no.1-2,pp.191(cid:150)233,2000.
+[17] W. Maddern, M. Milford, and G. Wyeth, (cid:147)Capping computation
+timeandstoragerequirementsforappearance-basedlocalizationwith
+cat-slam,(cid:148) in 2012 IEEE International Conference on Robotics and
+Automation(ICRA),2012,pp.822(cid:150)827.
+[18] F. Fraundorfer, C. Engels, and D. Niste·r, (cid:147)Topological mapping,
+localizationandnavigationusingimagecollections,(cid:148)inInternational
+ConferenceonIntelligentRobotsandSystems(IROS),2007.
+[19] M. Cummins and P. Newman, (cid:147)Appearance-only slam at large scale
+with fab-map 2.0,(cid:148) The International Journal of Robotics Research,
+2011.
+[20] C. Linegar, W. Churchill, and P. Newman, (cid:147)Work smart, not hard:
+Recalling relevant experiences for vast-scale but time-constrained
+localisation,(cid:148) in IEEE International Conference on Robotics and
+Automation(ICRA). IEEE,2015,pp.90(cid:150)97.
+[21] N. Savinov, A. Raichuk, R. Marinier, D. Vincent, M. Pollefeys,
+T.Lillicrap,andS.Gelly,(cid:147)Episodiccuriositythroughreachability,(cid:148)in
+InternationalConferenceonLearningRepresentations(ICLR),2019.
+[22] S.Bansal,V.Tolani,S.Gupta,J.Malik,andC.Tomlin,(cid:147)Combining
+optimal control and learning for visual navigation in novel environ-
+ments,(cid:148)ConferenceonRobotLearning(CoRL),2019.
+[23] D.Pathak,P.Mahmoudieh,G.Luo,P.Agrawal,D.Chen,Y.Shentu,
+E.Shelhamer,J.Malik,A.A.Efros,andT.Darrell,(cid:147)Zero-shotvisual
+imitation,(cid:148) in International Conference on Learning Representations
+(ICLR),2018.
+[24] S. Gupta, J. Davidson, S. Levine, R. Sukthankar, and J. Malik,
+(cid:147)Cognitive mapping and planning for visual navigation,(cid:148) in IEEE
+InternationalConferenceonComputerVisionandPatternRecognition
+(CVPR),2017,pp.7272(cid:150)7281.
+678
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:10 UTC from IEEE Xplore.  Restrictions apply. 

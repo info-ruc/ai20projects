@@ -1,0 +1,524 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+DeepMEL: Compiling Visual Multi-Experience Localization
+into a Deep Neural Network
+Mona Gridseth and Timothy D. Barfoot
+Abstract—Vision-based path following allows robots to au- Multi-experience localization   Seasonal dataset
+tonomously repeat manually taught paths. Stereo Visual Teach
+andRepeat(VT&R)[1]accomplishesaccurateandrobustlong-
+range path following in unstructured outdoor environments
+across changing lighting, weather, and seasons by relying on
+colour-constant imaging [2] and multi-experience localization
+[3]. We leverage multi-experience VT&R together with two
+datasets of outdoor driving on two separate paths spanning
+different times of day, weather, and seasons to teach a deep
+neural network to predict relative pose for visual odometry Deep relative pose regression
+(VO) and for localization with respect to a path. In this paper
+we run experiments exclusively on datasets to study how the Input Output
+networkgeneralizesacrossenvironmentalconditions.Basedon Radically  Metric 
+different  relative 
+the results we believe that our system achieves relative pose views of  DNN pose 
+estimatessufﬁcientlyaccurateforin-the-looppathfollowingand nearby  for path 
+that it is able to localize radically different conditions against places following
+each other directly (i.e. winter to spring and day to night), a
+capability that our hand-engineered system does not have.
+Fig. 1: Wecompilemulti-experiencelocalizationforpathfollowinginto
+I. INTRODUCTION aDNN.WeusedatasetscollectedwithVT&Racrossdifferentlightingand
+seasonstotraintheDNNtoperform3degreesoffreedom(DOF)relative
+Vision-based path following algorithms have enabled poseestimationunderchangingenvironmentalconditions.
+robots to repeat paths autonomously in unstructured and previousworkbyMelekhovetal.[6].Inparticular,ourDNN
+GPS-deniedenvironments.Furgaleetal.[1]performaccurate takes two pairs of stereo images and regresses the relative
+metric and long-range path following with their VT&R robot pose. In multi-experience localization VT&R relies on
+system, which relies on a local relative pose map removing gradually adding new experiences over time to be able to
+the need for global localization. The authors use sparse localize when the environment changes. We aim to localize
+SURFfeatures[4]tomatchimageswhenperformingVOand radically different path traversals against each other without
+localization.Patonetal.extendVT&Rtoautonomousopera- the use of such intermediate bridging experiences.
+tionacrosslighting,weather,andseasonalchangebyadding Weconductexperimentstotesttheabilityofourregressor
+colour-constantimages[2]andmulti-experiencelocalization to generalize across large appearance change. In VT&R
+[3].Multi-experiencelocalizationcollectsdataeverytimethe VO is used to propagate the current pose forward, while
+robot repeats a path and the most relevant experiences are localization provides a pose correction by estimating the
+chosen for feature matching. relativeposeoftheliveframewithrespecttothemap.Since
+Developing a robust and accurate VT&R system has both VO and localization compute relative poses, we test
+taken a large research and engineering effort. As a result our network’s performance on both of these tasks. Using the
+we can use outdoor datasets collected with VT&R across exact same network architecture, we train one network with
+lighting and seasonal change to compile multi-experience temporallyadjacentkeyframesforVOandonenetworkwith
+localization into a deep neural network (DNN) for relative keyframes localized across different experiences.
+pose estimation. VT&R, which is shown to achieve high- Theremainderofthispaperisoutlinedasfollows:Section
+accuracy path following [5], stores data in a spatio-temporal II discusses related work, Section III gives the details of the
+pose graph (see Figure 2). The pose graph contains the network architecture and loss function, Section IV explains
+relativeposebetweentemporallyadjacentkeyframesderived our training procedure and lays out the experiments, while
+from VO and the relative pose of a keyframe with respect to Section V provides the results.
+themappedpath.Eachtraversalofthepathisstoredasanew
+experience.Wesamplerelativeposesbetweenkeyframesthat II. RELATEDWORK
+are localized across different experiences and use them as VT&R [1] performs accurate [5] and robust autonomous
+labels for our training data. We design the DNN based on path following. Moreover, the addition of colour-constant
+imagery[2]andmulti-experiencelocalization[3]enablesthe
+All authors are with the University of Toronto Institute system to handle lighting, weather, and seasonal change.
+for Aerospace Studies (UTIAS), 4925 Dufferin St, Ontario,
+Convolutional Neural Networks (CNN) have been in-
+Canada. mona.gridseth@robotics.utias.utoronto.ca,
+tim.barfoot@utoronto.ca cludedindifferentpartsofthevisualposeestimationpipeline
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1674
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. to tackle appearance change. Several such approaches are Live Exp.
+testedagainsttheLong-TermVisualLocalizationBenchmark
+[7]. Examples include learning robust descriptors [8]–[14],
+Exp. 2
+semantic information [15], [16], and place recognition [17],
+and transforming whole images to different conditions [18].
+Others have in turn focused on replacing the whole pose- Exp. 1
+estimation pipeline with neural networks by regressing pose
+directly from images in an end-to-end fashion, several ex-
+Exp. 0
+amples of which are presented in a survey on deep learning
+Privileged temporal edge (manually driven) Spatial edge
+and visual simultaneous localization and mapping (SLAM)
+Temporal edge (autonomously driven) / Pose sampled for DNN
+[19]. Early work on absolute pose regression came from the
+development of PoseNet [20]. The system is based on a pre- Fig. 2: Imagekeyframesandtherelativeposesbetweenthemarestored
+in a spatio-temporal pose graph. Temporal edges represent relative poses
+trained GoogleNet architecture and regresses 6-DOF pose
+from VO and spatial edges give the relative pose between a keyframe on
+for metric relocalization of a monocular camera. Kendall a live experience and a keyframe on the privileged teach path. Several
+et al. extended the work to use a Bayesian neural network livekeyframesmaylocalizetothesameprivilegedkeyframe.Thevertices
+and edges in orange show how we can sample relative poses in time and
+providing relocalization uncertainty [21] and an improved
+space,bycompoundingspatialandtemporaltransforms,touseaslabelsfor
+lossfunction[22].Naseeretal.[23]improveonPoseNetby trainingtheDNN.
+generating additional augmented data leading to improved
+from autonomous repeats to keyframes on the manually
+accuracy, while Walch et al. [24] perform structured di-
+driven teach pass. Our system estimates both relative pose
+mensionality reduction on the CNN output with the help of
+for VO as well as metric localization with respect to the
+long short-term memory (LSTM) units. In [25] and [26] the
+path. We use the same neural network architecture and train
+authors were able to reduce localization error by passing
+two networks separately on data for VO and localization.
+sequential image data to recurrent models with LSTM units.
+Since VT&R provides highly accurate path following [5],
+Melekhov et al. [6] use a Siamese CNN architecture
+we sample relative pose labels from the VT&R pose graph.
+based on AlexNet [27] to compute relative camera pose
+The DNN takes as input RGB stereo images from a pair
+from a pair of images. Similarly Bateux et al. [28] regress
+of keyframes and regresses a 3-DOF relative pose given in
+relative pose for use in visual servoing. VO is a special (cid:2) (cid:3)
+the robot frame. For path following the offset from the path
+case of relative pose estimation, which has been explored
+and heading are the most important DOF and so we opt to
+extensively in the context of deep learning [29]–[33]. In estimate ξ = x y θ T ∈R3.
+severalexamplesauthorscombineCNNswithLSTMunitsto
+incorporateasequenceofdata[30],[32].Iyeretal.[32]use B. Network Architecture
+geometric consistency constraints to train their network in a Our DNN architecture is inspired by the one presented
+self-supervisedmanner.Inadifferentapproach,Peretroukhin in [6]. As in [6], the convolutional part of the DNN is
+et. al. have combined deep learning with traditional pose taken from the AlexNet architecture [27]. We opt to input
+estimation by learning pose corrections [34] and rotation a stack of all four RGB images to the network as in [30],
+[35], which they fuse with relative pose estimates. resultingin12inputchannels.ExperimentingwithaSiamese
+Relative pose estimation has also been used as a tool
+architecture did not cause improvements in our case. Our
+to regress absolute pose. In particular, Laskar et al. [36] ×
+images are different in size (512 384) from the standard
+combinerelativeposeregressionwithimageretrievalfroma ×
+input to AlexNet (224 224) and hence we make use of
+database.Balntasetal.[37]retrievenearestneighboursbased
+Spatial Pyramid Pooling (SPP) [43] as in [6] to reduce the
+on learned image features before regressing relative pose to
+size of our feature map before the fully connected layers.
+reﬁne the absolute pose. Saha et al. [38] classify anchor
+SPP lets us create a ﬁxed-sized output while maintaining
+points to which they regress relative pose. Oliveira et al.
+spatial information by pooling the responses of each feature
+[39] combine the outputs of two DNNs for visual odometry
+in spatial bins (we use max pooling). The size of the output
+and absolute pose estimation, respectively, to accomplish
+is the number of bins times the number of features. We
+topometric localization. The work was further extended by
+use four levels of pyramid pooling with the following bins:
+using multi-task learning for localization [40]. In our work × × × ×
+5 5,3 3,2 2, and 1 1. Finally, we keep the same
+we focus on robustness to large appearance change for
+fullyconnectedlayersasinAlexNet,butaddonemorefully
+relative pose regression and show experimental results on
+connected layer with 3 connections to regress the 3-DOF
+two challenging outdoor paths.
+pose. An overview of the network can be seen in Figure 3.
+III. METHODOLOGY C. Loss Function
+A. System Overview
+We use a simple quadratic loss function that takes the
+VT&R stores image keyframes as vertices and relative difference in target and predicted coordinates. Translation
+poses between them as edges in a spatio-temporal pose and rotation are manually weighted using a diagonal matrix
+graph. Figure 2 illustrates a pose graph with temporal edges W with 1.0 on the diagonal for x and y and 10.0 for θ. As
+derived from VO and spatial edges that connect keyframes pointed out in [22], angles may wrap around 2π, but this
+1675
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. most similar to the current conditions are chosen for feature
+matching when localizing with respect to the path.
+A. Training and Testing
+We train, validate, and test our system on two outdoor
+paths. The ﬁrst dataset, called UTIAS In The Dark, covers
+a 250 m path following a paved road and grass in an area
+Convolution 4, 11x11, 12, 64 with buildings. The path is repeated once per hour for over
+ReLU 24 hours covering signiﬁcant lighting change. The robot has
+1, 5x5, 64, 192
+MaxPool headlights for driving during the night. The path has 45
+1, 3x3, 192, 384   repeats from which we choose 5 for testing and use the
+Convolution remaining for training and validation. We only train and test
+1, 3x3, 384, 256
+ReLU our network once for each path and do not re-train for each
+1, 3x3, 256, 256   test condition. The path in the second dataset, called UTIAS
+Multi Season, is about 160 m. It covers an area with rugged
+SSP Layer
+terrainandvegetation.Dataiscollectedfromwintertospring
+Dropout FC, 9984, 4096 and includes a total of 138 repeats, 8 of which are held out
+Linear for testing. Figure 4 shows an aerial view of the paths.
+FC, 4096, 4096 
+ReLu Data collected during path traversals by the hand-
+FC, 4096, 1000 engineered VT&R system is organized in a spatio-temporal
+pose graph illustrated in Figure 2. With the help of multi-
+FC, 1000, 3
+experience localization, VT&R is able to localize back to
+the teach pass during long-term driving, providing us with
+training data across large environmental change. In order to
+Fig. 3: The neural network takes two sets of RGB stereo images and
+generate pose labels for training and validation for VO, we
+produces a 3-DOF relative pose. The architecture contains convolution
+layers,spatialpyramidpooling,andfullyconnectedlayers.Welistthestride, sample the temporal edges between immediately adjacent
+kernelsize,andnumberofinputandoutputchannelsfortheconvolutional keyframes. For localization we can sample randomly from
+layersaswellasinputandoutputsizesforthefullyconnectedlayers.
+the graph in both space and time, allowing us to generate
+large datasets connecting keyframes from both similar and
+radically different conditions. An example of such a sample
+is illustrated in orange in Figure 2. We randomly pick
+a vertex from an autonomous repeat and ﬁnd to which
+privilegedteachkeyframethisvertexislocalized.Ifwewant
+tosampleinspacewecanpickanotherteachkeyframeinthe
+Fig. 4: AerialviewofthepathsfortheUTIASInTheDarkandUTIAS same area. Finally, we randomly pick an autonomous repeat
+MultiSeasondatasets. vertexlocalizedtothechosenteachvertex.Wecompoundthe
+is not a problem we would encounter as we are estimating
+(cid:16) (cid:17) (cid:16) (cid:17)
+small relative poses. The loss is
+L 1 − T −
+= ξ ξˆ W ξ ξˆ , (1)
+2
+whereξrepresentsthetargetposethatwehavesampledfrom
+the VT&R pose graph and ξˆ is the estimated pose.
+IV. EXPERIMENTS Fig. 5: Integrated VO for day and evening representing one of the most
+andleastaccurateresults,respectively.
+We conduct experiments to test relative pose estimation
+for VO and localization, where localization is performed
+betweenstereocameraframestakenduringdifferenttimesof
+day,weather,andseasons.Theexperimentsmakeuseofdata
+collected with a Clearpath Grizzly RUV with a maximum
+speed of 1 m/s equipped with a factory-calibrated PointGrey
+Bumblebee XB3 stereo camera with 24 cm baseline, see
+Figure 1. We use VT&R with colour-constant images [2]
+andmulti-experiencelocalization[3]tolabelthedata.Multi-
+Fig. 6: Integrated VO for sunny weather with snow on the ground and
+experience localization stores each traversal of the path in overcast weather with no snow representing one of the most and least
+the pose graph. During a repeat a set of the experiences accurateresults,respectively.
+1676
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. TABLE I: RMSEforeachDOFfortheUTIASMultiSeasondataset.ThediagonalentriesareVOresults,whiletheoff-diagonalentriesarelocalization
+results.Therowsareusedasrepeatsandthecolumnsasteachruns.Thegreenandredcellsarebetterandworseperformingexamples,respectively,picked
+forfurtherqualitativeanalysis.
+Snow Somesnow Nosnow Green
+Sunny Overcast Sunny Overcast Sunny Overcast Sunny Overcast
+x:0.015 x:0.073 x:0.086 x:0.086 x:0.070 x:0.075 x:0.089 x:0.082
+Snow Sun y:0.0039 y:0.023 y:0.028 y:0.041 y:0.017 y:0.023 y:0.028 y:0.024
+θ:0.11 θ:0.54 θ:0.55 θ:0.85 θ:0.40 θ:0.49 θ:0.59 θ:0.49
+x:0.073 x:0.032 x:0.074 x:0.088 x:0.074 x:0.080 x:0.099 x:0.088
+Overcast y:0.031 y:0.0032 y:0.031 y:0.046 y:0.027 y:0.037 y:0.040 y:0.035
+θ:0.57 θ:0.11 θ:0.60 θ:0.81 θ:0.55 θ:0.59 θ:0.79 θ:0.68
+x:0.077 x:0.075 x:0.014 x:0.086 x:0.070 x:0.074 x:0.100 x:0.091
+Somesnow Sun y:0.029 y:0.032 y:0.0059 y:0.037 y:0.028 y:0.029 y:0.039 y:0.035
+θ:0.64 θ:0.65 θ:0.13 θ:0.92 θ:0.61 θ:0.59 θ:0.81 θ:0.70
+x:0.13 x:0.13 x:0.12 x:0.019 x:0.12 x:0.13 x:0.12 x:0.13
+Overcast y:0.071 y:0.069 y:0.066 y:0.0025 y:0.065 y:0.069 y:0.071 y:0.076
+θ:2.1 θ:2.1 θ:2.4 θ:0.13 θ:1.3 θ:2.1 θ:1.4 θ:1.6
+x:0.056 x:0.061 x:0.065 x:0.079 x:0.011 x:0.057 x:0.076 x:0.074
+Nosnow Sun y:0.017 y:0.020 y:0.023 y:0.031 y:0.0033 y:0.021 y:0.025 y:0.019
+θ:0.39 θ:0.41 θ:0.48 θ:0.63 θ:0.10 θ:0.42 θ:0.52 θ:0.46
+x:0.071 x:0.067 x:0.070 x:0.082 x:0.057 x:0.012 x:0.082 x:0.074
+Overcast y:0.025 y:0.034 y:0.028 y:0.033 y:0.024 y:0.0042 y:0.031 y:0.028
+θ:0.49 θ:0.47 θ:0.57 θ:0.75 θ:0.47 θ:0.012 θ:0.61 θ:0.54
+x:0.097 x:0.10 x:0.10 x:0.095 x:0.088 x:0.097 x:0.019 x:0.070
+Green Sun y:0.034 y:0.039 y:0.042 y:0.045 y:0.031 y:0.036 y:0.0033 y:0.029
+θ:0.63 θ:0.92 θ:0.81 θ:0.96 θ:0.66 θ:0.74 θ:0.14 θ:0.50
+x:0.090 x:0.099 x:0.10 x:0.10 x:0.10 x:0.097 x:0.089 x:0.013
+Overcast y:0.029 y:0.032 y:0.033 y:0.042 y:0.026 y:0.030 y:0.030 y:0.0035
+θ:0.55 θ:0.69 θ:0.65 θ:0.94 θ:0.52 θ:0.61 θ:0.52 θ:0.14
+TABLE II: RMSE for each DOF for the UTIAS In The Dark dataset. keyframes that are localized to each other by VT&R and
+The diagonal entries are VO results, while the off-diagonal entries are
+comparedirectlytotheVT&Rlabels.NotethatVT&Rdoes
+localizationresults.Therowsareusedasrepeatsandthecolumnsasteach
+runs. The green and red cells are better and worse performing examples, not consider global pose estimates, only the relative pose of
+respectively,pickedforfurtherqualitativeanalysis. the robot with respect to the teach pass. We also include a
+Morning SunFlare Day Evening Night qualitative path following experiment, where we test the VO
+x:0.0073 x:0.012 x:0.013 x:0.013 x:0.013 and localization networks together. We start by computing
+Morning y:0.0022 y:0.0053 y:0.0058 y:0.0079 y:0.0093
+θ:0.080 θ:0.17 θ:0.15 θ:0.15 θ:0.21 the relative pose between the initial live and teach keyframe
+x:0.010 x:0.0079 x:0.011 x:0.013 x:0.013 pair. Next we use VO, as computed by the network, to
+SunFlare y:0.0051 y:0.0023 y:0.0060 y:0.0069 y:0.0086
+θ:0.12 θ:0.084 θ:0.14 θ:0.15 θ:0.20 propagate this pose forward for a window of possible next
+x:0.012 x:0.011 x:0.0074 x:0.013 x:0.013
+teachkeyframesandchoosetheteachkeyframethatgivesthe
+Day y:0.0058 y:0.0058 y:0.0021 y:0.0069 y:0.0087
+θ:0.13 θ:0.14 θ:0.079 θ:0.15 θ:0.20 smallestnewrelativepose.Asthecorrectionstepweusethe
+x:0.019 x:0.019 x:0.019 x:0.0091 x:0.020
+Evening y:0.011 y:0.011 y:0.011 y:0.0037 y:0.012 localization network to compute a relative pose between the
+θ:0.22 θ:0.22 θ:0.22 θ:0.092 θ:0.28 live and teach keyframes. We combine the propagated pose
+x:0.015 x:0.015 x:0.016 x:0.016 x:0.0047
+Night y:0.013 y:0.014 y:0.013 y:0.014 y:0.0041 with the pose from localization by computing a weighted
+θ:0.29 θ:0.31 θ:0.29 θ:0.31 θ:0.092 average with weights 0.3 and 0.7, respectively.
+transformstogettherelativeposeassociatedwithourpairof We train our network on an NVIDIA GTX 1080 Ti GPU
+keyframes.Forthispaperwesampleonlyintimeanddonot with a batch size of 64 and use early stopping based on the
+movealongthegraphinthespatialdirection.FortheUTIAS validation loss to determine the number of epochs. We use
+In The Dark dataset our training and validation sets have theAdamoptimizer[44]withlearningrate0.0001andother
+360,000 and 40,000 samples for localization, respectively. parameterssettotheirdefaultvalues.Networkinferenceruns
+For VO we get 64,530 and 7170 samples. The UTIAS at a minimum 50 fps on a Lenovo laptop with one GPU.
+Multi Season dataset has 450,000 and 50,000 samples for
+localization training and validation, respectively. For VO we V. RESULTS
+have 69,659 training samples and 7739 validation samples. We conduct standalone experiments for the localization
+Whenprocessingthetestrunswekeepthedatasequential and VO networks for data with large appearance variation
+toassessperformanceinarealisticscenario.Wetestlocaliza- in an outdoor environment. Tables I and II list the root
+tionacrossenvironmentalchangebyperforminglocalization mean squared error (RSME) for each run in the test sets.
+for every pair of runs in the test set (one run is used as the WecompareperformancewiththeVT&Rsystem,whichwe
+teach pass and the other as the autonomous repeat). Speciﬁ- know has centimeter-level error on kilometer-scale repeats
+cally,thisletsuslocalizeradicallydifferenttraversalsdirectly [5]. The values on the diagonal are results for VO, while
+withouttheuseofanyintermediatebridgingexperiences.We the rest are for localization. The rows represent repeat runs
+test VO standalone for the same runs. while the columns are used as teach runs. For the paths in
+Path following is performed by alternating between using our datasets the the relative pose values for x can typically
+VOtopropagatetheposeforwardandlocalizationtoprovide fall between 0 to 30 cm. y normally varies between +/- 10
+a pose correction. We perform two experiments for local- cm, but can reach almost 40 cm on sharp turns. Similarly θ
+ization. In order to test the localization network standalone mostly varies between +/- 5 degrees, but may reach almost
+we compute the relative pose between the live and teach 40 degrees on sharp turns. If the network had only learned
+1677
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. A
+1.0
+0.01 n0.9
+o
+uti0.8
+b
+y (meters) 00..0010 ative distri000...567
+target mul0.4
+0.02 predicted loc Cu0.3 predicted loc
+predicted loc + vo predicted loc + vo
+0.2
+0 25 50 75 100 125 150 175 200 0.00 0.01 0.02 0.03 0.04
+BB Vertex Error in y (meters)
+0.6 1.00
+0.4 on0.95
+a (degrees) 000...202 ve distributi000...889050
+thet 0.4 target mulati0.75
+0.6 pprreeddiicctteedd  lloocc + vo Cu0.70 pprreeddiicctteedd  lloocc + vo
+0.8 0.65
+0 A25 50 75 100 1B25 150 175 200 0 1 2 3 4 5 6
+Vertex Error in theta (degrees)
+C
+0.03 target 1.0
+predicted loc
+0.02 predicted loc + voon0.9
+y (meters) 000...000101 mulative distributi0000....5678
+u predicted loc
+0.02 C0.4 predicted loc + vo
+0 25 50 75 100 125 150 175 200 0.000 0.025 0.050 0.075 0.100 0.125 0.150 0.175
+DD Vertex Error in y (meters)
+1.0
+0.5
+n0.9
+o
+theta (degrees) 100...050 tparregdeictted loc umulative distributi00000.....45678 predicted loc
+1.5 predicted loc + vo C0.3 predicted loc + vo
+0 C 25 50 75 Ve1r0t0ex 1D25 150 175 200 0 1Error in t2heta (degr3ees) 4
+Fig. 7: Theﬁgureshowslocalizationresultsforoneofthebetter(top)testsequencesfromtheUTIASInTheDarkdatasetandonewithlargererrors
+(bottom).Weplottherelativeposeestimatesforyandθfromthelocalizationnetwork(blue)aswellasposeestimatesfromcombiningVOandlocalization
+(green)togetherwiththetargetvaluesforasegmentofthefullpath.Theplotsontherightshowthecumulativedistributionoferrorsforthefullpath.
+Theimagepairsontheleftprovideanecdotalexamplesfromthetestsequenceandaremarkedintheplot.
+to randomly return small pose estimates, path following the tables) and one of the cases with the largest errors
+would not be possible due to the difference in relative pose (marked in red). We integrate the results from VO to show
+size on straight road versus turns. Furthermore, repeat speed the full paths in Figures 5 and 6, while Figures 7 and 8
+and the number of repeat keyframes can vary between runs display localization results. For path following, the most
+and so simply replaying previous experiences would also important performance indicators are the lateral and heading
+fail quickly. With these approximate numbers in mind, we errors with respect to the path. For a small segment of
+see that our system achieves low errors across a range each path we plot the target y and θ values against those
+of conditions. For tests across lighting change localizing predicted standalone by the localization network as well as
+evening and night repeats are the most challenging, but they thepathfollowingmethodthatcombinesVOandlocalization
+donotperformmuchworsethantheothercombinations.For network outputs for prediction and correction. We think the
+the seasonal tests we see that the network is able to localize latter method has a smoothing effect on the pose estimates.
+runs as different as winter and spring. These examples show The fact that this method chooses different teach keyframes
+thesystem’spotentialtolocalizeagainstlargeenvironmental forlocalizationthantheoriginalVT&Rsystemmayaccount
+changesdirectlywithoutrelyingonintermediateexperiences. for some of the discrepancy between the two solutions in
+Figure 8. Additionally, we plot the cumulative distribution
+To supplement our quantitative ﬁndings we provide more
+of y and θ errors for the whole test sequence and include
+detailed plots for two test cases from each dataset. We pick
+two example teach-and-repeat image pairs, illustrating the
+one of the best performing test cases (marked in green in
+1678
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. A
+0.125 target 1.0
+0.100 predicted loc
+0.075 predicted loc + vo ution0.8
+b
+y (meters) 000...000025050 ulative distri00..46
+m
+0.025 Cu0.2 predicted loc
+predicted loc + vo
+0.050
+0 25 50 75 100 125 150 175 200 0.00 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08
+BB Vertex Error in y (meters)
+target 1.0
+3 predicted loc
+theta (degrees) 1012 predicted loc + vo mulative distribution000...468
+2 Cu0.2 pprreeddiicctteedd  lloocc + vo
+0 25 A 50 75 100 125 150 175 B200 0.0 0.5 1.0 1.5 2.0 2.5 3.0
+Vertex Error in theta (degrees)
+C
+0.20 1.0
+0.15 n
+0.10 utio0.8
+b
+meters) 00..0005 e distri0.6
+y ( 0.05 ativ0.4
+0.10 target mul
+0.15 pprreeddiicctteedd  lloocc + vo Cu0.2 pprreeddiicctteedd  lloocc + vo
+0.20
+D 0 25 50 75 Ve1r0t0ex 125 150 175 200 0.00 0.05 0.1E0rror0 .i1n5 y (m0.e20ters0).25 0.30 0.35
+6 target 1.0
+predicted loc
+theta (degrees) 2024 predicted loc + vo mulative distribution000...468
+4 Cu0.2 predicted loc
+predicted loc + vo
+0 25 50 75 1C00 125 150 175 2D00 0 2 4 6 8
+Vertex Error in theta (degrees)
+Fig. 8: Theﬁgureshowslocalizationresultsforoneofthebetter(top)testsequencesfromtheUTIASMultiSeasondatasetandonewithlargererrors
+(bottom).Weplottherelativeposeestimatesforyandθfromthelocalizationnetwork(blue)aswellasposeestimatesfromcombiningVOandlocalization
+(green)togetherwiththetargetvaluesforasegmentofthefullpath.Theplotsontherightshowthecumulativedistributionoferrorsforthefullpath.
+Theimagepairsontheleftprovideanecdotalexamplesfromthetestsequenceandaremarkedintheplot.
+challengingenvironmentalchange.ThepathfromtheUTIAS Furthermore, our network can perform localization for input
+In The Dark Dataset has less sharp turns and smaller lateral image pairs from different times of day or seasons without
+path offsets resulting in a smaller signal-to-noise ratio in the the need of intermediate bridging experiences, which are
+data making the value of y harder to predict, see Figure necessary for long-term operation with the original VT&R
+7. Given the RMS errors as well as the plots from the system. From the performance we achieve on these datasets
+example runs, we think that this localization system would webelievethatthelocalizationsystemissufﬁcientlyaccurate
+be sufﬁciently accurate for path following in the loop. for in-the-loop path following.
+Tackling the localization problem across outdoor envi-
+VI. CONCLUSIONANDFUTUREWORK ronmental change is a ﬁrst step in applying deep learning
+more generally to path following. We want to improve the
+In this work, we present a DNN that can perform relative
+technique by enabling transfer to paths not seen during
+pose regression for both VO and localization with respect
+training. Ultimately we aim to close the loop in real time
+to a path in an outdoor environment across illumination and
+withthelocalizationsystemwehavedevelopedinthispaper.
+seasonal change. We collect labels for training and testing
+from a spatio-temporal pose graph generated by VT&R. We ACKNOWLEDGMENT
+conduct experiments across environmental change on two We would like to thank Clearpath Robotics and the Nat-
+outdoor paths. The network carries out VO under different ural Sciences and Engineering Research Council of Canada
+and challenging conditions, including night time driving. (NSERC) for supporting this work.
+1679
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [20] A. Kendall, M. Grimes, and R. Cipolla, “Posenet: A convolutional
+network for real-time 6-dof camera relocalization,” in Proceedings
+of the IEEE international conference on computer vision, 2015, pp.
+[1] P.FurgaleandT.D.Barfoot,“Visualteachandrepeatforlong-range
+2938–2946.
+roverautonomy,”JournalofFieldRobotics,vol.27,no.5,pp.534–
+560,2010.[Online].Available:http://dx.doi.org/10.1002/rob.20342 [21] A. Kendall and R. Cipolla, “Modelling uncertainty in deep learning
+forcamerarelocalization,”inProceedings-IEEEInternationalCon-
+[2] M. Paton, K. MacTavish, C. J. Ostafew, and T. D. Barfoot, “It’s not
+ference on Robotics and Automation, vol. 2016-June. Institute of
+easy seeing green: Lighting-resistant stereo visual teach amp; repeat
+ElectricalandElectronicsEngineersInc.,jun2016,pp.4762–4769.
+usingcolor-constantimages,”in2015IEEEInternationalConference
+onRoboticsandAutomation(ICRA),May2015,pp.1519–1526. [22] ——,“Geometriclossfunctionsforcameraposeregressionwithdeep
+learning,”inProceedings-30thIEEEConferenceonComputerVision
+[3] M. Paton, K. MacTavish, M. Warren, and T. D. Barfoot, “Bridging
+andPatternRecognition,CVPR2017,vol.2017-January. Instituteof
+theappearancegap:Multi-experiencelocalizationforlong-termvisual
+ElectricalandElectronicsEngineersInc.,nov2017,pp.6555–6564.
+teach and repeat,” in 2016 IEEE/RSJ International Conference on
+IntelligentRobotsandSystems(IROS),Oct2016,pp.1918–1925. [23] T. Naseer and W. Burgard, “Deep regression for monocular camera-
+[4] H. Bay, T. Tuytelaars, and L. Van Gool, “Surf: Speeded up robust based 6-dof global localization in outdoor environments,” in 2017
+features,”inEuropeanconferenceoncomputervision. Springer,2006, IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+pp.404–417. (IROS). IEEE,2017,pp.1525–1530.
+[5] L.Clement,J.Kelly,andT.D.Barfoot,“Monocularvisualteachand [24] F. Walch, C. Hazirbas, L. Leal-Taixe, T. Sattler, S. Hilsenbeck, and
+repeataidedbylocalgroundplanarity,”inFieldandServiceRobotics. D.Cremers,“Image-basedlocalizationusinglstmsforstructuredfea-
+Springer,2016,pp.547–561. turecorrelation,”inProceedingsoftheIEEEInternationalConference
+onComputerVision,2017,pp.627–637.
+[6] I.Melekhov,J.Ylioinas,J.Kannala,andE.Rahtu,“Relativecamera
+poseestimationusingconvolutionalneuralnetworks,”inInternational [25] R. Clark, S. Wang, A. Markham, N. Trigoni, and H. Wen, “Vidloc:
+Conference on Advanced Concepts for Intelligent Vision Systems. Adeepspatio-temporalmodelfor6-dofvideo-cliprelocalization,”in
+Springer,2017,pp.675–687. ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+Recognition,2017,pp.6856–6864.
+[7] T.Sattler,W.Maddern,C.Toft,A.Torii,L.Hammarstrand,E.Sten-
+borg, D. Safari, M. Okutomi, M. Pollefeys, J. Sivic et al., “Bench- [26] M. Patel, B. Emery, and Y. Y. Chen, “ContextualNet: Exploiting
+marking 6dof outdoor visual localization in changing conditions,” in contextual information using LSTMs to improve image-based local-
+ProceedingsoftheIEEEConferenceonComputerVisionandPattern ization,”inProceedings-IEEEInternationalConferenceonRobotics
+Recognition,2018,pp.8601–8610. and Automation. Institute of Electrical and Electronics Engineers
+[8] M. Dymczyk, E. Stumm, J. Nieto, R. Siegwart, and I. Gilitschenski, Inc.,sep2018,pp.5890–5896.
+“Willitlast?learningstablefeaturesforlong-termvisuallocalization,” [27] A.Krizhevsky,I.Sutskever,andG.E.Hinton,“Imagenetclassiﬁcation
+in 2016 Fourth International Conference on 3D Vision (3DV), Oct with deep convolutional neural networks,” in Advances in neural
+2016,pp.572–581. informationprocessingsystems,2012,pp.1097–1105.
+[9] N. Su¨nderhauf, S. Shirazi, A. Jacobson, F. Dayoub, E. Pepperell, [28] Q. Bateux, E. Marchand, J. Leitner, F. Chaumette, and P. Corke,
+B. Upcroft, and M. Milford, “Place recognition with convnet land- “Training deep neural networks for visual servoing,” in 2018 IEEE
+marks:Viewpoint-robust,condition-robust,training-free,”inRobotics: InternationalConferenceonRoboticsandAutomation(ICRA). IEEE,
+ScienceandSystems,2015. 2018,pp.1–8.
+[10] P.-E.Sarlin,C.Cadena,R.Siegwart,andM.Dymczyk,“Fromcoarse [29] V. Mohanty, S. Agrawal, S. Datta, A. Ghosh, V. D. Sharma, and
+toﬁne:Robusthierarchicallocalizationatlargescale,”inProceedings D. Chakravarty, “Deepvo: A deep learning approach for monocular
+oftheIEEEConferenceonComputerVisionandPatternRecognition, visualodometry,”ArXiv,vol.abs/1611.06069,2016.
+2019,pp.12716–12725. [30] S.Wang,R.Clark,H.Wen,andN.Trigoni,“End-to-end,sequence-to-
+[11] N.Piasco,D.Sidibe´,V.Gouet-Brunet,andC.Demonceaux,“Learning sequenceprobabilisticvisualodometrythroughdeepneuralnetworks,”
+scene geometry for visual localization in challenging conditions,” in TheInternationalJournalofRoboticsResearch,vol.37,no.4-5,pp.
+2019 International Conference on Robotics and Automation (ICRA). 513–542,2018.
+IEEE,2019,pp.9094–9100. [31] H. Zhan, R. Garg, C. S. Weerasekera, K. Li, H. Agarwal, and I. M.
+[12] M.Dusmanu,I.Rocco,T.Pajdla,M.Pollefeys,J.Sivic,A.Torii,and Reid, “Unsupervised Learning of Monocular Depth Estimation and
+T.Sattler,“D2-net:Atrainablecnnforjointdescriptionanddetection VisualOdometrywithDeepFeatureReconstruction,”inProceedings
+oflocalfeatures,”inProceedingsoftheIEEEConferenceonComputer of the IEEE Computer Society Conference on Computer Vision and
+VisionandPatternRecognition,2019,pp.8092–8101. PatternRecognition. IEEEComputerSociety,dec2018,pp.340–349.
+[13] Z. Luo, T. Shen, L. Zhou, J. Zhang, Y. Yao, S. Li, T. Fang, and [32] G. Iyer, J. Krishna Murthy, G. Gupta, K. Madhava Krishna, and
+L. Quan, “Contextdesc: Local descriptor augmentation with cross- L.Paull,“Geometricconsistencyforself-supervisedend-to-endvisual
+modality context,” in Proceedings of the IEEE Conference on Com- odometry,”inIEEEComputerSocietyConferenceonComputerVision
+puterVisionandPatternRecognition,2019,pp.2527–2536. andPatternRecognitionWorkshops,vol.2018-June. IEEEComputer
+[14] J.Revaud,P.Weinzaepfel,C.DeSouza,N.Pion,G.Csurka,Y.Cabon, Society,dec2018,pp.380–388.
+and M. Humenberger, “R2d2: Repeatable and reliable detector and [33] G.Costante,M.Mancini,P.Valigi,andT.A.Ciarfuglia,“Exploring
+descriptor,”arXivpreprintarXiv:1906.06195,2019. RepresentationLearningWithCNNsforFrame-to-FrameEgo-Motion
+[15] J. L. Scho¨nberger, M. Pollefeys, A. Geiger, and T. Sattler, “Seman- Estimation,”IEEERoboticsandAutomationLetters,vol.1,no.1,pp.
+tic visual localization,” in Proceedings of the IEEE Conference on 18–25,dec2015.
+ComputerVisionandPatternRecognition,2018,pp.6896–6906. [34] V.PeretroukhinandJ.Kelly,“Dpc-net:Deepposecorrectionforvisual
+[16] M. Larsson, E. Stenborg, C. Toft, L. Hammarstrand, T. Sattler, and localization,”IEEERoboticsandAutomationLetters,vol.3,no.3,pp.
+F. Kahl, “Fine-grained segmentation networks: Self-supervised seg- 2424–2431,July2018.
+mentationforimprovedlong-termvisuallocalization,”inProceedings [35] V.Peretroukhin,B.Wagstaff,andJ.Kelly,“Deepprobabilisticregres-
+oftheIEEEInternationalConferenceonComputerVision,2019,pp. sionofelementsofso(3)usingquaternionaveraginganduncertainty
+31–41. injection,”inProceedingsoftheIEEEConferenceonComputerVision
+[17] R.Arandjelovic,P.Gronat,A.Torii,T.Pajdla,andJ.Sivic,“Netvlad: andPatternRecognitionWorkshops,2019,pp.83–86.
+Cnn architecture for weakly supervised place recognition,” in Pro- [36] Z. Laskar, I. Melekhov, S. Kalia, and J. Kannala, “Camera Relocal-
+ceedings of the IEEE conference on computer vision and pattern ization by Computing Pairwise Relative Poses Using Convolutional
+recognition,2016,pp.5297–5307. NeuralNetwork,”inProceedings-2017IEEEInternationalConfer-
+[18] L. Clement and J. Kelly, “How to train a cat: Learning canonical enceonComputerVisionWorkshops,ICCVW2017,vol.2018-January.
+appearancetransformationsfordirectvisuallocalizationunderillumi- Institute of Electrical and Electronics Engineers Inc., jan 2018, pp.
+nationchange,”IEEERoboticsandAutomationLetters,2017. 920–929.
+[19] R.Li,S.Wang,andD.Gu,“Ongoingevolutionofvisualslamfrom [37] V. Balntas, S. Li, and V. Prisacariu, “Relocnet: Continuous metric
+geometry to deep learning: Challenges and opportunities,” Cognitive learning relocalisation using neural nets,” in Proceedings of the
+Computation, vol. 10, no. 6, pp. 875–889, Dec 2018. [Online]. European Conference on Computer Vision (ECCV), 2018, pp. 751–
+Available:https://doi.org/10.1007/s12559-018-9591-8 767.
+1680
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. [38] S.Saha,G.Varma,andC.V.Jawahar,“Improvedvisualrelocalization
+bydiscoveringanchorpoints,”inBMVC,2018.
+[39] G. L. Oliveira, N. Radwan, W. Burgard, and T. Brox, “Topometric
+localizationwithdeeplearning,”ArXiv,vol.abs/1706.08775,2017.
+[40] A.Valada,N.Radwan,andW.Burgard,“DeepAuxiliaryLearningfor
+Visual Localization and Odometry,” in Proceedings - IEEE Interna-
+tionalConferenceonRoboticsandAutomation. InstituteofElectrical
+andElectronicsEngineersInc.,sep2018,pp.6939–6946.
+[41] X. Li, S. Wang, Y. Zhao, J. Verbeek, and J. Kannala, “Hierarchical
+scenecoordinateclassiﬁcationandregressionforvisuallocalization,”
+2019.
+[42] E. Brachmann and C. Rother, “Expert sample consensus applied to
+camera re-localization,” in Proceedings of the IEEE International
+ConferenceonComputerVision,2019,pp.7525–7534.
+[43] K.He,X.Zhang,S.Ren,andJ.Sun,“SpatialPyramidPoolinginDeep
+Convolutional Networks for Visual Recognition,” IEEE Transactions
+onPatternAnalysisandMachineIntelligence,vol.37,no.9,pp.1904–
+1916,sep2015.
+[44] D.KingmaandJ.Ba,“Adam:Amethodforstochasticoptimization,”
+InternationalConferenceonLearningRepresentations,122014.
+1681
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:59:13 UTC from IEEE Xplore.  Restrictions apply. 

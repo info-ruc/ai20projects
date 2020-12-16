@@ -1,0 +1,538 @@
+   
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Pinbot: A Walking Robot with Locking Pin Arrays for Passive 
+Adaptability to Rough Terrains 
+Seonghoon Noh, Student Member, IEEE and Aaron M. Dollar, Senior Member, IEEE 
+d  Abstract— To date, many control strategies for legged robots 
+have  been  proposed  for  stable  locomotion over  rough  and 
+unstructured  terrains.  However,  these  approaches  require 
+sensing information throughout locomotion, which may be noisy 
+or unavailable at times. An alternative solution to rough terrain 
+locomotion is a legged robot design that can passively adapt to 
+the variations in the terrain without requiring knowledge of 
+them. This paper presents one such solution in the design of a 
+walking robot that employs pin array mechanisms to passively 
+adapt to rough terrains. The pins are passively dropped over the 
+terrain to conform to its variations and then locked to provide a 
+statically stable stance. Locomotion is achieved with parallel 
+four-bar  linkages  that  swing  forward  the  platforms  in  an 
+alternating  manner.  Experimental  evaluation  of  the  robot 
+demonstrates that the pin arrays enable legged locomotion over 
+rough terrains under open-loop control. 
+ 
+I.  INTRODUCTION 
+Figure 1. The walking robot standing with three pin arrays 
+The mechanical design and control strategy for legged 
+flexures, have been used to assist in walking, climbing, and 
+robots  are  often  closely  tied,  giving  rise  to  various 
+standing over rocky terrains in various situations. Kim et al. 
+maneuvering capabilities. Some recent legged robots such as 
+designed SpinybotII, a wall-climbing robot, with compliant 
+the MIT Cheetah 3 [1] and ANYmal [2] feature the prominent 
+microspines  that  engage  the  asperities  on  vertical,  rough 
+universal-revolute leg topology. Thanks to the use of elaborate 
+surfaces to cling without actuation and to climb while carrying 
+control methods necessitated by the high number of joints and 
+a payload of its own weight [7]. Carpenter et al. have also 
+actuators in these robots, they are able to achieve impressive 
+utilized arrays of compliant microspines for locomotion over 
+dynamic maneuvers. In contrast, designs intended for more 
+rough, vertical surfaces but in a rotary configuration as in a 
+quasi-static  locomotion  have  also  enabled  legged  robot 
+wheel [8]. Another variation known as a linearly-constrained 
+locomotion  while  allowing  a  simpler  control  approach, 
+spine mechanism also consists of sharp, needle-like tips but 
+sometimes even open-loop. Notable examples of these include 
+are constrained to prismatic motion and uses compression 
+RHex [3], a hexapod robot with compliant, arched legs for 
+springs for compliance. Wang et al. used this mechanism to 
+rough terrain locomotion, and Sprawlita [4], a robot with 
+assist a human-scale robot in walking over rough terrains [9, 
+pneumatically  actuated  prismatic  legs  and  compliant  hip 
+10]. Other unique applications of microspines include those 
+joints. 
+designed by Parness et al. as anchors for the JPL LEMUR IIb 
+One mechanism that has not yet been explored in legged  robot  for  exploration  and  drilling  in  microgravity 
+robots is a pin array, but it has been briefly explored in a few  environments like asteroids [11] and microspines in a grapple 
+other  robotic  applications.  Perhaps  the  earliest  robotic  created by Nguyen et al. for perching in aerial robots [12]. 
+application of a pin array was a universal gripper concept 
+In this work, we present the design of a walking robot that 
+named the ‘Omnigripper’ [5] in which two surfaces consisting 
+uses pin arrays to passively adapt to rough terrains during 
+of pin arrays are lowered onto an object to adapt to its top 
+locomotion. The pins are released to passively drop onto the 
+surface and then closed like a parallel gripper for grasping. A 
+terrain and are “locked” using a locking plate that applies a 
+more recent adaption of pin arrays in a universal gripper was 
+lateral force on them. The locked pins support a statically 
+presented  in  [6].  In  this  universal  gripper,  pins  with  an 
+stable stance while other pins are moved forward via a parallel 
+elliptical  cross  section  are  arranged  perpendicularly  for 
+four-bar linkage in an alternating stance gait. We first discuss 
+jamming through relative rotation. The jammed pins then 
+the pin array mechanism and its design parameters. We then 
+provide the necessary lateral force for grasping objects. 
+present the locomotion mechanism and the corresponding 
+In mobile robots, a slightly different mechanism known as  locomotion strategy. Lastly, we demonstrate the pin arrays’ 
+microspines,  which  are  small,  sharp  tips  with  compliant  ability to passively adapt to rough terrains. 
+This work was supported in part by the National Science Foundation,  II.  PIN ARRAY MECHANISM 
+grant IIS-1637647. 
+A pin array in this work is a set of densely populated 
+S. Noh and A. Dollar are with the Department of Mechanical Engineering 
+prismatic joints whose stroke is unactuated and is specified 
+and Materials Science, Yale University, New Haven, CT 06520 USA (e-
+mail: seonghoon.noh, aaron.dollar@yale.edu).  by the pins’ contact with the environment or lack thereof, i.e., 
+ 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1438
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply.    
+below the locking plate. At 
+(a)  (b)  (c) 
+the  other  end,  the  locking 
+plate is displaced with respect 
+to the other two support plates 
+and is jamming the pins. 
+While  this  is a function 
+generation problem in linkage 
+synthesis,  it  is  sufficient  to 
+  create a linkage that has the 
+following  characteristics 
+Figure 2. (a) A pin array in swing phase hovers over a rough terrain. (b) 
+The pins are released to fall under their weight and passively adapt to  because only the two ends of 
+the terrain. (c) The locking plate (white) is pulled horizontally to lock  the  motion  range  are  of 
+the pins.  interest.  The  transmission 
+ 
+angles  across  the  linkage 
+resting on a surface or being suspended in air. Instead, the 
+should seek to maximize the  Figure 3.The six-bar linkage for 
+actuation in a pin array mechanism locks the pins such that  locking. A DC motor actuates 
+locking force when the slider 
+their stroke remains fixed. By passively dropping onto and  the  input  link  (orange)  to 
+link  is  approaching  the 
+conforming to the terrain rather than being actuated by a  translate  the  locking  plate 
+locking  configuration.  The  (green) and jam the pins. 
+motor or a spring, the pin arrays achieve passive adaptability 
+motion range of the slider link 
+and thus reduce the likelihood of postural disturbance due to 
+should be great enough to contact as many pins as possible. 
+ground reaction forces. Moreover, the pins’ vertical, prismatic 
+Given these conditions, the lateral force on the locking plate is 
+orientation suggests several favorable attributes for legged 
+approximately multiplied by the mechanical advantage of the 
+locomotion such as constrained vertical linear motion for 
+lever colored in cyan in Figure 3. 
+obstacle clearance and minimal horizontal forces. 
+B.  Pin array density 
+A.  Pin array locking mechanism 
+The density of the pin array primarily affects the pin 
+The pin locking strategy in this work embodies a principle 
+arrays’ ability to support the robot’s weight and to passively 
+similar to that of other material jamming mechanisms seen in 
+adapt to terrains. As described previously, the pins are jammed 
+variable stiffness robots. One notable example is the universal 
+by a locking plate that is actuated to move laterally against the 
+gripper based on granular jamming by Brown et al. [13]. 
+pins, and the resulting frictional force locks the pins. This 
+Follmer et al. and Stanley et al. have used particle jamming to 
+locking method induces a double shear stress on the pins. 
+modulate the stiffness of tactile user interfaces [14, 15]. Kim 
+Assuming that the locking plate and the pins are perfectly 
+et  al.  used  layer  jamming  to  create  a  variable  stiffness 
+perpendicular and  that the  shear  stress  is evenly divided 
+mechanism for applications in minimally invasive surgeries 
+between the two shear planes, the shear stress in a single shear 
+[16]. 
+plane for each pin is given 𝜏𝜏by=  𝐹𝐹
+In contrast to these jamming mechanisms which constrain  2𝑁𝑁𝜋𝜋𝜋𝜋2
+continuous or discrete, adjacent bodies, the pin array locking      (1) 
+mechanism must constrain discrete, separated bodies. The 
+where F is the lateral force applied by the locking plate, N is 
+mechanism must also be able to exert a sufficient force parallel 
+the number of pins in the array, and r is the radius of the pin. 
+to the pins to support the weight of the robot. Since the pins 
+will have different strokes when standing on a rough terrain,  Clearly, the minimum locking force to support the robot 
+the locking mechanism must not be dependent on the pins’  weight depends on the coefficient of friction between the 
+length. Such mechanism would confine its motion to a plane  locking plate and the pins. For a given coefficient of friction, 
+perpendicular to the pins’ motion.  the locking force should be sufficiently high to prevent the pins 
+from slipping but not too high that the pins fail in shear. 
+A one degree-of-freedom locking mechanism may consist 
+Calculating this range of allowable forces can be difficult since 
+of numerous, coupled components that individually constrain 
+not all pins will experience the same force due to variations in 
+the pins or a monolithic component that can affect the pins 
+their pose upon locking and/or variations in the locking plate. 
+simultaneously.  The  former  can  quickly  result  in  a 
+Also, simply using a stronger pin material can unnecessarily 
+complicated  design  since  the  pins  are  expected  to  be 
+increase the total weight, which in turn increases the required 
+compactly placed. As for the latter, an appropriate, monolithic 
+locking force. Therefore, a high pin array density is required 
+component already exists in a pin array assembly: the pin array 
+to use a light pin material and to distribute the shear stress 
+support plates. Therefore, a pin array support plate can be 
+among the pins supporting the robot’s weight. 
+added to jam the pins by applying a lateral force on the pins to 
+lock them via friction.  One consequence of a high pin density is the likelihood that 
+some pins will not lock at all. Since the force exerted on each 
+The locking mechanism that translates this locking plate is 
+pin is approximately proportional to the amount of axial 
+a six-bar rocker-slider linkage, shown in Figure 3 and is driven 
+misalignment between the holes in the fixed support plates and 
+by a small DC motor. The two additional links in comparison 
+the moving locking plate, not all pins will have enough friction 
+to a typical four-bar rocker-slider linkage allow the motor to 
+to support their own weight. Thus, these unlocked pins will not 
+be placed above the pin array. At one end of the rocker’s 
+share the shear force nor will they support the weight of the 
+motion range, the locking plate ideally is perfectly aligned 
+robot. The minimum force the locking plate must apply on the 
+with the other two pin array support plates that lie above and 
+1439
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply.    
+𝜇𝜇
+𝑠𝑠
+pins to support the robot’s total mass, m, is dependent on  , 
+First gait phase  Second gait phase 
+the coefficient of static friction between the locking plate and 
+the pins. Therefore, the average minimum shear stress in a  (a)  (b) 
+shear plane of a locked pi𝜏𝜏n is=  𝑚𝑚𝑚𝑚
+𝑎𝑎 2𝑛𝑛𝜇𝜇 𝜋𝜋𝜋𝜋2
+  𝑠𝑠   (2) 
+ 
+where n is the number of actually locked pins.   
+III.  LOCOMOTION 
+(c)  (d) 
+In this section, we develop the design and control strategy 
+for a walking robot that can achieve locomotion under open-
+loop control by leveraging the passive adaptability of the pin 
+array mechanism. The walking robot in this work adopts a 
+   
+statically stable gait to accommodate the locking speed of the 
+pin  array  mechanism  prototype  and  to  evaluate  its 
+performance without requiring a complex control method. We 
+(e)  (f) 
+discuss how multiple pin array mechanisms can be combined 
+and coordinated to achieve rough terrain locomotion. 
+A.  Pin array layout 
+   
+The layout and the number of pin arrays must be such that 
+the robot can maintain stability during locomotion, so we look 
+to a stability metric for selecting the configuration. Several  robot center of gravity  pin array center of gravity 
+stability  metrics  for  legged  robots  have  been  previously  stance phase pin array   swing phase pin array 
+proposed, but two prominent metrics include the stability 
+current support polygon 
+margin proposed by McGhee and Frank [17] and the energy 
+ 
+stability margin proposed by Messuri and Klein [18]. Without 
+a priori knowledge of the terrain and with countlessly different  Figure 4. Top views of three possible pin array layouts and their support 
+polygon during the two gait phases. The two pin array layout (a, b) 
+types of terrain, the design of the pin array layout can only be 
+cannot maintain static stability whereas the three (c, d) or four (e, f) pin 
+guided by the stability margin by assuming a flat terrain for  array layouts can always be statically stable. 
+now. However, the importance of the energy stability margin 
+will become more apparent when the locking mechanism of  Figure 4 contains diagrams of the robot support polygon 
+the pin array is evaluated.  before and after the stance switching for three different layouts 
+that are joined by some abstract locomotion mechanism not 
+The stability margin is the perpendicular distance between 
+illustrated. A suitable layout should use the minimum number 
+the robot’s center of gravity projected onto a horizontal plane 
+of pin arrays while keeping the projected robot center of 
+and an edge of the support polygon, a convex polygon created 
+gravity within the support polygon. It is clear that the design 
+by the robot’s ground contacts. The energy stability margin 
+with two pin arrays presents the classic control problem of a 
+extends the stability margin to uneven terrains and is the 
+bipedal robot, for which additional bodies must be controlled 
+energy required for the robot’s center of gravity to rotate over 
+to balance the robot. Therefore, this configuration is not a 
+the corresponding edge of the support boundary, a 3D convex 
+feasible design for a statically stable locomotion. The designs 
+hull formed by the footholds. The energy stability margin is as 
+with three and four pin arrays can both maintain static stability 
+𝑆𝑆 =𝑚𝑚𝑚𝑚|𝑅𝑅|(1−𝑐𝑐𝑐𝑐𝑐𝑐𝑐𝑐)𝑐𝑐𝑐𝑐𝑐𝑐𝑐𝑐
+follows 
+at all times, but the former is chosen to keep the robot design 
+𝐸𝐸
+    (3)  minimal. 
+where R is the vector from the midpoint of AB, an edge formed  B.  Locomotion mechanism 
+by two adjacent footholds to the robot’s center of gravity and  Unlike common leg mechanisms in legged robots, a pin 
+θ and ψ are the angles by which R is rotated to lie in the vertical  array mechanism cannot accomplish locomotion alone since 
+plane and to align with the vertical axis respectively.  the pins can only move vertically. However, the pin array 
+walker is by no means the first to require a separate locomotion 
+Although  legged  robots  with  statically  stable  gaits 
+mechanism.  Ambler,  a  large  six-legged  robot,  rotated  its 
+typically have at least four legs, we desire to keep the pin array 
+vertical, prismatic legs in the body plane for locomotion [19]. 
+layout and the required locomotion mechanism as minimal as 
+Another locomotion strategy is to horizontally translate one 
+possible. Therefore, we select the pin array layout from three 
+frame or platform forward while keeping another in stance in 
+candidate configurations: two, three, and four pin arrays. By 
+an  alternating  manner.  This  method  was  adopted  by  a 
+representing a pin array as a rectangular arrangement of pins, 
+planetary  rover  prototype  dubbed  the  “walking  beam” 
+the support polygon of the robot can be found as a polygon 
+developed  by  the  Martin-Marietta  Corporation,  which 
+consisting  of  the  outermost  corner  pins  in  stance  phase. 
+regrettably does not have a citable publication, and by another 
+Furthermore,  with  a  predominantly  symmetric  pin  array 
+legged robot from our previous work [20]. 
+assembly, the center of gravity for each pin array can be 
+approximated to be at its centroid, and the robot’s total center  However, unlike these aforementioned legged robots, the 
+of gravity can be easily determined.  pin array walker does not have the ability to retract its legs, the 
+1440
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply.    
+pins, once they are released, so it requires an upward motion 
+during the gait cycle to allow the pins to clear any obstacles in 
+front of them. Therefore, a parallel four-bar linkage is used to 
+join each of the two side pin arrays to the center pin array. The 
+linkage rotates half a revolution and then stops to allow the 
+side and center pin arrays to switch their gait phase, as shown 
+in Figure 4. The parallel four-bar linkage was chosen for its 
+simple design and actuation that can provide the cyclical 
+motion needed for an alternating gait. 
+The length of the two rotating links in the four-bar linkage 
+determines the required input torque for locomotion, the stride 
+length, and the maximum obstacle clearance height.  It also 
+affects the stability margin of the robot because the robot’s 
+ 
+center of gravity can approach or cross over the edges of the 
+Figure 6. A rendering of the locomotion mechanism 
+support  polygon  during  locomotion.  Without  strict 
+performance  requirements,  the  design  of  the  locomotion 
+array assembly respectively. In this prototype, only about half 
+mechanism was guided by the motor’s available torque and the 
+of the pin’s total length is usable for passively adapting to the 
+stability margin of the robot at its designed scale. 
+terrain, which is about 0.96 inches. The mass of each side pin 
+C.  Gait cycle  array and the center pin array is 149 grams and 521 grams 
+respectively, totaling in 819 grams. 
+Because the prismatic motion of the pins is unactuated and 
+the robot begins its locomotion with its pins pushed in, the pins  The  actuation  unit  for  the  locomotion  mechanism  is 
+must be allowed to fully release initially such that subsequent  located on  the center pin  array. Timing belts couple the 
+half revolutions of the linkage will continue to allow the pins  rotation of the parallel links in the four-bar linkages to ensure 
+to drop fully and utilize their full length. Therefore, the linkage  continuous motion past the singularity, and a metal bevel gear 
+first rotates from a horizontal configuration to an angle less  train drives the two linkages. The length of the rotating links 
+than 180o to allow maximum extension of the pins. This angle  in the linkage gives a stride length of 23 mm. Each pair of 
+can be quickly found based on the length of the pins at  adjacent pulleys has its own timing belt, and the timing belts 
+maximum extension, the kinematic parameters of the parallel  are tensioned by sliding out the outer pulleys. Deflection of the 
+four-bar  linkage  and  the  robot’s  design  parameters.  To  acrylic base due to the belt tensioning is reduced by reinforcing 
+minimize the impulse on the pin arrays during switching due  it with aluminum bars. 
+to impact with the ground, the angle should allow the pins to 
+L293D H-bridge chips on an Arduino prototype shield are 
+fully contact the ground. 
+used for the motor control. Position control of the DC motor 
+IV.  ROBOT PROTOTYPE  for locomotion is implemented with a PID controller on an 
+Arduino Uno. The PID control’s command is limited to a 
+The robot consists of three pin arrays that are joined by two 
+maximum value to maintain a quasi-static locomotion. Due to 
+parallel four-bar linkages that enable locomotion. The pin 
+the resulting low angular speed of the DC motor, the integral 
+arrays are made from commercially available plastic pins and 
+term is also limited to a maximum value to prevent integral 
+laser-cut  acrylic  sheets  for  a  convenient  manufacturing 
+windup. The small DC motors for the locking linkages are 
+process. A small DC motor actuates each locking linkage. The 
+actuated to stall and then turned off to avoid damage. The robot 
+side pin arrays have a small counterweight to balance the 
+is powered with an external, benchtop power supply. 
+weight distribution due to an asymmetric design. Maximum 
+retraction and extension of the pins are determined by the 
+height of the top plate and the three lower plates of the pin  V.  EVALUATION 
+A.  Pin array mechanism 
+We first evaluate the pin array’s locking mechanism and 
+its implications on the stability of the robot. Because the 
+diameter of the pinholes in the support and locking plates 
+dictates whether the locking plate can contact every pin with 
+a sufficient lateral force, numerous fabrication iterations (all 
+using a laser cutter) were required to improve the uniformity 
+of the locking force distribution while minimizing the friction 
+on the pins during the release. Despite these iterations, only a 
+portion of the pins could be locked. 
+Figure 7 shows an image of a locked pin array after it was 
+oriented upside down to allow the ineffectively locked pins to 
+slide  out.  For  every  locked  pin  array,  there  often  were 
+alternating rows of locked and unlocked pins, resulting in a 
+higher average shear stress in the locked pins. This may be 
+attributed to the arrangement pattern of the pins on the plates. 
+Figure 5. A rendering of a pin aray assembly 
+1441
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply.    
+TABLE I.   MAXIMUM LOAD SUPPORTED BY A PIN ARRAY 
+Left pin array  Center pin array  Right pin array 
+1450 g  1050 g  1350 g 
+ 
+Quantitative  evaluation  of  the  pin  array  mechanism 
+involved measuring the maximum load supported by different 
+areas of the pin arrays: the four corner and center areas, each 
+of which consists of about thirty pins. The pin arrays were 
+locked  at  maximum  extension  and  placed  upside  down. 
+Calibration  weights  were  placed  directly  on  the  pins  in 
+increments  of  10  grams  and  then  50  grams  over  the 
+corresponding region to determine the maximum load. For 
+measuring the maximum load for an entire pin array, a thin, 
+acrylic plate was placed over all pins to distribute the weight. 
+Table I reports the maximum load supported by each of 
+  the three pin arrays. The two side pin arrays supported a 
+similar amount, but the center pin array supported much less. 
+Figure 7. A bottom view of a locked pin array after being rotated upside 
+This may be attributed to the moment induced on the locking 
+down to check for unlocked pins. The pins extending out towards the 
+viewer are the locked pins.  plate by the offset between the midplane and the plane of the 
+locking linkage in the center pin array. This moment may 
+It can also be observed in Figure 7 that not all of the four  have exacerbated the misalignment in the center pin array, 
+corner pins, or even their adjacent pins, are locked. This  reducing its effectiveness. 
+shows that the support polygon of the robot is not constant 
+Figure 9 presents the measurements from the maximum 
+and often smaller than the theoretical support polygon.  
+load  test  as  a  visual  representation of  the locking  force 
+Several factors contribute to this observation in the pin  distribution discretized across the regions of the pin arrays. 
+array  mechanism.  The  aforementioned  tolerance  in  the  While the center regions could support loads comparable to 
+pinhole diameter necessary for allowing all pins to release  the maximum measured in each pin array, some of the corner 
+smoothly creates enough gap between the holes and the pins  regions could only support a fraction of the maximum values 
+such that the pins can have random angular misalignments  or even none at all. This diagram reveals that an actual support 
+with respect to the vertical plane. Thus, the lateral locking  polygon constructed from the convex hull of the pins is not 
+force on each pin is not completely perpendicular to its side,  representative of the robot’s stability during locomotion even 
+which produces different frictional forces on the pins. The  over a flat terrain. 
+tolerance also creates differences in the axial misalignment of 
+Extending this comparison to the energy stability margin, 
+the pinholes, which affects the lateral force exerted on each 
+one may recall that it quantifies the energy required to rotate 
+pin. 
+and topple a rigid body over a given edge formed by two 
+The pin arrays’ passive adaptability to arbitrary features  adjacent  footholds.  Whereas  the  energy  stability  margin 
+can be observed in Figure 8, in which a pin array stands on  captures the stability of a fixed robot configuration, i.e., rigid 
+rock-like objects and on human fingers. In both situations, the  legs, the stability metric represented by Figure 9 is more 
+pin array was simply placed over the objects and locked.  conservative and accurate in that it shows the maximum force 
+Because the motion of the pins induces a negligible amount  under  which  a  region  of  the  support  boundary  will  be 
+of ground reaction force, postural stability is maintained  compromised. Thus, it may be useful to obtain an updated 
+regardless of the terrain features. Applications for the pin  stability metric that also considers the reconfigurability of leg 
+array’s  passive  adaptability  can  range  from  standing  on  mechanisms such as a pin array. 
+numerous, small asperities to maintaining a stable foothold on 
+a non-flat surface. Of course, this does not consider the 
+frictional forces necessary to maintain a fixed ground contact, 
+which will be discussed in the next section.  100 g 110 g
+0 g 130 g 220 g 120 g 180 g
+220 g 0 g 220 g 190 g
+280 g 230 g 250 g 100 g
+ 
+ 
+Figure 9. Maximum load supported by each region of the three pin arrays. 
+Figure 8. Side views of a pin array passively adapting to rough, rock-like  The red regions consistently did not have enough locked pins to place a 
+features (left) and a human hand (right).  calibration weight over the area. 
+1442
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply.    
+ 
+Figure 10. Views of the robot walking over wooden blocks. In the left image, the center pin array partially lands over a wooden block and adapts to the 
+height difference between the its front and rear pins. In the center image, the side pin arrays are seen adapting to the wooden block in a similar manner. 
+In the right image, the side pin arrays are standing between two wooden blocks. 
+B.  Locomotion 
+A  more  effective  pin  array  mechanism  can  provide  a 
+The robot’s ability to walk was tested over two terrains: a  consistent support boundary like that of a fully-actuated robot, 
+smooth, level terrain and a terrain with obstacles. In both  while maintaining passive adaptability, a useful trait in rough 
+situations, the robot used the same, fixed gait parameters and  terrain locomotion. The results presented here also identified 
+did not utilize any sensing or planning. By doing so, the tests  a need for a legged robot stability metric that can quantify the 
+highlighted the benefits of passive adaptability of the pin  reconfigurability in robot legs, which could be a fruitful topic 
+arrays in rough terrain locomotion.  for future research. 
+The robot walked over the smooth terrain effortlessly and  The current design assumes there is no drastic change in 
+exhibited minimal changes in its posture. When walking over  the  terrain’s  overall  slope.  To  consider  the  problem  of 
+the terrain with obstacles, the robot benefited from the passive  locomotion over changing slopes while adapting to smaller 
+adaptability of the pin arrays to support its stance without any  asperities, a more appropriate locomotion mechanism will 
+footstep planning. This can be observed in Figure 10 that  need to be implemented. The design also lacks to ability to 
+depicts the robot’s locomotion over wooden blocks with a  steer or control its yaw rotation, which is a necessary function 
+nominal thickness of 0.5”. In the left image, the center pin  for mobile robots. Optimization of the pin array size and 
+array has partially landed over a wooden block when it enters  density may be useful after material properties and other 
+the stance phase. Despite the height difference between the  design parameters are finalized. 
+front and rear parts of the pin array, the pins extend to 
+different lengths according to the terrain. The center image  REFERENCES 
+provides a clear view of this behavior in the side pin arrays. 
+[1]  G. Bledt, M. J. Powell, B. Katz, J. Di Carlo, P. M. Wensing and S. 
+The right image shows the side pin arrays standing in between 
+Kim, "MIT Cheetah 3: Design and Control of a Robust, Dynamic 
+wooden blocks to their front and rear. 
+Quadruped Robot," 2018 IEEE/RSJ International Conference on 
+Intelligent Robots and Systems (IROS), Madrid, 2018, pp. 2245-2252. 
+During these tests, the pin array walker demonstrated the 
+[2]  M. Hutter et al., "ANYmal - a highly mobile and dynamic 
+need for better traction and a method for adapting to changing 
+quadrupedal robot," 2016 IEEE/RSJ International Conference on 
+slopes.  The  robot  was  occasionally  observed  undergoing 
+Intelligent Robots and Systems (IROS), Daejeon, 2016, pp. 38-44. 
+undesired  yaw  rotation  upon  collision  with  the  terrain.  [3]  Saranli, U., Buehler, M., and Koditschek, D. E., 2001, “RHex: A 
+Depending on the type of asperities on the terrain, pins with  Simple and Highly Mobile Hexapod Robot,” Int. J. Rob. Res., 20(7), 
+sharper tips or tips with a friction material may be required.  pp. 616–631. 
+Also,  the  rotating  motion  of  the  locomotion  mechanism  [4]  Cham, J. G., Bailey, S. A., Clark, J. E., Full, R. J., and Cutkosky, M. 
+R., 2002, “Fast and Robust: Hexapedal Robots via Shape Deposition 
+imparted some horizontal velocity to the pins, sometimes 
+Manufacturing,” Int. J. Rob. Res., 21(10-11), pp. 869–882. 
+causing them to deflect or jam with the terrain features. This 
+[5]  Scott, Peter B. “The 'Omnigripper': a form of robot universal gripper.” 
+either resulted in some postural disturbance or a yaw rotation. 
+Robotica 3 (1985): 153-158. 
+[6]  Mo, An, and Wenzeng Zhang. “A Novel Universal Gripper Based on 
+VI.  CONCLUSION AND FUTURE WORK  Meshed Pin Array.” International Journal of Advanced Robotic 
+Systems, Mar. 2019. 
+In this work, we presented the design of a walking robot  [7]  Sangbae Kim, A. T. Asbeck, M. R. Cutkosky and W. R. Provancher, 
+that can passively adapt to rough terrains using pin arrays. The  "SpinybotII: climbing hard walls with compliant microspines," ICAR 
+robot  successfully  maneuvered  over  obstacles  and  '05. Proceedings., 12th International Conference on Advanced 
+demonstrated high adaptability to various terrain features  Robotics, 2005., Seattle, WA, 2005, pp. 601-606. 
+under open-loop control. Evaluation of the robot indicated  [8]  K. Carpenter, N. Wiltsie and A. Parness, "Rotary Microspine Rough 
+Surface Mobility," in IEEE/ASME Transactions on Mechatronics, vol. 
+that while the pin array walker can support several times its 
+21, no. 5, pp. 2378-2390, Oct. 2016. 
+own weight, the uneven distribution of the locking force 
+[9]  S. Wang, H. Jiang and M. R. Cutkosky, "A palm for a rock climbing 
+limits its stability and thus its locomotion performance.  robot based on dense arrays of micro-spines," 2016 IEEE/RSJ 
+International Conference on Intelligent Robots and Systems (IROS), 
+The current proof-of-concept prototype is limited in its 
+Daejeon, 2016, pp. 52-59. 
+stride length, gait speed and payload carrying capability by  [10] Wang, Shiquan, et al. “Design and Modeling of Linearly-Constrained 
+the locking mechanism. The mechanism’s effectiveness may  Compliant Spines for Human-Scale Locomotion on Rocky Surfaces.” 
+be improved by adding a friction material such as silicone to  The International Journal of Robotics Research, vol. 36, no. 9, Aug. 
+the pinholes to increase the frictional force and by preventing  2017, pp. 985–999. 
+unwanted jamming or slipping of the pins during locomotion.  [11] A. Parness, M. Frost, N. Thatte and J. P. King, "Gravity-independent 
+mobility and drilling on natural rock using microspines," 2012 IEEE 
+1443
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply.    
+International Conference on Robotics and Automation, Saint Paul, 
+MN, 2012, pp. 3437-3442. 
+[12] H. Nguyen, R. Siddall, B. Stephens, A. Navarro-Rubio and M. Kovač, 
+"A Passively Adaptive Microspine Grapple for Robust, Controllable 
+Perching," 2019 2nd IEEE International Conference on Soft Robotics 
+(RoboSoft), Seoul, Korea (South), 2019, pp. 80-87. 
+[13] E. Brown, N. Rodenberg, J. Amend, A. Mozeika, E. Steltz, M. R. 
+Zakin, and H. M. Jaeger, “Universal robotic gripper based on the 
+jamming of granular material,” Proc. Nat. Acad. Sci. U.S.A., vol. 107, 
+no. 44, pp. 18,809–18,814, 2010. 
+[14] S. Follmer, D. Leithinger, A. Olwal, N. Cheng and H. Ishii, “Jamming 
+user interfaces: Programmable particle stiffness and sensing for 
+malleable and shape-changing devices,” in Proc. 25th Annu. ACM 
+Symp. User Interface Software Technology, 2012, pp. 519–528. 
+[15] A. A. Stanley, A. M. Genecov and A. M. Okamura, "[D13] 
+Controllable surface haptics via particle jamming and pneumatics," 
+2014 IEEE Haptics Symposium (HAPTICS), Houston, TX, 2014, pp. 
+1-1. 
+[16] Y. Kim, S. Cheng, S. Kim and K. Iagnemma, "A Novel Layer 
+Jamming Mechanism With Tunable Stiffness Capability for 
+Minimally Invasive Surgery," in IEEE Transactions on Robotics, vol. 
+29, no. 4, pp. 1031-1042, Aug. 2013. 
+[17] McGhee, R. B. and Frank, A. A. On the stability properties of 
+quadruped creeping gaits, Mathematical Bioscience, Vol. 3, pp. 331-
+351, 1968. 
+[18] A. Messuri, Dominic & A. Klein, Charles. (1985). Automatic body 
+regulation for maintaining stability of a legged vehicle during rough-
+terrain locomotion. Robotics and Automation, IEEE Journal of. 1. 132 
+- 141. 10.1109/JRA.1985.1087012. 
+[19] E. Krotkov, J. Bares, T. Kanade, T. Mitchell, R. Simmons and R. 
+Whittaker, "Ambler: a six-legged planetary rover," Fifth International 
+Conference on Advanced Robotics 'Robots in Unstructured 
+Environments, Pisa, Italy, 1991, pp. 717-722 vol.1. 
+[20] Noh, Seonghoon, and Dollar, Aaron. "Design of an Underactuated 
+Legged Robot With Prismatic Legs for Passive Adaptability to 
+Terrain." Proceedings of the ASME 2019 International Design 
+Engineering Technical Conferences and Computers and Information 
+in Engineering Conference. Volume 5A: 43rd Mechanisms and 
+Robotics Conference. Anaheim, California, USA. August 18–21, 
+2019. V05AT07A052. ASME. 
+1444
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 14:18:58 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,614 @@
+   
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Theoretical Derivation and Realization of Adaptive Grasping Based 
+on Rotational Incipient Slip Detection 
+Tetsuya Narita, Satoko Nagakari, William Conus, Toshimitsu Tsuboi and Kenichiro Nagasaka 
+  Abstract— Manipulating objects whose physical properties  Actuator /w
+are unknown remains one of the greatest challenges in robotics.  Torque sensor
+Controlling  grasp  force  is  an  essential  aspect  of  handling 
+unknown objects without slipping or crushing them. Although 
+extensive research has been carried out on grasp force control, 
+unknown  object  manipulation  is  still  difficult  because 
+conventional approaches assume that object properties (mass, 
+center of gravity, friction coefficient, etc.) are known for grasp  Elastic Gel
+force control. One of the approaches to address this issue is  Pressure Distribution
+incipient slip detection. However, there has been few detailed  Sensor
+investigations of robust detection and control of incipient slip on   
+rotational case. This study makes contributions on deriving the  Figure 1.   Mobile Manipulator equiped with grippers and sensors to 
+theoretical model of incipient slip and proposes a new algorithm  detect rotational incipient slip. 
+to  detect  incipient  slip.  Additionally,  a  novel  sensor 
+in cipient slip. Therefore, once grasp force is determined as the 
+configuration and a grasp force control algorithm based on the 
+minimum force necessary to keep the incipient slip area from 
+derived theoretical model are proposed. Finally, the proposed 
+expanding, unknown objects can be grasped without slipping 
+algorithm is evaluated by grasping objects with different weights 
+and are less likely to be crushed. This is especially effective 
+and moments including a fragile pastry (éclair). 
+for grasping fragile objects. 
+I.  INTRODUCTION  Although  various  approaches  regarding  incipient  slip 
+detection have been proposed, robust detection and control of 
+Manipulation is an essential skill for robots to perform 
+incipient slip remain major problems. In particular, no research 
+various tasks instead of, or in cooperation with, humans. In 
+has been able to detect and control rotational incipient slip for 
+most  cases,  robots  are  required  to  work  in  unstructured 
+unknown  objects.  Rotational  incipient  slip  detection  is 
+environments, which is one of the greatest challenges faced by 
+essential for grasping objects subject to a moment of force. 
+many  researchers.  Manipulation  tasks  in  an  unstructured 
+There are three fundamental problems faced with incipient slip 
+environment usually require a robot to grasp unknown objects, 
+detection when applied to grasp unknown objects:  
+where a grasp model contains unknown parameters i.e., mass, 
+A)  Physical  mechanism  of  the  rotational  incipient  slip 
+center of gravity, elasticity, friction coefficient, etc. Therefore, 
+phenomenon is not mathematically well defined. 
+a considerable amount of literature has grown around the 
+B)  Detection  methods  of  rotational  incipient  slip  and  its 
+theme of unknown object grasping using object recognition, 
+corresponding sensor configuration have not been established. 
+tactile sensing, grasping stability and grasp force control. 
+C)  Robust  and  general  grasp  force  algorithms  to  limit 
+However, the performance of unknown object grasping is 
+rotational incipient slip have not been established. 
+limited by difficulties of handling unknown object properties. 
+ In particular, grasping unknown objects without slipping  Contribution 
+or crushing them requires appropriate grasp force control to 
+This  paper  addresses  the  above  three  problems  and 
+balance force and moment according to the force closure 
+proposes a new algorithm to detect translational and rotational 
+theorem. While various grasping approaches based on force 
+incipient slip, a novel sensor configuration and a grasp force 
+closure have been proposed, conventional approaches assume 
+control algorithm.  
+physical models or object properties are known. Therefore, a 
+In summary, the primary contributions of this paper are: 
+novel  grasping  approach  that  controls  grasp  force 
+1) Deriving models of translational and rotational incipient slip. 
+independently  of  object  properties  is  required  to  handle 
+2) A novel sensor configuration and an incipient slip detection 
+unknown objects. Incipient slip detection is one effective 
+algorithm that includes rotation. 
+solution to solve this problem. Incipient slip is the physical 
+3) Grasp force control algorithm that handles incipient slip. 
+phenomenon observed when only a partial area in the contact 
+This paper begins by reviewing related research in section II. 
+area slips [1]. The contact area here represents the area where 
+Section  III  elucidates  the  incipient  slip  mechanism  for 
+the  robot  hand  and  an  object  contact  each  other.  When 
+translational  and  rotational  incipient  slip  based  on  the 
+tangential  force  is  applied  to  an  object,  the  slip  area  is 
+mathematical model. In section IV, conditions for stable and 
+expanded, and after the slip area expands over the entirety of 
+robust detection are clarified and a sensor configuration to 
+the contact area, slip occurs. Namely, incipient slip is the 
+detect rotational incipient slip is proposed. Section V discusses 
+transitional phenomenon of slip. In other words, slip between 
+the design of a novel grasp force control algorithm to control 
+the robot hand and an object can be predicted by detecting 
+the  area  of  incipient  slip.  Section  VI  demonstrates  that 
+ 
+proposed algorithm allows a robot to control incipient slip 
+Tetsuya Narita and others are with Sony Corporation, 2-10-1 Osaki, 
+independent of the object properties: mass, friction efficient,  
+Shinagawa,Tokyo, 141-8610 Japan (email: Tetsuya.A.Narita@sony.com). 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 531
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply.    
+etc., to achieve object grasping that is robust to translational  𝑓𝑓 𝑥𝑥 =𝐶𝐶𝑛𝑛𝑥𝑥𝑛𝑛 1
+and rotational incipient slip. 
+object surface 0.8
+A.T Ihnec ipiniecnipt iSelnitp  IsTIl.hi pe RoprEhyL eAnToEmDe RnoEnS EiAs RaC Hb ehavior based on  𝑑𝑑 Robot Fsitnicgke𝑐𝑐rslip𝑎𝑎 𝑥𝑥Stick Ratio c/a00..46 123snrdtd  o oorrrdddeeerrr
+friction theory that is defined by Amontons’ Law. Thus far,  𝐸𝐸∗ ∆𝑥𝑥 area area 0.2 45tthh  oorrddeerr
+spring 
+0
+much of the current literature on incipient slip pays particular  constant: 0 0.2 0.4 0.6 0.8 1
+Fx/Fn
+attention  to  tribology  and  robot  manipulation.  Johansson  (a) (b)  
+studied mechanisms and perception of incipient slip of human 
+Figure 2.   Elastic contact model and plot of the stick ratio. (a) Elastic 
+fingers [2][3]. Adams also focused on human fingers and 
+contact model with hemispheric fingertip and object. (b) Plot of the stick 
+showed a mathematical formulation of elastic friction [4].  ratio with different orders of contact suface. 
+Otsuki  studied mechanisms of friction for elastic objects and 
+explained incipient slip phenomenon through FEM analysis  slip detection [26]. Maeno proposed a grasp force control 
+and experiments [1]. Yamada showed that incipient slip occurs  method  with  an elastic finger  [27]. Melchiorri  calculated 
+at the edge of the contact area and proved this by using FEM  forces according to known model  [11]. These approaches, 
+with a human finger model [5]. Maeno [6][7] and Canepa [8]  however, have failed to verify their effectiveness by grasping 
+also provide analysis of incipient slip with FEM analysis.  unknown or fragile objects and taking rotational incipient slip 
+Recently, Tada proposed quantification of incipient slip based  into account.  
+on elastic contact theory [9]. Although various research has 
+III.  INCIPIENT SLIP MECHANISM 
+been conducted in the past, such studies remain narrow in 
+focus, dealing only with incipient slip in the translational  In this section, basic incipient slip theory based on elastic 
+direction, and has not proposed a mathematical formulation for  contact theory is reviewed and a method to realize robust 
+rotational slip. Cirillo [10] and Melchiorri [11] suggests a  incipient slip detection is detailed. The incipient slip theory 
+detection method of rotational slip using a friction model.  [28] is then extended to rotational slip. 
+However, these proposals assume that model parameters are 
+A.  Translational Incipient Slip Theory 
+known and are not applicable for unknown objects.  
+Fig.2(a) describes the elastic contact model between the 
+B. Sensors and Structures  robot finger and an object. A contact area of depth d is defined 
+Incipient slip is a subtle and delicate physical phenomenon,  b𝑓𝑓e(t𝑥𝑥w)e=en𝐶𝐶 a 𝑥𝑥flat elastic 𝐶𝐶plate with springs a𝑛𝑛nd a hemispherical 
+𝑛𝑛
+hence detection quality is considerably dependent on sensor  rigid obje𝑛𝑛ct. The contac𝑛𝑛t surface is described as the function: 
+specification.  Early  works  studying  tactile  sensing  were  , where   is a constan𝐹𝐹t and   is the order of the 
+broadly reviewed in [12]-[14]. Pressure distribution sensors  function. The contact area is assumed𝑁𝑁 to include both stick and 
+are one of the most widely used tactile sensors. Some have  slip areas. The total normal force  , which in this case is 
+tried to detect slip or incipient slip from distributed force and  equivalent 𝐹𝐹to t=he2 g𝐸𝐸ra∗s∫p𝑎𝑎 f𝑢𝑢orc(e𝑥𝑥,) c𝑑𝑑a𝑥𝑥n =be c2a𝑛𝑛lc𝐸𝐸u∗la𝐶𝐶te𝜆𝜆d a𝑎𝑎s 𝑛𝑛f+o1llows: 
+pressure data [10][15][16]. Vision sensors have been also  𝑁𝑁 0 𝑧𝑧 𝑛𝑛+1 𝑛𝑛 𝑛𝑛
+proposed for incipient slip detection. GelSight is a tactile    𝐸𝐸∗   1(1=) 
+sceanmseorra  t[h1a7t] .c Sapintucree tsh es ucrafpatcuer etdex dtautrae sh auss hiniggh a snp aetliaasl troemsoelru tainodn   w1−h𝜈𝜈e1r2e+  1− i𝜈𝜈s2 e2ffective Young’s modulus calculated from𝐸𝐸 𝐸𝐸∗
+information, including surface roughness and texture, deep  𝐸𝐸1 𝐸𝐸 𝐸𝐸2 , using Yong’s moduli of t𝜈𝜈he robo𝜈𝜈t fi𝑢𝑢ng(e𝑥𝑥r )1 and 
+neural networks are often used to detect incipient slip [18]-[20].  2 𝑥𝑥 𝜆𝜆 1 1 𝑧𝑧
+Vibrations  and  sound  signals  also  provide  valuable  object   as well as their 𝑛𝑛shear moduli   and  .   is the 
+information  for  incipient  slip  detection.  Romano  used  indentation depth at  .   is a scaling factor that maps from 
+vibrations for touch and slip detection [21]. Teshigawara [22]  one-dimensional contact to three-dimensional contact with n 
+and Cutkosky [23] distinguished slippage and changes in  order contact surface [29]. 
+normal force using vibrations from tactile or force sensors.  Tangential force can be calculated based on the elastic 
+Although methods using vibrations can be fast and sensitive to  contact th𝐹𝐹eor=y a2s𝐺𝐺 fo�llo𝑐𝑐w𝑢𝑢s(: 𝑥𝑥)𝑑𝑑𝑥𝑥+2�𝑎𝑎𝜇𝜇𝐸𝐸 𝑢𝑢 (𝑥𝑥)𝑑𝑑𝑥𝑥
+∗ ∗
+subtle changes caused by incipient slip, they are vulnerable to  𝑥𝑥 𝑧𝑧 𝑧𝑧
+external disturbances. Multimodal methods are one of the  0 𝑐𝑐  
+proposed answers to these obstacles. BioTac® is a multimodal                         = 2𝑛𝑛 𝜇𝜇𝐸𝐸∗𝐶𝐶 𝜆𝜆 𝑎𝑎𝑛𝑛+1�1−�𝑐𝑐�𝑛𝑛+1�
+tactile sensor, consisting of three complementary modalities:  𝑛𝑛+1 𝑛𝑛 𝑛𝑛 𝑎𝑎
+force, pressure and temperature. Xu [24] and Su [25] utilized  μ 𝐺𝐺∗   (2)  
+BioTac® for manipulation. Although various sensor types and 
+where   is the friction coefficient and   is the transverse 
+processing algorithms have been proposed, these proposals are 
+elastic modulus. From (1), (2), the following is derived: 
+not based on mathematical formulation, which means that  =�1− � 1 .
+𝑐𝑐 𝐹𝐹
+essential physical parameters for incipient slip detection is still  𝑥𝑥 𝑛𝑛+1
+𝑎𝑎 𝜇𝜇𝐹𝐹
+unclear.     𝑁𝑁   (3) 
+C. Grasp Force Control  The left side of (3) represents the ratio of stick area against 
+Although vast research has been proposed for incipient slip  contact area (stick ratio), in other words, the tendency of 
+detection,  few  have  highlighted  grasp  force  control.  We  incipient slip. Drop of the stick ratio toward zero implies an 
+proposed a grasp force and position controller with incipient   increased tendency of incipient slip. 
+532
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply.    
+𝑧
+Fig.2(b) is a plot of (3), which represents the stick ratio 
+𝑏𝑏
+with different orders of contact surface n. Fig.2(b) shows that 
+the stick ratio dropped to zero suddenly when grasp force 
+decreases or tangential force increases. This sudden drop must 
+be avoided for stable grasp control. Also, (3) indicates that the 
+stick ratio is dependent on the unknown parameter, the friction 
+𝑥𝑥
+coefficient, which makes it difficult to estimate the stick ratio.  𝑐𝑐 𝑎𝑎
+stick slip
+These two are the major problems to control incipient slip with  area area
+unknown parameters and are discussed in section IV. 
+B.  Rotational Incipient Slip Theory  (a) (b)
+ 
+Detection of rotational incipient slip for unknown objects 
+Figure 3.   Elastic contact model with flat and curved area. (a) Contact 
+is essential for handling unknown objects where moments are  model. (b) Plot of stick ratio with different flat area/curved area ratio. 
+applied. In this section, the translational incipient slip theory is 
+extended to rotational incipient slip.   (a) 1 (b)1
+The  total  moment  around  the  contact  center  can  be 
+calcu𝑇𝑇late=d ∫as𝑎𝑎 fo𝑟𝑟l𝑓𝑓lo(w𝑟𝑟s):𝑑𝑑 𝑟𝑟                                                               0.8 0.8
+             𝜃𝜃   =𝐹𝐹−𝑁𝑁𝑎𝑎𝑎𝑎𝜇𝜇𝜃𝜃�−𝑛𝑛6+𝑛𝑛1�𝑎𝑎𝑐𝑐�2−62𝑛𝑛�𝑛𝑛(𝑛𝑛2−+12�)�𝑎𝑎𝑐𝑐�𝑛𝑛+2+2(𝑛𝑛𝑛𝑛++12)�   Stick Ratio000...246 Stick Ratio000...246
+𝑟𝑟 𝜃𝜃   (4) 
+0 0
+𝑓𝑓 (𝑟𝑟) 0 10 20 30 40 50 0 10 20 30 40 50
+where   is the distance from the contact center,   deno𝜃𝜃tes the  Time[s] Time[s]  
+rotational direction around the center of fingertip and   is  Figure 4.   ANSYS® simulation results. Rigid plane is shown as a 
+transparent rectangular shape and elastic contact surface is shown as a 
+the tangential force in the rotational direction applied per unit 
+colored shape. (a) Plot of stick ratio of contact with elastic flat plane. (b) 
+area. T�h𝑐𝑐e� s𝑛𝑛t+ic2k+ rati𝑛𝑛o+ c2an� b𝑐𝑐�e 2re−pres3e𝑛𝑛nte+d as𝑇𝑇 fol3l𝑛𝑛o(w𝑛𝑛+s:2 )=0. Plot of stick ratio of contact with elastic sphere. 
+𝜃𝜃
+𝑎𝑎 2(𝑛𝑛−1) 𝑎𝑎 2(𝑛𝑛−1) 𝐹𝐹𝑎𝑎𝜇𝜇 𝑛𝑛2−1
+  𝑧𝑧 n=2   (5)  the state distribution. Fig.4 shows that the stick ratio changes 
+slowly for the curved surface contact, while it drops suddenly 
+When the contact surface is assumed quadric ( ), the stick  for the flat surface contact. These results support the theory 
+ratio becomes:  that  a  robot  finger  with  curved  surface  is  preferable  for 
+𝑐𝑐 =��4− 8𝑇𝑇 −1. incipient slip c𝑢𝑢ontrol. 
+𝜃𝜃
+𝑎𝑎 𝜇𝜇𝐹𝐹𝑎𝑎 For problem𝑥𝑥 2), a stick ratio estimation method with shear 
+  𝑧𝑧   (6) 
+displacement   is proposed. Shear displacement represents 
+the displacement of the robot elastic fingertip in the tangential 
+IV.  DETECTION METHOD AND SENSOR CONFIGURATION  direction when tangential force is applied to the grasped object. 
+If shear displacement of fingertip can be measured, (3) can be 
+  A.  Incipient Slip Detection Method  rewritten as follows: =(1−Ψ(𝜇𝜇,𝐹𝐹 )𝑢𝑢 )
+𝑐𝑐 1
+According to section III, two major problems need to be  𝑎𝑎 𝑁𝑁 𝑥𝑥 𝑛𝑛+1
+addressed to control incipient slip stably: 1) Avoiding sudden      (7) 
+2
+stick ratio drop and 2) Calculating or estimating the stick ratio  Ψ(𝜇𝜇,𝐹𝐹 )=𝐺𝐺∗𝜋𝜋�𝑛𝑛+1 𝐹𝐹𝑁𝑁 �𝑛𝑛+1
+independent of the friction coefficient. In this section, these  𝑁𝑁 𝑢𝑢2𝑛𝑛𝜇𝜇𝐸𝐸𝐹𝐹∗𝐶𝐶𝑛𝑛𝜆𝜆𝑛𝑛
+problems are further discussed.   where  𝑁𝑁 . Equation (7) shows that 
+𝑥𝑥
+For problem 1), the relationship between elastic contact 
+if shear displacement   is zero, the stick ratio becomes equal 
+surface and the stick ratio is first mathematically analyzed. 
+to one, which means that incipient slip no longer occurs. Shear 
+Fig.3 provides the analytical model and r𝑏𝑏e⁄s𝑎𝑎ults of different 
+displacement can be calculated by tracking the displacement 
+contact surface shapes. The contact surface is composed of a 
+of the maximum pressure point. When there is difficulty in 
+flat surface and a curved surface, where   represents the 
+tracing the maximum pressure point due to sensing noise, the 
+surface ratio. As shown in Fig3, there is a clear trend that the 
+Center of Pressure (CoP) is also effective as an approximation 
+stick ratio drops suddenly when the surface ratio is large. This 
+of the maximu𝑢𝑢m pressure point.  
+result gives interesting insight on the incipient slip mechanism. 
+The same ap𝜃𝜃plies for the rotational case. Rotational shear 
+The result implies that when the slip area reaches the flat 
+displacement   can be defined as the displacement of the 
+surface, slip occurs suddenly. In Amonton’s friction law, slip 
+robot elastic fingertip in the rotational direction when torque is 
+behavior is related to static friction and the strength of the 
+applied to the grasped object. Equation (6) can be rewritten 
+normal pressure distribution. Consequently, a sudden drop is 
+with rotational shear displacement as follows: 
+considered to occur when the gradient of contact pressure  𝑐𝑐 =��4−Φ(𝜇𝜇,𝐹𝐹 )𝑢𝑢 −1
+distribution is flat. The above theory for flat and curved contact  𝑎𝑎 𝑁𝑁 𝜃𝜃
+cases is also confirmed with the ANSYS® simulation software.      (8) 
+1
+The  elastic  flat  plate  and  elastic  curved  surface  are  Φ(𝜇𝜇,𝐹𝐹 )=16𝐺𝐺∗�3 𝐹𝐹𝑁𝑁 �3
+contacted by a rigid plate. The same tangential force is applied  𝑁𝑁 34𝜇𝜇𝐸𝐸𝐹𝐹∗𝐶𝐶2𝜆𝜆2 𝑢𝑢
+to the rigid plate. The simulation outputs the contact state   where  𝑁𝑁 . In the same manner as the 
+𝜃𝜃
+distribution: “stick” or “slip”, and stick ratio is calculated from 
+translational case, if the rotational shear displacement   can 
+533
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply.    
+be controlled to be zero then the stick ratio becomes equal to 
+Elastic gel
+one for rotational incipient slip. However, rotational shear  (3 x 3 hemisphere array)
+displacement cannot be detected with the same method as 
+Pressure Distribution Sensor
+translational slip because rotational incipient slip does not  (11 x 13 nodes, 3mm pitch)
+change the maximum pressure point when the robot finger is 
+assumed to be a single hemisphere in Fig.2. To measure the 
+rotational shear displacement with the convex fingertip, a 
+novel sensor configuration is proposed in the following section. 
+Sensor base
+B.  Sensor Configuration   
+In order to measure rotational shear displacement, a finger  Figure 5.   Proposed elastic finger tip (left) and cross-section (right). 
+composed of multiple elastic hemispheres as shown in Fig.5 is 
+proposed. The translational shear displacement at each elastic  0.3
+hemisphere can be measured with the CoP according to the  3mm pitch
+0.25 1mm pitch
+previous section. The translational shear displacement at each 
+elastic hemisphere would change according to the rotational  0.2
+m]
+shear displacement. The relationship between rotational and  m
+tinracnipsliaetniot nslailp �,s ch𝑦𝑦𝑥𝑥ae𝑖𝑖na r�b ed= irsep�plr𝑐𝑐a𝑐𝑐ec𝑐𝑐𝑠𝑠s𝑛𝑛e𝑐𝑐em𝜃𝜃𝜃𝜃nteendt− ,𝑐𝑐u 𝑐𝑐𝑐𝑐bs𝑠𝑠𝑐𝑐ie𝑛𝑛n𝜃𝜃fg𝜃𝜃o raen 𝑡𝑡𝑡𝑡 aa𝑥𝑥nf�fdi �nae𝑥𝑥𝑦𝑦f 𝑖𝑖tte�rar nrsoftoartmio:n al  Estimation error [ 00..001.551
+1𝑖𝑖′ 0 0 1𝑦𝑦 1𝑖𝑖
+    (9)  0
+′ 1x1 2x2 3x3 4x4 5x5
+𝜃𝜃,𝑡𝑡 𝑡𝑡
+Hemisphere array configuration  
+𝑥𝑥 𝑦𝑦
+Figure 6.   Simulated translational shear displacement estimation error 
+where i represents the index of the elastic sphere.   and   
+for different fingertip gel hemisphere array configurations when the 
+represent rotational sh𝜃𝜃e,a𝑡𝑡r ,d𝑡𝑡isplacement, x-axis, and y-axis  sensor node pitch is 1mm and 3mm. 
+translational displacement𝑥𝑥 res𝑦𝑦pectively. In order to solve three 
+unknown parameters:  , more than three equations are  In particular, no shear displacement means no slippage 
+needed. In other words, fingertip contacts with at least two  occurs between the finger and the objects. Additionally, this 
+hemispheres is necessary to calculate equation (9).  allows robots to grasp objects without slippage. The next 
+For measuring the CoP, a sensor capable of measuring  section moves on to discuss a grasp force control algorithm to 
+pressure  distribution  is  required.  A  capacitive  pressure  prevent shear displacement. 
+distribution sensor was chosen that calculates pressure by  V.   GRASP FORCE CONTROL ALGORITHM 
+transforming  deformation  of  sensor  material  to  capacity 
+change at each node.   In order to prevent shear displacement for object grasping, 
+the shear displacement should be controllable by grasp force. 
+A  urethane  gel  composed  of  an  array  of  elastic 
+This section first gives theoretical explanations that the shear 
+hemispheres is placed on top of the sensor to allow rotational 
+displacement  can  be  controlled  by  grasp  force  and  then 
+shear  displacement  estimation.  To  measure  the  shear 
+proposes a grasp force control algorithm. 
+displacement accurately, the distance between each sensor 
+The proposed grasp force algorithm is based on the elastic 
+node (sensor pitch) and the number of elastic hemispheres are 
+contact theory of the same mechanical model shown in Fig.2. 
+carefully selected. Fig.6 provides the simulation results on 
+Under the precondition that the robot finger 𝑎𝑎is an elastic 
+estimation  error  of  translational  shear  displacement  with 
+convex shape and is deformed by normal force, the contact 
+different amounts of elastic hemispheres and different sensor 
+area is considered to be a circle whose radius is  . The radius 
+node pitches. As can be seen in Fig.6, a smaller sensor node  of the contact area is represented as a function of grasp force: 
+𝑎𝑎 =� � 1 .
+pitch is a key factor for lower estimation error. From a  𝑛𝑛+1 𝐹𝐹
+𝑁𝑁 𝑛𝑛+1
+practical  point  of  view,  however,  node  pitch  should  be  2𝑛𝑛 𝐸𝐸∗𝐶𝐶 𝜆𝜆
+  𝑛𝑛 𝑛𝑛   (10) 
+carefully decided because of a trade-off between smaller node 
+𝐹𝐹
+pitch and larger processing cost or lower sensitivity. To keep 
+Assuming the tangential force app𝑥𝑥lied to the elastic fingertip 
+a high enough data sampling frequency and sensitivity, a  is constant, then the shear force  of the elastic fingertip can 
+sensor node pitch of 3mm is chosen. The data sampling  be represented as𝐹𝐹 fo=llo∫w𝑎𝑎s: 𝐺𝐺∗𝑢𝑢 𝑑𝑑𝑟𝑟 =2𝐺𝐺∗𝑢𝑢 𝑎𝑎.
+frequency is 100Hz. Fig.6 also shows that the hemisphere  𝑥𝑥 −𝑎𝑎 𝑥𝑥 𝑥𝑥
+array configuration also affects estimation error. With more      (11) 
+𝑢𝑢 𝐹𝐹
+hemispheres used, the estimation error is partially reduced 
+T𝑥𝑥he relationship betw𝑁𝑁een translational shear displacement 
+except the case with more than 3x3 hemispheres used. This   and grasp force 𝑢𝑢  =is derived from (10) and (11): 
+𝐹𝐹
+result is explained by the fact that less sensor nodes are  𝑥𝑥 𝑥𝑥 1
+assigned for each hemisphere with more hemispheres used. In  𝐺𝐺∗�𝑛𝑛+1  𝐹𝐹𝑁𝑁 �𝑛𝑛+1.            (12) 
+order to minimize the error, 3 x 3 hemisphere configuration is    𝑇𝑇 2𝑛𝑛 𝐸𝐸∗𝐶𝐶𝑛𝑛𝜆𝜆𝑛𝑛
+selected. Considering the small size requirement, the fingertip  𝜃𝜃
+size is decided as 40x40mm and 11x13 pressure sensor nodes  From (4), the m𝑇𝑇om=e∫nt𝑎𝑎  𝐺𝐺 ∗o𝑟𝑟f 𝑢𝑢the𝑟𝑟 e𝑑𝑑la𝑟𝑟st=ic 2fi𝐺𝐺n∗g𝑢𝑢ert𝑎𝑎ip2 is: 
+𝜃𝜃 −𝑎𝑎 𝑎𝑎 𝜃𝜃 3 𝜃𝜃
+are implemented. 
+  .  (13) 
+534
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply.    
+(i.e., hand-over or placement on a table). For example, grasp 
+Grasp Force Control
+𝐿𝑃𝐹𝐹 𝑢𝑢 𝑢𝑢 Hand actuator force is expected to decrease when a robot hands over an object 
+𝑥𝑥 𝜃𝜃
+𝜏𝜏 Shear Displacement  ,  to human. The shear displacement, in this case, would change 
+𝑢𝑢 min.  as the human begins to support the object against gravity. The 
+𝑢𝑢𝜃𝜃_𝑟𝑟𝑒𝑓 grasp force 𝑞
+𝑥𝑥_𝑟𝑟𝑒𝑓 Acc𝐽𝐽elerationControl opposite is true when grasping objects. This extension is 
+RGeefneerreantcoer － GCraosnptr Fololrecre －+ + 𝐼𝐼𝑛𝑛𝑎𝑎 + + Plant simply realized by switching the increase and decrease of 
+grasp force (Fig.7) with the same incipient slip detection and 
++－::RGerlaesapse + － 𝐽𝐽𝑛𝑛𝑐𝑐2 force control algorithm. Although this is simple extension, 
+𝐿𝑃𝐹𝐹 smooth object release motion is achieved. 
+ 
+VI.   EVALUATION 
+Figure 7.   Proposed grasp force controller for a finger. 
+ A.  Experimental Setup and Procedure 
+Height adjuster  In order to evaluate the proposed method, two different 
+experiments are conducted. Since the proposed incipient slip 
+Pressure distribution sensor
+detection  method  detects  incipient  slip  based  on  shear 
+Gel
+displacement, the estimation accuracy of shear displacement 
+test object
+Linear / Rotational
+is firstly evaluated. For this evaluation, a 2-axis (rotational 
+stage
+and translational) position control stage (Fig.8) is utilized. 
+The proposed elastic fingertip and a test object are in contact 
+with each other, and contact force is maintained by adjusting 
+the stage’s height. Shear displacement is applied to the object 
+ 
+by position control of the stage and the position is measured 
+Figure 8.   Experimental setup to evaluate shear displacement estimation 
+accuracy. Linear and rotational displacement are controlled by a 2 axis  by the embedded encoder. Shear displacement is calculated 
+positioning stage. Contact force is controlled with the height adjuster.  using CoP as an approximation of the maximum pressure 
+𝑢𝑢
+𝐹𝐹 𝜃𝜃 point as described in section IV-B. The accuracy is evaluated 
+The relationship b𝑁𝑁etween rotational shear displacement    by  comparing  the  encoder  position  and  estimated  shear 
+and grasp force   i𝑢𝑢s d=erived from (10) and (13):  displacement derived from (9). 
+3𝑇𝑇
+𝜃𝜃 𝜃𝜃 2  Secondly, the proposed grasp force control algorithm is 
+  2𝐺𝐺∗�𝑛𝑛+1  𝐹𝐹𝑁𝑁 �𝑛𝑛+1.  (14)  evaluated using a mobile manipulator equipped with two 7 
+2𝑛𝑛 𝐸𝐸∗𝐶𝐶𝑛𝑛𝜆𝜆𝑛𝑛
+DoF arms and parallel link grippers composed of the proposed 
+tactile sensor and torque-controlled actuators (Fig.1). The 
+Equations  (12𝐹𝐹)  and  (14)  show  that  the  translational  and 
+experiments are conducted in the following order. First, the 
+rotational shea𝑁𝑁r displacement are defined as functions of 
+gripper grasps a target object placed on a flat plane. Second, 
+grasp force ( ), which suggests that displacement can be 
+the object is lifted by the arm. Third, the grasped object is held 
+controlled by  grasp  force. It  should  be noted  that  these 
+in the air for 4 seconds. Finally, the object is placed at its 
+theories are only applied to convex elastic fingertips. 
+original position. Grasp force is determined using the proposed 
+ Fig.7 shows the proposed grasp force control algorithm. 
+algorithm with no objeτct information given to the robot. Every 
+This algorithm is composed of two control blocks: Grasp 
+experiment is condu 𝑢𝑢cted usi𝑢𝑢ng this test sequence. In each test 
+Force Control and Acceleration Control block. The grasp 
+Force Control block calculates grasp force at 1kHz so that no  sequence, grasp force𝑥𝑥   deriv𝜃𝜃ed from the proposed algorithm, 
+shear displacement  and   from Fig.7 are recorded at 10 
+translational or rotational shear displacement occurs. Since 
+Hz. Fig.12 shows 3 different test objects used in this evaluation. 
+translational  and  rotational  incipient  slip  generally  occur 
+simultaneously, grasp force for translational and rotational  B.  Estimation Accuracy of Shear Displacement 
+incipient slip are first calculated respectively and then summed. 
+Fig.9 provides the results of shear displacement estimation 
+A first order of low pass filter is used to suppress the noise of 
+accuracy.  The  horizontal  axis  represents  the  applied 
+shear displacement values. The reference generator updates 
+d𝑅𝑅isplacement, which was measured using the stage encoder, 
+the target shear displacement dependent on grasp status and  2
+and the vertical axis represents estimated shear displacement. 
+application. Since two contact points between an object and 
+ represents the coefficient of determination of the linear 
+hemispheres on the finger is necessary to calculate shear 
+regression line. Although the estimation error is observed at 
+displacement from the result in section IV, minimum grasp 
+15% and 3% for translational and rotational displacement 
+force is added to keep contact. The minimum contact force is 
+respectively, the estimated displacement shows strong linear 
+determined as the grasp force applied when two contact points 
+correlation with the applied displacement. A possible cause of 
+are detected for the first time. The acceleration Control block 
+error is the approximation error of CoP.  
+controls the acceleration of the actuators used to generate 
+accurate grasp force at 8kHz. A 𝐽𝐽disturbance observer (DOB)  C.  Robustness of Proposed Grasp Force Control Algorithm 
+τ
+is adopted𝐼𝐼 to cancel disturbance 𝑛𝑛noise caused by inertia and  to Object Weight and Moment Variations 
+ 𝑢𝑢 𝑢𝑢
+friction in𝑎𝑎 an actuator, where  is nominal inertia of the  At the first𝑥𝑥 step of𝜃𝜃 the evaluation, grasp force  , shear 
+actuator,  is target inertia and plant is described as a second  displacement  and  , are observed. A rec𝑢𝑢tangula𝑢𝑢r plastic 
+order system. A first order of low pass filter is used in the DOB.  
+bottle is utilized as a target object. As shown in F𝑥𝑥ig.10-a𝜃𝜃, grasp 
+It is interesting to note that the proposed algorithm can be 
+force is controlled according to the values of   and  .  
+extended to other manipulation tasks such as object release 
+535
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply.    
+(a) (b) in Fig.10-b. The comparison reveals that the grasp force is not 
+0.08 enough in no rotational slip detection case. In addition, the 
+mm] 2 d]0.07 results also show that rotational slip detection is essential for 
+Estimated Displacement [01..5501 R² = 0.9958 Estimated Rotation [ra000000......0000000123456 R² = 0.9944 gexraps apTnihdniigsn  gop baVpjfeIreIcor.tm  sd C ewrtOiihtvNheeC  duLt nrUtahkSnenIs oOrlwaoNtt niaAo tNoniobaDnlj  eFaclcU tai TnpsUecrRo ippEaie neWrndtit Oe saRsll.Kis p o   thceloarriyf ibeyd  
+0 1 2 0 0.02 0.04 0.06 0.08 essential conditions to stably detect and control incipient slip. 
+Applied Displacement [mm] Applied Rotation [rad]   This theoretically contribution led to the proposal of a novel 
+Figure 9.   Estimation accuracy of (a) translational shear displacement  incipient slip detection method, sensor configuration and 
+and (b) rotational shear displacement. The difference between the orange 
+adaptive grasp force control algorithm. The experimental 
+dotted line and the blue plots represents the estimation error. 
+results show that the proposed algorithm is able to adaptively 
+(a) (b)
+N]3 2.5 with rotational slip detection calculate grasp force for unknown objects with varied weights, 
+GraspForce [4012 N] 2 without rotational slip detection mfraogmileen tpsa asntrdie sst,i fwfnaess sreesa. lFizienda llwy,i tghroaustp isnlgip opbinjegc tos,r  inccrulusdhiinngg  
+𝑢𝑢𝑢𝑢𝑥𝑥𝜃𝜃[mm][rad]--000-0...100-.15505202 Grasp Force [01..515 tsdpheurenarmcsaFitbun.i cit glaui tlry eap  obedfiril srtiephtyceet c istoaeinvnn edso.o  fI ronc suoctrrrne utwarcosotuilrn rkge a i ilnssgpc oalaurntiid taehelsms sr eie.m nsotpRilaruoolt bviaouesnspmt eniecsen ts atfs lro sofom a tnha ndea    
+-0.2 0
+0 2 4 Tim6e [s] 8 1τ0 12 0 5 T𝑢𝑢ime [s] 10𝑢𝑢 15   important future work. In addition, further investigation of 
+𝑥𝑥 𝜃𝜃 grasp  control  algorithm  is  needed  for  different  hand 
+Figure 10.   (a) Grasp force  , shear displacement   and   when 
+grasping the rectangular plactic bottle, (b) Grasp force with and without  configurations such as a multi-fingered hand. Since graspable 
+rotational slip detection when grasping an éclair.  objects  range  is  limited  due  to  geometric  constraints  of 
+parallel grippers, a multi-fingered hand may be one of the 
+The observation shows that the grasp force drastically 
+possible options. 
+increases and decreases during the whole sequence. Since 
+these changes can be observed at the exact time of lifting and  2 3.5
+placing the object, it appears that the proposed algorithm  3
+detects force and moment change adaptively by measuring  N]1.5 N]2.5
+inci pIine notr dselirp t.o   further confirm the robustness of the proposed  orce [ 1 orce [ 2
+F F1.5
+aisl gmoeriatshumre, dg rwaistph  faonr coeb,j e𝜏𝜏dcetr iovfe vda frrieodm w theieg phτrtso paonsde md oalmgoenrittsh. mIn,   Grasp 0.5 mprionpimosuemd  mgreatshpo dforce Grasp 0.51 mprionpimosuemd  mgreatshpo dforce
+this evaluation, the deri𝑚𝑚ve𝑖𝑖𝑛𝑛d g𝜏𝜏rasp force   is compared with  0 0
+minimum grasp force ( ) to𝑚𝑚 𝑖𝑖e𝑛𝑛valuate that the grasp force  250300350400450500550600650 0 20 40 60 80 100 120
+is not la𝜏𝜏rger than necessary.   is investigated beforehand  Object Weight [g] Oτbject Moment [mNm]  
+by condu𝑚𝑚c𝑖𝑖𝑛𝑛ting grasp trials repeatedly given constant grasp  Figure 11.   Comparison between gra𝜏𝜏sp𝑚𝑚 𝑖𝑖𝑛𝑛force   derived by proposed 
+forces.   is selected as the minimum grasp force among  method  and  minimum  grasp  force   with  different  weight  and 
+successful trials. A rectangular plastic bottle (Fig.12-1,2) is  moment. The range and mean of grasp force τ during 10 grasp trials is 
+used  for  this  evaluation.  Object  weight  is  changed  by  represented. 
+adjusting the amount of small pieces of metal in the bottle and 
+object momeτnt is changed by g𝜏𝜏rasping at different positions  TABLE I.   SPECIFICATION OF THE TEST OBJECTS 
+on the bottle. Fig.11 provides resu𝑚𝑚lt𝑖𝑖s𝑛𝑛 of this experiment. Since  Obj[e𝒈𝒈c]t Properties 
+[𝒎𝒎𝒎𝒎𝒎𝒎]
+grasp force   is stably close to  , it is demonstrated that    Object  Moment  Success Rate 
+Mass   
+the proposed algorithm derives the minimum necessary grasp   
+force,  adaptively  and  robustly  with  different  weight  and  1 Plastic bottle   600  0  10/10 
+  (placed vertically) 
+moment. 
+Plastic bottle  251  120 
+ Finally, the grasp success rate is investigated for each  2  10/10 
+(placed horizontally) 
+object to evaluate effectiveness of the proposed algorithm.  3  Eclair  104  39  10/10 
+The success rate is derived from 10 trials for each object. If   
+an object does not touch the ground during a test sequence, 
+the trial is considered a success. The results of all target 
+objects are summarized in Table I. As Table I shows, every 
+target  object,  including  a  fragile  pastry,  can  be  grasped 
+without fail independent of object shape, weight, moment and 
+stiffness. In order to investigate effectiveness of rotational 
+1 2 3
+incipient slip detection, grasp force is compared with and   
+without rotational incipient slip detection, which is illustrated  Figure 12.   The 3 test objects. The robot grasps objects at the orientation 
+shown in the picture. 
+536
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply.    
+  [19] J. Li, S. Dong and E. Adelson. “Slip detection with combined tactile 
+and visual information,” 2018 IEEE International Conference on 
+REFERENCES   Robotics and Automation (ICRA). IEEE, 2018. p. 7772-7777 
+[20] S. Stepputtis, Y. Yang and H. B. Amor, “Extrinsic Dexterity Through 
+[1]  M. Otsuki and H. Matsukawa, “Systematic breakdown of Amontons' 
+Active Slip Control Using Deep Predictive Models,” 2018 IEEE 
+law of friction for an elastic object locally obeying Amontons' law,” 
+International Conference on Robotics and Automation (ICRA). IEEE, 
+Scientific reports, 2013, 3: 1586 
+2018. p. 3180-3185. 
+[2]  R.S.Johansson and G. Westling, “Signals in tactile afferents from the  [21] J. M. Romano, K. Hsiao, G. Niemeyer, S Chitta and K. J. Kuchenbecker, 
+fingers eliciting adaptive motor responses during precision grip,”  
+“Human-inspired robotic grasp control with tactile sensing,” IEEE 
+Experimental brain research, 1987, 66.1: 141-154. 
+Transactions on Robotics, 2011, 27.6: 1067-1079. 
+[3]  R.S.Johansson and G. Westling, “Roles of glabrous skin receptors and  [22] S. Teshigawara, T. Tsutsumi, S. Shimizu, Y. Suzuki, A. Ming, M. 
+sensorimotor memory in automatic control of precision grip when 
+Ishikawa and M. Shimojo, “Highly sensitive sensor for detection of 
+lifting rougher or more slippery objects,” Experimental brain research, 
+initial slip and its application in a multi-fingered robot hand,” 2011 
+1984, 56.3: 550-564. 
+IEEE International Conference on Robotics and Automation. IEEE, 
+[4]  M.J.Adams, S. A. Johnson, P. Lefevre, V. Levesque, V. Hayward, T.  2011. p. 1097-1102. 
+Andre and J. L. Thonnard, “Finger pad friction and its role in grip and  [23] M. R. Tremblay and M. Cutkosky, “Estimating friction using incipient 
+touch,” Journal of The Royal Society Interface, 2013, 10.80: 20120467. 
+slip sensing during a manipulation task,” in Proc. IEEE International 
+[5]  D. Yamada, T. Maeno and Y. Yamada, “Artificial finger skin having  Conference on Robotics and Automation. IEEE, 1993. p. 429-434. 
+ridges and distributed tactile sensors used for grasp force control,” in  [24] D. Xu, G. E. Loeb and J. A. Fishel, “Tactile identification of objects 
+Proc. 2001 IEEE/RSJ International Conference on Intelligent Robots 
+using Bayesian exploration,” 2013 IEEE International Conference on 
+and Systems. Expanding the Societal Role of Robotics in the the Next 
+Robotics and Automation. IEEE, 2013. p. 3056-3061. 
+Millennium (Cat. No. 01CH37180). IEEE, 2001. p. 686-691. 
+[25] Z. Su, K. Hausman, Y. Chebotar, A. Molchanov, G. E. Loeb, G. S. 
+[6]  T. Maeno, K. Kobayashi and N. Yamazaki, “Relationship between 
+Sukhatme  and  S.  Schaal,  “Force  estimation  and  slip 
+structure of finger tissue and location of tactile receptors,” Nippon Kikai 
+detection/classification for grip control using a biomimetic tactile 
+Gakkai Ronbunshu, C Hen/Transactions of the Japan Society of 
+sensor,” 2015 IEEE-RAS 15th International Conference on Humanoid 
+Mechanical Engineers, Part C, 1997, 63.607: 881-888. 
+Robots (Humanoids). IEEE, 2015. p. 297-303. 
+[7]  T. Maeno, T. Kawai and K. Kobayashi, “Analysis and design of a tactile  [26] T. Takahashi, T. Tsuboi, T. Kishida, Y. Kawanami, S. Shimizu, M. 
+sensor detecting strain distribution inside an elastic finger,” in Proc. 
+Iribe, T. Fukushima and M. Fujita, “Adaptive grasping by multi 
+1998 IEEE/RSJ International Conference on Intelligent Robots and 
+fingered hand with tactile sensor based on robust force and position 
+Systems. Innovations in Theory, Practice and Applications (Cat. No. 
+control,”  2008  IEEE  International  Conference  on  Robotics  and 
+98CH36190). IEEE, 1998. p. 1658-1663. 
+Automation. IEEE, 2008. p. 264-271. 
+[8]  G. Canepa, R. Petrigliano, M. Campanella and D. D. Rossi, “Detection  [27] T. Maeno. S. Hiromitsu and T. Kawai, “Control of grasping force by 
+of incipient object slippage by skin-like sensing and neural network 
+detecting stick/slip distribution at the curved surface of an elastic finger,” 
+processing,” IEEE Transactions on Systems, Man, and Cybernetics, 
+in Proc. 2000 ICRA Millennium Conference. IEEE International 
+Part B (Cybernetics), 1998, 28.3: 348-356. 
+Conference on Robotics and Automation. Symposia Proceedings (Cat. 
+[9]  M. Tada, T. Shibata, and T. Ogasawara, “Investigation of the touch  No. 00CH37065). IEEE, 2000. p. 3895-3900. 
+processing model in human grasping based on the stick ratio within a  [28] P. Valentin, “Basic ideas and applications of the method of reduction 
+fingertip contact interface,” in Proc. IEEE Int. Conf. Systems, Man and 
+of dimensionality in contact mechanics,” Physical Mesomechanics. 15. 
+Cybernetics, tp1n4, 2002. 
+254-263. 10.1134/S1029959912030022, 2012 
+[10] A. Cirillo, P. Cirillo, G. D. Maria and C. Natale, “Control of linear and  [29] G. Thomas and P. Valentin, “Mapping of three-dimensional contact 
+rotational slippage based on six-axis force/tactile sensor,” 2017 IEEE 
+problems  into  one  dimension,”  Physical  review.  E,  Statistical, 
+International Conference on Robotics and Automation (ICRA). IEEE, 
+nonlinear,  and  soft  matter  physics.  76.  036710. 
+2017. p. 1587-1594. 
+10.1103/PhysRevE.76.036710, 2007. 
+[11] C. Melchiorri, “Slip detection and control using tactile and force 
+sensors,” IEEE/ASME transactions on mechatronics, 2000, 5.3: 235-
+243. 
+[12] Z. Kappassov, J. A. Corrales and V. Perdereau, “Tactile sensing in 
+dexterous robot hands,” Robotics and Autonomous Systems, 2015, 74: 
+195-220. 
+[13] M.T.Francomano, D. Accoto and E. Guglielmelli, “Artificial sense of 
+slip—A review,” IEEE Sensors Journal, 2013, 13.7: 2489-2498. 
+[14] R. S. Dahiya, G. Metta, M. Valle and G. Sandini, “Tactile sensing—
+from humans to humanoids,” IEEE transactions on robotics, 2009, 
+26.1: 1-20. 
+[15] D. Cockburn, J. Roberge, T. Le, A. Maslyczyk and V. Duchaine, 
+“Grasp stability assessment through unsupervised feature learning of 
+tactile images,” 2017 IEEE International Conference on Robotics and 
+Automation (ICRA). IEEE, 2017. p. 2238-2244. 
+[16] T. P. Tomo, A. Schmitz, W. K. Wong, H. Kristanto, S. Somlor, J. 
+Hwang, L. Jamone and S. Sugano, “Covering a robot fingertip with 
+uSkin: A soft electronic skin with distributed 3-axis force sensitive 
+elements for robot hands,” IEEE Robotics and Automation Letters, 
+2017, 3.1: 124-131. 
+[17] W.Yuan, R. Li, M. A. Srinivasan and E. H. Adelson. “Measurement of 
+shear and slip with a GelSight tactile sensor,” 2015 IEEE International 
+Conference on Robotics and Automation (ICRA). IEEE, 2015. p. 304-
+311. 
+[18] R. Calandra, A. Owens and D. Jayaraman. “More than a feeling: 
+Learning to grasp and regrasp using vision and touch,” IEEE Robotics 
+and Automation Letters, 2018, 3.4: 3300-3307. 
+537
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:56 UTC from IEEE Xplore.  Restrictions apply. 

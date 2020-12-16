@@ -1,0 +1,596 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Long-Term Robot Navigation in Indoor Environments
+Estimating Patterns in Traversability Changes
+Lorenzo Nardi1,2 Cyrill Stachniss1
+Abstract—Nowadays, mobile robots are deployed in many
+indoor environments such as ofﬁces or hospitals. These en-
+vironments are subject to changes in the traversability that
+often happen following patterns. In this paper, we investigate
+the problem of navigating in such environments over extended
+periods of time by capturing and exploiting these patterns to
+make informed decisions for navigation. Our approach uses a
+probabilisticgraphicalmodeltoincrementallyestimateamodel
+ofthetraversabilitychangesfromtherobot’sobservationsand
+to make predictions at currently unobserved locations. In the
+beliefspacedeﬁnedbythepredictions,weplanpathsthattrade
+off the risk to encounter obstacles and the information gain
+of visiting unknown locations. We implemented our approach
+andtesteditindifferentindoorenvironments.Theexperiments (a)Workingstate. (b)Coffeebreak.
+suggest that, in the long run, our approach leads robots to
+Fig.1:Patternsintraversabilitychangesonthetopologicalmapof
+navigate along shorter paths compared to following a greedy
+anofﬁce.Theredcirclesarethenodesandthebluesolidlinesare
+shortest path policy.
+the traversable connections among them.
+I. INTRODUCTION
+traversability and (ii) planning paths that exploit the pre-
+Over the last decade, many mobile robots have been
+dictionstoreducetheriskofencounteringblockedpassages.
+deployed in indoor environments such as ofﬁces, hospitals,
+Whileexistingapproachesproposetomakedecisionsaccord-
+and shopping malls. Most robot navigation systems rely on
+ingtoperiodicpatternsofchange[5],wefocusonmodeling
+static representations of the environment such as occupancy
+spatial patterns that are independent of time information.
+grid or topological maps for planning and navigating to
+The main contribution of this paper is a novel system for
+targeted locations. In reality, robots are often employed in
+robotnavigationoverextendedperiodsoftimeinindooren-
+environments where the traversability changes continuously.
+vironmentswherethetraversabilitychangesfollowingspatial
+Traditionalnavigationsystemsavoidobstaclesbyperforming
+patterns. We consider a topological map of the environment
+reactivestrategies[6]orplanninglocaldeviations[24].These
+like the one illustrated in Fig. 1, where the nodes are the
+approaches are effective to tackle unforeseen obstacles but
+locations of interest and the edges are the passages between
+have no memory about previous experiences. Thus, when
+theselocations.Weincrementallymodelhowthetraversabil-
+encountering the same situation multiple times, robots may
+ityoftheedgeschangesusingtherobot’sobservationsduring
+perform every time the same sub-optimal behavior.
+traversal. We use a probabilistic graphical model to repre-
+In indoor environments, there are many changes in the
+sent this knowledge and to predict the traversability in the
+traversability that are correlated or happen following certain
+environment. We exploit the predictions to plan navigation
+patterns. For example, the doors in an environment could be
+strategies that account for the risk to encounter blocked
+openorclosedatthesametimeaccordingtocertainpatterns.
+passages and, at the same time, for the information gain of
+IntheenvironmentillustratedinFig.1a,theofﬁces’doorsare
+making observations to improve the model.
+typically open (green) while people are working. Whereas,
+As a result of that, our approach is able to (i) learn
+if the kitchen is open, it is likely that people are enjoying
+incrementally a model of the patterns of change in the en-
+a coffee and so that the ofﬁces’ doors are closed (red),
+vironment traversability fromrobot’s observations; (ii) make
+see Fig. 1b. When deploying a robot in such environments
+predictions about the traversability at unobserved locations;
+over a longer period of time, it can observe these patterns
+(iii) plan paths that exploit the predictions to realize antici-
+and exploit this knowledge to navigate along shorter paths,
+patory strategies for navigation. Over time, our system leads
+thus increasing the efﬁciency of its operations.
+therobottoencounterareducednumberofblockedpassages
+In this paper, we investigate the problem of (i) modeling
+and,thus,tonavigatealongpathsthatareonaverageshorter
+and predicting the patterns of change in the environment
+than following greedy-reactive strategies.
+1Photogrammetry&RoboticsLab,UniversityofBonn,Germany.
+2AutonomousIntelligentDrivingGmbH,Munich,Germany. II. RELATEDWORK
+ThisworkhaspartiallybeenfundedbytheDeutscheForschungsgemein-
+In the literature, several approaches have been proposed
+schaft (DFG, German Research Foundation) under Germany’s Excellence
+Strategy,EXC-2070-390732324-PhenoRob. to model changing environments for robot navigation. For
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 300
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. example, Stachniss and Burgard [25] map the typical con- III. PROBLEMDEFINITIONANDASSUMPTIONS
+ﬁgurations of low-dynamic areas of the environment for im-
+Weconsiderarobotthatnavigatesinindoorenvironments
+proving localization. Conditional transition maps [13] learn
+where the traversability changes according to certain pat-
+themotionpatternsofobjectsonagrid-basedrepresentation.
+terns. Initially, these patterns are completely unknown to
+Dynamic Gaussian process occupancy maps [20] map long-
+the robot. However, during navigation, it can observe which
+term dynamics with a spatially-continuous representation
+passages are frequently blocked at the same time.
+that provides occupancy estimates. Fremen [10] enhances
+Our robot navigation system relies on a topological map
+a topological map with a spectral model that allows for G
+of the environment = (V, E), where E are the edges
+predicting the traversability of the edges as a function of
+representing possible passages and V are the set of nodes
+the time of day. Fentanes et al. [5] use this model for
+representing their intersections. We refer to each navigation
+planningpathsthattakeintoaccountthetemporalperiodicity
+task performed by the robot as a run. At every run, the
+of changes in the environment. In contrast to that, we use
+traversability of the environment may change. We represent
+a probabilistic approach to learn a time-agnostic model of
+the traversability of the i-th edge at a run t as the binary
+the traversability changes on the edges of a topological
+random variable et that is 0 if the edge is blocked or 1 if
+representation of the environment. i
+the edge is free. We refer to the state of all the edges of
+Representingthefulljointprobabilityoverthetraversabil-
+the topology during run t as the environment conﬁguration
+ity of the edges is intractable even for relatively small { }
+Et = et, ..., et| | .
+environments. In the context of SLAM, FAB-MAP [3] uses 1 E
+In this work, we make the following key assumption:
+the Chow-Liu tree approximation for modeling the joint
+1) when the robot starts a new run, it has no knowledge
+distribution of a set of visual features. For trafﬁc prediction,
+about the current environment conﬁguration except for
+Furtlehner et al. [8] use a factor graph representation to
+its previous observations;
+model and predict the road trafﬁc from a probe vehicle. We
+2) duringeachrun,theenvironmentconﬁgurationdoesnot
+considerasimilarmodelbasedonfactorgraphs[12]thatcan
+change. This means that we account only for the low-
+capture the correlation between traversability changes and
+frequency dynamic changes in the environment;
+exploit this correlation to make probabilistic predictions.
+3) the environment conﬁguration is independent on the
+Planning paths in the belief space deﬁned by the predic-
+temporalorderoftheruns,i.e.,theconﬁgurationatrunt
+tions can be formulated as a partially observable Markov
+has the same degree of dependence to the conﬁguration
+decision process (POMDP). However, POMDPs are in prac-
+at run t+1 than to the one at t+k;
+tice intractable for real-world environments [21]. The re- ∈
+4) when reaching one of the nodes v V, the robot can
+active planning problem [16] considers a set of possible
+observe all the adjacent edges to v.
+conﬁgurations and plans policies that guarantee the robot
+to reach the goal. Murphy et al. [18] samples the edge IV. ESTIMATINGPATTERNSINTRAVERSABILITY
+costs from a probabilistic costmap, generates a list of paths
+∗ To make informed decisions for navigating in changing
+usingA andselectsthemostfrequentpath.RAGsearch[2]
+environments, we aim at learning a model of the patterns
+plans risk-aware paths on a graph where the edge costs are
+of change to predict the traversability at unknown loca-
+unknown by trading off exploration and exploitation. In the
+tions. We use the robot’s observations during traversal to
+Canadian traveler problem (CTP) [22], an agent aims at
+incrementally learn a probabilistic model that captures the
+traveling along the shortest path in a road network where
+correlation among the edges’ traversability and that exploits
+some roads, unknown to the agent, are blocked. Lim et
+this correlation to make predictions during navigation.
+al. [15] introduce a variant of the CTP in which the roads’
+traversability may be correlated. The CTP is a PSPACE- A. Modeling Environment Conﬁgurations
+complete problem [7], however different approximations
+During navigation at run t, the environment presents a
+have been proposed. Nikolova and Karger [19] approximate
+conﬁguration Et of which the robot typically observes only
+the CTP by considering graphs that consist only of disjoint ⊆
+a subset of edges Zt Et. To plan reliable routes, we aim
+paths. Whereas, CTP-UCT [4] is a Monte-Carlo search
+at predicting the traversability of the currently unobserved
+algorithmthatcomputespoliciesbytakingtheuncertaintyof ∪
+edges Ut, with Et = Zt Ut. We formulate this as
+thepredictionsintoaccount.Weextendthisapproachtoplan
+the problem of estimating the probability of the unobserved
+paths that lead the robot to collect informative observations
+edges Ut to be traversable conditioned on the partial obser-
+for improving the model of the environment traversability
+vation of the environment conﬁguration Zt:
+and its predictions.
+Krause et al. [11] use a criterion based on mutual in- | p(Ut, Zt)
+p(Ut Zt)= , def. cond. prob. (1)
+formation for collecting information about the environment. p(Zt)
+Meliou et al. [17] plan informative paths by selecting the ∪
+= η p(Et), Et =Zt Ut (2)
+locations that maximize the mutual information. We use
+the mutual information for planning paths that trade off the where η is a normalizer given the current observations Zt
+exploration of informative locations and the exploitation of and p(Et) is the joint probability distribution over the
+the traversability predictions to navigate along short paths. traversability of the edges in the environment.
+301
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. (a)Exampletopology. (b)Indep.variablesapprox. (c)Chow-Liutreeapprox. (d)Ourfactorgraphapprox.
+Fig. 2: Graphical model (GM) representations (b-d) of the joint probability over the edges in the example topology (a).
+The distribution p(Et) deﬁnes a probability function over turingsomeofthecorrelationbetweentheedgetraversability
+| | | |− | |
+the space of possible conﬁgurations. It captures the correla- while storing only E (E 1)/2+ E low-dimensional
+tion among the traversability of edges and, thus, its knowl- factors.Therefore,ourrepresentationrequiresonlyquadratic
+edge is essential to make predictions about the environment space in the number of edges rather than exponential as in
+conﬁguration. In general, p(Et) is a distribution without a the case of the full joint probability distribution.
+special structure and the space required to represent it is ex-
+C. Computing Factors From Observations
+ponentialinthenumberofedges.Therefore,representingthe
+jointdistributionovertheedgesbecomesquicklyintractable. Given our factor graph representation, we need to provide
+Thereexistdifferentapproachestocomputeatractableap- a deﬁnition of the factors φ and ψ such that the model
+proximationofthejointprobabilitydistribution.Thesimplest corresponds to the robot’s observations collected in the
+one is to consider each edge to be independent of all others previous runs and we can efﬁciently update the model in an
+as illustrated in Fig. 2b for the example topology in Fig. 2a. incremental manner as the robot acquires new observations.
+Thisrepresentationisefﬁcienttostoreandcompute,butitis Thebeliefpropagationalgorithm[23]allowsforperform-
+not able to capture the correlation among the edges. A more ing inference on factor graphs. We use the BP algorithm
+advanced approach is the Chow-Liu tree approximation [1] to make predictions from current data (see Sec. IV-D) but
+that represents the joint probability using a tree-structured also to estimate the model parameters from the robot’s
+Bayesian network as the one depicted in Fig. 2c. Chow- observations. Furtlehner et al. [8] introduce an approach to
+Liu representation requires quadratic space and is able to estimate the factor nodes from the marginal probabilities by
+capture some correlation among edges. However, it requires using the ﬁxed points of belief propagation. We use this
+training data and typically does not deal with incremental approach to deﬁne the unary factors and binary factors of
+and partial data that characterize our problem. To deal our factor graph as:
+with our requirements, we propose to approximate the joint
+φ = p(e ), (4)
+probability distribution over the edge traversability by using i i
+p(e , e )
+a ﬂexible but bounded factor graph representation. ψ = i j , (5)
+ij p(e )p(e )
+i j
+B. Our Factor Graph Model
+where p(e ) and p(e ,e ) are respectively the unary and
+i i j
+A factor graph is a probabilistic graphical model that binary joint probabilities of the edges to be traversable
+allows for representing a general factorization of a function. or blocked. Note that Eq. (5) has an analogy with the
+It is structured as an undirected graph with two kinds of mutual information between e and e that is non-zero
+(cid:54) i j
+nodes: the variable nodes that correspond to the random for p(e , e )=p(e )p(e ). This gives an intuition that such
+i j i j
+variables and the factor nodes that represent local functions deﬁnition of the factors allows for modeling the correlation
+of the adjacent variable nodes. between edges.
+Weuseafactorgraphrepresentationinwhichthevariable This deﬁnition of factor nodes allows for computing the
+nodes are the edges E of the topology. We model the approximated joint probab(cid:89)ility distri(cid:89)bution in Eq. (3) as:
+correlation among the traversability of the edges by deﬁning
+| | | |
+one unary factor node φ for each edge and one binary factor E E p(e ,e )
+p (Et) = η p(e ) i j . (6)
+node ψ for each pair of topology edges, as in the factor φψ i p(e )p(e )
+i j
+graph illustrated in Fig. 2d. Considering this representation, i j
+we assume that we can approximate(cid:89)the j(cid:89)oint distribution We compute the unary and binary joint probabilities,
+over the edges as: p(e ) and p(e , e ), from the robot’s observations in the
+i i j
+≈ previous runs Z1:t-1. We achieve this by maintaining a
+p(Et) pφψ(Et) = η φi ψij. (3) counter of the number of observed occurrences of each
+i j unary and binary conﬁgurations. To prevent probabilities
+This factor graph representation allows for approximating to take extreme values of 0 or 1 on a single observation,
+the probability over the environment conﬁgurations by cap- we initialize them with a uniform prior by assigning to
+302
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. each conﬁguration an equal positive number of occurrences. the set of known traversable and blocked edges, and the set
+{ }
+After each run, we update the counters based on the robot’s of unknown edges. Let ρ = s , s , ..., s be the current
+0 1
+observations and recompute the probabilities. Dealing with sequence of sta(cid:115)tes at the k-th rollout, we select the next
+(cid:48)
+unary and binary joint probabilities allows us to update only state s that maximizes the UCT formula:
+the probabilities corresponding to the observed edges. Using
+(cid:48) logRk-1(ρ) − (cid:48) − (cid:48)
+thisprocedure,wecanincrementallyandefﬁcientlycompute s =argmaxB (cid:48) dist(s,s) Ck-1(ρ), (7)
+the model’s parameters from the robot’s observations. The s(cid:48) Rk-1(ρ)
+other key advantage of this procedure is that it allows for where ρ(cid:48) = {ρ,s(cid:48)} is the new sequence of states, B > 0 is
+easily incorporating partial observations of the environment. a parameter that biases the exploration in the belief space,
+Forinstance,intheexampleillustratedinFig.2a,iftherobot dist(s, s(cid:48)) is the travel distance to move from s to s(cid:48),
+observes the edges a and b but not c and d, we update p(a), Rk-1(ρ) is the number of previous rollouts that start with ρ,
+p(b), and p(a, b), but not p(a, c) and p(b, d). and Ck-1(ρ) is the average travel distance to the goal in the
+previous rollouts that start with ρ.
+D. Predicting Traversability of Edges
+After performing a number of rollouts, CTP-UCT selects
+P
+Our factor graph model maintains a tractable approxima- the path that minimizes:
+tionofthejointprobabilitydistributionoverthetraversability P P
+of the edges and provides us a tool for predicting the costCTP−UCT( ) = length( ), (8)
+P
+traversability of currently unknown edges. The belief prop- where length( ) is the average travel distance to the goal
+P
+agation algorithm implements a message passing procedure along during the rollouts. We extend this cost function to
+in the graph to estimate the MAP environment conﬁguration plan paths that, in the initial runs, lead the robot to collect
+andthemarginalprobabilitiesofeachedgetobetraversable. information about the traversability in the environment for
+WepredictthetraversabilityoftheunobservededgesUtat improving the model and the predictions in the subsequent
+runtbyﬁxingtheobservededgesZt totheobservedvalues runs.
+in the factor graph and by performing belief propagation.
+B. Collecting Informative Observations
+This procedure allows for computing a belief about the
+environment conﬁguration that estimates p(Ut | Zt). Acommonapproachtocollectinformationabouttheenvi-
+ronment is to make observations at locations that maximize
+V. PLANNINGEXPLOITINGPREDICTIONS the mutual information about the non-observed regions. The
+We aim at exploiting the traversability predictions pro- mutual information, also called information gain, between
+vided by our factor graph model to plan anticipatory be- two discrete random variables a and b is deﬁned as:
+(cid:88)
+haviors that lead the robot to encounter a reduced number I H −H |
+(a, b) = (a) (a b), (9)
+of unforeseen obstacles during navigation in the long run.
+p(a, b)
+To achieve this, we explore the belief space of possible = p(a, b) log , (10)
+environment conﬁgurations and plan paths that trade off ∈ ∈ p(a)p(b)
+a a,b b
+travel distance and information gain to improve the edge where H(·) and H(·|·) are respectively the entropy and the
+traversability model. conditional entropy.
+Given the current set of unobserved edges Ut, we can
+A. Minimizing Travel Distance From Predictions
+bias the robot’s behavior to collect informative observations
+We minimize the travel distance to reach the goal in a by selecting paths that maximize the information gain:
+partiallyobservedenvironmentbyexploringthebeliefspace I H −H |
+of the possible environment conﬁgurations deﬁned by the (P, Ut) = (P) (P Ut), (11)
+P
+predictions.Wesearchthebeliefspacebyusinganapproach where P is the set of edges along the path .
+based on CTP-UCT [4]. CTP-UCT is a Monte-Carlo search Computing the entropy over P requires the knowledge
+algorithm based on the upper conﬁdence bounds applied to of their joint probability. However, our factor graph model
+trees[9]thatallowsforcomputingapproximatesolutionsfor does not provide direct access to it. Therefore, we ap-
+I
+the Canadian traveler problem. proximate (P, Ut) with the sum of the pairwise mutual
+Given a prediction of the environment conﬁguration, we information between the edges a(cid:88)long the path P and the
+approximate the belief space of possible conﬁgurations by unobserved edges Ut:
+performing a sequence of rollouts. A rollout randomly sam- I ≈ I I
+ples a conﬁguration according to the current belief and (P, Ut) ˆ(P, Ut) = m∈ax (p, ut), (12)
+∈ p P
+simulates robot navigation on this conﬁguration. The robot ut Ut
+I
+has no initial knowledge about the sampled conﬁguration where (p, ut)iscomputedusingEq.(10).Thisapproxima-
+but it can make observations during traversal. In CTP-UCT, tioninvolvesonlyunaryandbinaryjointprobabilitiesthatare
+the robot selects locations for navigation that led to the goal directlyavailablefromourfactorgraphmodel.Furthermore,
+through short paths and have been selected less often in the we make sure that the mutual information for the same edge
+previousrollouts.Tothisend,ateachstepoftherollouts,we is not counted multiple times by considering the maximum
+consider a state s composed by the robot’s current location, mutual information for each unobserved edge ut.
+303
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. C. Exploration vs. Exploitation
+We aim at computing paths that trade off exploration and
+exploitation to minimize the travel distance in the long run. ons0.3
+Toroigtihniasl eCnTdP,-wUeCTpebrufotrwmearepselaqcueenEcqe(cid:104). (o8f)rboyllsoeultesc(cid:105)tainsginpatthhes gpredicti FInudllepjoeinndte(netxpva.crioamblpelsexity)
+that minimize: wron0.2 Ourapproach
+P P − I vg.
+cost( ) = length( ) γ#runs ζ ˆ(P, Ut) , (13) A
+0.1
+P P
+where length( ) is the estiImated travel distance of to 10 100 1000 10000
+the goal from the rollouts, ˆ(P, Ut) is an approximation #observations
+P ∈ Fig.3:Avg.ratioofwrongpredictionsforlowandhighcorrelated
+of the information gain along , γ [0,1] is a parameter
+environment conﬁgurations using different models.
+that controls the exploration term, and ζ is a constant that
+normalizes information gain and travel distance.
+robot observes at each run the whole environment. These
+The exploratory behavior of the robot is determined by
+assumptions allow for computing the full joint distribution
+theparameterγ thatdecaysexponentiallywiththenumberof over the traversability of the edges despite its exponential
+runsperformedbytherobot.Initially,whenfewobservations
+space complexity to use for comparison. We additionally
+areavailable,γ leadstherobottofavorexploratorybehaviors compare our approach with a model that assumes each edge
+forimprovingthemodelofthetraversabilityoftheedges.As
+to be independent of all others, like the one illustrated
+the robot performs more and more runs and acquires several
+in Fig. 2b. To investigate the performance of our approach,
+observations of the environment, the model and its ability
+we consider two different cases: one in which the environ-
+to make predictions improve and the exploration becomes
+mentconﬁgurationsarehighlycorrelated(smallM)andone
+less prominent. When the learning process of the model
+in which the correlation is low (large M).
+converges, our problem becomes similar to a CTP in which
+We compare the capabilities of each model to predict the
+the traversability of the edges is correlated. At this point,
+edge traversability for 10000 partial conﬁgurations after the
+the exploratory term in Eq. (13) has a low weight and the
+robot observed 10, 100, 1000, and 10000 conﬁgurations.
+robot can exploit the predictions similarly as in the original
+In Fig. 3, we illustrate on average the ratio of wrong
+CTP-UCT to navigate along short paths.
+predictions for the three approaches. In cases in which
+the conﬁgurations are highly correlated (solid lines), our
+VI. EXPERIMENTALEVALUATION
+approach(blue)providesgoodpredictionsalreadyafterafew
+The main focus of this work is on robot navigation
+observations. The predictions improve incrementally as the
+over extended periods of time in environments where the
+robot makes more observations similarly as if using the full
+traversability changes by following patterns and on how
+joint probability distribution (green). Instead, assuming the
+the knowledge about such patterns can be obtained and
+edges to be independent (red) cannot capture the correlation
+exploited.Ourexperimentsaredesignedtoillustratethatour
+between edges and leads to worse predictions. In cases in
+approachisableto(i)modelandmakepredictionsaboutthe
+which the conﬁgurations have low correlation (dotted line),
+traversability changes in the environment from the robot’s
+the three approaches provide similar predictions. Therefore,
+incremental observations; (ii) plan paths that exploit the
+also in situations with low correlation, our approach does
+predictions to make decisions for navigation; (iii) navigate
+not reveal worse performance than the model assuming
+alongpathsthatareonaverageshorterthanfollowinggreedy
+independence among edges.
+shortest path strategies in the long run.
+In our experiments, we consider different topologies de- B. Navigation Exploiting Predictions
+ﬁned over real-world environments. Many approaches exist The second experiment is designed to show that our
+to build topological maps, for example, Kuipers et al. [14]. approachisabletoexploitthepredictionsoftheenvironment
+On these topologies, we simulate correlated traversability conﬁgurations to plan anticipatory strategies that lead the
+changes.Tothisend,weuseamixtureofM templateconﬁg- robot to navigate along shorter paths over time. In this ex-
+urations computed by randomly sampling the traversability periment, we consider four different environments described
+of the edges. At each run, we generate an environment inTab.I.Toevaluatetheimprovementovertime,werepeated
+conﬁgurationbysamplinguniformlyoneoftheM templates aﬁxedsequenceofnavigationof25tasksandconﬁgurations
+and applying random noise. foratotalof500runsineachenvironment.Wecompareour
+approach to the theoretical optimal path computed assuming
+A. Predicting Environment Conﬁgurations
+to known the ground truth environment conﬁguration (in
+We designed the ﬁrst experiment to show the capabilities practice unknown to the robot) and to an optimistic shortest
+∗
+of our approach to model the traversability changes and pathpolicycalledSPO.ThisstrategyplanpathsusingA by
+to make predictions about the environment conﬁgurations. assuming that every edge of the environment is traversable
+In this experiment, we consider a relatively small topology unless the robot observes the opposite and re-plans. SPO
+composed by 9 nodes and 13 edges and assume that the doesnottakeintoaccountthepredictionsoftheenvironment
+304
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. 1.2 50runs
+1.0
+SPO 250runs
+1.0
+nce nce0.9 500runs
+dista0.8 dista
+travel0.6 Smalloﬃce travel0.8
+g.0.4 Mediumoﬃce g.
+Av Largeoﬃce Av0.7
+0.2
+Hospital
+Theoreticaloptimum
+0.0 0.6
+0 50 100 150 200 250 300 350 400 450 500 SPO SPD CTP-UCT Ourapproach
+#runs
+Fig. 5: Avg. distance traveled by the robot following different
+Fig. 4: Avg. distance traveled by the robot following our approach
+planning approaches. CTP-UCT and SPD use our factor graph
+over the number of runs in the environments described in Tab. I
+model for computing the predictions.
+normalized between the theoretical optimum (black dashed line)
+and the SPO solution (black dash-dotted line).
+It is important to note that CTP-UCT and SPD do not
+provide an approach to model and make predictions of
+TABLEI:Environmentsconsideredinourexperimentalevaluation.
+the edge traversability in the environment. Therefore, we
+Environment Dimensions Nodes Edges compute the predictions using our factor graph model also
+Smallofﬁce 25×20m 16 18 for these approaches.
+×
+Mediumofﬁce 30 30m 20 30 The performance of the approaches after 50, 250, and
+×
+Largeofﬁce 50 30m 18 37
+× 500 runs for navigating in the environments introduced in
+Hospital 125 35m 40 55
+the previous section are illustrated in Fig. 5. SPO (orange)
+reveals a constant trend over time as it does not take the
+conﬁguration and, thus, independent of the number of runs,
+predictionsintoaccount.Takingintoaccountthepredictions,
+makes the same decisions as if navigating for the very ﬁrst
+SPD (green) leads the robot to navigate along shorter paths
+time. In our approach, we perform 50 rollouts per decision
+over time. However, the determinization of the predicted
+and set the parameter that regulates the exploratory term of
+conﬁgurations may cause the robot to follow paths that
+the cost function to γ =0.95.
+are distant from the optimal ones. CTP-UCT (red) consider
+The performance of our approach over the number of
+a weaker approximation of the belief deﬁned by the pre-
+runs in the four environments are illustrated in Fig. 4. We
+dictions by performing rollouts. Thus, it is able to make
+evaluate the average difference in the travel distance to
+more informed decisions than SPD that lead the robot along
+the theoretical optimum with ground truth knowledge avail-
+shorter paths. Our approach (blue) extends CTP-UCT by
+able(0.0)normalizedwithrespecttotheSPOsolution(1.0).
+considering an exploratory term that allows the robot to
+Initially,whentherobotcollectedlittleinformationaboutthe
+collect informative observations that explicitly improve the
+environment, the predictions on the traversability are weak
+model and so the predictions about the traversability of the
+and the robot following our approach performs similarly as
+edges. The exploratory behavior leads initially to slightly
+following SPO. After 100 runs, our approach starts discov-
+longer travel distances than CTP-UCT but, in the long run,
+ering patterns in the traversability changes and plans paths
+it allows the robot to navigate along shorter paths than
+leading the robot to the goal along shorter paths. Over time,
+following other approaches in our evaluation.
+when the robot collects more and more observations about
+the environment, the learning process of the traversability VII. CONCLUSION
+model converges and, after 500 runs, the robot following
+In this paper, we investigate robot navigation over ex-
+our approach navigates along paths that are on average 30%
+tendedperiodsoftimeinenvironmentswherethetraversabil-
+shorter than following an optimistic shortest path strategy.
+ity changes happen following patterns. We present an ap-
+C. Planning Performance Comparison proach that learns a probabilistic model of the traversability
+changes from the robot’s incremental observations during
+Besidesthebaselinesdiscussedintheprevioussection,we
+navigation. Our model exploits the estimated correlation
+compare the performance of our approach to other planners.
+between the traversability in the environment to predict
+For comparison, we consider the original CTP-UCT [4] that
+the traversability at unknown locations. We exploit these
+searches for the shortest path in the predicted belief as
+predictions to make informed decisions that lead the robot
+described in Sec. V-A. We compare our approach also to
+to navigate encountering a reduced number of unforeseen
+a strategy inspired by Lim et al. [15] called SPD. SPD
+obstacles in the long run.
+makes a most likely assumption on the belief about the
+∗ Although our approach presents higher complexity com-
+edge traversabilities and plans the shortest path using A
+paredtotraditionalplanningsystems,inenvironmentswhere
+on the ‘determinized’ environment conﬁguration. When the
+the traversability changes following patterns, it has the po-
+robot makes an observation incompatible with the current
+tential to automatically lead to navigate robots along shorter
+determinized conﬁguration, SPD computes a new prediction
+paths over time increasing the efﬁciency of their operations.
+and re-plans.
+305
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [24] C. Stachniss and W. Burgard. An Integrated Approach to Goal-
+directedObstacleAvoidanceunderDynamicConstraintsforDynamic
+Environments. In Proc. of the IEEE/RSJ Intl. Conf. on Intelligent
+[1] C. Chow and C. Liu. Approximating Discrete Probability Distribu-
+RobotsandSystems(IROS),pages508–513,2002.
+tions with Dependence Trees. IEEE Trans. on Information Theory,
+[25] C.StachnissandW.Burgard.MobileRobotMappingandLocalization
+14(3):462–467,1968.
+inNon-StaticEnvironments. InProc.oftheNationalConferenceon
+[2] J.J.Chungn,A.Smith,R.Skeele,andG.Hollinger.Risk-awareGraph ArtiﬁcialIntelligence(AAAI),pages1324–1329,2005.
+SearchwithDynamicEdgeCostDiscovery. Intl.JournalofRobotics
+Research(IJRR),2018.
+[3] M.CumminsandP.Newman. FAB-MAP:ProbabilisticLocalization
+and Mapping in the Space of Appearance. Intl. Journal of Robotics
+Research(IJRR),27(6):647–665,2008.
+[4] P. Eyerich, T. Keller, and M. Helmert. High-quality Policies for
+the Canadian Traveler’s Problem. In Proc. of the Conference on
+AdvancementsofArtiﬁcialIntelligence(AAAI),2010.
+[5] J.Fentanes,B.Lacerda,T.Krajn´ık,N.Hawes,andM.Hanheide.Now
+or later? Predicting and Maximising Success of Navigation Actions
+from Long-Term Experience. In Proc. of the IEEE Intl. Conf. on
+Robotics&Automation(ICRA),pages1112–1117,2015.
+[6] D.Fox,W.Burgard,andS.Thrun. TheDynamicWindowApproach
+to Collision Avoidance. IEEE Journal of Robotics and Automation,
+4(1):23–33,1997.
+[7] D. Fried, S. Shimony, A. Benbassat, and C. Wenner. Complexity of
+Canadian Traveler Problem Variants. Theoretical Computer Science,
+487:1–16,2013.
+[8] C. Furtlehner, J.M. Lasgouttes, and D. de La Fortelle. A Belief
+PropagationApproachtoTrafﬁcPredictionusingProbeVehicles. In
+IEEETrans.onIntelligentTransportationSystems(ITS),2007.
+[9] L.KocsisandC.Szepesva´ri. BanditbasedMonte-CarloPlanning. In
+Proc.oftheEurop.Conf.onMachineLearning,pages282–293,2006.
+[10] T.Krajn´ık,J.P.Fentanes,J.M.Santos,andT.Duckett. Fremen:Fre-
+quencyMapEnhancementforLong-TermMobileRobotAutonomyin
+ChangingEnvironments. IEEETrans.onRobotics(TRO),33(4):964–
+977,2017.
+[11] A. Krause, C. Guestrin, A. Gupta, and J. Kleinberg. Near-optimal
+SensorPlacements:MaximizingInformationwhileMinimizingCom-
+municationCost.InProc.oftheIntl.Conf.onInformationProcessing
+inSensorNetworks,pages2–10,2006.
+[12] F. Kschischang, B. Frey, and H.A. Loeliger. Factor Graphs and
+the Sum-Product Algorithm. IEEE Trans. on Information Theory,
+47(2):498–519,2001.
+[13] T.Kucner,J.Saarinen,M.Magnusson,andA.Lilienthal. Conditional
+TransitionMaps:LearningMotionPatternsinDynamicEnvironments.
+InProc.oftheIEEE/RSJIntl.Conf.onIntelligentRobotsandSystems
+(IROS),pages1196–1201,2013.
+[14] B. Kuipers, J. Modayil, P. Beeson, M. MacMahon, and F. Savelli.
+Local Metrical and Global Topological Maps in the Hybrid Spatial
+SemanticHierarchy. InProc.oftheIEEEIntl.Conf.onRobotics&
+Automation(ICRA),volume5,pages4845–4851,2004.
+[15] Z.W. Lim, D. Hsu, W.S. Lee, and W. Sun. Shortest Path under
+Uncertainty:ExplorationversusExploitation. InProc.oftheConf.on
+UncertaintyinArtiﬁcialIntelligence(UAI),2017.
+[16] R.MacDonaldandS.Smith. ActiveSensingforMotionPlanningin
+Uncertain Environments via Mutual Information Policies. Intl. Jour-
+nalofRoboticsResearch(IJRR),38(2-3):146–161,2019.
+[17] A. Meliou, A. Krause, C. Guestrin, and J. Hellerstein. Nonmyopic
+Informative Path Planning in Spatio-temporal Models. In Proc. of
+the Conference on Advancements of Artiﬁcial Intelligence (AAAI),
+volume10,pages16–7,2007.
+[18] L.MurphyandP.Newman.RiskyPlanningonProbabilisticCostmaps
+forPathPlanninginOutdoorEnvironments. IEEETrans.onRobotics
+andAutomation,29(2):445–457,2013.
+[19] E. Nikolova and D.R. Karger. Route Planning under Uncertainty:
+The Canadian Traveller Problem. In Proc. of the Conference on
+AdvancementsofArtiﬁcialIntelligence(AAAI),pages969–974,2008.
+[20] S.O’CallaghanandF.Ramos.GaussianProcessOccupancyMapsfor
+Dynamic Environments. In Proc. of the Intl. Sym. on Experimental
+Robotics(ISER),pages791–805,2016.
+[21] C. Papadimitriou and J. Tsitsiklis. The Complexity of Markov
+DecisionProcesses. 12(3):441–450,1987.
+[22] C.PapadimitriouandM.Yannakakis. ShortestPathsWithoutaMap.
+TheoreticalComputerScience,84(1):127–150,1991.
+[23] J.Pearl. ProbabilisticReasoninginIntelligentSystems:Networksof
+PlausibleInference. Elsevier,2014.
+306
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 15:00:29 UTC from IEEE Xplore.  Restrictions apply. 

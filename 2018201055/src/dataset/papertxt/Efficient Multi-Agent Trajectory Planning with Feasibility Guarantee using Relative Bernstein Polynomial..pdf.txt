@@ -1,0 +1,456 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Real-time Data Driven Precision Estimator for RAVEN-II Surgical
+Robot End Effector Position
+Haonan Peng, Xingjian Yang, Yun-Hsuan Su, Blake Hannaford
+Abstract—Surgicalrobotshavebeenintroducedtooperating as stiffness and internal damping are signiﬁcant and are
+rooms over the past few decades due to their high sensitivity, known to vary as a function of tension [10]. Therefore, the
+small size, and remote controllability. The cable-driven nature
+kinematics based end effector poses reported by the robot
+ofmanysurgicalrobotsallowsthesystemstobedexterousand
+from motor sensors are prone to error.
+lightweight,withdiametersaslowas5mm.However,duetothe
+slack and stretch of the cables and the backlash of the gears,
+B. Related Work
+inevitable uncertainties are brought into the kinematics calcu-
+lation [1]. Since the reported end effector position of surgical To compensate for the inaccuracy, an intuitive approach
+robotslikeRAVEN-II[2]isdirectlycalculatedusingthemotor
+is to take additional sensor measurements by applying a
+encodermeasurementsandforwardkinematics,itmaycontain
+motion tracker at the surgical tooltip or a joint encoder
+relatively large error up to 10mm, whereas semi-autonomous
+functions being introduced into abdominal surgeries require on each robot joint depending on whether to resolve the
+position inaccuracy of at most 1mm. To resolve the problem, a problem in cartesian or joint level. Drawbacks occur in both
+cost-effective, real-time and data-driven pipeline for robot end solutions.Intheformercase,complicationsoccurduringthe
+effectorpositionprecisionestimationisproposedandtestedon
+required high heat sterilization procedure [10]. The latter,
+RAVEN-II. Analysis shows an improved end effector position
+however,introducescomplexitykeepingthesensorwiresand
+errorofaround1mmRMStraversingthroughtheentirerobot
+workspace without high-resolution motion tracker. The open robot cables compact. Alternatively, real-time video streams
+source code, data sets, videos, and user guide can be found at from endoscopes are used as an additional cue for end
+//github.com/HaonanPeng/RAVEN Neural Network Estimator. effectorposeestimates.Butextractingposeinformationfrom
+vision alone can be challenging with the highly dynamic
+I. INTRODUCTION and reﬂective surgical scenes in real-world operations [11].
+A. Background Recently, online estimation systems are proposed to provide
+a robust and precise end effector position prediction.
+Robot-assisted Minimally Invasive Surgery (RAMIS)
+Haghighipanah et al. [1] proposed a joint level model-
+opens the door to collaborative operations between experi-
+based approach for RAVEN-II pose estimation using an
+enced surgeons and surgical robots with high dexterity and
+unscented Kalman ﬁlter [12]. Although improved results
+robustness [3]. While surgeons are in charge of decision
+were shown for the ﬁrst three joints, the experiments were
+makingandrobotmanipulationthroughteleoperation,robots
+limitedtorepeatedlypickingupaﬁxedmass.Also,jointpose
+follow the trajectory commands. In abdominal RAMIS, the
+estimates for the last four surgical tool joints were beyond
+precision requirement is in millimeter scale. With surgeons
+the scope of the study and were suggested to be corrected
+manually closing the loop, accuracy of the reported robot
+through vision. In 2018, Seita et al. [13] presented a data-
+end effector pose is not a big concern. In recent years,
+drivenCartesianposecalibratorforthedaVinciResearchKit
+surgical robot intelligence has emerged in medical robotics
+experimental surgical robotic platform (dVRK) [14]. That
+research, where repetitive tasks like ablation [4] and de-
+study successfully achieved autonomous surgical debride-
+bridement [5] can be conducted autonomously under su-
+ment through a two-phase calibration procedure. The result
+pervision of surgeons. Intelligent robot navigation agents
+shows high precision in both position and orientation, and is
+are now being developed to incorporate raw teleoperation
+tailoredtothespeciﬁcsurgicaltaskofdebridement.In2014,
+commands,tremorcanceling[6]andmotioncompensationof
+Mahleretal.[15]usedGaussianprocessregressionanddata
+the dynamic surgical scenes [7] [8]. Moreover, vision-based
+cleaning to reduce the error of RAVEN-II end effector, and
+force estimation [9] in RAMIS shows promise. In all these
+by including the velocity information, the accuracy could be
+applications, precise end effector positioning of the surgical
+further improved.
+robot is a requirement.
+Many surgical robots are designed with cable transmis- C. Contributions
+sions with motors mounted at the base to allow lighter
+In this work, the authors built a robot position precision
+and more compact arms. Cable dynamic properties such
+estimator on RAVEN-II that is not task-speciﬁc and spans
+the robot workspace. Thus, a pipeline was built to collect
+Haonan Peng, Xingjian Yang, Yun-Hsuan Su and Blake Hannaford are
+withtheUniversityofWashingtonDepartmentofElectricalandComputer precise RAVEN-II position data traversing the workspace
+Engineering,185StevensWay,PaulAllenCente{r-RoomAE100R,Campus from teleoperation trials by human operators. The ground
+Box 352500, Seattle, WA 98195-2500, USA. penghn, yxj1995,
+} truthpositionwascarefullyderivedthroughcalibratedstereo
+yhsu83, blake @uw.edu
+978-1-5386-2512-5/18/$31.00(cid:13)c2020IEEE vision.Finally,thedatasetwasusedtotrainaneuralnetwork
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 350
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. Fig.1:Workﬂowforproposedonlinepositionprecisionestimationsystem.Pipelineentailsvisionbasedgroundtruthmeasurement(left)anddatadriven
+robotpositionestimator(right).TraininglabelspassingfromlefttorightaretrueRAVEN-IIpositioninformation.
+position with an average precision of around 0.8 mm, a sig-
+niﬁcantimprovementfromtheRAVEN-IIfeedbackposition.
+Fig. 2: 16 marker points used for camera pose calibration are placed at 8
+groundlocationsinrobotworkspace.
+model that estimates position error. To the best of the
+authors’ knowledge, this work is ﬁrst to simultaneously Fig.3:Geometricrelationsamongimageplane,cameraandmarker.
+1) introduce a cost-effective approach for vision-based
+precise robot position data collection; B. Camera Localization
+2) train a neural network model with 1000Hz detailed Sincethegoalofphaseoneistoobtaingroundtruthrobot
+sensor and controller state information as input; position through vision, accurate camera pose identiﬁcation
+3) implement and analytically quantify the performance in relation to the robot frame is crucial. The existing camera
+of a data-driven precision estimator of the robot posi- extrinsic matrix solver in MATLAB [17] requires placing
+tion in the entire robot workspace. a chessboard at a known pose with respect to the world
+frame.Theresultantcameraposefromsaidsolutioncontains
+II. METHODS error up to 40 millimeters if only 1-5 chessboards are used.
+Although placing more chessboards (usually more than 20)
+A. System Workﬂow
+theoretically improves precision, the problem of acquiring
+The online end effector pose estimation system consists
+accuratechessboardposesalsobecomesincreasinglydifﬁcult
+of two phases - vision-based ground truth measurement and
+due to the constrained workspace. As a practical alternative,
+neural network estimator, as shown in Fig. 1.
+we use 1 chessboard and 16 marker points together (Fig. 2).
+1) PhaseOne: 4webcamsaremountedwithposesdeter- The chessboard provides a rough cameras pose estimate and
+mined by a two-phase calibration procedure (Fig. 2, left).
+the 16 markers further reﬁne it.
+During data recording, 3 distinct colored balls are ﬁxed We deﬁne world frame w, chessboard frame b, camera
+to the end effector as markers (Fig. 6 left). The balls are frame c and image frame i. The camera position and orien-
+only used to collect training data and are removed in real tation with respect to the world coordinate are respectively
+operation. In addition, the balls and the holder are hollow pw =[xwywzw]T and Rw ∈R(3×3).
+and very light, for a negligible load to the system. For each cSimilacrly,cthce marker pcosition in the world coordinate is
+imageframe,preprocessingstepsareperformedandfollowed pw =[xw yw zw]T whereas its 2D projection on the image
+m m m m
+by Hough circle detection [16]. A frame update algorithm frame is pi =[xi yi ]T. Let distance vectors 
+is then adopted to prevent false positives by comparing m m m −(cid:20) (cid:21)
+circles detected in subsequent images. Finally, the 3 circle (cid:126)vc2m = pwm pwc ,   (1)
+centersyieldgroundtruthendeffectorpositionupto0.5mm pi · xim
+accuracy. (cid:126)vi2c = Rcw fm =Rbw Rcb ymi , (2)
+2) Phase Two: There are 2 stages in phase two - ofﬂine f
+training and online estimation. The collected position data where f is the camera focal length. According to the ge-
+is used to train a neural network. Next, the trained neural ometric relations illustrated in Fig. 3, the following three
+networkmodelprovidesonlineestimationoftheendeffector equations hold true for each marker from each camera view:
+351
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. Fig.4:Circledetectionmethodandthepreprocessingsteps.Colorimage(1)isﬁrstconvertedtograyandGaussianblurisapplied(2).ThenCannyedge
+(3)istakenfromthegrayimage.Intheotherpathway,thecolorimage(1)isdividedintored,green,andyellowcolorchannels(4).ThenGaussianblur
+withσ of10%radiusfollowedbybinarizationisapplied(5).Image(6)iselementwisemultiplicationof(3)and(5).Houghcircledetectionisappliedin
+eachchannelinimage(6),whichcombinestoresultin(7).Finally,image(8)isacolorchecknearthecirclebordertoeliminatefalsepositives.
+Toimproveadaptability,anautomatedparametertuningalgo-
+(cid:126)v (k) (cid:107)(cid:126)v (cid:107) ∀ ∈ rithmisdesignedfortheaccumulatorthresholdpara2,where
+c2m = (cid:107)c2m(cid:107)2 k [1,2,3], (3) small values indicate a higher chance of false positives.
+(cid:126)v (k) (cid:126)v
+i2c i2c 2 Suppose k circles are expected, the algorithm uses bi-
+where (cid:126)v(k) represents the kth entry in the distance vector. section to approach the lower bound of para2, such that
+There are a total of 6 unknown variables in pw and Rw. ‘HoughCircle’ comes close to returning (k+1) circles but
+c c −
+With16equationsets(3)yieldfromall16markerpoints,the stillreturnsk.Inthecasewherepara2jumpsbetween(k 1)
+Levenberg-Marquardt algorithm [18] ﬁnds optimal camera and (k + 1), increasing σ in Gaussian blur helps, but is
+(cid:48) (cid:48)
+pose with initial guess pw and Rw from the chessboard. conducted only if necessary - due to decreased precision.
+c c
+C. Auto Hough Circle Detection D. Frame Update Algorithm
+Localization of the colored balls assists with end effector There are 2 main purposes of the frame update algorithm.
+position acquisition. 2D circle detection is the ﬁrst step to The ﬁrst is to decide if any camera is returning false circles.
+localize colored balls. Hough circle detection [16] is chosen The second is to provide other parameters to ‘HoughCircle’,
+due to its robustness to occlusion. Yet, it is sensitive to includingtheminimumdistancebetweencirclecentersdmin,
+bright edge noises, so heuristic parameter tuning and image and extrema of circle radius rmin and rmax. Setting a low
+enhancementsarenecessary.Fig.4showsthepre-processing dmin and wide range between rmin and rmax allows more
+steps with the following design details: chance to detect circles, but it also increases computational
+cost and the risk of false positives. Thus, under smooth end
+a) Edge Detection (1)-(3): These steps increase the
+signal to noise ratio and clear up noisy edges. effector motion, dmin, rmin and rmax values are bounded
+by the detection result from the previous frames.
+b) Color Segmentation (1)-(4)-(5): After this, circle
+segments in the color channels are intentionally enlarged. Thereare atotal of 4 cameras.For eachball, thereshould
+c) BorderReﬁnement(3)(5)-(6): Sincecirclesinb)are ideally be 4 circles detected - one corresponding to each of
+larger than a). The circle canny edges [19] will be kept, and the 4 camera views. After the frame update algorithm, each
+detectedcircleisproclaimedaseithereffectiveorsuspended.
+any edges outside the circles will be removed.
+Every circle is initialized as effective. If any of the condi-
+d) Circle Identiﬁcation (6)-(7)-(8): After circles are
+tionsbelowholdstrue,aneffectivecirclewillbesuspended:
+detected,samplepointsneartheborderareusedtoensurethe
+circlecolormatchesthetargetcolorwithsimilaritymorethan • The movement of the circle center in successive frames
+25%. Otherwise, the circle is considered a false detection. exceeds a predetermined motion threshold.
+• Color check in ﬁg. 4 (8) fails to match target color by
+25%.
+• Hough circle detection does not return a circle, even
+with the largest tolerable σ for Gaussian blur.
+On the other hand, if all the following conditions are
+satisﬁed for more than 5 frames, a suspended circle will
+become effective:
+Fig.5:ComparisonofCannyedgeonoriginalimage(left),normalblurred
+image(middle)andprocessedimagebyoursystem(right). • The Hough circle returns result normally.
+• Color check in ﬁg. 4 (8) is successful.
+The ‘HoughCircle’ function in OpenCV [20] is used • The 3D reconstructed ball center position from effec-
+to detect circles. Two heuristically chosen parameters are tively detected 2D circles is consistent with that of this
+inverseratiodp=1andhighCannythresholdpara1=100. suspended 2D circle information.
+352
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. −−−−→ −−−−→
+A line that connects a 2D effective circle center and its of orientation is taken by setting PwPw, PwPw as x and
+e0 g e0 y
+associatedcameracenterformsa3Dray.The3Dpositionof y axis of the end effectors frame. Then, the Nelder-Mead
+the ball center is the intersection point of rays. These rays Simplex Method [22] is used to ﬁnd the optimal value of
+usually do not intersect perfectly, and the midpoint of the (xˆw,yˆw,zˆw,αˆ,βˆ,γˆ), which is the pose of the end effector.
+e e e
+common perpendicular of the two rays is selected to be the
+F. Neural Network Architecture
+intersection point. When the number of effective circles is (cid:110)(cid:16) (cid:17) (cid:111)
+larger than 2, the mean position is taken from each pair of Thetrainingdatafortheneuralnetworkisrepresentedas:
+rays. Thus, 2 or more effective circles of the same ball must |
+χ = ravenstate(k),err(k) k =[1...N] , (8)
+be detected at any time instance for successful localization. NN
+If not, the system skips a few frames and restarts, all while where ‘ravenstate’ is a ROS topic that contains real-time
+raisingthetolerablerangefortheparameters.Oncethereare kinematicsanddynamicinformationofRAVEN-II.And‘err’
+enough effective circles, the parameter tolerance converges isthedifferencebetweentheRAVEN-IIreportedendeffector
+back down. positionsandthegroundtruthcollectedthroughvision-based
+E. End Effector Localization measurement in phase one. More details follow:
+1) The Features: The information provided in a ‘raven-
+As Fig. 6 shows, the 3 colored balls are ﬁxed around the
+state’ message includes: (a) kinematics derived Cartesian
+end effector center (the black point, which is deﬁned by the
+pose, (b) desired Cartesian pose, (c) current joint pose, (d)
+RAVEN-II system). The end effector center position shares
+desired joint pose, (e) motor and joint velocities, (f) motor
+thesameplanewiththe3ballcenters.Thedistancesbetween
+torques, (g) desired grasper pose and other information, all
+the end effector center and each ball center are deﬁned as
+of which are added as features of the neural network.
+d = 38 mm and each ball has radius r = 20mm. An end
+2) The Labels: We chose the end effector position error
+effector coordinate frame is designed for RAVEN-II, where
+asthelabelinsteadofthegroundtruthpositionitselfbecause
+the origin is the end effector point, the X axis points toward
+RAVEN-II already has end effector pose feedback in the
+the green ball center, and the Y axis points at the yellow
+‘ravenstate’ topic. To get a more accurate estimation, one
+ball center, which is also co-linear with RAVEN-II axis X
+6b onlyneedstocorrectRAVEN-IIposefeedbackderivedfrom
+[21].
+joint pose and forward kinematics, instead of creating a new
+estimation.Infact,thisdesignismorerobusttostaticCarte-
+sian positional offsets contained in the ‘ravenstate’ reported
+position,whichslightlydifferseverytimethesystemrestarts.
+Fig.6:Geometricrelationsbetweenballcentersandendeffectorposition.
+The detected ball centers in the world coordinate frame
+are:greenpw =[xwywzw]T,yellowpw =[xwywzw]T and
+g g g g y y y y
+red pwr =[xwr yrwzrw]T. These 3 points are used to estimate Fig. 7: The performance of different hyperparameter sets. The legend
+theendeffectorcenterpˆw =[xˆwyˆwzˆw]T andtheorientation ‘L654sigmoid’meansthatthereare3hiddenlayersof600,500and400
+· e · e e e
+Rˆw =Rot(z,γˆ) Rot(y,βˆ) Rot(x,αˆ) represented in Euler units with sigmoid activation. ‘elu/relu’ refers to ELU [23] and RELU
+e [24]activationfunctions
+angles. From the setup of th(cid:2)e end effe(cid:3)ctor and three colored
+balls, the estimated ball centers can be represented by
+(cid:2) (cid:3) 3) Network Structure and Parameters: In order to de-
+·
+pˆw = Rˆw d 0 0 T +pˆw (4) termine the structure and hyperparameters of the neural
+g e (cid:2) (cid:3) e
+pˆw = Rˆw· 0 d 0 T +pˆw (5) network,thenetworkwasﬁrsttrainedwithrandomlychosen
+y e e hyperparameters from a large range and then the hyperpa-
+· −
+pˆw = Rˆw d 0 0 T +pˆw (6) rameters narrowed to a smaller range. We evaluated more
+r e e
+To solve for the end effector pose, a cost function C than 100 sets of hyperparameter values. Nine illustrative
+with 6 unknown variables (xˆw,yˆw,zˆw,αˆ,βˆ,γˆ) can be set values are plotted in Fig. 7. The following hyperparameter
+up. Minimizing the cost givees ane opetimal solution of the values yielded the best obtained performance:
+unknown variables, • 3 dense sigmoid layers of 600, 500, 400 units.
+− − − • batch normalization [25], batch size = 1024.
+C =(pwg pˆwg)2+(pwy pˆwy)2+(pwr pˆwr)2 (7) • learning rate = 1×10−8, epochs = 10000.
+× −
+Take the middle point of pw and pw as the initial guess • regularization rate = 5 10 6(L ).
+g r 1 −
+of pˆw = [xˆw yˆw zˆw]T, denoted as Pw. The initial guess • Adam[26]optimizer:(β =0.9,β =0.999,=10 8)
+e e e e e0 1 2
+353
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. III. EXPERIMENTALRESULT and test set are randomly chosen trajectories in the dataset,
+instead of random sample points. The purpose is to make
+A. Experiment Setup
+sure that the trained neural network has similar accuracy in
+A standard RAVEN II surgical robot was used with a
+the whole workspace instead of performing well only along
+remote controller. Only the left arm was activated and there
+the recorded trajectories.
+was no control signal sent to the right arm. The vision-
+based ground truth measurement system was set up and C. Performance Analysis
+the environment was surrounded by black cloth to reduce
+First, the accuracy of the measurement system was tested.
+background interference in images. To get data for neural
+The error of measurement mainly comes from two aspects:
+network training, RAVEN-II was manually operated by a
+1) inaccurate circle detection in the images; 2) inaccurate
+remote controller and moved randomly in the workspace
+camera localization. The 1st type of error was calculated by
+for 140 minutes. Due to unstable performance of RAVEN-II assuming camera localization is perfect. 200 frames were
+near the robot workspace boundary and singular points, the
+chosen, and the centers of the circles were manually marked
+operation workspace deﬁned in this paper is a reasonable
+in the images. Then, the ball centers were calculated using
+large space around initialization center, which is enough for
+manually marked circle centers and the result was used
+a typical block transfer operation. The data was recorded
+as the ground truth for accuracy analysis. The 2nd type
+as time-synchronized pairs of ‘ravenstate’ and ground truth
+of error was calculated by assuming circle detection was
+end effector positions. The recorded trajectories contained a
+perfect. 16 marker points with known position inside the
+total of 49,(cid:16)407 data pairs, in w(cid:17)hich each ravenstate consists workspace were chosen and manually marked in the image
+of 118 ﬂoats for each arm.
+plane. After ball centers were detected, the optimization
+methodintroducedinII.Ewasusedtosolvetheendeffector
+ravenstate(k),err(k) k =1...49,407.
+positionandfurtherimprovedtheaccuracy.Finally,theresult
+was compared with the ground truth and analytically shown
+in TABLE I.
+TABLEI:TheErrorofMeasurementSystem
+Axis SingleBallCenter EndEffectorPosition
+RMS(mm) SD(mm) RMS(mm) SD(mm)
+x 0.6273 0.2891 0.4229 0.0513
+y 0.6354 0.3000 0.2896 0.0949
+z 0.3004 0.1029 0.1521 0.0718
+3D 0.9866 0.2315 0.5346 0.0695
+After training the neural network ofﬂine, an online neural
+Fig.8:Experimentalsetup. network estimator was built, which took the ‘ravenstate’ as
+input and output the estimated end effector position, ew =
+pˆw + err, which is roughly 10 times more accurate than
+e
+B. Neural Network Ofﬂine Training the RAVEN-II original estimation calculated by kinematics.
+The training data χ was used to train the neural The test set, consisting of 10% of the recorded data, was
+R →NNR untouched during all training procedures, and was used to
+network f : 118 3 to map input ‘ravenstate’(k)
+NN test the system performance.
+to the output end effector position error err(k). Suppose
+Fig.9showstheonlineestimationresult.Theactualvalue
+pw and pˆw are the true and ‘ravenstate’ reported RAVEN-
+e e was obtained using the measurement system, and the origi-
+II positions. After training, an online end effector position
+nal estimate came from the RAVEN-II forward kinematics,
+precision estimator was built, where pw =pˆw+err.
+e e containing errors from cable-driven mechanism etc. Fig. 10
+Thetrainingdatacomesfromrecordedtrajectories,which
+shows the RMS error and standard deviation of the error.
+are a series of continuous points traversing most of the
+workspace. However, the neural network estimator is ex-
+IV. DISCUSSIONSANDFUTUREWORK
+pected to work in the entire workspace. The technique
+A. Performance of Phase One
+of randomly choosing subsets of points in the recorded
+trajectory to form the validation set and test sets might only The vision-based ground truth position measurement sys-
+achieve high performance on the training set trajectories, tem was used to measure the RAVEN-II end effector posi-
+and rapidly decreases its accuracy when the robot leaves tion, but can be extended to measuring other object poses.
+the trained trajectories. After several tests, it was found Andthesystemisrobusttoocclusionwith4camerasaround
+that to prevent poor performance during online estimation at workspace. The measurement system achieves accuracy be-
+unseenpointsduetooverﬁtting,thevalidationsetandtestset low 0.5 mm in each axis. (TABLE.I) In summary, the
+should be carefully selected. In particular, the validation set proposed procedure for acquiring ground truth position is
+354
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. Fig. 9: Comparison of actual position, motor encoder based forward kinematics position, and neural network estimation. The neural network estimator
+decreasesthepositionalRMSerrorby83.6%andthestandarddeviationoferrorby59.4%.
+assumesthedynamicpropertyofthesystemdoesnotchange
+signiﬁcantly after training, i.e., the testing happens within a
+shorttimeaftertrainingandtheendeffectorisalsounloaded.
+In the future, the inﬂuence of payload and time period
+between training and testing will be further studied.
+V. CONCLUSION
+Fig.10:RMSerrorandstandarddeviationoferrorinendeffectorposition
+Due to compliance and losses in the transmission mech-
+withandwithoutneuralnetworkonlineestimator.
+anism (cable/pulley links in the RAVEN-II), indirect mea-
+surement of joints and other external uncertainties, esti-
+a cost-effective option to satisfy the required accuracy and mation of the precise end effector position is challenging.
+canfurtherimproveprecisionbyincreasingtheballcountor In this work, a cost-effective online RAVEN-II position
+using higher resolution cameras. precision estimator is implemented and tested on a 140-
+As illustrated in Fig. 9, the data was collected through minute trajectory set. The system entails a vision-based
+manual teleoperation of RAVEN-II for 140 minutes through ground truth position measurement system and an online
+random trajectories traversing the robot workspace. Com- data-driven position estimator based on a neural network.
+pared to preprogrammed periodic trajectories, this dataset Although the total cost of the measurement is around one
+providesdataspanningmostoftheworkspaceandthemotion hundred dollars (mostly the cost of four webcams), the
+pattern is more realistic to teleoperated surgical operations. sub-millimeter accuracy achieved is more than 10 times
+betterthantheRAVEN-IIpositionaccuracybasedonmotor-
+B. Advantages of Phase Two
+mounted encoders. The neural network estimator decreases
+After ofﬂine training, we built an online estimator, which the positional RMS error by 83.6% and the standard devia-
+gave a signiﬁcantly more accurate end effector position tion of error by 59.4%. Furthermore, the estimator requires
+estimate. Since the neural network input ‘ravenstate’ is an no additional sensors or information other than the RAVEN-
+existing ROS topic from RAVEN-II, the online estimator IIbuilt-in‘ravenstate’ROStopic(updatedat1000Hz),which
+requires no additional sensor or information and can be contains kinematic and dynamic information of RAVEN-II.
+applied to any RAVEN-II robot. Finally, the proposed cost-effective position estimator can
+Fig. 10 shows that the neural network estimator can not be generalized to other RAVEN-II sites, as well as other
+onlydecreasetheRMSerror,butalsothestandarddeviation robots with accuracy affected by compliance and losses in
+of the error, which means that the online estimator can transmission elements between motors and joints. Although
+improve precision beyond applying a static Cartesian offset robotic surgeons today readily compensate for imperfect
+alone. Moreover, our estimator could potentially be utilized position control, as commercial surgical robots incorporate
+in other robots where transmission compliance and losses humanaugmentationandautonomousfunctions,theneedfor
+are signiﬁcant inﬂuences on precision. Our current work accurate position estimate and control will increase.
+355
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [12] E.A.WanandR.VanDerMerwe,“Theunscentedkalmanﬁlterfor
+nonlinearestimation,”inProceedingsoftheIEEE2000AdaptiveSys-
+[1] M.Haghighipanah,Y.Li,M.Miyasaka,andB.Hannaford,“Improving
+temsforSignalProcessing,Communications,andControlSymposium
+position precision of a servo-controlled elastic cable driven surgical
+(Cat.No.00EX373). Ieee,2000,pp.153–158.
+robotusingunscentedkalmanﬁlter,”in2015IEEE/RSJinternational
+[13] D.Seita,S.Krishnan,R.Fox,S.McKinley,J.Canny,andK.Goldberg,
+conference on intelligent robots and systems (IROS). IEEE, 2015,
+“Fastandreliableautonomoussurgicaldebridementwithcable-driven
+pp.2030–2036.
+robots using a two-phase calibration procedure,” in 2018 IEEE In-
+[2] B.Hannaford,J.Rosen,D.W.Friedman,H.King,P.Roan,L.Cheng,
+ternationalConferenceonRoboticsandAutomation(ICRA). IEEE,
+D. Glozman, J. Ma, S. N. Kosari, and L. White, “Raven-ii: an
+2018,pp.6651–6658.
+open platform for surgical robotics research,” IEEE Transactions on
+[14] P. Kazanzides, Z. Chen, A. Deguet, G. S. Fischer, R. H. Taylor,
+BiomedicalEngineering,vol.60,no.4,pp.954–959,2012. (cid:13)
+[3] J.H.Palep,“Roboticassistedminimallyinvasivesurgery,”Journalof and S. P. DiMaio, “An open-source research kit for the da vinciR
+surgical system,” in 2014 IEEE international conference on robotics
+MinimalAccessSurgery,vol.5,no.1,p.1,2009.
+andautomation(ICRA). IEEE,2014,pp.6434–6439.
+[4] D. Hu, Y. Gong, B. Hannaford, and E. J. Seibel, “Semi-autonomous
+simulated brain tumor ablation with ravenii surgical robot using [15] J. Mahler, S. Krishnan, M. Laskey, S. Sen, A. Murali, B. Kehoe,
+behavior tree,” in 2015 IEEE International Conference on Robotics S. Patil, J. Wang, M. Franklin, P. Abbeel et al., “Learning accurate
+andAutomation(ICRA). IEEE,2015,pp.3868–3875. kinematiccontrolofcable-drivensurgicalrobotsusingdatacleaning
+[5] B.Kehoe,G.Kahn,J.Mahler,J.Kim,A.Lee,A.Lee,K.Nakagawa, andgaussianprocessregression,”in2014IEEEInternationalConfer-
+S. Patil, W. D. Boyd, P. Abbeel et al., “Autonomous multilateral enceonAutomationScienceandEngineering(CASE). IEEE,2014,
+debridementwiththeravensurgicalrobot,”in2014IEEEInternational pp.532–539.
+Conference on Robotics and Automation (ICRA). IEEE, 2014, pp. [16] H.Yuen,J.Princen,J.Illingworth,andJ.Kittler,“Comparativestudy
+1432–1439. of hough transform methods for circle ﬁnding,” Image and vision
+[6] C. N. Riviere, W. T. Ang, and P. K. Khosla, “Toward active tremor computing,vol.8,no.1,pp.71–77,1990.
+cancelinginhandheldmicrosurgicalinstruments,”IEEETransactions Proceedings of the 35th International Convention MIPRO. IEEE,
+onRoboticsandAutomation,vol.19,no.5,pp.793–800,2003. 2012,pp.1752–1757.
+[7] K.Lindgren,K.Huang,andB.Hannaford,“Towardsreal-timesurface [18] J.J.More´,“Thelevenberg-marquardtalgorithm:implementationand
+trackingandmotioncompensationintegrationforroboticsurgery,”in theory,”inNumericalanalysis. Springer,1978,pp.105–116.
+2017IEEE/SICEInternationalSymposiumonSystemIntegration(SII). [19] J.Canny,“Acomputationalapproachtoedgedetection,”inReadings
+IEEE,2017,pp.450–456. incomputervision. Elsevier,1987,pp.184–203.
+[8] S. G. Yuen, D. T. Kettler, P. M. Novotny, R. D. Plowes, and R. D. [20] G.BradskiandA.Kaehler,LearningOpenCV:Computervisionwith
+Howe, “Robotic motion compensation for beating heart intracardiac theOpenCVlibrary. ”O’ReillyMedia,Inc.”,2008.
+surgery,” The International journal of robotics research, vol. 28, [21] H.King,S.Kosari,B.Hannaford,andJ.Ma,“Kinematicanalysisof
+no.10,pp.1355–1372,2009. theraven-iiresearchsurgicalrobotplatform,”UniversityofWashing-
+[9] Y. H. Su, K. Huang, and B. Hannaford, “Real-time vision-based ton,Tech.Rep.UWEETR-2013-0006,2012.
+surgical tool segmentation with robot kinematics prior,” in Medical
+[22] J. C. Lagarias, J. A. Reeds, M. H. Wright, and P. E. Wright,
+Robotics (ISMR), 2018 International Symposium on. IEEE, 2018,
+“Convergence properties of the nelder–mead simplex method in low
+pp.1–6.
+dimensions,” SIAM Journal on optimization, vol. 9, no. 1, pp. 112–
+[10] S. N. Kosari, S. Ramadurai, H. J. Chizeck, and B. Hannaford,
+147,1998.
+“Control and tension estimation of a cable driven mechanism under
+[23] D.-A. Clevert, T. Unterthiner, and S. Hochreiter, “Fast and accurate
+different tensions,” in ASME 2013 International Design Engineering
+deep network learning by exponential linear units (elus),” arXiv
+TechnicalConferencesandComputersandInformationinEngineering
+preprintarXiv:1511.07289,2015.
+Conference. American Society of Mechanical Engineers, 2013, pp.
+[24] V. Nair and G. E. Hinton, “Rectiﬁed linear units improve restricted
+V06AT07A077–V06AT07A077.
+boltzmann machines,” in Proceedings of the 27th international con-
+[11] B.Lin,Y.Sun,X.Qian,D.Goldgof,R.Gitlin,andY.You,“Video-
+ferenceonmachinelearning(ICML-10),2010,pp.807–814.
+based 3d reconstruction, laparoscope localization and deformation
+recovery for abdominal minimally invasive surgery: a survey,” The [25] S. Ioffe and C. Szegedy, “Batch normalization: Accelerating deep
+International Journal of Medical Robotics and Computer Assisted networktrainingbyreducinginternalcovariateshift,”arXivpreprint
+Surgery,vol.12,no.2,pp.158–178,2016. arXiv:1502.03167,2015.
+[17] A. Fetic´, D. Juric´, and D. Osmankovic´, “The procedure of a camera [26] D. P. Kingma and J. Ba, “Adam: A method for stochastic optimiza-
+calibration using camera calibration toolbox for matlab,” in 2012 tion,”arXivpreprintarXiv:1412.6980,2014.
+356
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:46 UTC from IEEE Xplore.  Restrictions apply. 

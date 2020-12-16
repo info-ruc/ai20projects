@@ -1,0 +1,518 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Efﬁcient Updates for Data Association with
+Mixtures of Gaussian Processes
+Ki Myung Brian Lee1, Wolfram Martens2, Jayant Khatkar1, Robert Fitch1 and Ramgopal Mettu3
+Abstract—Gaussian processes (GPs) enable a probabilistic AmajorchallengeinthecontextofroboticsisthatMCMC
+approach to important estimation and classiﬁcation tasks that methodsforDPmixturemodelstypicallyrequirefrequentre-
+ariseinroboticsapplications.Meanwhile,mostGP-basedmeth-
+associationandlikelihoodinferencethatarecomputationally
+ods are often prohibitively slow, thereby posing a substantial
+expensive.WhenGPsareusedasmixturecomponents,these
+barrier to practical applications. Existing “sparse” methods to
+speed up GPs seek to either make the model more sparse, operations then require frequent inversion of a large covari-
+or ﬁnd ways to more efﬁciently manage a large covariance ance matrix; the cost of this operation scales quadratically
+matrix. In this paper, we present an orthogonal approach that withthenumberofdatapoints.Thus,theseapproachesscale
+memoises (i.e. reuses) previous computations in GP inference.
+poorly to real-world applications, and there is a pressing
+We demonstrate that a substantial speedup can be achieved
+needtoimprovecomputationalefﬁciencyinordertosupport
+by incorporating memoisation into applications in which GPs
+mustbeupdatedfrequently.Moreover,wederiveanovelonline online robotics applications such as active perception.
+update scheme for sparse GPs that can be used in conjunction In this paper, we address this inefﬁciency through a novel
+with our memoisation approach for a synergistic improvement memoisation framework that reuses results from previous
+in performance. Across three robotic vision applications, we
+computations for GP inference. Our core insight is that
+demonstrate between 40-100% speed-up over the standard
+we can exploit the linear algebraic operations for online
+method for inference in GP mixtures.
+updates to not only share the results between different
+I. INTRODUCTION types of operations, but we can also reuse the results from
+priorinferencecomputations.Thisapproachisorthogonalto
+Afundamentalprobleminroboticsistorobustlyassociate
+existing methods to speed up GPs, which generally seek to
+noisy sensor measurements to the relevant environmental
+improve computational efﬁciency by considering a low-rank
+phenomena. Instances of such data association problems
+approximation of the covariance matrix.
+include object segmentation, where pixel or pointcloud
+We show that our memoisation framework can be used
+measurements are segmented into different objects [1–3],
+in both exact and approximate settings, and demonstrate
+and multi-target tracking, where measurements need to be
+substantialbeneﬁtsforthreeapplications.Intheexactsetting,
+attributed to a (possibly unknown) number of targets [4].
+memoisation provides a speedup ranging between 40-100%.
+More generally, most active perception algorithms makes
+We also develop a novel online update scheme for two
+use of the data association step as a fundamental primitive.
+existing sparse approximation methods to allow using our
+A promising approach is to model the measurements as a
+memoisation approach in conjunction. In the sparse setting,
+mixture of Gaussian processes; approaches in this direction
+incorporating memoisation incurs a small overhead perfor-
+include Gaussian process (GP) regression and Dirichlet pro-
+mance for moderate data sizes, but clear gains are evident
+cess (DP) mixture models. GP [5] is already widely used
+for large data sizes.
+in robotics applications because they enable powerful non-
+parametric Bayesian inference on both spatial and temporal
+data. Similarly, DP mixture models can describe problems II. RELATEDWORK
+where observed data needs to be associated to distinct latent
+InﬁniteGPmixturemodelsareapowerfultoolforsolving
+components. Markov-Chain Monte Carlo (MCMC) methods
+general data association problems in a non-parametric set-
+such as Gibbs sampling are used to work with DP mixture
+ting.ThestandardapproachistoassumeaDPmodel[8]over
+models. DP mixture models over GP components have been
+GPs, and perform Gibbs sampling [9–11]. In the robotics
+usedinroboticsapplicationssuchasobjectsegmentation[6],
+community, [6] used Gibbs sampling to cluster pointcloud
+gas distribution mapping [7], and spatiotemporal topic mod-
+measurementsintoapplefruitdetection.Suchaprobabilistic
+elling for active exploration [1].
+formulation allowed principled multi-robot active perception
+in [1]. Despite potential usefulness, GP inference on a large
+This work is supported in part by an Australian Government Research
+TrainingProgram(RTP)Scholarships,theUniversityofTechnologySydney, dataset can be prohibitively expensive for even a small
+andTulaneUniversity. number of evaluations, and scales quadratically with size of
+1University of Technology Sydney, Ultimo, NSW 2006, Aus-
+{ } dataset. To address this bottleneck, low-rank approximation
+tralia brian.lee, jayant.khatkar @student.uts.edu.au,
+rfitch@uts.edu.au methods, or sparse methods have been extensively studied.
+2SoftwareandPrototypesforAutomation(SPA),Siemens,Berlin,Ger- The subset of regressors (SoR) [12], and deterministic train-
+manywolfram.martens@siemens.com
+ingconditional(DTC)methods[13]arestandardapproaches
+3DepartmentofComputerScience,TulaneUniversity,NewOrleans,LA
+70118,USArmettu@tulane.edu based on a probabilistic formulation.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 335
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. Ourmemoisationapproachisorthogonaltothesemethods Algorithm 1 GPMIXTUREINFERENCE
+because it does not entail additional approximation. In fact, 1: for ﬁxed number of iterations do
+D
+it is possible to use both in conjunction, provided there is a 2: Sample d from
+i
+suitable online update scheme for the sparse approximation 3: Remove d from current expert
+i
+method used. A challenge is that most sparse approximation 4: for each expert e do
+j P |D
+methodsonlyconsiderbatchinference.Tothisend,wederive 5: Compute GP likelihood (d )
+P |iE \j
+an online update scheme for SoR and DTC methods, and 6: Compute expert prior (e e )
+j j
+show how our approach can be used in conjunction. 7: Compute posterior using lines 5 and 6
+∗
+8: Choose e based on the posterior
+III. PRELIMINARIES D∗
+9: Add d to
+i
+A. Gaussian Process Regression
+ItisimportanttonotethatboththeDTCandSoRapprox-
+We are interested in zero-mean scalar Gaussian processes ×
+(GPs) over x∈Rd, imations require×the inversion of an M M matr(cid:28)ix, instead
+of the usual N N covariance matrix. Since M N, this
+f ∼GP(0,k (x,x(cid:48))), (1) leads to a substantial speed-up.
+f
+(cid:48) (cid:48) C. Mixture of GP Experts
+with kernel function k (x,x)=cov(f(x),f(x)).
+D { ··· f } The aim of the data association problem is to correctly
+{vGaxilvLiu,eeeyntio}Df,,=fwthheaedtrc1exo,niydiwit=ii,otdhnNfaml(xleib(cid:16)aike)seul+airhesomeoitedniostoffandnomaitseaoeabpssuoeirirenv∼mtasteiwoNnntit((cid:17)yh0o∗,fdσait2th=)ea. aDGsP,so(wc0i,haketejre(exae,caxhc(cid:48)h)d)a∈staubEps.oeFti(cid:48)notDrsdjiimf∈pollilDcoiwtytso,wdaeisGwjoPiilnlta‘essxsuupbmesreett’stheDajtjth⊂=e
+query location x∗ is given by [5]: kernel function kj(x,x) for each expert ej are drawn from
+a known set of kernel functions with ﬁxed hyperparameters.
+∗− ∗
+P ∗ | ∗ D −1 (y µ )2 ∗ AnimportantclassofalgorithmsforGPmixtureinference
+log (y x , )= ∗ +log2πσ 2 , (2)
+2 σ 2 issampling-basedalgorithmssuchasGibbssampling[9],or
+with mean and variance: GP-INSAC [14]. These sampling-based algorithms typically
+∗ ∗ − follow the pattern shown in Algorithm 1. Each iteration
+µ∗ =k∗∗T−(K+∗ σ2IN) 1yD,− ∗ (3) begins with a random selection of a measurement pair to
+σ 2 =k k T(K+σ2IN) 1k . process (Line 2). The selected pair is ﬁrst dissociated from
+∈R × itscurrentexpert(Line3).Then,foreachexpert,wecompute
+Here,yD N 1 denotestheconcatenationoftheobserva-
+∈R × the measurement likelihood of the selected pair through GP
+tions for all data points. The covariance terms, K N N,
+∗ ∈R × ∗∗ inference (2), and a prior on the expert itself. Given the
+k N 1,andk areconstructedasK =k(x , x ),
+∗ ∗ ∗∗ ∗ ∗ mn m n likelihood and prior, we compute the posterior, and select
+k =k(x ,x ), and k =k(x ,x ) respectively.
+n n the new expert for the current measurement pair.
+B. Sparse Gaussian Process For example, in inﬁnite mixture of GP experts [9], the
+expert prior is a DP, and the expert is selected by sampling
+We consider two variants of sparse approximations,
+from posterior. In GP-INSAC [14], the expert prior is a
+namelySubsetofRegressors(SoR)andDeterministicTrain-
+Bernoulli distribution over inlier and outlier events, and the
+ing Conditional (DTC). In these approximations, we pick a
+D expert with maximal posterior is chosen.
+subsetfromthemeasurements toserveastheactivepoints
+that induce the rest of the measurements. Throughout the IV. INCREMENTALUPDATES
+paper, we assume that the data points are ordered such that Addition and removal of data points to a GP expert are
+the active points come ﬁrst. Given M active points, the SoR necessaryforGPmixtureupdates.Inthissection,wepresent
+approximation is to assume: how to efﬁciently update the inference results when data
+(cid:48) ≈ − (cid:48) points are being added or removed. We review the case
+kˆ(x,x) k (x)TK 1k (x), (4)
+M MM M of exact inference, and derive a similar method for sparse
+whereK isthecovariancematrixoftheactivepoints,and approximate inference.
+MM
+(k (x)) =k(x,x ) for active points x . A. Inference
+M i i i
+With (4), the inference equations become [5]:
+1) ExactInference: Astandardmethodforefﬁcientincre-
+∗ ∗ −
+µ =k T(KT K +σ2K ) 1KT yD, mentalupdatesistousetheCholeskyfactorofthecovariance
+S∗R M∗ M M MM −M∗ (5) matrix. The Cholesky factor L = chol(K + σ2I × ) is
+σ 2 =σ2k T(KT K +σ2K ) 1k , N N
+SR M M M MM M a lower triangular matrix such that LLT = K+σ2I × .
+∗ ∗ N N
+where kM =kM(x ), and KM is the ﬁrst M columns of the UsingL,were-writetheinferenceequat−ion∗(3)inafo−rmtha∈t
+full covariance matrix. will become useful later. Deﬁne p=L 1k ,q=L 1yD
+R
+DTC approximation has the same mean as SoR, but a N. Then, the inference equation can be re-written as:
+‘correction term’ is applied to the variance term: ∗
+µ =pTq,
+∗ ∗∗− ∗ − ∗ ∗ ∗∗− (7)
+σ 2 =k k TK 1k+σ 2 . (6) σ 2 =k pTp.
+DTC M MM SoR
+336
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. (cid:20) (cid:21)
+O
+Therefore, inference is of order (N) given p and q. Then, the Cholesky factor can be updated as [17]:
+2) SparseApproximateInference: Despitethecompelling
+need for incremental sparse approximate GP inference in L+ = L 0(cid:113) , (14)
+roboticsapplications,thereiscurrentlynoliteratureondoing l+ l++
+sotothebestofourknowledge.Here,wegiveaformulation − −
+for updates in sparse approximations that is similar to the where l+ =(L 1k+)T, and l++ = k++ lT+l+.
+2) Sparse Case: For sparse inference, we need to update
+exact case. Assume, for the moment, that the set of active
+pointsaregiv(cid:20)en,andcomprisetheﬁrstM datapoint(cid:21)s.Divide theincompleteCholeskyfactorLˆ andtheQRdecomposition
+the covariance matrix as: QandR.WebeginwithLˆ.Letk+ = [kTM kT(N−M) k++]T
+be the covariance vector to be added, and deﬁne
+K K − −
+Kˆ = K −MM K − KM(−N1MK) − . (8) ˆlM = LˆMM1kM. A convenient criterion for deciding whether
+(N M)M (N M)M MM M(N M) a new point should be added to the active set is to use:
+An analogue of the Cholesky decomposition in the sparse
+−
+case is the incom(cid:20)plete Cho(cid:21)lesk(cid:20)y decompositio(cid:21)n. The incom- ˆl2 =k ˆlT ˆl . (15)
+++ ++ M M
+plete Cholesky decomposition of Kˆ is computed as [15]:
+The new point is added to the active set if ˆl2 >σ2, or the
+Lˆ chol(K ) inactive set otherwise. From a probabilistic+p+erspecTtive, the
+Lˆ = MM = MM− . (9)
+Lˆ(N-M)M K(N−M)MLˆMMT criterion(15)isthepredictivevarianceofthenewpointgiven
+In terms of the incomplete Cholesky factor, the inference thecurrentactiveset.Anewdatapointisconsideredinactive
+equations (5) can be written as: if it is almost certainly predicted by the existing active data
+∗ ∗ ∗ − − − points (i.e. low variance). Numerically, (15) ensures that the
+µSR =µDTC =k TLˆMMT(LˆTLˆ +σ2IM) 1LˆMM1LˆTyD, diagonals of Lˆ are sufﬁciently greater than zero, which is
+∗ ∗ − − − ∗
+σ 2 =σ2k TLˆ T(LˆTLˆ +σ2I ) 1Lˆ 1k , (10) essential for stable computation of future updates. While it
+SR MM M MM
+∗ ∗∗− ∗ − − ∗ ∗ is also possible to compute and use other criteria (e.g. [18])
+σ 2 =k k TLˆ TLˆ 1k +σ 2,
+DTC MM MM SR through algebraic manipulations, we defer the use of other
+which is also referred to as the V-method in [16]. It is still
+criteria to future work for simplicity.
+difﬁcult to update (10) incrementally as we did for exact
+Ifthenewpointisdecidedasinactive,theupdateissimply
+iannfdertehnecem,ubleticpaluicsaetioofntohfeyinDvebrysioLˆn−MoM1fLˆXT.= (LˆTLˆ +σ2IM), auprdoawteidnsaesr:tion Lˆ+ =[LˆT ˆlM]T. If it is active, the matrix is
+In this work, we use the QR decomposition to compute  
+theCholeskyfactorofX,whichnowallowsforincremental Lˆ 0
+updates. QR decomposition of a matrix A ∈ RP×Q with Lˆ+ = ˆlT ˆl , (16)
+≥ (cid:2) (cid:3) ∈ R × M ++
+mPatriQx (iis.eg.iQveQnTby=AI =) aQndRRw∈heRreP×QQ is uPppPeristraianugnuitlaarry. Lˆ(N−M)M ˆl(N−M)
+p − −
+Deﬁne L˜ = LˆT σIM T, and consider L˜ = QR. Then, whereˆl(N−M) =ˆl++1(k(N−M) Lˆ(N−M)MˆlM).
+we have RT = chol(X), because X = RTR and R is Afterwards, the QR decomposition is updated. Note that,
+upper triangular. It can be shown that the Lˆ−1LˆT term also whether active or inactive, the updates on Lˆ are row and/or
+MM
+cancels, and the inference equations become: column insertions. Equivalently, we need to compute the
+∗ ∗ ∗ − − QR decomposition after inserting row and/or column to
+µSR =µDTC =k TLˆMMTR 1QTy the augmented matrix L˜. Fortunately, this can be computed
+∗ ∗ − − − − ∗ O
+σ 2 =σ2k TLˆ TR 1R TLˆ 1k (11) efﬁciently with Givens rotations in (M2) time.
+SR MM MM
+∗ ∗∗− ∗ − − ∗ ∗
+σ 2 =k k TLˆ TLˆ 1k +σ 2.
+DTC MM MM SR C. Deletion of a Data Point
+− ∗
+Sanimdiˆrla=r toRe−x1apc.tTinhfeenre,ntchee,idnefeﬁrneencpˆe=eqLuaMtMi1oknMs,bqˆec=omQe:TyD, Div1i)deExLacitntCoabsleo:ckComnastirdiecresthaes:removalof a data point dj.
+∗ ∗  
+µ =µ =ˆrTqˆ
+SoR DTC L 0 0
+∗ 11
+σ 2 =σ2ˆrTˆr (12) L= l ∗ l 0 . (17)
+SoR j jj
+σ∗2 =k∗∗−pˆTpˆ+σ∗2 . L31 l∗j L33
+DTC SoR
+Therefore, performing sparse approximate inference is of Let K \ \ be the covariance m(cid:20)atrix after re(cid:21)moving the
+O ( j, j)
+order (M) given pˆ, qˆ, and ˆr. jth row and column from K. Then, we have:
+B. Insertion of a Data Point
+L 0
+chol(K \ \ )=L \ = 11 , (18)
+{ 1) Exa}ctCase: Consid(cid:20)ertheinsertio(cid:21)nofdatapointd+ = ( j, j) ( j) L31 U
+x+,y+ . For simplicity, we only append data points to the
+where U=cu(L ,l∗ ). cu(L,x) is the rank-1 update of L
+end of the covariance matrix: 33 j
+with x, deﬁned by cu(L,x) = chol(LLT +xxT). Rank-1
+O −
+K+ = K k+ , (13) updatescanbeperformedin ((N j)2)timeusingGivens
+kT+ k++ rotations.
+337
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. for removal previously, so that the previous result of rank-
+1 update is already available in cache as L \ (the area
+( i)
+marked red in Fig. 1a). Since then, one data point, say d∗,
+has been removed (marked blue in Fig. 1b, and another has
+been added (marked yellow in Fig. 1b).
+Recall from Sec. IV-C that removal of a data point affects
+(a) (b) only the columns beyond, and insertion affects the rows
+below.Therefore,changesarelimitedtothecolumnsbeyond
+Fig.1. Anillustrativeexampleforrank-1updatememoisation.Supposedi
+hadbeentemporarilyremovedpreviouslyin(a).Between(a)and(b),one d∗, and the rows beyond the size of current cache. The
+point was removed (blue), and another was added (yellow). If we attempt previous result in cache is valid up to the column where
+removalofdi againin(b),theredpartofthematrixremainsunchanged. removal occurred, and up to the row where the last update
+Bestviewedincolour.
+was computed. More generally, if multiple points have been
+2) Sparse case: Again, in the sparse case, we need to
+removed since the last update, the rank-1 update result will
+update Lˆ, Q and R. There are two possibilities. First, if the
+remain the same up to the furthest left (i.e. lowest) column
+data point being removed is inactive, then we simply need
+to remove the corresponding row from the Cholesky factor. removed, which is precisely the discrepancy index δi we
+stored in the cache.
+Then, the QR factors are updated incrementally, through a
+row deletion operation [19]. The row deletion operation is Therefore, if δi >di, we can ‘hot-start’ the rank-1 update
+of order O(M2). from column δi onwards. TOhis wa−y, the complexity of the
+If the data point is active, then a rank-1 update must be rank-1 update is reduced to ((N δi)2).
+Inthesparsecase,thecachecanhelpreducecomplexityof
+performedontheCholeskyfactor.Theprocessisthesameas
+the temporary removal of active points (Sec. IV-C). Because
+theusualrank-1update,exceptthattheGivensrotationneed
+rank-1 update is identical in the sparse case, we can achieve
+not go beyond column M. Therefore, rank-1 update is of
+O − − a similar reduction in complexity through ‘hot-start’. The
+complexity ((M j)(N j)).Becausethecontentsofthe O − −
+Cholesky factor has been modiﬁed, the QR decomposition complexity is then ((N δi)(M δi)).
+O
+must be recomputed in full, which is of order (NM2). C. Likelihood Inference and Insertion
+V. MEMOISATIONOFONLINEUPDATES For exact inference, we need to update p and q in (3).
+Similar to the case of rank-1 updates, the changes in the
+In this section, we present a memoisation approach that
+reuses previous results of incremental updates described in Cholesky factor L are limited to the columns beyond the
+Sec. IV. discrepancy index δi. Further, the changes to the covariance
+vector k or y is limited to the rows beyond δ . Because L
+D i
+A. Cache Structure is triangular, the solutions p and q also remain unchanged
+EachGPexpertisendowedwithacachetostoreprevious above δ . We can use back-substitution to update only the
+i
+resultsofonlineupdatesthatwewillre-uselater.Thecontent changed part of p. The complexity of solving for p is
+O O −
+of the cache is as follows for the exact and sparse cases. reduced from (N2) to (N(N δ )).
+∈D i
+1) Exactcase: Foralldatapointsd currentlyasso- Thesameargumentcanbemadefortheupdateofpˆ inthe
+i j
+ciated to the expert, we store L(\i), the result−of temporary sparsecase,becauseLˆMMalsoremainsunchangedincolumns
+remFoovraalllfodraatassopcoiianttisonDte(sntiontg,neacnedssqa(r\iil)y=inLD(\1i)),yDw\e{dsi}to.re bOe(yMon2d)δtoi.OTh(Me c(oMmp−leδxi)t)y.Aofdsioflfveirnegncfeorispˆthiastrqˆedauncdedˆrfnreoemd
+p=L−1k.Mostimportantly,westorethediscrejpancyindex to be updated after the Qi R row/column insertion operations,
+D
+δi for all data points in , which we deﬁne as the furthest as all of Q and R changeO. Re-computing qˆ through matrix
+left(i.e.numericallylowest)columnindexofthedatapoints multiplication is of order (NM), and solving for ˆr is of
+O
+that have been removed from e since the last update. The order (M2).
+j
+predominant component of space complexity is the storage For both exact and sparse inference, insertion requires
+O − −
+of L(\i), which is of order (N3). L 1k = p and LMM1kM = pˆ respectively. In the context of
+2) Sparse Case: Similarly to the exact case, we store mixture updates, inference is always performed immediately
+Lˆ \ for all associated data points, and pˆ = Lˆ−1k for before insertion. Therefore, the cache entry for p and pˆ is
+( i) M
+any data point. The discrepancy index δ is also stored, but alwaysuptodate,andwecanimmediatelyre-usetheresult.
+i
+weonlyconsiderthecolumnindicesoftheactivedatapoints
+VI. EMPIRICALSTUDIES
+removed since the last update. The space complexity is of
+O
+order (M2N) for storage of Lˆ \ , where M is the size of In this section, we consider three applications of our
+( i) (cid:28)
+active set. With correct choice of threshold (15), M N. approach and demonstrate its beneﬁts with experimental
+evaluations. We consider naive and memoised versions of
+B. Temporary Removal
+exactandDTCinference,atotaloffourcombinations.Inthe
+Let us ﬁrst consider a simple example depicted in Fig. 1. ‘naive’version,theGPexpertsareupdatedincrementally,but
+Wewouldliketotemporarilyremoved forassociationtest- donotre-usepreviousresults.Inallapplicationsconsidered,
+i
+ing (Algorithm 1, Line 3). Suppose d has been considered wechoosethethresholdσ2 usedforsparseapproximationto
+i T
+338
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. (a)Aframefromoriginalvideo
+(a)Rawdata. (b)Associationresult.
+(b)Trajectoryofdetectedtargetsovertime
+(c)Computationtime
+Fig. 2. Application of Gibbs sampling for a synthetic data association
+problem.In(b),DifferentcoloursrepresentassociationtoadifferentGP.In
+(c),amortisedtimeistheaveragecomputationtimeperiteration,andtotal
+(c)ResultafterGibbssampling
+timeisthetotalfor100,000iterations.
+Fig. 3. Data association for multi-target tracking using the Parking Lot
+be equal to the noise variance σ2. In other words, if a data
+dataset[21].CombiningGibbssamplingwithGPsallowssolvingnotonly
+point is more uncertain than the assumed noise model, it thedataassociationproblem,butalsoinferenceofmissingmeasurements;
+is considered active. These combinations were implemented in(b)and(c),xandy areimagecoordinates.
+using the Armadillo library [20]. seen that the Gibbs sampler correctly associates and infers
+Overall, memoisation provides a clear beneﬁt in perfor- over the raw data.
+manceoverthestandardexactapproachtoperforminginfer- The results in Fig. 2c show that memoisation consistently
+ence in GPs. We also show that incorporating memoisation providesaround50%speed-upinthesparsecase,andaround
+into a sparse approximation provides a synergistic beneﬁt 60% in the exact case for larger dataset sizes. In terms
+when data size is large, but imposes a small overhead when of total computation time, the naive exact method requires
+data sizes are more moderate. around 20 seconds while memoisation requires 10 seconds.
+Interestingly, the computation time for the exact inference
+A. DP Mixture of 1D GPs
+showsincreasingdeviationasthedatasetsizegrowsforboth
+We ﬁrst consider a synthetic dataset generated from a memoisedandnaivecase.Detailedproﬁlingrevealedthatthe
+Dirichlet process (DP) mixture of GPs as a controlled difference is due to memory allocation and manipulation.
+benchmark for the behaviour of amortised computation time This is consistent with the lack of variation for the sparse
+with dataset size. The DP prior is given by: cases,becausethesparseinferencerequiresmuchlessmem-
+P |E \{ } ∝(cid:107)D (cid:107) ory. Regardless, memoisation consistently exhibits compu-
+(e e ) ,
+Pj | ∈jE ∝ j (19) tational beneﬁts even under deviations. Another interesting
+(e e / ) α, pattern is that sparse inference is initially slower than exact
+≥
+whereα 0controlsthegenerationofnewexperts.Inother inference for smaller dataset sizes, but eventually becomes
+words, a new sample is drawn from a particular GP expert faster for larger dataset sizes. This is as expected, because
+with probability proportional to its current size, and a new for a smaller dataset size maintaining QR decomposition in
+GP expert are created with a non-zero probability. As such, addition to the Cholesky factor incurs substantial overhead.
+it is possible to generate, or associate with unknown number
+B. Multi-Target Tracking
+of GP experts.
+Withthegenerateddata,weusedGibbssamplingtosolve To examine the computational beneﬁts in a practical
+the data association problem. Gibbs sampling is a special scenario, we consider the example of data association and
+case of our template in Algorithm 1, where the expert prior tracking for multiple targets, a compelling application of
+is set as DP (19), and selection is done by sampling. One mixture of GPs. We consider the parking lot dataset in [21],
+instance of the result is shown in Fig. 2, where it can be which provides detections of pedestrians in a surveillance
+339
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. (a)Fullpointcloud. (b)Segmentationresult
+Fig.4. ComputationtimeofGibbssamplingwithvaryingdatasetsizefor
+multi-targettracking.Amortisedtimeistheaveragetimeperiteration,and
+totaltimeisforall50,000iterations.
+footage over time. An example frame from the video, and
+the raw detection results provided by the dataset are shown
+in Figs. 3a and 3b respectively.
+We model the position of each pedestrian as a two di-
+mensional GP over time, except with no correlation. This
+(c)Computationtime
+allows modelling each component as separate GPs, which is
+Fig.5. Groundsegmentation.In(a),thecolorrepresentsheight.In(b),blue
+astraightforwardextensionfromthebenchmarkexample.As
+isclassiﬁedasground,andorangeisclassiﬁedasoutlier(i.e.anobject).In
+before,weposeaDPpriorontheGPexperts(i.e.individual (c), amortised time is the average time per iteration, and total time is for
+pedestrians), and use Gibbs sampling to associate detections 50,000iterations.
+tothecorrecttargets.TheresultofGibbssamplingisshown the result is shown in Fig. 5b. It can be seen that the ground
+in Fig. 3c. As can be seen, the Gibbs sampler can produce is segmented correctly, with few erroneous classiﬁcations.
+correct associations between detection and pedestrians, and, A comparison of amortised computation time is shown in
+at the same time, generate a smooth trajectory through Fig. 5c. It can be seen that memoisation offers speed-up of
+inference. around 40% for exact inference, and around 70% for sparse
+We examined the behaviour of amortised computation inference. In this application, sparse inference outperforms
+time of the Gibbs sampler with variation in dataset size exact inference, because pointcloud data is much denser
+through downsampling. As shown in Fig. 4, memoisation than the image data in the multi-target tracking application.
+provides up to 100 % speed up (i.e. half the computation Further,itisworthnotingthatcomputationtimeofmemoised
+time)forfullinference,andaround50%speedupforsparse sparseinferenceislessthanhalfofthenaiveexactcase,with
+inference. In terms of total computation time, memoisation 6 second reduction in computation time. This demonstrates
+offers up to 200 seconds reduction. It is worth noting that that combining memoisation with existing sparse inference
+sparse inference scales worse for this application than the methods can lead to substantial computational beneﬁts, en-
+benchmark case, and is in fact slower than exact inference. ablingtheuseofGPmixturemodelsinpracticalapplications
+This is because the measurements of each pedestrian are that are otherwise infeasible.
+already sparse, and numerous active points are produced for
+VII. CONCLUSION
+sparse inference. In turn, these active points are temporarily
+In this paper, we have presented a memoisation approach
+removed during the mixture update iterations, incurring a
+to increasing the efﬁciency of inference using GPs. Our
+large computational cost due to full re-computation of QR
+method achieves substantial speedup when combined with
+decomposition, which is not covered by memoisation.
+sampling methods such as MCMC, where we must repeat-
+C. Pointcloud Segmentation edly add and remove points from one or more GPs. The
+To examine the behaviour in a large, dense dataset, we memoisation approach is orthogonal to the conventional
+consider ground segmentation in pointcloud data. Similar to sparse approximation methods, and, as we have demon-
+GP-INSAC[22],weposetheproblemasoutlierdetectionby strated, can be combined with the conventional methods for
+modelling the height of the ground as a scalar GP over two even greater computational beneﬁt.
+dimensions, and treating the non-ground objects as outliers. In the future, we would like to combine our memoisation
+Then, outlier detection can be solved as a special case of framework with more advanced variable reordering methods
+Algorithm 1 with a simple Bernoulli distribution for expert suchas[15].Further,wewouldliketoscaleourapproachto
+prior. We used a dataset containing a palm tree shown in bigger problem instances such as 3D multi-object segmenta-
+Fig. 5a, collected using a Riegl 3D scanner. An instance of tion [1,6,23].
+340
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [12] G.Wahba,Splinemodelsforobservationaldata. Siam,1990,vol.59.
+[13] M. Seeger, C. Williams, and N. Lawrence, “Fast forward selection
+[1] F. Sukkar, G. Best, C. Yoo, and R. Fitch, “Multi-robot region-of-
+tospeedupsparsegaussianprocessregression,”in9thWorkshopon
+interestreconstructionwithdec-mcts,”inInternationalConferenceon
+ArtiﬁcialIntelligenceandStatistics,2003.
+RoboticsandAutomation(ICRA),May2019,pp.9101–9107.
+[14] B. Douillard, J. Underwood, N. Kuntz, V. Vlaskine, A. Quadros,
+[2] H. van Hoof, O. Kroemer, and J. Peters, “Probabilistic segmentation
+P.Morton,andA.Frenkel,“Onthesegmentationof3DLIDARpoint
+and targeted exploration of objects in cluttered environments,” IEEE
+clouds,”inProc.ofIEEEICRA,2011,pp.2798–2805.
+Trans.Robot.,vol.30,no.5,pp.1198–1209,2014.
+[15] F.R.BachandM.I.Jordan,“Predictivelow-rankdecompositionfor
+[3] L.L.Wong,L.P.Kaelbling,andT.Lozano-Pe´rez,“Dataassociation
+kernelmethods,”inProceedingsofthe22ndinternationalconference
+forsemanticworldmodelingfrompartialviews,”Int.J.Robot.Res.,
+onMachinelearning. ACM,2005,pp.33–40.
+vol.34,no.7,pp.1064–1082,2015.
+[16] L. Foster, A. Waagen, N. Aijaz, M. Hurley, A. Luis, J. Rinsky,
+[4] V.Indelman,E.Nelson,N.Michael,andF.Delaert,“Multi-robotpose
+C. Satyavolu, M. J. Way, P. Gazis, and A. Srivastava, “Stable and
+graphlocalizationanddataassociationfromunknowninitialrelative
+efﬁcientgaussianprocesscalculations,”JournalofMachineLearning
+poses via expectation maximization,” in Proc. of IEEE ICRA, 2014,
+Research,vol.10,no.Apr,pp.857–882,2009.
+pp.593–600.
+[17] M. A. Osborne, S. J. Roberts, A. Rogers, S. D. Ramchurn, and
+[5] C. E. Rasmussen and C. K. I. Williams, Gaussian Processes for
+N.R.Jennings,“Towardsreal-timeinformationprocessingofsensor
+MachineLearning. TheMITPress,2006.
+network data using computationally efﬁcient multi-output gaussian
+[6] P.R.Soria,F.Sukkar,W.Martens,B.C.Arrue,andR.Fitch,“Multi-
+processes,”in2008InternationalConferenceonInformationProcess-
+view probabilistic segmentation of pome fruit with a low-cost rgb-d
+inginSensorNetworks(ipsn2008). IEEE,2008,pp.109–120.
+camera,” in Iberian Robotics conference. Springer, 2017, pp. 320–
+[18] A. J. Smola and P. L. Bartlett, “Sparse greedy Gaussian process
+331.
+regression,” in Advances in Neural Information Processing Systems
+[7] C.Stachniss,C.Plagemann,A.J.Lilienthal,andW.Burgard,“Gasdis-
+13, T. K. Leen, T. G. Dietterich, and V. Tresp, Eds. MIT Press,
+tributionmodelingusingsparsegaussianprocessmixturemodels,”in
+2001,pp.619–625.
+InternationalConferenceonRoboticsScienceandSystems,Robotics:
+[19] S.HammarlingandC.Lucas,“Updatingtheqrfactorizationandthe
+science and systems, 2008, Zu¨rich, Switzerland, June 25-28, 2008,
+leastsquaresproblem,”inManchesterUniversityMIMSEPrints,2008.
+vol.4. MITPress,2008,pp.310–317.
+[20] C.SandersonandR.Curtin,“Armadillo:atemplate-basedC++library
+[8] R. M. Neal, “Markov chain sampling methods for Dirichlet process
+for linear algebra,” Journal of Open Source Software, vol. 1, p. 26,
+mixturemodels,”J.Comput.Graph.Stat.,vol.9,no.2,pp.249–265,
+2016.
+2000.
+[21] G.Shu,A.Dehghan,O.Oreifej,E.Hand,andM.Shah,“Part-based
+[9] C.E.RasmussenandZ.Ghahramani,“InﬁnitemixturesofGaussian
+multiple-person tracking with partial occlusion handling,” in 2012
+processexperts,”inAdvancesinNeuralInformationProcessingSys-
+IEEEConferenceonComputerVisionandPatternRecognition. IEEE,
+tems14,T.G.Dietterich,S.Becker,andZ.Ghahramani,Eds. MIT
+2012,pp.1815–1821.
+Press,2002,pp.881–888.
+[22] B. Douillard, J. Underwood, N. Kuntz, V. Vlaskine, A. Quadros,
+[10] J. Shi, R. Murray-Smith, and D. Titterington, “Bayesian regression
+P. Morton, and A. Frenkel, “On the segmentation of 3d lidar point
+andclassiﬁcationusingmixturesofGaussianprocesses,”Int.J.Adapt.
+clouds,”inProc.ofIEEEICRA. IEEE,2011,pp.2798–2805.
+Control.Signal.Process.,vol.17,no.2,pp.149–161,2003. [23] W. Martens, Y. Poffet, P. R. Soria, R. Fitch, and S. Sukkarieh, “Ge-
+[11] E. Meeds and S. Osindero, “An alternative inﬁnite mixture of Gaus- ometricpriorsforgaussianprocessimplicitsurfaces,”IEEERobotics
+sianprocessexperts,”inAdvancesinNeuralInformationProcessing andAutomationLetters,vol.2,no.2,pp.373–380,April2017.
+Systems18,Y.Weiss,B.Scho¨lkopf,andJ.C.Platt,Eds. MITPress,
+2006,pp.883–890.
+341
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:41:04 UTC from IEEE Xplore.  Restrictions apply. 

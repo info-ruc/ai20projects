@@ -1,0 +1,533 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Robot-Supervised Learning for Object Segmentation
+Victoria Florence1, Jason J. Corso1,2, and Brent Grifﬁn1,2
+Abstract—To be effective in unstructured and changing
+environments, robots must learn to recognize new objects.
+Deep learning has enabled rapid progress for object detection
+and segmentation in computer vision; however, this progress
+comesatthepriceofhumanannotatorslabelingmanytraining
+examples. This paper addresses the problem of extending
+learning-based segmentation methods to robotics applications
+where annotated training data is not available. Our method
+enables pixelwise segmentation of grasped objects. We factor
+theproblemofsegmentingtheobjectfromthebackgroundinto
+two sub-problems: (1) segmenting the robot manipulator and
+objectfromthebackgroundand(2)segmentingtheobjectfrom
+the manipulator. We propose a kinematics-based foreground
+segmentation technique to solve (1). To solve (2), we train a
+self-recognition network that segments the robot manipulator.
+We train this network without human supervision, leveraging
+our foreground segmentation technique from (1) to label a
+trainingsetofimagescontainingtherobotmanipulatorwithout
+a grasped object. We demonstrate experimentally that our
+method outperforms state-of-the-art adaptable in-hand object
+segmentation. We also show that a training set composed Fig. 1: Our method produces pixelwise annotations of
+of automatically labelled images of grasped objects improves grasped objects (top). These annotations can be used to im-
+segmentation performance on a test set of images of the same
+prove performance of object instance segmentation methods
+objects in the environment.
+(bottom). The method adapts to new environments, objects,
+and robotic platforms without human supervision.
+I. INTRODUCTION
+Although robots are highly productive in controlled en-
+works in which robots grasp unknown objects in order to
+vironments, developing robotics algorithms that continue
+learntheirvisualappearance[6]–[11].Mostofthesemethods
+to learn new tasks in changing environments is an open
+predatedeeplearningandrequireahumantodesignavisual
+problem. A robust object detector will be indispensable
+model or other visual heuristics for recognizing the robot
+for automation of these tasks, since many industrial and
+manipulator.Notably,humanshavetoredesignthesemodels
+home service tasks require interaction with numerous, ever-
+if there are physical changes to the robot or a new robot is
+changing objects. Object detection has seen a signiﬁcant
+deployed. Work by Browatzki et al. [6], which we compare
+gain in performance in the past decade due to deep learn-
+against, and this paper are the only methods we are aware
+ing. Learning-based methods outperform handcrafted visual
+of without this requirement.
+features by taking a data-driven approach to generating
+This paper introduces a method called robot supervision
+features that are more robust for object detection [1], [2].
+that automatically generates object segmentation training
+However, most deep learning-based methods assume that
+data through robot interaction with grasped objects. In this
+large quantities of annotated training data are available for
+way,weenablerobotstocontinueimprovingtheirownvision
+eachtypeofobject[3],[4],whichisimpracticalwhenrobots
+systems over time. Using only the robot’s kinematic link
+encounter new objects and tasks. Thus, failing to detect
+coordinate frames and an RGB-D camera, we segment a
+new objects is a limitation of ﬁxed-dataset, learning-based
+grasped object and the manipulator from the background
+detection and a more general obstacle for robot autonomy.
+using our kinematics-based foreground segmentation. We
+For robot perception, simply applying dataset-driven de-
+then separate the robot manipulator from the object using
+tection methods is wasting a useful asset: robots can take
+a deep Convolutional Neural Network (CNN) called a Self-
+action to improve sensing and understanding of their envi-
+RecognitionNetwork(SRN),leavingonlythein-handobject
+ronments [5]. Various approaches have been created to take
+(see example in Figure 2). Notably, the robot annotates its
+advantage of robot embodiment to learn object appearances.
+own training data for the SRN using our kinematics-based
+We follow the paradigm of past in-hand object segmentation
+foregroundsegmentation;thus,theSRNcanberetrainedau-
+tonomously.Theendresultisamethodforgeneratingobject
+1RoboticsInstitute,UniversityofMichigan
+labels (like those shown in Figure 1) that is generalizable to
+2ElectricalEngineeringandComputerScience,UniversityofMichigan
+{vflorenc,jjcorso,griffb}@umich.edu many existing robot platforms without human supervision.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1343
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. tracking on a model of the robot manipulator to isolate
+objects. Krainin et al. [8] take a self-recognition based
+approachtoobjectlearningbymatchingarobotmanipulator
+to its 3D mesh model in order to isolate and model an in-
+handobject.However,theirmethodrequiresa3Dgeometric
+model of the robot manipulator and focuses on modeling
+non-deformableobjectsfrommultipleviewpoints.Browatzki
+et al. [6], [7] use a GMM trained on pixel values around
+a bounding box to isolate a grasped object. This method
+Fig. 2: An overview of our method. After collecting images
+focuses on viewpoint selection and data association, but
+ofanobject(left),therobotusesencoderreadingsandactive
+their object isolation technique is not robust to pixel-level
+depth sensing to segment the foreground (manipulator or
+similarity between the object, background, and robot. While
+manipulator + grasped object) of each image (middle-left,
+these systems are able to isolate unseen objects for visual
+grey). Using its self-recognition network (middle, blue), the
+learning and oftentimes model the occlusion of the robot
+robot isolates the object from the rest of the foreground
+manipulatorbytheseobjects,theyarelimitedbytheneedfor
+(middle-right,red).Thus,therobotgeneratesdensely-labeled
+custom manipulator models, environment-speciﬁc heuristics,
+annotations of newly encountered objects (right).
+and parameter tuning.
+To test our method, we collect and annotate a new dataset
+C. Self-supervised Manipulator Recognition
+that contains RGB-D images of our robot manipulator with
+To the best of our knowledge, da Costa Rocha et al. [24]
+30 in-hand objects (20 images each, 600 total). We evaluate
+is the ﬁrst method to “make use of the kinematic model of a
+our method and that of Browatzki et al. [6] on this dataset
+robot in order to generate training labels.” This work learns
+andshowthatourmethodachievesa27point(or75%)mIoU
+pixelwiseself-recognitionofthedaVincisurgicalrobotwith
+improvement over the baseline method. Finally, we ﬁne-
+unsupervised training labels much like our SRN. da Costa
+tune an object instance segmentation framework [2] on data
+Rocha’s method uses a projection of a full geometric model
+produced by our method. The ﬁne-tuning improves object
+ofthemanipulatorintoanRGBimagetogeneratethelabels,
+segmentation from 38.1 AP to 49.8 AP on a test set of
+while our method requires depth sensor readings and only
+images. An example of our results and a test image are
+useslinkcoordinateframes(e.g.,inFigure3).Thebeneﬁtof
+shown in Figure 1. We provide our source code and data
+our approach is that we learn self-recognition without a full
+at https://github.com/vﬂorence/RSLOS.
+model of the robot and adapt to changes in robot hardware
+II. RELATEDWORK automatically. Additionally, the end goal of our method is
+A. Interactive Object Segmentation in-hand object isolation for object learning, while da Costa
+Rocha’s work focuses on robotic self-recognition.
+In interactive object segmentation methods, robot actions
+or environment continuity are used in order to segment the III. KINEMATICS-BASEDFOREGROUNDSEGMENTATION
+object from the rest of the image. Some methods learn
+A. Kinematics-based Depth Segmentation
+objects that are placed in uncluttered or known environ-
+ments [13]–[15]. Other works rely on scene change over We begin segmenting the robot’s manipulator from back-
+time, calling anything that violates the static scene assump- ground by over-segmenting the head camera’s depth image.
+∈ ×
+tion an object [16]–[20]. They rely on the non-guaranteed WeuseD RH W torepresentthedepthimage,whereH and
+∈
+movement of objects. Other methods in this category push W are the numbers of rows and columns in D. D(i,j) R
+objectstocreatemovementinthesceneandgrouppixelsthat is the measured depth in millimeters for the pixel at row
+move together into object labels [21]–[23]. These methods i, column j. Using the graph-based image segmentation of
+have more control over object movement, but they require Felzenswalb [25], we deﬁne the depth-image segmentation
+a work surface and objects that permit pushing. The beneﬁt { }
+S(D):= s1,s2,...,sn , (1)
+of these methods is that they can segment many objects at
+the same time; however, they do not allow for full pose or where S is exhaustive of the 2D coordinates in D with
+environmental control. mutually exclusive subsets.
+Next, we use the robot’s encoder readings and kinematic
+B. In-hand Object Segmentation
+model to get approximate 3D coordinates of link positions
+In-hand object segmentation methods use robot encoder and project them into the depth image. We take the 3D link
+feedback to locate a grasped object and various methods position of each ith link relative to the camera’s coordinate
+(cid:62)
+to reason about robot-object occlusion. Omrcˇen et al. [9] frame, Pi:=[xi,yi,zi] , and ﬁnd the projected depth-image
+incorporate many data sources such as color distribution, coordinates using the transform
+a disparity map, and a pretrained Gaussian Mixture Model
+(GMM) of the hand to segment unknown objects, but their [pi,1](cid:62):=(cid:98)KzPi +0.5(cid:99)=[hi,wi,1](cid:62), (2)
+method does not extract pixelwise object labels. Welk et i
+∈ ×
+al. [10] use Eigen-backgrounds, disparity mapping, and whereK R3 3istheheadcamera’sintrinsiccameramatrix.
+1344
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. Kinematics-
+based
+Depth
+Segmentation
+RGB
+Segmentation
+Reﬁnement
+Fig. 3: In our kinematics-based foreground segmentation method, we use link coordinate frames from the kinematic model
+of the robot to localize the robot manipulator (left). Using the RGB-D camera’s depth channel (top, left), we over-segment
+the image. We then project manipulator coordinates into the image (top, middle) and label the segments containing ﬁltered
+projectedcoordinatesasforeground(top,right).WereﬁnethesegmentationwiththeRGBchannels(bottom,left),initializing
+GrabCut [12] with a depth segmentation-based mask (bottom, middle) to give us our ﬁnal output (bottom, right).
+∈{ }
+Using the dep(cid:91)th segmentation (1) and projected kinematic where Mgc(i,j) 0,1,2,3 , 0 is background, 1 is probably
+points (2), we deﬁne our initial foreground segmentation background, 2 is probably foreground, and 3 is foreground.
+{ |∃ ∈ ≤ } We reﬁne Mgc using G(cid:40)rabCut for 8 iterations and convert
+sfg:= sj pi sj,D(hi,wi) zi+λ , (3) the reﬁned M to the binary mask
+gc
+wspeihnaesnroedrDλre(ahisdi,ianwgni)o(iiDsse(thhtihe,rwedise)h)potlohdfmfaoerapszruoi.rjeePcmutteednsitmlicnpoklryr,elosifpcaothtnieodnidneg(ppttioh) Mfg(i,j):= 01 MMggcc((ii,,jj))∈∈{{02,,13}}. (8)
+is within λ (distance) past its expected kinematic location M is the ﬁnal kinematics-based foreground segmentation
+fg
+(zi), the segment (sj) containing that reading is added to the mask, where Mfg(i,j)=1 indicates that I(i,j) corresponds
+initial foreground segmentation (s ).
+fg to the robot’s manipulator in the foreground (see example in
+Figure 3).
+B. RGB Segmentation Reﬁnement
+Wereﬁnetheinitialforeg(cid:40)roundsegmentationusingmatrix IV. ROBOT-SUPERVISEDSELF-RECOGNITIONNETWORK
+∈ ×
+operations. We represent s (3) as matrix M RH W s.t.
+fg 0 Using the kinematics-based foreground segmentation de-
+∈ scribedinSectionIII,weenabletherobottocollectandlabel
+M0(i,j):= 1 D(i,j) sfg, (4) itsowndatatotrainanSRNthatlabelsinstancesoftherobot
+0 otherwise
+manipulator in an image. Speciﬁcally, the robot performs
+foregroundsegmentationonimageswhereitsmanipulatoris
+whereM0(i,j)=1isaforegroundelement.Wepost-process theonlyobjectintheforeground(i.e.,noobjectsaregrasped)
+M by ﬁlling in all holes then performing a morphological
+0 ∈ and creates a manipulator annotation from the foreground
+binary opening operation with the kernel J where J
+× 8 N mask.
+RN N and every element is equal to one. These operations
+To diversify training data for the SRN, we collect images
+reducetheeffectofdepthsensornoise,whichoftenmanifests
+of the robot manipulator in various poses, permuting across
+as holes and noisy object edges.
+all combinations of individual joint positions. Poses are
+Using the processed M , we generate two more matrices
+0 uniformly distributed across each joint’s range, and the
+Mp:= erosion(M0,J10), (5) number of positions per joint can be set as a parameter
+to match the time available for learning. For each pose
+Mr:= dilation(M0,J75), (6)
+we 1) position the camera such that the robot gripper is
+where M is precision oriented, and M is recall oriented. approximately centered in the image and 2) command the
+p ⇒ r ⇒
+NotethatMp=1 = M0=1,andM0=1 = Mr=1.The non-varied manipulator joints to a position that puts the
+erosion and dilation operations soften the boundary created gripperbeyondthedepthcamera’sminimumrange.Thedata
+by the depth segmentation to account for depth sensor noise collectionjointconﬁgurationcanbeadjustedtoﬁtanyrobot
+and any misalignment between the RGB and depth images. platform, as long as these two requirements are met.
+We generate our ﬁnal foreground segmentation using a We use M (8) to label each manipulator image as a
+∈ × fg
+GrabCut segmentation [12] on the RGB image I RH W training example, where the background class ID is 0 and
+corresponding to D. Using M , M, and the processed M , the manipulator class ID is 1.
+p r 0
+we initialize the GrabCut segmentation using Inspired by work on domain randomization for sim-to-
+realtransferlearning[26],[27],weperformdatasetaugmen-
+Mgc:=Mr+M0+Mp, (7) tation to close the gap between the automatically labeled
+1345
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. Fig.5:Weusekinematics-basedforegroundsegmentationto
+segment the gripper and object from the background. The
+output (right) is combined with the SRN output to create
+robot-supervised object annotations.
+(cid:92)
+combined for each image as
+Fig. 4: In the self-recognition network training set, we
+¬
+augment manipulator images with background images taken Mobject=Mfg MSRN. (9)
+by the robot (left) and from the COCO dataset (right) as
+We then perform a ﬁnal opening on M with J , a
+well as foreground objects (bottom). These augmentations object 3
+matrix of ones, for noise removal. Examples of this process
+increase the diversity of the background and manipulator
+can be seen in Figure 6, where M is shaded blue and
+classes, respectively, and increase the number of example SRN
+M 9 is outlined in red.
+images in the self-recognition network training set. object
+VI. EXPERIMENTS
+manipulator-only images and future test-time images with
+A. Experimental Setup
+objects in-hand. We did this with background substitution
+and foreground object augmentation. Examples of these All experiments use the Toyota Human Support Robot
+augmentations can be seen in Figure 4. (HSR) [28]. Images are gathered with its RGB-D head
+We do background substitution with background images camera. In the object learning experiments, the robot begins
+takenfromthepopularCommonObjectsinContext(COCO) with objects grasped; recent works such as [29] and [30]
+dataset[3]aswellaspicturestakenbytherobotwithoutthe demonstrate viable methods for unknown object grasping.
+manipulator in view. We use a Pytorch implementation of Mask R-CNN for the
+We perform foreground superposition with object classes SRN and object re-recognition networks [31], [32].
+intheCOCOdataset[3].Foreachforegroundaugmentation,
+B. Metrics
+we randomly scale and rotate an alpha-matted object image
+and overlay it at the center of the image. On the grasped object annotation task, we use pixelwise
+mIoUasourmetric.Foreachimage,wecreateaground-truth
+The background and foreground augmentations can in-
+object annotation that is compared to our method’s output
+crease the number and type of objects sampled in the train-
+as well as the baseline. We calculate a standard, per-image,
+ing background class, while the foreground augmentations
+Intersection over Union (IoU) metric for the object masks
+randomly alter manipulator appearance to imitate robot-
+and average the results for each class to get a class mean
+object occlusion. Increasing dataset diversity and size re-
+IoU (mIoU). The overall mIoU is an average of all class
+duces overﬁtting and improves the robustness of the learned
+mIoUs.
+manipulator segmentation.
+On the object re-recognition in context task, we use the
+We use an object instance segmentation framework, Mask
+COCO API Average Precision (AP) detection metrics for
+R-CNN, pretrained on the COCO dataset with R-50-FPN
+evaluating performance on this task [3]. AP is calculated as
+backboneastheSRNmodel.Weusethestandardmulti-task
+the area under the precision recall curve. We provide results
+loss from the original paper [2].
+for different IoU and pixels-per-object thresholds. For more
+details about these metrics, we recommend looking at the
+V. ROBOT-SUPERVISEDOBJECTANNOTATION
+COCO detection task evaluation metric [3].
+In order to annotate in-hand objects, we repeat the data The difference in metric is motivated by the fact that the
+collection procedure from Section IV with objects grasped output for the ﬁrst task is a single mask with labels for
+by the robot manipulator. We apply our kinematics-based each pixel, while the output for the second task can include
+foregroundisolationmethodtocreateMfg (8)foreachimage multiple detections per image region.
+(see example in Figure 5). The SRN is applied to predict
+C. Grasped Object Annotation Performance
+the manipulator location. In cases where the SRN returns
+multiple predictions, we take the prediction with the highest To quantify the performance of our robot-supervised ob-
+score. We call the mask representing the SRN prediction ject annotation method, we gather a test set of 600 human-
+M . To create the ﬁnal object labels, M and M are annotated images of the manipulator with an object grasped.
+SRN fg SRN
+1346
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Data Collection
+Data Total Train Val
+GripperImages 297 208 89
+BackgroundImages 1800 1260 540
+(COCO/Lab) (1746/54) (1220/40) (526/14)
+ForegroundObjects 80 56 24
+TABLE II: Augmented Datasets
+Dataset Total
+Orig-originalimages 297
+FG-foregroundaugmentation 891
+BG-backgroundaugmentation 5400
+FGBG-foreground,backgroundaugmentation 5400
+Ours-alldata 11988
+asshowninTableIII.Thecombinedforeground,background
+Fig. 6: Some of our method’s best qualitative results. The
+augmentationadda6.5pointimprovement.Resultsshowthat
+areas shaded blue are labeled as manipulator by the SRN,
+the object recall scores consistently beneﬁt from augmenta-
+while the red-outlined areas are the object labels. These
+tions. Improved recall scores indicate that there are fewer
+pixelwise segmentations of in-hand objects can be used to
+false negatives on the object labeling task (i.e. fewer false
+train data-driven object detectors.
+positives by the SRN).
+By adding data examples through our data augmentation
+methods, we are able to increase the precision of the SRN
+For each of 30 objects from the Yale-CMU-Berkeley (YCB)
+detector and achieve higher recall on object segmentation.
+standardized object dataset [33] we collect 20 images of
+the grasped object. The object viewing poses are uniformly 2) Robot-SupervisedObjectAnnotationPerformance: We
+sampled from the joint spaces of two revolute joints in what compareourmethodtothepriorworkofBrowatzkietal.[6].
+couldbecalledthe“wrist”oftherobot;thisconﬁgurational- Their work focuses on efﬁcient viewpoint selection for
+lowsforcoverageoftheentireviewingsphereofthegrasped object learning and included an in-hand object segmentation
+object without consideration of robot-object occlusion. Due method.Similarlytoourmethod,itdoesnotrequirehuman-
+torobot-objectocclusion,itisnotpossibletoviewtheentire designed vision heuristics for reasoning about robot-object
+object from a single grasp, and the object is not guaranteed occlusion. The method trains a Gaussian Mixture Model on
+to be visible in every image. thepixelswithinaframearoundtheexpectedobjectlocation
+Forourmethod,weuseFelzenswalbsegmentationparam- (i.e. between inner and outer bounding boxes). We re-
+etersofσ =0.5andk=800,whichareapproximatelyscaled implementtheirsegmentationmethodandchooseparameters
+by image size from the parameter settings in the original based on a parameter sweep over the test set. (bounding box
+paper[25].Additionally,wesetthedepthsegmentationnoise sizes=(270,300),numberofGaussians=1,threshold=1E-
+thresholdtoλ =200mm.TheSRNusedinourexperiments 15).
+istrainedandvalidatedon208and89imagesofHSR’sma- The overall mIoU results in Table III indicate that our
+nipulator,respectively.Weannotateallimagesautomatically method outperforms the baseline on the task of object
+with the kinematics-based foreground segmentation method segmentation. Additionally, our method outperforms [6] on
+(Section III) and augment them with the methods described the majority of objects as shown in Figure IV. Examples of
+in Section IV. The number of background and foreground segmentation results for our method are shown in Figure 6.
+imagesthatweuseisshowninTableI.ForallSRNtraining, In order to gain insight on the performance of each method,
+we follow the Detectron solver scheduling rules [34]. we look at the performance along the axes of pixels per
+1) Ablation of Data Augmentation: To show the contri- objectandaveragesaturation.Dataregardingtherelationship
+bution of each type of augmentation in our SRN dataset between object size and method performance can be viewed
+creation method, we train multiple SRNs, each using a in Figure 7a, while method performance versus object satu-
+differentcombinationofdataaugmentations.Werepeateach ration is shown in Figure 7b. Note that our robot platform,
+type of data augmentation three times per the most plentiful HSR,isblackandwhite,sosaturationisapixel-basedmetric
+augmentation resource involved, repeating resources with representing robot-object visual similarity.
+fewer elements as necessary. For example, we have more Overall, this experiment indicates increased robustness of
+backgrounds than gripper images, so to create the “BG” our method over the prior work on in-hand object seg-
+dataset, we use each background 3 times and repeat the mentation without human-designed, robot-speciﬁc heuristics
+gripper images as necessary. The number of images in each for reasoning about robot-object occlusion. Our method
+augmented data split is shown in Table II. enables us to apply advances in deep learning based object-
+Results from the ablative SRNs show that foreground segmentation without human annotation and demonstrates
+(FG) and background (BG) augmentations add 2.9 and 4.7 improvedaccuracyoverthepixel-basedmethodinBrowatzki
+point improvements, respectively, to our SRN performance et al. [6].
+1347
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. TABLE III: Method Comparison and Ablation Study , Ours
+, Browatzkietal.[6]
+Method mIoU Precision Recall
+Orig 0.431 0.788 0.477 1 1
+FG 0.460 0.780 0.516 0.8 0.8
+BG 0.478 0.784 0.531
+FGBG 0.506 0.795 0.563 U 0.6 0.6
+o
+Ours 0.639 0.823 0.716 mI 0.4 0.4
+Browatzkietal.[6] 0.362 0.685 0.400
+0.2 0.2
+0
+TABLE IV: Object Segmentation Performance (mIoU) 0
+102 103 104 105 0 50 100 150 200 250
+Average#ofpixelsperobject Averagesaturationofobject
+Object Browatzkietal.[6] Ours
+Pitcher 0.934 0.957 (a) (b)
+Bowl 0.864 0.951
+Fig. 7: We examine our method’s performance along two
+Mug 0.867 0.931
+Wood 0.184 0.909 pixel-based metrics of image content. On the axis of pixels
+Magazine 0.363 0.885 perobjectmask,weobservethatthebaselinemethodfailson
+Apple 0.895 0.875
+verylargeobjects,andthattheperformancesofbothmethods
+Brick 0.716 0.865
+Plate 0.445 0.860 decreaseonsmallobjects(left).Additionally,weobservethat
+Soccerball 0.802 0.852 our method’s performance was slightly less correlated with
+Powerdrill 0.625 0.844 pixel-level similarity to the manipulator (right).
+Tshirt 0.002 0.831
+Wineglass 0.054 0.814
+Scissors 0.260 0.721
+Hammer 0.428 0.708 fromtheannotations,maintainingthetrainingandvalidation
+Screwdriver 0.240 0.696
+splits.Forourmethod,wecollectandautomaticallylabel20
+Rope 0.106 0.676
+Banana 0.837 0.654 additional images per object for the 25 overlapping classes.
+Padlock 0.177 0.546 Wethenﬁne-tunetheLVIS-trainednetworkonourmethod’s
+Fork 0.407 0.537
+output labels, leaving out approximately 8% of the object
+Spoon 0.411 0.493
+Wrench 0.092 0.489 images as a validation set. Results in Table V show that our
+Expomarker 0.107 0.486 method outperforms the dataset baseline on all metrics. This
+Spatula 0.090 0.413 result indicates that despite the noise we observe in the in-
+Tablecloth 0.003 0.408
+hand object segmentation results in Figure IV, the limited
+Knife 0.374 0.406
+Keys 0.106 0.345 training examples of in-hand objects are useful for training
+Baseball 0.071 0.291 a deep CNN to recognize the same objects in different
+Golfball 0.079 0.289 contexts.
+Dice 0.101 0.223
+Sponge 0.228 0.210
+Averaged 0.362 0.639 VII. CONCLUSIONS
+D. Object Re-recognition in Context We have presented and experimentally validated robot
+In order to analyze the usefulness of the labels produced supervision that enables robots to generate new annota-
+byourmethod,wecompareastate-of-the-artobjectinstance tions using in-hand object segmentation. Our method of
+segmentation framework trained on dataset images to one kinematics-based foreground segmentation followed by a
+that is ﬁne-tuned on outputs from our method. The same robot-supervisedSRNachievessigniﬁcantimprovementover
+model, initialization, and training schedules are used as in the baseline on the task of in-hand object segmentation. Our
+theSRNtrainingprocedureforbothnetworks.Asabaseline, methodperformswellonawidevarietyofobjectsandisnot
+we train Mask R-CNN on a subset of the Large Vocabulary speciﬁctoasinglerobotplatform.Additionally,experiments
+Instance Segmentation dataset v0.5 (LVIS v0.5) by Gupta et indicate that ﬁne-tuning an object instance segmentation
+al.[4]thathas25classesincommonwithourselectedYCB frameworkonlabelscreatedbyourmethodimprovesperfor-
+objects (excluding brick, dice, golfball, rope, and wood). manceonobjectsegmentationincontext.Usingourmethod,
+We reduce the LVIS v0.5 dataset to the images containing robots can generate their own training data and learn to
+any of the 25 YCB objects and remove all other classes bettersegmentnewobjectsandenvironmentswithouthuman
+supervision.
+TABLE V: Object Instance Segmentation Performance
+Dataset AP AP0.50 AP0.75 APs APm APl ACKNOWLEDGMENT
+BoundingBox
+LVIS 39.2 51.0 45.6 35.5 44.3 62.3 ToyotaResearchInstitute(“TRI”)providedfundstoassist
+LVIS+ﬁne-tuningonourdata 49.9 70.8 57.6 50.6 57.3 63.3
+the authors with their research but this article solely reﬂects
+Segmentation
+LVIS 38.1 50.9 45.1 30.8 42.4 61.3 the opinions and conclusions of its authors and not TRI or
+LVIS+ﬁne-tuningonourdata 49.8 69.7 54.7 36.6 57.0 65.4 any other Toyota entity.
+1348
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [21] H. van Hoof, O. Kroemer, and J. Peters, “Probabilistic segmentation
+and targeted exploration of objects in cluttered environments,” IEEE
+[1] S.Ren,K.He,R.Girshick,andJ.Sun,“FasterR-CNN:Towardsreal- TransactionsonRobotics,vol.30,pp.1198–1209,Oct.2014.
+timeobjectdetectionwithregionproposalnetworks,”inAdvancesin [22] D. Schiebener, J. Morimoto, T. Asfour, and A. Ude, “Integrating
+NeuralInformationProcessingSystems(NIPS),2015. visualperceptionandmanipulationforautonomouslearningofobject
+[2] K. He, G. Gkioxari, P. Dollar, and R. Girshick, “Mask R-CNN,” in representations,”AdaptiveBehavior,vol.21,no.5,pp.328–345,2013.
+TheIEEEInternationalConferenceonComputerVision(ICCV),Oct. [23] D. Schiebener, A. Ude, and T. Asfour, “Physical interaction for
+2017. segmentation of unknown textured and non-textured rigid objects,”
+[3] T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan, in2014IEEEInternationalConferenceonRoboticsandAutomation
+P. Dolla´r, and C. L. Zitnick, “Microsoft COCO: Common objects in (ICRA),May2014,pp.4959–4966.
+context,” in The European Conference on Computer Vision (ECCV), [24] C.daCostaRocha,N.Padoy,andB.Rosa,“Self-supervisedsurgical
+D.Fleet,T.Pajdla,B.Schiele,andT.Tuytelaars,Eds. Cham:Springer tool segmentation using kinematic information,” IEEE International
+InternationalPublishing,2014,pp.740–755. Conference on Robotics and Automation (ICRA), 2019, to be pub-
+[4] A.Gupta,P.Dollar,andR.Girshick,“Lvis:Adatasetforlargevocab- lished.
+ulary instance segmentation,” in The IEEE Conference on Computer [25] P.F.FelzenszwalbandD.P.Huttenlocher,“Efﬁcientgraph-basedim-
+VisionandPatternRecognition(CVPR),June2019. agesegmentation,”InternationalJournalofComputerVision(IJCV),
+[5] J. Bohg, K. Hausman, B. Sankaran, O. Brock, D. Kragic, S. Schaal, vol.59,no.2,pp.167–181,Sept.2004.
+and G. S. Sukhatme, “Interactive perception: Leveraging action in [26] J.Tobin,R.H.Fong,A.Ray,J.Schneider,W.Zaremba,andP.Abbeel,
+perceptionandperceptioninaction,”IEEETransactionsonRobotics, “Domain randomization for transferring deep neural networks from
+vol.33,no.6,pp.1273–1291,Dec.2017. simulationtotherealworld,”IEEE/RSJInternationalConferenceon
+[6] B. Browatzki, V. Tikhanoff, G. Metta, H. H. Bu¨lthoff, and C. Wall- IntelligentRobotsandSystems(IROS),pp.23–30,2017.
+raven, “Active object recognition on a humanoid robot,” in IEEE [27] J. Tremblay, T. To, B. Sundaralingam, Y. Xiang, D. Fox, and S. T.
+International Conference on Robotics and Automation (ICRA), May Birchﬁeld,“Deepobjectposeestimationforsemanticroboticgrasping
+2012,pp.2021–2028. ofhouseholdobjects,”inConferenceonRobotLearning(CoRL),2018.
+[7] B. Browatzki, V. Tikhanoff, G. Metta, H. H. Bu¨lthoff, and C. Wall- [28] T. Yamamoto, K. Terada, A. Ochiai, F. Saito, Y. Asahara, and
+raven,“Activein-handobjectrecognitiononahumanoidrobot,”IEEE K. Murase, “Development of human support robot as the research
+TransactionsonRobotics,vol.30,no.5,pp.1260–1269,Oct.2014. platform of a domestic mobile manipulator,” ROBOMECH Journal,
+[8] M. Krainin, P. Henry, X. Ren, and D. Fox, “Manipulator and object vol.6,no.1,p.4,Apr2019.
+tracking for in-hand 3d object modeling,” The International Journal [29] L. Pinto and A. Gupta, “Supersizing self-supervision: Learning to
+ofRoboticsResearch(IJRR),vol.30,no.11,pp.1311–1327,2011. grasp from 50k tries and 700 robot hours,” in IEEE International
+[9] D.Omrcen,A.Ude,K.Welke,T.Asfour,andR.Dillmann,“Senso- ConferenceonRoboticsandAutomation(ICRA),May2016,pp.3406–
+rimotor processes for learning object representations,” in IEEE-RAS 3413.
+InternationalConferenceonHumanoidRobots,Nov.2007,pp.143– [30] J.Mahler,M.Matl,V.Satish,M.Danielczuk,B.DeRose,S.McKinley,
+150. and K. Goldberg, “Learning ambidextrous robot grasping policies,”
+[10] K. Welke, J. Issac, D. Schiebener, T. Asfour, and R. Dillmann, ScienceRobotics,vol.4,no.26,p.eaau4984,2019.
+“Autonomous acquisition of visual multi-view object representations [31] F. Massa and R. Girshick, “maskrcnn-benchmark: Fast, modular
+for object recognition on a humanoid robot,” in IEEE International reference implementation of Instance Segmentation and Object De-
+ConferenceonRoboticsandAutomation(ICRA),May2010,pp.2012– tection algorithms in PyTorch,” https://github.com/facebookresearch/
+2019. maskrcnn-benchmark,2018.
+[32] A. Paszke, S. Gross, S. Chintala, G. Chanan, E. Yang, Z. DeVito,
+[11] A.Venkataraman,B.Grifﬁn,andJ.J.Corso,“Kinematically-informed
+Z.Lin,A.Desmaison,L.Antiga,andA.Lerer,“Automaticdifferen-
+interactiveperception:Robot-generated3dmodelsforclassiﬁcation,”
+tiationinpytorch,”inNIPS-W,2017.
+2019,arXiv:1901.05580.
+[33] B. Calli, A. Walsman, A. Singh, S. Srinivasa, P. Abbeel, and A. M.
+[12] C.Rother,V.Kolmogorov,andA.Blake,“Grabcut:Interactivefore-
+Dollar,“Benchmarkinginmanipulationresearch:Usingtheyale-cmu-
+ground extraction using iterated graph cuts,” ACM Trans. Graph.,
+berkeley object and model set,” IEEE Robot. Autom. Mag., vol. 22,
+vol.23,no.3,pp.309–314,Aug.2004.
+no.3,pp.36–52,Sept.2015.
+[13] A.Zeng,K.Yu,S.Song,D.Suo,E.Walker,A.Rodriguez,andJ.Xiao,
+[34] R. Girshick, I. Radosavovic, G. Gkioxari, P. Dolla´r, and K. He,
+“Multi-view self-supervised deep learning for 6d pose estimation in
+“Detectron,”https://github.com/facebookresearch/detectron,2018.
+theamazonpickingchallenge,”inIEEEInternationalConferenceon
+RoboticsandAutomation(ICRA),May2017,pp.1386–1383.
+[14] C. Matuszek, N. FitzGerald, L. Zettlemoyer, L. Bo, and D. Fox,
+“A joint model of language and perception for grounded attribute
+learning,”inInternationalConferenceonMachineLearning(ICML),
+2012.
+[15] J. Vasquez-Gomez, L. Sucar, and R. Murrieta-Cid, “View planning
+for 3d object reconstruction with a mobile manipulator robot,” in
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),Nov.2014.
+[16] E. Herbst, P. Henry, X. Ren, and D. Fox, “Toward object discovery
+and modeling via 3-d scene comparison,” in IEEE International
+ConferenceonRoboticsandAutomation(ICRA),May2011,pp.2623–
+2629.
+[17] E.Herbst,P.Henry,andD.Fox,“Towardonline3-dobjectsegmen-
+tation and mapping,” in IEEE International Conference on Robotics
+andAutomation(ICRA),May2014,pp.3193–3200.
+[18] R.Finman,T.Whelan,M.Kaess,andJ.J.Leonard,“Towardlifelong
+object segmentation from change detection in dense rgb-d maps,” in
+EuropeanConferenceonMobileRobots(ECMV),Sept.2013,pp.178–
+185.
+[19] T. Fa¨ulhammer, R. Ambrus¸, C. Burbridge, M. Zillich, J. Folkesson,
+N.Hawes,P.Jensfelt,andM.Vincze,“Autonomouslearningofobject
+models on a mobile robot,” IEEE Robotics and Automation Letters
+(RA-L),vol.2,no.1,pp.26–33,Jan.2017.
+[20] J.ModayilandB.Kuipers,“Bootstraplearningforobjectdiscovery,”
+in IEEE/RSJ International Conference on Intelligent Robots and
+Systems(IROS),vol.1,Sept.2004,pp.742–747vol.1.
+1349
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:58:26 UTC from IEEE Xplore.  Restrictions apply. 

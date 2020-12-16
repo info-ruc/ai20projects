@@ -1,0 +1,565 @@
+2 020 IEEE International Conference on Robotics and Automation (ICRA)  
+31 May - 31 August, 2020. Paris, France
+Optimized Foothold Planning and Posture Searching for 
+Energy-Efficient Quadruped Locomotion over Challenging Terrains 
+Lu Chen, Shusheng Ye, Caiming Sun*, Aidong Zhang, Ganyu Deng, and Tianjiao Liao 
+  
+Abstract—  Energy-efficient  locomotion  is  of  primary 
+importance  for  legged  robot  to  extend  operation  time  in 
+practical  applications.  This  paper  presents  an  approach  to 
+achieve energy-efficient locomotion for a quadrupedal robot 
+walking  over  challenging  terrains.  Firstly,  we  optimize  the 
+nominal stance parameters based on the analysis of leg torque 
+distribution. Secondly, we proposed the foothold planner and 
+the  center  of  gravity  (COG)  trajectory  planner  working 
+together to guide the robot to place its standing legs in an 
+energy-saving  stance  posture.  We  have  validated  the 
+effectiveness of our method on a real quadrupedal robot in   
+experiments including autonomously walking on plain ground 
+and climbing stairs.  Figure 1.  The quadrupedal robot Pegasus is climbing stairs. 
+I.  INTRODUCTION  or  even  shorter,  due  to  their  high-energy-consumption 
+locomotion. 
+Legged robots have many advantages over wheeled robots 
+when  interacting  with  challenging  uneven  terrains.  Once  While many creative hardware designs are achieved to 
+employed in  a practical  scenario,  a quadrupedal robot  is  increase locomotion efficiency, plenty of efforts have been 
+expected to work as long as possible on its task. The robot  paid to optimize the robot control algorithm or locomotion 
+should locomote in an energy-efficient way to save energy for  parameters. Hutter [9] shown an approach of changing the 
+increasing operation time other than wasted in locomotion.  contact  force  or  joint  torque  distribution  to  increase  a 
+quadrupedal robot’s locomotion efficiency. An approach of 
+To  date  there  have  been  two  ways in improving  the 
+generating an optimal trajectory for quadrupedal robot was 
+locomotion efficiency of legged robot: hardware designing 
+presented in [10]. Compared with the distance-based search 
+(optimizing) method and algorithm designing (optimizing) 
+approach,  the  energy-based  search  method  can  generate 
+approach.  From  the  hardware  point  of  view,  some 
+smoother trajectory resulting less energy loss. Gait parameters 
+energy-efficient legged robots were developed. Based on the 
+are another decisive factor which influence the locomotion 
+passive dynamics  theory [1],  a  four-legged bipedal  robot 
+performance  of  legged  robots.  Many  researchers  have 
+Ranger was designed which achieved a very low Total Cost Of 
+attempted to improve locomotion efficiency by optimizing 
+Transport  (TCOT)  of  0.19  [2].  However,  those  passive 
+gait parameters. Optimal gaits were applied on a two-legged 
+walkers scarified the movement versatility while minimizing 
+robot to achieve walking and running in the most energetically 
+the  power  consumption.  Some  researchers  attempted  to 
+ways [11]. The optimal gait parameters were identified by 
+improve legged robot locomotion efficiency by using elastic 
+using  policy  gradient  reinforcement  learning  method  and 
+elements  to  temporarily  store  mechanical  energy  during 
+realized  an  energy  efficient  dynamic  walk  for  a  NAO 
+locomotion. The quadruped robot ANYmal [3] and StarlETH 
+humanoid  robot  [12].  In  paper  [13]  the  foot  trajectory 
+[4] employed the series elastic actuators (SEA) to achieve high 
+parameters were optimized in order to achieve energy optimal 
+energy efficiency. The MIT Cheetah Robot [5] achieved high 
+locomotion  for  a  quadrupedal  robot.  However,  these 
+energy  efficiency  by  employing  a  comprehensive  design 
+parameter optimizing methods did not consider the terrain 
+principle including high torque density motor design, energy 
+information  resulting in  low  locomotion  robustness when 
+regeneration and low inertia leg design. Up to now, most of 
+interacting with challenging terrains. Hexapod Robot Weaver 
+existing legged robots, including quadruped robots of Boston 
+can adapt its gait parameters (virtual stiffness, stride frequency, 
+Dynamics’ BigDog, Spot and SpotMini, HyQ [6], ANYmal 
+stride height) based on exteroceptive sensing and achieves a 
+[3], MIT Cheetah 3 [7], Unitree’s Laikago, and the biped 
+low COT on multi-terrains [14]. But leg torque workspace 
+group of the most dynamic humanoid ATLAS, ASIMO [8], 
+wasn’t considered as a constraint to further reduce the energy 
+and UBTECH’s Walker, consume plenty of energy during 
+consumption. 
+operation and while untethered they can only last a few hours,  
+Our  approach  also  makes  full  use  of  the  terrain 
+ 
+information  as  reported  in  Ref  [14]  and  [15]  while  we 
+  adaptively consider leg torque distribution to achieve not only 
+All authors are with Institute of Robotics and Intelligent Manufacturing  energy-efficient but also statically stable locomotion over 
+(IRIM), the Chinese University of Hong Kong (CUHK), Shenzhen 518172, 
+challenging terrains. We proposed a locomotion framework 
+China; also with Shenzhen Institute of Artificial Intelligence and Robotics 
+which includes a foothold planner and a COG trajectory 
+for Society (AIRS), Shenzhen 518172, China; also with Robotics Research 
+Center, Peng Cheng Laboratory (PCL), Shenzhen 518055, China. 
+*Corresponding author, Dr. Caiming SUN, cmsun@cuhk.edu.cn 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 399
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply.    
+optimizer working together to guide the supporting legs to 
+form in energy-efficient stance postures.   (a) 
+In the following, Section Ⅱ describes how we evaluated  
+creeping static gait. Section Ⅲ shows the analysis on leg 
+torque distribution based on forward kinematics and statics. 
+Section Ⅳ introduces the motion planner method we used for 
+planning energy-efficient locomotion. Section Ⅴ gives the 
+results  of  various  experiments  on  our  quadrupedal  robot 
+Pegasus. Lastly, Section Ⅵ discusses the conclusions. 
+II.  STATIC GAIT ENERGY CONSUMPTION ANALYSIS  (b) 
+A.  Six Creeping Static Gait  swing leg 
+Creeping gaits are perfect for locomotion on challenging 
+rough terrain with low speed. They make a quadrupedal robot 
+stay statically stable during most of a locomotion cycle [16]. 
+Thus, we also use a six-creeping gait similar to [17] on our 
+quadrupedal robot to achieve stable stability when walking   
+over  challenging  terrains  such  as  climbing  stairs.  The 
+swing-leg  sequence  is  right-hind  (RH),  right-front  (RF),  Figure 2.  (a) RH leg joint current during a three full gait cycles locomotion. 
+The knee joint current (avg 1611 mA, max 5140 mA) is much larger than the 
+left-hind (LH), left-front (LF). 
+hip (avg 351 mA, max 1628 mA) joint. At most of the time, the hip joint  
+B.  Energy Consumption Calculation  current is near zero thus can be neglected. (b) The current consumption of the 
+four legs in a three gait cycles locomotion. The swinging leg has the least 
+For a quadrupedal robot, equation (1) is used to calculate  current whose value is below 1000 mA (shown as the four solid black 
+the  total  power  consumption  including  joule  heating  and  rectangles).  
+mechanical power during locomotion [5]. 
+Mechanical Power= ∑ 𝜏×𝜔                                         III.  LEG WORKSPACE AND TORQUE DISTRIBUTION 
+12 𝑚𝑜𝑡𝑜𝑟𝑠
+  =∑12 𝑚𝑜𝑡𝑜𝑟𝑠𝐾𝑡×𝐼𝑚𝑜𝑡𝑜𝑟 ×𝜔            (1)  To find out the energy-saving workspace for a leg, we 
+need to get the leg torque distribution in two steps. Firstly, we 
+Junle Power= ∑12 𝑚𝑜𝑡𝑜𝑟𝑠𝐼𝑚2𝑜𝑡𝑜𝑟 ×𝑅                           derived the leg workspace in x and z coordinate plane that the 
+hip joint is neglected. Then we calculated the torque values of 
+where  K  is  the  torque  constant  and  R  is  the  winding 
+t
+thigh and knee joints through the entire leg workspace based 
+resistance.  
+on statics analysis.  
+Equation (1) indicates that the joint motor current is a 
+primary parameter in calculating the power consumption. For  A.  Leg Workspace 
+simpilicy, the following experiments in Section Ⅱ will use the 
+Figure  3  shows  the  kinematics  configurations  of  our 
+measured  current  to  approximately  indicate  the  power 
+quadrupedal robot Pegasus. The robot body coordinate frame 
+consumption. 
+is defined at the same point of COG which is at the same 
+height of hip joint. Here we neglect the link length between 
+C.  Locomotion Current Analysis 
+hip joint and thigh joint whose length is 0.08 m. Therefore, the 
+  To  analyze  how  the  current  was  consumed  during  coordinate origins of those two joints (P , P ) are assumed to 
+HIP 0
+locomotion, we have conducted an experiment in which the  be at the same coordinate point. For convenience the cartesian 
+robot Pegasus walked on plain ground. Firstly, we had an  positions of knee joint and foot joint calculated from forward 
+analysis  on  the  leg’s  three  joints.  Because  of  the  same  kinematics are in the hip coordinate frame. 
+configurations of the four legs, we only take one leg (RH) for 
+ 
+analysis. From the current profiles shown in Fig. 2a, obviously  (a)    Θ2 (b)   
+Z L1
+that the knee joint consumes the largest current while the hip 
+joint consumes the least current. Secondly, the total current 
+consumption of each leg is shown in Fig. 2b. One can observe    P P   
+X HIP   0 Θ1  
+that the leg consumes the least current when it is in swinging  COG  L2
+motion. 
+P
+ 
+ 
+Therefore, the experimental results come to a conclusion  Θ3 1  
+that during the locomotion cycle of our quadrupedal robot  L3
+Pegasus walking in six-creeping gait, the hip joint and the  P 
+swinging leg consume the least current. We will design our  2  
+optimization  approach  to  minimize  the  current  of  the 
+supporting legs including thigh joint and knee joint while  Figure 3.  Leg joints configuration and  frame definition of the quadrupedal 
+robot Pegasus. The 3DOF leg joints are configured as hip (roll), thigh (pich) 
+neglect the swinging leg. 
+and knee (pitch). (a) Side view. (b) Back view. 
+400
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply.    
+The forward kinematics equations are shown as (2), where  weight, the leg torque has the same distribution (only the 
+for Pegasus, L  is 0.26 m, L  is 0.34 m.  torque value is different) no matter where the placements of 
+2 3
+the four legs are. Thus, the torque distribution shown in Fig. 4 
+𝑥 =𝑥                                                               
+0 ℎ𝑖𝑝 is general enough for analyzing energy consumption of the 
+𝑦 =𝑦 −𝐿 cos𝜃                                                 supporting legs during locomotion. 
+0 ℎ𝑖𝑝 1 1
+When  searching  for  the  torque-saving  workspace,  the 
+𝑧 =𝑧 +𝐿 sin𝜃                                                 
+0 ℎ𝑖𝑝 1 1
+kinematics constraint and static stability constraint must be 
+𝑥 =𝑥 +𝐿 sin𝜃                                                considered  together.  Though  some  workspace  has  the 
+1 0 2 2
+minimum torque but not meet the kinematics constraint or 
+𝑦1 =𝑦0−𝐿2sin𝜃1cos𝜃2                              (2)  stability constraint, this workspace should be avoided. Firstly, 
+𝑧 =𝑧 −𝐿 cos𝜃 cos𝜃                                     the COG height (HCOG) should be larger than the thigh link 
+1 0 2 1 2
+length (L2) to avoid the knee joint from touching the ground 
+𝑥2 =𝑥1+𝐿3sin(𝜃2+𝜃3)                                    (shown as the dashed line in Fig. 4c). Secondly, the leg should 
+𝑦 =𝑦 −sin𝜃 [𝐿 cos𝜃 +𝐿 cos(𝜃 +𝜃 )]            not  stand  straightly  to  avoid  influencing  the  locomotion 
+2 0 1 2 2 3 2 3
+stability. 
+𝑧 =𝑧 −cos𝜃 [𝐿 cos𝜃 +𝐿 cos(𝜃 +𝜃 )]           
+2 0 1 2 2 3 2 3
+To help find out the torque-saving workspace, we have 
+validated  the  leg  torque  distribution  by  commanding  our 
+B.  Torque Distribution 
+quadrupedal robot to move up and down alternately. The 
+Pegasus  weights  about  35.2  kg,  each  leg  shares  experiment  results  shown  in  Fig.  5  demonstrate  that  the 
+approximately 86.2 N force when standing in nominal stance.  current on leg joints have the extreme values in some specific 
+For a nominal stance, we take an analysis of the statics on each  postures. One can observe that the minimum current (torque) 
+leg. The inferred statics expressions of our Pegasus robot are  value occurs when the leg is almost completely bended (Fig. 
+shown in (3).  5a) or nearly stretched straightly (Fig. 5c). And the maximum 
+𝑇 =−[𝐿 sin𝜃 +𝐿 sin(𝜃 +𝜃 )]𝑓                         value appears when the leg is at about the center position (Fig. 
+𝑡ℎ𝑖𝑔ℎ 2 2 3 2 3 𝑥
+5b) in an up-down cycle. This conclusion is approximately the 
++[𝐿2cos𝜃2+𝐿3cos(𝜃2+𝜃3)]𝑓𝑧                      (3)  same as the leg torque distribution. 
+𝑇 =−𝐿 sin(𝜃 +𝜃 )𝑓 +𝐿 cos(𝜃 +𝜃 )𝑓           The torque-saving workspace is parameterized by two 
+𝑘𝑛𝑒𝑒 3 2 3 𝑥 3 2 3 𝑧
+parameters H  (the height from foot to hip joint) and L  
+Based on the forward kinematics equation (2) and statics  COG F2H
+(the horizon distance from foot to hip joint). According to the 
+equation (3), the leg torque distribution can be drawn as 
+analysis on torque distribution and experiment results, we get 
+shown in Fig. 4.  The torque distribution is used for finding out 
+a suggested torque-saving workspace (the red filled rectangle 
+the torque-saving leg stance posture. Because we focus on 
+shown in Fig. 4c) for our quadrupedal robot Pegasus. The 
+optimizing the torque distribution for supporting legs, the 
+settings for the two parameters H  and L  is [0.48 m, 0.52 
+force implied on foot in horizontal direction is neglected, i.e.,  COG F2H
+m] and [0, -0.2 m] (minus sign demonstrates that foot joint is 
+f  = 0. Obviously, the torque on thigh joint and knee joint is 
+x behind hip joint).  
+proportional to the weight distributed from the trunk. Though 
+the torque distribution discussed in this section is generated 
+IV.  ENERGY-EFFICIENT BASED MOTION PLANNER 
+based on the assumption that the four legs bear the same  
+(a)  (c)  A.  Optimized Nominal Stance 
+For the six-creeping gait, in each gait cycle there are two 
+nominal stances appearing alternately. The shape of nominal 
+stance plays an important role in locomotion stability and 
+moving  speed  [18].  A  nominal  stance  with  shape  of 
+(b)  parallelogram is widely used in statically walking gait of 
+H   quadrupedal robot. 
+COG
+In this paper we parameterize our robot’s nominal stance 
+L  
+F2H with three parameters: stance length (LStance), stance width 
+(WStance) and skew (LSkew), depicted in Fig. 6a. The skew 
+  is a key parameter which helps the robot to move faster and 
+more stable [18]. We experimentally found that robot walks 
+Figure 4.  Torque distribution of leg. Darker blue stands for smaller torque  more stable and faster if the skew is equal to half of step 
+values. (a) Thigh joint torque distribution. The thigh joint has the minimum 
+length. 
+torque value when the foot placement is just below the center of thigh joint, 
+demonstrated as the darkest blue zone. (b) Knee joint torque distribution. The  The following will discuss the gait parameter constraints. 
+knee joint has the minimum torque value if the foot stands behind some 
+We assume the robot is moving forward only and the static 
+distance to the thigh joint. (c) Sum of thigh and knee joint torque distribution. 
+stability can be fit at all time. First, the leg must be avoided 
+The total minimum torque value only appears if the leg stands up straightly. 
+The zone (we will specifiy an torque-saving workspace in this zone) bewteen  stretching straightly at any time. There exist two situations in 
+the thigh joint and knee joint’s minimum torque line have smaller torque  which the leg is easy to stretch straightly. The first one is the 
+values compared to other zone’.  hind leg (Fig. 6b) in the body shifting stage when climbing  
+401
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply.    
+(a)  (b)  (c)  rectangle should be less than 0.4 m. We set LSearch to 0.3 m. A 
+small value 0.08 m is set as the width of search rectangle 
+accounting for the lateral locomotion limitation. 
+(d) 
+B.  Foothold Planner 
+For a quadrupedal robot, the foothold planner plays a key 
+role  in  ensuring  safe  locomotion  on  challenging  terrains. 
+Given the optimized nominal stance as the starting position (in 
+Fig. 7a), the foothold planner can select a list of kinematical 
+feasible foothold locations to the goal position. In addition, the 
+  selected  candidate  footholds  must  can  be  formed  in  the 
+optimized  nominal  stance  when  the  energy-efficiency 
+Figure 5.  The up-down experiment. The robot stands in a predefined stance  constraint is considered. The leg torque distribution actively 
+location where the four feet are below the thigh joint. This figure shows the 
+contributes to our foothold planner together with kinematic 
+current changing trend of the RH leg including the hip joint, thigh joint and 
+analysis on terrain maps, which leading to energy-efficient 
+knee joint during up-down movement. 
+postures  for  legged  robots  on  challenging  terrains.  Our 
+proposed  foothold  planner  has  a  cascaded  structure  that 
+(a)  LSkew  LStance  (b) Thigh Joint  afopoptlhieosl ddsi ffaerree nfto luenndg t(hF oigf .r e7c)t.a nTghuel amr saeianr ccho mrepgoionne nutnst iol fv atlhide  
+LH  LF  planner are described in the following sections. 
+WStance  s  HCOG  1)  Traversability Map:   
+1 Foot  The traversability map is created from the elevation map. 
+RH  LStep  RF  s2  Sthiem gileaorm toe t[r1ic9a],l  tchhea rtaracvteerrissatibcisli toyf  sthcoe rtee rcraanin bse i ngcelnuedriantge dh efriogmht  
+ 
+of step, angle of slope and roughness of terrain. The higher of 
+the score is, the higher of the locomotion traversability is. 
+Figure 6.  (a) The nominal stance. Solid line parallelogram is the nominal 
+stance when right two legs are swinging, dashed line parallelogram is the 
+2)  Foothold Feasible Score: 
+nominal stance during left two legs swing stage. The narrow rectangle is the 
+Based on the traversability map and taking the toque 
+foothold search region with nominal foothold at center and min and max 
+foothold (yellow sphere) at two sides. (b) To avoid a leg from stretching, the   a 
+square sum of s and H  must be less than the square of leg length.  
+2 COG
+stairs. This kinematical constraint of leg can be described as 
+equation (6). The second one is in the leg swinging stage, the 
+swinging leg may extend to its limit with a very large step 
+length.  This  kinematical  limitation  can  be  expressed  in   b   e 
+equation (7). Furthermore, it should be noted that when the 
+foothold is planned at the left edge (shown as the dashed 
+yellow sphere in Fig. 6a) of search rectangle. After each 
+swing-leg stage, the flying foot should be ahead of its previous 
+location once touched ground (s  > 0). This constraint is 
+1
+shown as equation (5). Lastly, shown as equation (4), we set   c  2 2    
+the skew value to half of nominal step length to achieve a  1 1
+stable locomotion stability.   2 2
+The following summarized gait constraints are used to  1 1
+guide our robot locomotion parameters settings. 
+𝐿Skew =𝐿𝑆𝑡𝑒𝑝⁄2                                (4)   d       g  1 1
+𝐿Search <2𝐿𝑆𝑡𝑒𝑝                                  (5)      2 2
+   
+𝐿𝑆𝑡𝑒𝑝 <√𝐿2𝐿𝑒𝑔−𝐻𝐶2𝑂𝐺                            (6)      2 1 2 1  
+𝐿Search <2√𝐿2𝐿𝑒𝑔−𝐻𝐶2𝑂𝐺 −𝐿𝑆𝑡𝑒𝑝⁄2                    (7)  Figure 7.  The foothold planner is searching for footholds which can form in 
+optimized nominal stance. (a) The initial stance. As a demonstration, the 
+For Pegasus, the leg length LLeg is 0.6 m. To achieve high  search region includes 9 cells (3×5) with nominal foothold in the center 
+energy-efficient  locomotion,  leg  torque  distribution  is  shown as the blue sphere. (b) The traversability score map of search region 
+considered as a critical constraint (in Fig. 6) to obtain gait  with green cells stand for valid while yellow cells are invalid. (c) Searching 
+parameter settings as followed: COG height H  is close to  for the cells (blue cells with the number stands for its prioity) which can form 
+COG nominal stance. (d) The final footholds are found shown as the red spheres 
+0.5  m  in  the  recommended  energy-saving  workspace. 
+forming in a nominal stance. (e) Another case of traversability score map. (f) 
+According to constraint (6), we can calculate the step length 
+Because of no valid cells are found that can form in nominal stance, the 
+should be set less than 0.33 m. Here we set LStep to 0.2 m.  search rectangle length is broaden (3×7). (g) The final footholds are found. 
+Based on constraint (5) and (7), the length of foothold search 
+402
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply.    
+distribution into account, the foothold feasibility f∈[0,1]  D.  Navigation Framework 
+combines the values as below: 
+Given a navigation goal, the robot should be able to reach 
+f=1−𝜔1𝑑𝐷11−𝜔2𝑑𝐷22                           (8)  tnhaavti ggaotiaoln  asa beiflfiitcyi,e nstelyv earas l pofusnsicbtlieo.n aTl o macohdiuelvees  thsuisc hs elafs-  
+localization,  perception  and  mapping,  foothold  planning, 
+𝜔 +𝜔 =1
+1 2 swing-leg trajectory planning and COG trajectory planning 
+{𝐷1 =𝐿𝑆𝑒𝑎𝑟𝑐ℎ+2𝑊𝑆𝑒𝑎𝑟𝑐ℎ                          (9)  are  needed  to  be  organized  together  appropriately.  The 
+𝐷 =𝑊𝑆𝑒𝑎𝑟𝑐ℎ locomotion planning frameworks we proposed is shown in Fig. 
+2 2 8. It should be noted that the modules marked with red 
+where 𝑑  is  the  Manhattan  Distance  from  the  nominal  rectangle are the key components in this paper to realize the 
+1
+foothold to the planned foothold while 𝑑  is the Euclidean  robot automatically walk in energy-efficient locomotion over 
+2
+challenging terrains. The foothold planner together with the 
+Distance  to center  line  of the two  long  edges  of  search 
+rectangle. The weights  𝜔  and 𝜔  can penalize footholds  COG trajectory planner guide the robot to walk in a way that 
+1 2
+using the optimized nominal stance which is created based on 
+whose distance to the nominal foothold location is far away 
+the leg torque distribution. 
+from forward and lateral direction respectively. 
+The  robot  uses  a  rotating  2D  lidar  to  perceive  the 
+3)  Foothold Searching Procedure: 
+surrounding  terrain  information.  The  scanned  data  are 
+Similar  to  the  quadrupedal  robot  ANYmal  [20],  our 
+reconstructed as 3D point cloud which are used for generating 
+foothold  planner  starts  the  searching  progress  from  the 
+the elevation map. An open source elevation mapping Robot 
+nominal foothold in a specific search region of a nominal 
+Operating System (ROS) package [21] is used in our project. 
+stance (shown as Fig. 7a). The searching strategy is improved 
+The traversability map is created based on the elevation map. 
+that the leg torque workspace is incorporated as a critical 
+Once  the  feasible  footholds  are  found  based  on  the 
+constraint  for  the  optimization  of  energetically  efficient 
+traversability map, the COG trajectory and the collision free 
+locomotion. Additionally, a narrow rectangle is used instead 
+swing-leg trajectory can be planned. The footholds together 
+of a circle as the search region since the workspace of forward 
+with the trajectories in cartesian space are transformed into leg 
+motion is of more importance than the workspace of the lateral 
+motor’s position in joint space which are used to control the 
+motion when the quadrupedal robot is in forward locomotion. 
+legs to form in energy-saving stance posture. 
+Furthermore,  our  foothold  planner  supports  any  specified 
+number  of  foothold  locations,  for  example  4,  8,  or  12  To correct the accumulation errors caused by slipping, we 
+footholds, etc. in one planning cycle.  designed an auxiliary localization module based on 3D point 
+cloud. This module follows the center of a randomly selected 
+The foothold planner searching progress for the next gait 
+object  in  front  of  robot.  The  changed  coordinate 
+cycle is as below: By using the traversability score map 
+transformation between robot and object is used to correct the 
+(shown as Fig. 7b), the planner finds all the kinematical valid 
+localization errors in odometer module.  
+footholds (also called candidate footholds, shown in Fig. 7c) 
+which can form in nominal stance. Then the feasibility score 
+values of the candidate footholds are computed according to  V.  EVALUATIONS 
+equation (8) and (9). Lastly, the candidate footholds with the 
+We have validated the approach on our quadrupedal robot. 
+highest priority in each search region is chosen as the final 
+footholds for the next gait cycle (Fig. 7d). Should this cascade 
+Localization  dometer 3D point cloud
+not result in feasible footholds (Fig. 7e), the search rectangular 
+regions are extended by a pre-specified length (Fig. 7f) and the 
+cascaded searching process is repeated. If no valid footholds  Localization  using
+are  found  after  the  second  run  through  the  cascade,  the 
+foothold which is closest to the nominal foothold is chosen as 
+the final foothold.   Perception  apping Planning Controller
+C.  COG Trajectory Planner  p3oDin t  Elemvaatpion   opoltahnold  Inverse 
+We have also proposed a COG trajectory generator which  cloud kinematics
+can adapt itself to terrain. Each gait cycle includes two main 
+points (also called waypoints) which determine the COG  Traversability C   
+trajectory when robot is in stance with four feet after the  map plan
+trunk-shifting  stage.  The  feet  locations  which  form  the   oint 
+Tor ue distri ution
+supporting triangle are used to calculate the triangle inner  positions
+Swing leg 
+center (the COG waypoint). As the footholds are planned      plan
+rotating 
+based  on  the  percept  terrain  elevation  map,  the  COG 
+lidar
+waypoints will adapt the terrain accordingly. The height of 
+COG is defined as the mean height of supporting feet. Lastly,   oint motors     
+we set a threshold to suppress the trunk fluctuation. If the 
+variations  of  COG  height  did  not  exceed  the  fluctuation   
+threshold, the height of the COG remains unchanged. 
+Figure 8.  An overview of Pegasus navigation framework. 
+403
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply.    
+Pegasus is about 1.0 m long, 0.4 m wide, and 0.75 m tall when 
+(a) 
+legs stand straightly, with weight of about 35.2 kg. The 3DOF 
+legs are driven by electric motors at 400 Hz by PD position 
+controller. A NVIDIA Jetson TX2 embedded computer is 
+used  as  the  center  computing  platform.    A  Hokuyo 
+UTM-30LX-EW  lidar  is  mounted  on  the  robot  head  to 
+perceive the surrounding map. The lidar can sweep a full 
+scanning at about 1.5 s. The optimization parameters for 
+energy-efficient  locomotion  used  in  our  experiments  are 
+summarized in Section Ⅳ. 
+A.  Walking on Plain Ground  (b) 
+The first experiment was walking on plain ground. The 
+quadrupedal robot walks twice at the same distance but with 
+two different planning parameters. The first setting use the 
+traditional  parameters  while  the  other  uses  optimized 
+parameters. We use equation (1) to calculate the total power 
+consumption in locomotion experiments. For Pegasus, the 
+torque constant K = 0.217 Nm/A, the winding resistance R = 
+t 
+2.28 Ω. Fig. 10a shows the locomotion power consumption.  
+ 
+B.  Climbing Stairs 
+Figure 10.  Power consumption. (a) Walkinig on plain terrain in three full gait 
+The second experiment is climbing a set of stairs shown as  cycles. (b) Climing stairs. 
+Fig. 1. The stairs have a rise of 8 cm and a run of 30 cm. To 
+make  sure  that  the robot  travels  approximately  the  same 
+distance during the two comparative experiments, the robot is  TABLE I.   PEGASUS POWER CONSUMPTION DURING WALKING ON 
+PLAIN GROUND AND CLIMBING STAIRS 
+set to start from the same origin position and halt until the last 
+foot successfully climbs the last step.    Avg Before  Total  Before  Avg  After  Total After 
+Optimized   Optimized  Optimized  Optimized 
+With optimized gait parameters, our motion planner can 
+Ground  35.4 w  150210 w  31.8 w  132170 w 
+help the robot to keep its legs standing in energy-saving 
+postures during climbing stairs. As a result, the optimized  Stairs  37.8 w  851110 w  35.2 w  783490 w 
+locomotion  achieved  a  lower  power  consumption.  It  is 
+divided by the weight times velocity [2]. Compared to other 
+interesting to note the duration (15~50 s in Fig. 10b) when the 
+legged robots such as Boston Dynamics BigDog (COT=15) 
+robot is in a nominal stance with all four feet touched ground 
+[5], Hexapod Robot Weaver (COT=36.43) [14], our robot 
+(Fig. 9a) waiting for mapping. In this duration, the power 
+COT is 7.68 for plain ground and 8.2 for stairs, demonstrating 
+consumption in an optimized nominal stance (green line) is 
+the effectiveness of our proposed approach in improving 
+much less than that of in non-optimized stance (red line). 
+locomotion efficiency. Moreover, other legged robots, such 
+Table Ⅰ details the power consumed during auto  as BigDog or Weaver can also use this approach to reduce 
+locomotion on plain terrain and climbing stairs. We can see  their COT by about 10% or more. 
+that by using our proposed motion planner with optimized gait 
+parameters results in an energy consumption reduction of  VI.  CONCLUSION 
+13.6 % for plain ground and 7.94 % for stairs compared to 
+The experimental results demonstrate that by controlling 
+non-optimized gait. Additionally, our robot COT during the 
+the  robot  postures  to  make  legs  stay  in  energy-saving 
+two experiments can be given by the power consumption  
+workspace with the help of foothold planner and COG planner, 
+the quadrupedal robot can achieve a more energy-efficient 
+(a) 
+locomotion both  on plain ground  and rough  terrain.  Our 
+Pegasus robot can continuously walk on challenging terrains 
+for over 24 hours with one cycle of battery operation time.  
+ACKNOWLEDGMENT 
+This work was supported in part by the National Natural 
+(b)  Science Foundation of China (Grant No. U1613223), in part 
+by  the  Shenzhen  Natural  Science  Foundation (Grant No. 
+  JCYJ20180508163015880),  and  in  part  by  funding  from 
+Shenzhen Institute of Artificial Intelligence and Robotics for 
+Figure 9.  The robot is climing stairs. (a) Before locomotion, the robot plans  Society (AIRS), Shenzhen 518172,  China, and Peng Cheng 
+a global COG trajectory (yellow line) along with a list of global footholds  Laboratory (PCL), Shenzhen 518055, China. 
+(color spheres, red-RF,green-RH, blue-LH, yellow-LF) on the percept terrain 
+elevation map. (b) Sequence of snapshots of Pegasus while climing the stairs.  
+404
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply.    
+REFERENCES  
+[1]  McGeer T. Passive dynamic walking[J]. I. J. Robotic Res., 1990, 9(2): 
+62-82. 
+[2]  Bhounsule P A, Cortell J, Ruina A. Design and control of Ranger: an 
+energy-efficient,  dynamic  walking  robot[M]//Adaptive  Mobile 
+Robotics. 2012: 441-448. 
+[3]  Hutter M, Gehring C, Jud D, et al. Anymal-a highly mobile and 
+dynamic  quadrupedal  robot[C]//2016  IEEE/RSJ  International 
+Conference on Intelligent Robots and Systems (IROS). IEEE, 2016: 
+38-44. 
+[4]  Hutter M, Remy C D, Hoepflinger M A, et al. Efficient and versatile 
+locomotion with highly compliant legs[J]. IEEE/ASME Transactions 
+on Mechatronics, 2012, 18(2): 449-458. 
+[5]  S. Seok, A. Wang, Chuah, M. Y. (Michael), D. Otten, J. Lang, and S. 
+Kim,  “Design  principles   or  highly  e  icient  quadrupeds  and 
+implementation on the mit cheetah robot,” in 2013 IEEE International 
+Conference on Robotics and Automation, 2013. 
+[6]  Semini, C, et al. “Design of HyQ – a hydraulically and electrically 
+actuated  quadruped  robot,”  Proceedings  of  the  Institution  of 
+Mechanical  Engineers,  Part  I:  Journal  of  Systems  and  Control 
+Engineering, 225(6), 831–849, 2011.  
+[7]  Bledt G, Powell MJ, Katz B, Carlo J, Wensing P, Kim S, "MIT Cheetah 
+3: Design and Control of a Robust, Dynamic Quadruped Robot." 
+IEEE/RSJ International Conference on Intelligent Robots and Systems 
+(IROS), 2018: 2245 - 2252. 
+[8]  Sakagami, Y., Watanabe, R., Aoyama, C., Matsunaga, S., Higaki, N. 
+and Fujimura, K. “The intelligent ASIMO: system overview and 
+integration, ” In Proc. of IROS, 2002, 2478- 2483. 
+[9]  Hutter M, Gehring C, Bloesch M, et al. Excitation and stabilization of 
+passive dynamics in locomotion using hierarchical operational space 
+control[C]//2014  IEEE  International  Conference  on  Robotics  and 
+Automation (ICRA). IEEE, 2014: 2977-2982. 
+[10] Harper M Y, Nicholson J V, Collins E G, et al. Energy Efficient 
+Navigation  for  Running  Legged  Robots[C]//2019  International 
+Conference  on  Robotics  and  Automation  (ICRA).  IEEE,  2019: 
+6770-6776. 
+[11] Xi  W,  Remy  C  D.  Optimal  gaits  and  motions  for  legged 
+robots[C]//2014 IEEE/RSJ International Conference on Intelligent 
+Robots and Systems. IEEE, 2014: 3259-3265. 
+[12] Sun  Z,  Roos  N.  An  energy  efficient  dynamic  gait  for  a  nao 
+robot[C]//2014 IEEE International Conference on Autonomous Robot 
+Systems and Competitions (ICARSC). IEEE, 2014: 267-272. 
+[13] Koco E. Locomotion Control for Electrically Powered Quadruped 
+Robot Dynarobin[C]//Advances in Cooperative Robotics, Proceedings 
+of the 19th International Conference on CLAWAR 2016. 63-70. 
+[14] Bjelonic M, Kottege N, Homberger T, et al. Weaver: Hexapod robot for 
+autonomous navigation on unstructured terrain[J]. Journal of Field 
+Robotics, 2018, 35(7): 1063-1079. 
+[15] Chen, L., Ye, S., Sun, C., Zhang, A., Deng, G., Liao, T., & Sun, J. 
+(2019,  December).  CNNs  based  Foothold  Selection  for 
+Energy-Efficient Quadruped Locomotion over Rough Terrains. In 2019 
+IEEE International Conference on Robotics and Biomimetics (ROBIO) 
+(pp. 1115-1120). IEEE. 
+[16] R. B. McGhee, A. A. Fkask, and A. Frank. On the stability properties of 
+quadruped creeping gaits. Mathematical Biosciences, 3:331–351, Aug. 
+1968. 
+[17] Hutter M, Sommer H, Gehring C, et al. Quadrupedal locomotion using 
+hierarchical operational space control[J]. The International Journal of 
+Robotics Research, 2014, 33(8): 1047-1062. 
+[18] Pongas D, Mistry M, Schaal S. A robust quadruped walking gait for 
+traversing  rough  terrain[C]//Proceedings  2007  IEEE  International 
+Conference on Robotics and Automation. IEEE, 2007: 1474-1479. 
+[19] Wermelinger M, Fankhauser P, Diethelm R, et al. Navigation planning 
+for  legged  robots  in  challenging  terrain[C]//2016  IEEE/RSJ 
+International Conference on Intelligent Robots and Systems (IROS). 
+IEEE, 2016: 1184-1189. 
+[20] Fankhauser P, Bjelonic M, Bellicoso C D, et al. Robust rough-terrain 
+locomotion with a quadrupedal robot[C]//2018 IEEE International 
+Conference on Robotics and Automation (ICRA). IEEE, 2018: 5761–
+5768. 
+[21] Fankhauser P, Bloesch M, Gehring C, et al. Robot-centric elevation 
+mapping with uncertainty estimates[M]//Mobile Service Robotics. 
+2014: 433-440. 
+405
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:14:29 UTC from IEEE Xplore.  Restrictions apply. 

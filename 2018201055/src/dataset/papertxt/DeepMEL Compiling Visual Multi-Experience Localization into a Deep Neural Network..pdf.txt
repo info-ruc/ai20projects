@@ -1,0 +1,540 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Towards distortion based underwater domed viewport camera
+calibration
+Eduardo Iscar1, Matthew Johnson-Roberson1
+Abstract—Photogrammetry techniques used for 3D recon- opticalcenterarelocatedatthesameposition.Althoughthis
+structions and motion estimation from images are based on is very difﬁcult to achieve in practice, it has been shown
+projective geometry that models the image formation process.
+in [11] that the error is negligible when the misalignment is
+However, in the underwater setting, refraction of light rays
+small. However, there are situations where it is not possible
+at the housing interface introduce non-linear effects in the
+image formation. These effects produce systematic errors if toaligntheopticalcenterofthecamerawiththecenterofthe
+not accounted for, and severely degrade the quality of the dome, such as when multiple cameras share a single domed
+acquired images. In this paper, we present a novel approach viewport. Figure 1 shows such a stereo camera pair housed
+tothecalibrationofcamerasinsidesphericaldomeswithlarge
+in a borosilicate glass sphere. This sphere is used as the
+offsets between dome and camera centers. Such large offsets
+main pressure housing for the DROP-Sphere, a novel, low-
+notonlyamplifytheeffectofrefraction,butalsointroduceblur
+in the image that corrupts feature extractors used to establish cost deep sea autonomous underwater vehicle (AUV) being
+image-world correspondences in existing refractive calibration developed by the authors [12]. Using a glass sphere as the
+methods. We propose using the point spread function (PSF) as main pressure vessel drastically reduces the AUV’s cost to
+a complete description of the optical system and introduce a
+a total less than $35;000, enabling access to the deep ocean
+procedure to recover the camera pose inside the dome based
+for a much wider community of researchers and scientists.
+on the measurement of the distortions. Results on a collected
+dataset show the method is capable of recovering the camera One of the main characteristics of the DROP-Sphere is that
+pose with high accuracy. it dispenses with the Doppler velocity log (DVL) and relies
+on the camera feed for its navigation while surveying the
+I. INTRODUCTION
+ocean benthos. As a consequence, it is required to address
+In recent decades, computer vision techniques, such as the errors arising from large offsets in domed underwater
+photogrammetric 3D reconstructions or visual navigation, camerastoenableaccuratevehiclenavigationandprecise3D
+have seen a great increase in applications to the underwater reconstructionsoftheoceanseaﬂoor.Thispaperanalyzesthe
+domain. Examples include coral reef surveys [1], 3D recon- applicabilityofmethodsdevelopedfordomedhousingswith
+struction [2], benthic population assessment [3], or ship hull small offsets and introduces the usage of the point spread
+inspection [4]. Algorithms used for aerial or terrestrial en- function (PSF) as a means to compute the camera position
+vironments are frequently used for underwater visual odom- inside the dome. To do so, we collect a dataset of PSFs for
+etry (VO) [5] or photogrammetric 3D reconstructions [6]. multiple camera-dome positions and show how the camera
+However, to deploy cameras in the aqueous environment, pose can be recovered by analysing the optical distortions.
+underwater optical systems require an additional housing
+that protects the lens and camera from water damage as
+wellaspressure.Lightraystravellingthroughthisadditional
+housinginterfacegetrefractedwhenchangingmediums.The
+change in direction is proportional to the incidence angle
+and the quotient of the materials refractive indices. Due
+to refraction, camera rays no longer intersect the optical
+axis at the center of projection [7]. Underwater images are
+further affected by scattering and absorption, a wavelength
+dependent phenomenon that modiﬁes the perceived color
+in the images. As a consequence, the widely used pinhole
+camera model [8] is no longer valid [9].
+Most underwater housings fall into two main categories:
+ﬂat viewports and domed viewports. Flat viewports are
+simplertomanufactureandgenerallysmaller.However,they Fig. 1: Stereo camera used for vehicle navigation. The posi-
+reduce the camera ﬁeld of view (FOV) by approximately tion of the cameras is far from the center of the hemisphere,
+25% [10]. Inversely, domed viewports are more difﬁcult to introducing signiﬁcant distortion in the images.
+manufacture, but do not introduce refraction effects in the
+image as long as the center of the dome and the camera More speciﬁcally, the contributions of this paper are two
+fold. First, we analyze raytracing, a technique frequently
+1EduardoIscarandMatthewJohnson-RobersonarewiththeDepartment
+used in the literature for underwater refractive models, and
+ofNavalArchitectureandMarineEngineering,UniversityofMichigan,Ann
+f g
+Arbor,MI48109USA eiscar,mattjr @umich.edu show how and why it fails in the case of domed viewports
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1896
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. with large camera-dome offsets. Second, we propose the situations where the offset is large compared to the hemi-
+use of the PSF to characterize the complete optical system sphere radius. Additionally, their experiments are limited
+consisting of camera, lens, and dome, and use it to obtain to simulation. Bosch et al. [19] implemented a similar
+the camera pose within the dome. calibration method for an omnidirectional camera system
+in a cylindrical and spherical housing based on non-linear
+II. RELATEDWORK optimization of camera intrinsics, extrinsics, and housing
+Modelling underwater image formation effects has been parameters using raytracing. Their work, however, shows
+an important topic of research in recent years. Extensive limited quantitative evaluation of the calibration results and
+workhasbeendonewithregardtotheeffectofﬂatviewport requires high quality images for feature extraction. Related
+lensesonunderwatercameras.Acomprehensiveoverviewof work by Menna et al. [20] presented methods for character-
+the literature on refractive underwater imaging and camera ization of a commercial underwater camera domed housing
+models is presented by Sedlazeck et. al. [9]. A popular and analyzed its properties.
+approach has been to use an unmodiﬁed pinhole camera While these methods approach refractive image formation
+model [8] together with a conventional calibration based from a physics-based perspective, extensive work has been
+on checkerboard patterns [13] performed underwater. Errors done in the image processing community to recover images
+due to refraction, attenuation, and scattering are absorbed that are degraded by a range of different effects, such as
+by the estimated camera intrinsic and distortion parameters. motionblur,chromaticaberrations,comma,ordefocus.This
+It is important to realize that pinhole calibrations performed process generally assumes that the observed image can be
+underwaterataspeciﬁcdistanceareabletoachieveverylow expressedastheconvolutionoftheunderlying“sharp”image
+reprojectionerrorsofthecalibrationfeaturesduetotheavail- with an unknown kernel, called the PSF. If the PSF for
+abledegreesoffreedominthedistortioncoefﬁcients,camera a system is known, the original, undegraded image can be
+intrinsics, and pose. For such calibrations, however, errors recoveredthroughdeconvolution.Thecharacterizationofthe
+appear both in camera translation and rotation, with large optical distortions through the PSF forms the foundation
+displacementsfromthetruevalues..Projectionofpoints,and of the method introduced in this paper for domed housing
+camera raytracing will be affected by such systematic errors camera calibration and is described in detail in Section IV.
+that are dependent on scene depth. In previous work [14],
+III. LIMITATIONSOFRAYTRACINGMETHODS
+we analyzed the implications of such systematic errors on
+As mentioned in Section II, most previous work focuses
+the accuracy of underwater 3D reconstructions. However,
+onthemodellingofrefractionbytracingindividuallightrays
+examples of the successful application of this approach are
+imagedbythecameraandexplicitlycomputingtherefraction
+numerous in the literature [15] [16]. Other authors propose
+points at each of the interfaces. Most developed methods
+to slightly modify the pinhole camera model for underwater
+rely heavily on a constant interface, normal in the case of
+use. Lavest et al. [10] analyzed the effect of ﬂat viewports
+ﬂat viewports, while, to the best of our knowledge, only
+on the camera calibration and established that the effective
+domed housing simulation results have been presented. In
+focal length underwater is 1:33 times the focal length in air.
+this Section, we analyze the issues arising when raytracing
+Their derivation, however, only holds for viewports with a
+methods are applied to the calibration of cameras with
+constant surface normal and does not generalize to domed
+large offsets in spherical dome housings (Section III-A) and
+housings.
+describethemainsourcesofimagedegradation(SectionIII-
+Flat viewports also require the estimation of extra pa-
+B). The raytracing process is visualized in Figure 2. The
+rameters to completely calibrate the imaging system. In
+j ﬁgure shows a ray originating from the camera at a given
+addition to the camera extrinsics [Rt], distortion parameters pixel that intersects the inner glass surface at point A,
+d and intrinsics K, the distance between the camera and ﬂat
+with angle (cid:18). While going through the interface, the ray is
+viewport, and the viewport normal, need to be estimated.
+refracted according to Snell’s Law and then travels through
+Sedlazeck and Koch [17] present a calibration method for
+the glass until it intersects the outer surface at point B.
+ﬂatviewportstereocamerasthatdoesnotrequireanyspecial
+At this point, it is refracted again and the ray direction in
+calibration target to be imaged. Additional parameters, such
+water can be obtained. This generates a set of image pixel -
+as interface thickness or refractive indices, can also be
+underwaterraycorrespondencesthatfullydescribeageneral
+includedinthecalibrationprocess.SedlazeckandKoch[18]
+camera model and allow to obtain the camera ray in water
+developedsuchamethodthatalsoincludestheestimationof
+for any given pixel coordinate. The inverse of this problem,
+the parameters of a radiometric model of light propagation.
+to obtain the pixel that corresponds to a given 3D point, is
+Much less work has been done to model, characterize, and
+called reprojection and has to be solved as an optimization
+correct refraction in domed viewports. One of the main
+problem due to the nonlinearities introduced by refraction.
+reasonsisthatdomedviewportsintroducesmallerdistortions
+The reader is referred to [11], [21] for more information on
+whenproperlyaligned.KunzandSingh[11]usedraytracing
+general camera models and ray equation derivations.
+to simulate refraction through a spherical interface and eval-
+uate the induced error in 3D point triangulation. However, A. Raytracing based calibration
+the authors focused on small displacements between the In the context of most computer vision applications, the
+dome center and the optical center and did not consider pinhole camera model [8] is used together with a calibration
+1897
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. techniquebasedontheimagingofgeometricpatternssuchas
+checkerboards[13],circlegridsorAprilTags[22]toestablish X(cid:22)
+correspondencesbetweenpixelcoordinatesand3Dworldco-
+ordinates.Theraytracingunderwaterimageformationmodel
+B
+requires a total of 24 parameters in the case of spherical
+A
+dome housings: 4 camera intrinsic (K) parameters (focal
+1
+length for each image axis and image center), 5 lens distor- Cam
+(cid:18)
+tionparameters(3radialand2tangentialcoefﬁcients),6pose
+parameterseachforthecameraanddomeposesrespectively,
+as well as the three refraction coefﬁcients of air, glass, and
+water. The camera intrinsic and distortion coefﬁcients can
+be obtained by performing a pinhole camera calibration in
+air [13]. Furthermore, due to the rotational symmetry of the Water
+dome, the camera pose with respect to the dome reduces Refracion coefﬁcient n
+w
+to the estimation of its translation vector. Finally, refraction
+coefﬁcients for the glass interface can be obtained from Fig. 2: This ﬁgure shows the effect of refraction on un-
+manufacturer data with high accuracy using the Sellmeier derwater image formation. Refraction effects have been
+Equation [23]. While the refractive index of air depends on exaggerated for illustration purposes.
+temperature and pressure, changes are under 0:008% [24].
+The index of refraction of sea water is the most variable of
+thethreewithupto3%,butgivenpressure,temperature,and
+salinity, its value can be computed with an accuracy of at
+(cid:0)
+least 10 4 [25]. With these simpliﬁcations, the calibration
+of a domed underwater camera system only requires the
+estimationoftherelativecamera-dometranslationTdomeand
+c
+the camera extrinsics (Rc and Tc) for each image taken.
+w w
+Due to the nonlinear effects introduced into the image
+formation process by refraction, no explicit expression for
+themodelparameterscanbederived.Nonlinearoptimization
+methods can be used to search for the correct parameter
+values through the minimization of a cost function.
+Following the procedure outlined in [11], the calibration
+Fig. 3: Result of camera calibration simulations without
+process is set up as two nested optimization problems. The
+noise. Both images show the reprojection error of points
+outerloopoptimizestherelativepositionbetweenthecamera
+on a plane at 3m in front of the camera. The left image
+and dome, while the inner loop searches for the optimal
+X represents the reprojection using a conventional pinhole
+camera extrinsics Rc and Tc.
+w w camera model calibrated with underwater images; the right
+1 n k k image incorporates refraction with the proposed improved
+Rcw;T(cid:0)cw;Tdcome =arg(cid:1)min2 (cid:26)i di 2 (1) model.
+i
+k (cid:2) k
+BX u
+d Rc;Tc;Tdome = k k (2) respondences in simulation.The optimizer successfully con-
+i w w c u verged on all noiseless trials and the resulting reprojection
+where d is the distance between the in-water ray deﬁned error was orders of magnitude smaller than that obtained if
+i
+by the intersection point with the outer surface B, and its a pinhole model was assumed and a calibration performed
+direction u going through pixel i and the corresponding using in-water checkerboard images. This ﬁgure not only
+3D point X. We chose to deﬁne the cost function as the highlights how a refractive calibration outperforms a simple
+L2 distance between the ray and 3D point instead of the pinhole camera model if data can be measured with small
+reprojection error because the reprojection of world points enough noise but also shows how pinhole calibrations can
+into the image is itself a minimization problem. Instead, the achieve misleadingly small reprojection errors when cali-
+distance can be computed very efﬁciently. brated at a single distance. After performing experiments
+The initial values for the camera poses are computed with noiseless data, the procedure was repeated introducing
+through the Efﬁcient Perspective-n-Point (EPNP) algo- increasing levels of noise on the corners extracted from
+rithm [26], while initial values for the camera to dome’s the image. The results are shown in Figure 4, showing
+relative position can be either measured on the physical the histogram of camera pose estimation errors as noise is
+system or CAD model. increased. This ﬁgure shows how camera pose estimation
+Figure 3 shows the result of applying the proposed performance quickly degrades, even in the presence of pixel
+raytracing-based algorithm to noiseless pixel-3D point cor- noise as low as 4px
+1898
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. Fig. 4: As pixel noise increases, the calibration optimization
+converges to local minima at signiﬁcant distances from the
+true camera position and ray tracing will fail. Histogram
+legend in pixels.
+B. Sources of error
+In addition to refraction-based geometric distortion, im-
+ages taken inside glass domed viewports are degraded by
+additional effects exempliﬁed in Figure 5. This ﬁgure shows
+an image of different calibration boards acquired by one
+of the cameras inside the spherical housing shown in Fig-
+ure 1 and highlights the following effects: 1) Space varying
+defocus: The spherical glass interface acts as a lens and
+generates a space-varying defocus across the image plane.
+This effect can be seen when comparing the two zoomed Fig. 5: Example of image obtained inside the dome with
+areas in the bottom of Figure 5. 2) Chromatic aberration: large offset from the center. Note the difference in focus
+The different light wavelengths are refracted in different across the image plane as well as the chromatic aberration
+amounts by the interface, generating a change in color. 3) along the circle edges.
+Illumination falloff: Part of the light gets reﬂected on the
+glass dome surface in addition to lens vignetting, generating
+in the image, with a one to one correspondence between
+the illumination decay pattern observed.
+image plane and object plane. However, in a real imaging
+The large inﬂuence of these effects on image formation
+system the point image is degraded or spread by the kernel
+when large offsets from the dome center are present is the
+K. Deconvolution can be applied to the observed image O
+main differentiating factor between the problems addressed
+to recover the latent image I. Methods can be divided into
+by Kunz et al. [11] and Bosch et al. [19], both of which
+blind and non-blind methods. While blind methods estimate
+require accurate corner feature extraction. The combination
+both the PSF and latent image simultaneously, non-blind
+oftheseeffectsaddsexcessivenoisetothepositionofcorners
+methodsprovidebetterresultswhenprovidedwithapriorof
+extracted from the calibration targets. Multiple attempts
+the PSF. The PSF is a unique property of an optical system
+were performed to apply the raytracing-based calibration
+andfullydescribesit;thatis,notwodistinctopticalsystems
+procedure to real datasets with different calibration patterns
+share the same PSF [27]. As a consequence, if the PSF of a
+without success.
+systemcanbemeasured,itshouldbepossibletorecoverthe
+IV. DISTORTIONBASEDCALIBRATION parameters of the system that generated it. It is, however,
+A. Image formation a very high dimensional function that depends on optical
+ThedegradationeffectsintroducedinSectionIII-Bcanbe properties, such as lens geometry and materials, aperture,
+encoded as a convolution kernel K. The observed image O and imaging distance. While in some cases, such as with
+is then the result of convolving the kernel with the original motion blur, a static PSF can be used for the whole image,
+image I in the presence of additive gaussian noise N. the general PSF will also vary along the image plane.
+~ Shih et al. [28] showed that the PSF can be used to
+O =I K+N (3) reﬁne lens prescription parameters through optimization.
+ThekernelK isknownasthePSF.Intuitively,inanideal Their work focuses, however, on small deviations from the
+opticalsystemapointoflightwouldappearasasinglepoint nominal parameters due to manufacturing inaccuracies. Our
+1899
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. work considers the dome-lens-camera system as an optical
+assembly with large parameter variations.
+B. Distortion based calibration
+Knowledge about the PSF and its variations with respect
+to the optical system variables can be used to recover the
+speciﬁcsetofparametersthatgeneratestheimagedistortions
+observed. If we consider the relative position between dome
+and camera as independent variables of the PSF, obtaining
+the complete lens prescription is equivalent to calibrating
+the optical system. Such a priori knowledge about the PSF
+can be obtained in the form of measurement datasets or
+high ﬁdelity optical simulations. In this work we focus on
+the case where a dataset of the PSF for different camera-
+dome positions is available. Details about dataset collection Fig.6:ExperimentalsetupusedtorecordthePSFofthecom-
+and experimental setup are given in Section V. If such a plete camera-lens-dome optical system for different camera
+dataset of PSFs is available for a discrete set of camera- position within the dome. The light source motion system
+sphere relative positions, it is now possible to formulate the can be seem at the back of the tank.
+calibration problem as one where, given a measurement of
+lightsourcewasmountedonanactuatedYZmotionplatform
+the PSF, we aim to recover the x, y, and z (Tdome) position
+of the camera that generated such an array cof distortions. controlled by stepper motors. A 0:2mm pinhole cut out of
+0.1mm thick stainless steel was placed in front of the LED
+Given a set of measured PSFs, G , each centered at pixel
+ij moduletogenerateasmall-pointlightsource.TheLEDlight
+i, j, for one system conﬁguration, and a dataset U (x;y;z)
+i;j was conﬁgured to emit red, green, and blue light. Using a
+of the PSFs for differeXnt caXmera to sphere position x, y and
+movable single light point as opposed to a grid of points
+z at the same i;j positions, we deﬁne the cost function as
+ensured repeatable measurements and allowed exposure to
+k (cid:0) k
+f(x;y;z)= G P (x;y;z) (4) be adjusted individually for each position to adequately use
+i;j i;j
+the cameras sensor dynamic range.
+R;G;B i;j
+where P (x;y;z) is the estimated response based on the A. Experimental procedure
+i;j
+available dataset. Because PSFs can only be measured at
+For each camera pose, the light source was moved to 62
+a discrete set of coordinates in the image plane, we use
+different YZ positions evenly spaced along the back of the
+linear interpolation to obtain the PSF at the desired pixel
+tank. Not all positions fell within the ﬁeld of view of every
+coordinates. In the same way, PSFs can be interpolated
+camera pose but the experiment was designed so all camera
+betweendifferentcameraposes[29]toobtainP fromU .
+i;j i;j poseshadasimilarnumberofmeasurementstaken.Foreach
+Thecamerapositioninsidethedomecanthenbecomputed
+of the positions, the PSF was measured for red, green, and
+as
+bluelight.Additionally,thefocusofthelenswasadjustedfor
+each pose. While this change in backfocal distance affects
+x;y;z =argminf(x;y;z) (5)
+the shape and size of the PSF and makes the solving of
+This equation can be solved by means of non-linear least Equation 5 signiﬁcantly harder due to the unmodelled focus
+squares algorithms such as Levenberg-Marquardt. variable, the collected dataset was also designed with future
+work in mind that will beneﬁt from this property.
+V. EXPERIMENTALPSFCHARACTERIZATION
+B. Collected Dataset
+In order to characterize the changes of the PSF with
+respecttocameraposeinsidethesphericaldome,weassem- A Flir BFS-U3-63S4C camera, with a pixel size of 2:4um
+bled the experimental setup shown in Figure 6. The camera and a resolution of 2048x3072, was used with a Edmund
+was mounted on a three-axis linear motion stage. The X OpticsUC-8mmlens.TheIMX178colorsensorusedacolor
+axis was an electronically controlled, 150mm travel range ﬁlterarray(CFA)inaRGGBBayerpatternthatrequiresde-
+stage, while both the Y and Z axes were manual, 50mm mosaicing of the measured PSF response. Schuler et al. [30]
+travel stages. The camera was mounted with the optical showed that the improvement, when explicitly considering
+axis aligned with the system X axis. On top of the camera demosaicing in the deconvolution process, only improved
+was a mounted precision indicator dial, also aligned with the resulting image peak signal-to-noise ratio (PSNR) by
+the X axis. A custom acrylic tank was assembled to hold an average of 0.4dB. Based on these results, we exclusively
+one of the BK-7 glass hemispheres used as the pressure demosaicedtherawimagetoobtainthePSFofeachchannel.
+housing by the DROP-Sphere in front of the camera. The The PSFs of a total of 200 camera poses were characterized
+hemisphere had an external nominal radius of 187mm and duringtheexperiments,withsamplestakenat3mmintervals.
+a thickness of 14mm. Finally, in the tank, on the opposite While the collected dataset is speciﬁc to the camera, lens,
+side of the spherical dome at a distance of 370mm, a LED anddomeused,similardatasetscanbecollectedfordifferent
+1900
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. Top Bottom Center Center Testdata Interpolated Error
+Right Right Center Left
+Pos 1
+Red
+Fig. 7: Examples of the measured point spread functions
+Pos 2
+for four different positions in the image plane for the red
+light.AllPSFsarenormalizedwithrespecttotheirmaximum
+response.
+Fig.8:ResultingPSFsofcalibrationroutine.Eachrowshows
+conﬁgurations following the outlined procedure. Figure 7 themeasuredPSF,aswellastheresultoftheoptimizationat
+shows the normalized PSFs for the three color channels for a different position in the image plane. The error plot shows
+four different positions in the image plane and highlights the difference between the test data and optimization and
+the variability of the PSF as a function of wavelength. represents a term in Equation 4.
+Additionally, PSF shape was greatly affected by the position
+Original Corrected
+in the image plane and varies between circular blur kernels
+at the centered to teardrop shaped kernels towards the edges
+of the image. The size of the PSF greatly increased at the
+corners, where blur and distortions are maximized.
+VI. RESULTS
+A. Calibration
+The proposed distortion based calibration method (Equa-
+tion 5) was applied to different poses within the dataset
+described in Section V. The minimization problem was
+formulated as a non-linear least squares problem and solved Fig. 9: Deconvolution using the interpolated point spread
+using the Levenberg-Marquardt algorithm. Figure 8 shows functions. The variance of the Laplacian, a measure of
+the error between the measured and estimated PSF at mul- sharpness, increased from 19.2 to 62.9
+tiple different positions in the image plane. The optimizer
+converged to a position with an error of 0:184, 0:004, and VII. CONCLUSIONANDFUTUREWORK
+0:023mmoneachaxis.TheerroralongtheXaxisisbetween In this paper, we introduced the use of the PSF as an
+one and two orders of magnitude larger than the Y and Z alternative characterization of an underwater optical system
+axes. Analysing the dataset showed that variation along the andshowedthatitcanbeusedtorecoverthecameraposition
+X axis mostly affected the size of the PSFs with smaller within the dome.
+impact on its shape. Blur caused by a change in focus has a The presented procedure is very time intensive and re-
+similar inﬂuence, being modeled as a solid disk kernel of a quires the PSF measurements used for calibration to be
+varying radius depending on how out of focus the image is. performed under the same conditions (such as aperture or
+This similarity, together with the previously mentioned fact working distance) as the dataset was when it was col-
+that the camera focus was readjusted at each pose, is likely lected. This severely limits the application of the technique
+the reason for the discrepancy in error magnitude between on ﬁeld deployed robotic platforms. Future work will fo-
+the axes. Finally, the X axis was sampled very sparsely with cus on the development of a deep learning-based model
+only two different values in the dataset, which could further trained with extensive datasets of high resolution optical
+inﬂuence the result. simulations of PSFs. The network will enable fast and
+efﬁcient regression of the optical system parameters. The
+B. Deconvolution
+simulation software enables the user to adapt the range
+In addition to camera to dome pose calibration, the ob-
+of optical parameters to the intervals of interest depend-
+tained point spread functions can be used to deconvolve the
+ing on operational constraints. Finally, we are sharing the
+measured image and recover the underlying image. Figure 9
+collected dataset under https://umich.box.com/v/
+shows an example of a region of an image before and after
+psfdataset-uwdomedcameras.
+deconvolutionwiththeobtainedPSF.WeusedtheVanCittert
+algorithm as implemented in DeconvolutionLab2 [31]. In ACKNOWLEDGMENTS
+order to evaluate image sharpness, we use the variation of The authors would like to acknowledge the insightful
+Laplacian, (cid:27)r2 [32], a measure that increases for sharper comments by the paper’s reviewers. The work presented has
+2
+images. Comparing the original and deconvolved image, been partially supported by NASA award NNX16AL08G.
+values of (cid:27)r2 increased from 19 to 62.
+2
+1901
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [17] A.SedlazeckandR.Koch,“Calibrationofhousingparame-
+tersforunderwaterstereo-camerarigs.,”inBMVC,Citeseer,
+[1] S. B. Williams, O. Pizarro, J. M. Webster, R. J. Beaman,
+2011, pp. 1–11.
+I. Mahon, M. Johnson-Roberson, and T. C. Bridge, “Au-
+[18] A. Jordt-Sedlazeck and R. Koch, “Refractive calibration of
+tonomousunderwatervehicle–assistedsurveyingofdrowned
+underwatercameras,”inComputerVision–ECCV2012,A.
+reefs on the shelf edge of the great barrier reef, australia,”
+Fitzgibbon,S.Lazebnik,P.Perona,Y.Sato,andC.Schmid,
+JournalofFieldRobotics,vol.27,no.5,pp.675–697,2010.
+Eds., Berlin, Heidelberg: Springer Berlin Heidelberg, 2012,
+[2] M. Johnson-Roberson, O. Pizarro, S. B. Williams, and I.
+pp. 846–859.
+Mahon, “Generation and visualization of large-scale three-
+[19] J. Bosch, N. Gracias, P. Ridao, and D. Ribas, “Omnidirec-
+dimensional reconstructions from underwater robotic sur-
+tional underwater camera design and calibration,” Sensors,
+veys,” Journal of Field Robotics, vol. 27, no. 1, pp. 21–51,
+vol. 15, no. 3, pp. 6033–6065, 2015.
+2010.
+[20] F. Menna, E. Nocerino, F. Fassi, and F. Remondino, “Geo-
+[3] M.E.Clarke,N.Tolimieri,andH.Singh,“Usingtheseabed
+metric and optic characterization of a hemispherical dome
+auv to assess populations of groundﬁsh in untrawlable
+port for underwater photogrammetry,” Sensors, vol. 16,
+areas,” in The future of ﬁsheries science in North America,
+no. 1, p. 48, 2016.
+Springer, 2009, pp. 357–372.
+[21] P.SturmandS.Ramalingam,“Agenericconceptforcamera
+[4] P. Ozog, N. C. Bianco, A. Kim, and R. M. Eustice,
+calibration,” in European Conference on Computer Vision,
+“Longterm mapping techniques for ship hull inspection
+Springer, 2004, pp. 1–13.
+and surveillance using an autonomous underwater vehicle,”
+[22] A.Richardson, J.Strom,andE. Olson,“AprilCal:Assisted
+Journal of Field Robotics, vol. 33, no. 3, pp. 265–289,
+and repeatable camera calibration,” in Proceedings of the
+[5] S. Wirth, P. L. N. Carrasco, and G. O. Codina, “Visual
+IEEE/RSJ International Conference on Intelligent Robots
+odometry for autonomous underwater vehicles,” in 2013
+and Systems (IROS), Nov. 2013.
+MTS/IEEE OCEANS - Bergen, Jun. 2013, pp. 1–6.
+[23] Sellmeier,“Zurerklrungderabnormenfarbenfolgeimspec-
+[6] T Van Damme, “Computer vision photogrammetry for un-
+trum einiger substanzen,” Annalen der Physik, vol. 219,
+derwaterarchaeologicalsiterecordinginalow-visibilityen-
+no. 6, pp. 272–282, 1871.
+vironment,”TheInternationalArchivesofPhotogrammetry,
+[24] B. Edle´n, “The refractive index of air,” Metrologia, vol. 2,
+Remote Sensing and Spatial Information Sciences, vol. 40,
+no. 2, p. 71, 1966.
+no. 5, p. 231, 2015.
+[25] R. W. Austin and G. Halikas, “The index of refraction of
+[7] A.Jordt,Underwater3DReconstructionBasedonPhysical
+seawater,” 1976.
+Modelsfor Refraction and Underwater Light Propagation,
+[26] V.Lepetit,F.Moreno-Noguer,andP.Fua,“Epnp:Anaccurate
+ser. Kiel Computer Science Series 2014/2. Department of
+o(n) solution to the pnp problem,” International Journal
+Computer Science, CAU Kiel, 2014, Dissertation, Faculty
+Computer Vision, vol. 81, no. 2, 2009.
+of Engineering,Kiel University.
+[27] M. Hirsch and B. Scholkopf, “Self-calibration of optical
+[8] R.Tsai,“Aversatilecameracalibrationtechniqueforhigh-
+lenses,” in Proceedings of the IEEE International Confer-
+accuracy 3d machine vision metrology using off-the-shelf
+ence on Computer Vision, 2015, pp. 612–620.
+tv cameras and lenses,” IEEE Journal on Robotics and
+[28] Y. Shih, B. Guenter, and N. Joshi, “Image enhancement
+Automation, vol. 3, no. 4, pp. 323–344, Aug. 1987.
+using calibrated lens simulations,” in European Conference
+[9] A.SedlazeckandR.Koch,“Perspectiveandnon-perspective
+on Computer Vision, Springer, 2012, pp. 42–56.
+camera models in underwater imaging–overview and error
+[29] P. Janout, J. Pospil, K. Fliegel, M. Klima, and P. Pata, “In-
+analysis,” in Outdoor and Large-Scale Real-World Scene
+terpolationmethodsfortheimprovementofthepointspread
+Analysis, Springer, 2012, pp. 212–242.
+function estimation,” in 2018 28th International Confer-
+[10] J.-M. Lavest, G. Rives, and J.-T. Lapreste´, “Underwater
+enceRadioelektronika(RADIOELEKTRONIKA),Apr.2018,
+camera calibration,” in European Conference on Computer
+pp. 1–5.
+Vision, Springer, 2000, pp. 654–668.
+[30] C. J. Schuler, M. Hirsch, S. Harmeling, and B. Schlkopf,
+[11] C.KunzandH.Singh,“Hemisphericalrefractionandcam-
+“Non-stationary correction of optical aberrations,” in 2011
+era calibration in underwater vision,” in OCEANS 2008,
+International Conference on Computer Vision, Nov. 2011,
+IEEE, 2008, pp. 1–7.
+pp. 659–666.
+[12] E. Iscar, C. Barbalata, N. Goumas, and M. Johnson-
+[31] D. Sage, L. Donati, F. Soulez, D. Fortun, G. Schmit,
+Roberson, “Towards low cost, deep water auv optical map-
+A. Seitz, R. Guiet, C. Vonesch, and M. Unser, “Decon-
+ping,”inOCEANS2018MTS/IEEECharleston,IEEE,2018,
+volutionlab2: An open-source software for deconvolution
+pp. 1–6.
+microscopy,” Methods, vol. 115, pp. 28–41, 2017.
+[13] Z. Zhang, “A ﬂexible new technique for camera calibra-
+[32] J.L.Pech-Pacheco,G.Cristo´bal,J.Chamorro-Martinez,and
+tion,” IEEE Transactions on Pattern Analysis and Machine
+J. Ferna´ndez-Valdivia, “Diatom autofocusing in brightﬁeld
+Intelligence, vol. 22, no. 11, pp. 1330–1334, Nov. 2000.
+microscopy: A comparative study,” in Proceedings 15th
+[14] E. Iscar, K. A. Skinner, and M. Johnson-Roberson, “Multi-
+International Conference on Pattern Recognition. ICPR-
+view 3d reconstruction in underwater environments: Evalu-
+2000, IEEE, vol. 3, 2000, pp. 314–317.
+ationandbenchmark,”inOCEANS2017-Anchorage,Sep.
+2017, pp. 1–8.
+[15] M. Bewley, A. Friedman, R. Ferrari, N. Hill, R. Hovey, N.
+Barrett,E.M.Marzinelli,O.Pizarro,W.Figueira,L.Meyer,
+R.Babcock,L.Bellchambers,M.Byrne,andS.B.Williams,
+“Australian sea-ﬂoor survey data, with images and expert
+annotations,” vol. 2, 150057 EP –, Oct. 2015.
+[16] M. Zhukovsky, V. Kuznetsov, and S. Olkhovsky, “Pho-
+togrammetric techniques for 3-d underwater record of the
+antiquetimeshipfromphanagoria,”Int.Arch.Photogramm.
+Remote Sens. Spat. Inf. Sci, vol. 40, pp. 717–721, 2013.
+1902
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 22,2020 at 01:04:42 UTC from IEEE Xplore.  Restrictions apply. 

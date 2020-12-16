@@ -1,0 +1,491 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Integrated Motion Planner for Real-time Aerial Videography
+with a Drone in a Dense Environment
+Boseong Jeon, Yunwoo Lee and H. Jin Kim
+Abstract—This work suggests an integrated approach for a
+drone (or multirotor) to perform an autonomous videography
+task in a 3-D obstacle environment by following a moving
+object. The proposed system includes 1) a target motion
+predictionmodulewhichcanbeappliedtodenseenvironments
+and 2) a hierarchical chasing planner. Leveraging covariant
+optimization,thepredictionmoduleestimatesthefuturemotion
+ofthetargetassumingiteffortstoavoidtheobstacles.Theother
+module, chasing planner, is in a bi-level structure composed of
+preplanner and smooth planner. In the ﬁrst phase, we exploit
+a graph-search method to plan a chasing corridor which incor-
+poratessafetyandvisibilityoftarget.Inthesubsequentphase,
+we generate a smooth and dynamically feasible trajectory
+within the corridor using quadratic programming (QP). We
+validate our approach with multiple complex scenarios and
+Fig. 1. Autonomous aerial video shooting using a drone for a moving
+actual experiments.
+targetinplaneclassroomwithclutteringobjects.Thedroneplansachasing
+The source code and the experiment video can be found in
+trajectoryon-the-ﬂytoincorporatesafetyandvisibilityofthetargetagainst
+https://github.com/icsl-Jeon/traj_gen_vis and obstacles. The target (UGV with a green marker) is driven manually by a
+https://www.youtube.com/watch?v=_JSwXBwYRl8. humanoperator.
+I. INTRODUCTION
+Video ﬁlming has been one of the most popular appli- 2) Flight safety: the recording agent should be able to
+cations of unmanned aerial vehicles equipped with vision maintain its safety against arbitrary shape of obstacles not
+sensors,utilizingtheirmaneuverabilityandtechnologiessuch only simple obstacles (e.g. ellipse or sphere) for the broad
+visual odometry [1] and mapping [2], [3]. Still, the automa- applicability.
+tion of the videographic tasks using drones remains as an
+3) Occlusion against obstacles of general shape: occlu-
+open challenge especially in general dense environments.
+sion should be carefully handled in obstacle environments.
+Weproposeanonlinemotionstrategydevelopedformore
+It could degrade the aesthetic quality of video. Also, a
+realistic situations where multiple obstacles have arbitrary
+durationofocclusionofadynamicobjectmightinterruptthe
+shapesandthefuturetrajectoryoftargetisnotexactlyknown
+autonomous mission due to the failure of visual tracking.
+a priori except the location of sparse via-points which are
+4) Trade-off between global optimality and fast computa-
+predetermined for a ﬁlming purpose. Here, we assume that
+tion: asdescribedin1)-3),amotionstrategyforvideography
+the arrival time at each point is also unknown. This setting
+in the considered cases aims to achieve multiple objectives
+supposes a scenario where a drone is deployed for shooting
+simultaneously. Such a multi-objective problem is subject to
+a ski game or racing where players are supposed to pass
+local minima and might yield a poor solution if it relies
+deﬁned spots in a track.
+entirely on numerical optimization. On the contrary, if we
+A. Technical challenges rely only on sampling or discrete search algorithm such as
+RRT* [4] and A* [5] to focus on the global optimality at
+Regarding the autonomous target chasing mission, the
+the cost of online computation, a drone might not be able
+followings can be pointed out as main issues, which should
+to respond fast enough for the uncertain motion of target
+be handled jointly.
+on-the-ﬂy. Therefore, trade-off between optimality and fast
+1) Smoothtransition: ﬁrstofall,thesmoothnessofﬂight
+computation should be taken into account in a balanced
+path of a drone is essential for ﬂight efﬁciency by avoiding
+manner.
+jerky motion, which could cause increased actuation inputs
+5) Target prediction considering obstacles: for the oper-
+and undesirable shooting quality.
+ation in obstacle environments without exact information of
+*ThismaterialisbaseduponworksupportedbytheMinistryofTrade, the future movement of a target, reﬂecting the existence of
+Industry&Energy(MOTIE,Korea)underIndustrialTechnologyInnovation
+obstacles is crucial for more reliable prediction.
+Program.No.10067206,’DevelopmentofDisasterResponseRobotSystem
+forLifesavingandSupportingFireFightersatComplexDisasterEnviron-
+ment’ B. Related works
+Department of mechanical and aerospace engineering, Seoul national
+The previous works [6], [7] and [8] addressed the sim-
+university of South Korea {junbs95,yunwoo333}@gmail.com
+and hjinkim@snu.ac.kr ilar target following problem with consideration of ﬂight
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1243
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. efﬁciency, safety and visibility (A1-A3) under continuous
+optimization formulation. [6] and [7] developed a receding
+horizon motion planner to yield a dynamically feasible
+path in real-time for dynamic situations. Nevertheless, they
+assumed an ellipsoidal shape for obstacles, which is not
+applicable to more general cases, having difﬁculty in fully
+satisfying A2 and A3. Also, the objective function contains
+multiplenon-convextermssuchastrigonometryandproduct
+of vectors. This formulation might not be able to produce a Fig.2. Adiagramforsystemarchitecture:wesupposethecamera-drone
+haspriorknowledgeoftheenvironmentandtargetcolorfordetection.Based
+satisfactorysolutionduetolocal-minimaasdiscussedinA4.
+onthem,weimplementafullyonboardsystemforautomaticallyfollowing
+In the work [8], occlusion and collision were handled amovingtargetwithdrone.
+in a general environment which is represented with oc-
+tomap. Nevertheless, they relied on numerical optimization
+for the entire objectives containing complex terms such as aprioriwhilethearrivaltimeforeachpointisnotavailable.
+integration of signed distance ﬁeld over a manifold. Such As an additional speciﬁcation on the behavior of target, it
+approach might not be able to guarantee the satisfactory is assumed to move along a trajectory by minimizing high-
+optimality, similar to the case of [6], [9] (A4). In [10], the order derivatives such as acceleration as assumed in [10].
+authors addressed the target following with consideration Based on these settings, we build a fully-onboard system
+of A1, A2 and A4. The authors designed a hierarchical integrating a target prediction module and a chasing planner
+planner to consider the trade-off between optimality and for an autonomous target-chasing mission. Regarding the
+onlinecomputationwhereacorridorispre-plannedtoensure prediction, we aim to reﬂect on the presence of obstacles
+safety and then a smooth path is generated to minimize the while regressing the past observation, which is explained
+high-orderderivativesinthefollowingphase.Especially,[10] in section III. For the chasing planner, the objective is to
+performed prediction with a polynomial regression. Still, it achieve the points A1-A4 simultaneously by designing a bi-
+did not consider obstacles (A5) and the occlusion of the level which is discussed in section IV and V. The overall
+target was not included in their multi-layer planner, having pipeline is depicted in Fig. 2.
+difﬁculty in handling A3. For the ease of discussion, several notations are deﬁned
+Regarding the target prediction in chasing tasks, [11] as follows:
+included the obstacles for the formulation of prediction to – x ∈R3 : Position of a chaser(drone).
+tackle A5. The authors performed Monte-Carlo sampling – xc ∈R3 : Position of a target.
+p { | − ≤ ≤ }
+to estimate the distribution of future target position. In the – L(x ,x ) = x sx +(1 s)x , 0 t 1 : The
+paper, however, the dynamics and set of possible inputs of line1seg2ment connec1ting x ,x ∈2R3.
+targetwereassumedtobeknownasaprior,whichisdifﬁcult – χ⊂R3 : Conﬁguration sp1ace.2
+{ | }
+to be applied directly to more general cinematic scenarios. – χ = x P(x) <  : Free space in χ, i.e. the
+free
+Also,theauthorsrestrictedthehomotopyofthesolutionpath set of points where the probability of occupancy P(x)
+of the robot from the discrete selection of actuation inputs. obtained from octomap is small enough.
+\
+Tothe bestof ourknowledge,there isfew research which – χ =χ χ : Space occupied by obstacles.
+obs {fr|ee ∩ ∅}
+effectively handled A1 to A5 jointly for drones to be em- – χ (x )= x L(x,x ) χ = : A set of visible
+vis p p obs
+ployed in the considered cinematic or chasing scenarios. In vantage points for a target position v .
+\ p
+this work, we make the following contributions as extension – χ (x )=χ χ : A set of occluded vantage points
+occ p vis
+of our previous work [12]: for a target position x .
+p
+• An integrated framework for motion strategy is pro-
+posedfrompredictionmoduletochasingplanner,which III. TARGETFUTURETRAJECTORYPREDICTION
+could achieve the desired performance mentioned A1- This section describes future motion estimation of the
+A5 in our cinematic problem setting. target, utilizing the observation history and prior map infor-
+• Wevalidateourmethodbymultiplechallengingscenar- mation.Here,thetermspathandtrajectoryaredifferentiated
+ios and a real world experiment. Especially, the tested for clarity as described in [13]. A path refers to a geometric
+real platform is implemented to operate fully onboard path while a trajectory is a time-parameterized path. The
+handling target detection, localization, motion planning proposedpredictionmodulegeneratesageometricprediction
+and control. path ﬁrst, which will be followed by time estimation for the
+each point on the path.
+II. OVERVIEW
+A. Target path prediction
+This section manifests the inputs and the objectives of
+the proposed method. We assume that the ﬁlming scene is As mentioned in section II, we assume that the se-
+availableintheformofoctomapbeforethemission.Itisalso quence of via-points of the target is available as G =
+{ } ∈R
+assumed that an actor will pass through a set of via-points g ,g ,...,g (g 3) which are supposed to be passed
+1 2 M i
+in sequence for a ﬁlming purpose. The viapoints are known inorderandthearrivaltimeforeachpointisnotpreset.Also,
+1244
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. From (1) – (3), a geometric path ξ is obtained where
+z ,...,z represents the geometric prediction of the
+No+1 NT
+target until g (see ﬁg. 3). We now proceed to complete a
+trajectory prediction from the discrete path.
+B. Time prediction
+In this sub-section, we will allocate time knots t for each
+i
+point z in ξ with the constant velocity assumption for the
+i ≤
+simplicity. For the points z (n N ) which was used
+n o
+to regress on the past history of target, we simply assign
+the observation time stamps. For the predicted position z
+n
+(n > N ), the following recursion is used for allocating
+o
+times.
+Fig.3. Predictionof targetmotionoverahorizon(t,t+H].Theblack
+curvewithwhitedotsdenotesthegeometricpredictionobtainedfrom(1).By (cid:107) − (cid:107)
+z z −
+assigningthetimeknotforeachpointonthepath,wepredictthetrajectory t =t − + n n 1
+ofthetargetasvisualizedintheredcurve. n n 1 v (4)
+(cid:80) avg
+− (cid:107) − (cid:107)
+letusdenotethevalueoftheEuclideansigneddistanceﬁeld No 1 x x
+(ESDF) at a position x∈R3 of the prior map as φ(x). where vavg = n=1 t p,−n t p,n+1 representstheaver-
+Now, let us assume that the drone has collected target agespeedoverthecollecNteodob1servation.Thatis,thepassing
+observation at discrete time steps t ,t ,..,t , representing times for the points obtained in (1) are estimated with the
+xp(tn) (n = 1,..,No) as∈xp,n. 1Th2en, wNeo suppose that constant velocity assumption based on vavg. With this allo-
+the target is heading to g G after passing the previous cation, the future trajectory of the target for a time window
+waypoint. For a prediction request time t > t and a (t,t+H] is predicted with the following interpolation:
+No
+future horizon H, we want to forecast the future target
+− −
+t{rza1je,czt2o,r.y..,xˆzpN(Tτ}).(zTio∈obRt3ainanxdˆpN(τT),>aNpoo)siitsiogneanlepraattehdξﬁr=st xˆp(τ)= (tn+1 τt)nz+n1+−(τtn tn)zn+1 (tn <τ <tn+1)
+to provide a geometric prediction until the target reaches g, (5)
+assuming the target efforts to avoid obstacles around it. We In our videography setting, single prediction optimization
+compute xˆ (cid:88)(τ) from the following optimization. routinerunsattensofHz,showingitsreal-timeperformance.
+p
+This helps us to re-trigger prediction when the estimation
+(cid:124)1 No (cid:123)(cid:122)(cid:107) − (cid:107)(cid:125) error exceeds a threshold. From the formulation including
+min exp(γn) z x 2+
+ξ 2 n p,n the cost fobs, we were able to incorporate obstacles, which
+n(cid:88)=1 (cid:88) is the main objective described in A5.
+observation
+(cid:124)1NT−2(cid:107) −(cid:123)(cid:122) (cid:107)(cid:125) 1(cid:124)NT (cid:123)(cid:122) (cid:125) IV. PREPLANNINGFORCHASINGCORRIDOR
+2 zn 2zn+1+zn+2 2+ρ fobs(zn), This section introduces a method for generating a chasing
+n=1 n=1 corridor in order to provide the boundary regions for the
+chasingdrone’strajectory.Weﬁrstexplainametrictoencode
+2ndorderderivative obstacle
+(1)
+safety and visibility of the chaser’s position, which are
+whereγ intheﬁrsttermisapositiveconstanttogiveweight
+utilized as objectives in computing the corridor.
+tomorerecentobservations.Thesecondtermimpliesthatthe
+target will minimize its derivatives the efﬁciency of its ego A. Metric for safety and visibility
+motion. The functional fobs is a non-convex cost function For the safety metric, we reuse ESDF φ(x) as it can
+inherited from φ(x) to account for the safe behavior of measure the risk of collision with nearby obstacles (see
+the target. For the functional, we adopt a similar form of Fig. 4-(a)). Now, the visibility metric is introduced so that
+functional introduced in [14]. wecanencodehowrobustlythedronecanmaintainitssight
+Theaboveoptimization(1)canbearrangedintothebelow, against 1) occluding obstacles and 2) unexpected motion of
+which is the standard form for covariant optimization [14]. the target. For a target position x when seen from a chaser
+p
+(cid:124) (cid:123)(cid:122) (cid:125) (cid:124) (cid:123)(cid:122) (cid:125) positionx withlineofsight(LOS)L(x ,x ),wedeﬁnethe
+1 (cid:107) − (cid:107) c p c
+min ρ Aξ b 2+ f (ξ) below as visibility:
+ξ 2 obs (2)
+priorterm obstacleterm ψ(x ;x )= min φ(x). (6)
+c p
+(2) is solved with the following covariant update rule where L(xc,xp)
+In the actual implementation, (6) is calculated over the
+α is a step size.
+grid ﬁeld. That is, we can evaluate (6) with a simple min
+− − − ∇
+∆ξ = α(ATA) 1(ρ(ATAξ ATb)+ f (ξ)) (3) operation while traversing the voxels along L(x,x ) with
+obs p
+1245
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. linear time complexity. Because (6) means the minimum
+distance between obstacles and the LOS connecting the
+object and the drone (see Fig. 4 - (a)), a small value of
+which implies that the target could be lost more easily than
+the higher value as illustrated in ﬁg. Fig. 4 - (b).
+The proposed metric possesses multiple advantages. First,
+it can be directly computed from reusing ESDF which was
+utilized for the target prediction and safety metric for drone,
+withoutfurthercalculation.Second,itcanbedeﬁnedwithout Fig. 4. (a): Safety metric φ(xc) and visibility metric ψ(xc;xp) for a
+restriction of shape of obstacles in contrast to the research target position xp and drone xc. (b): Visibility ﬁeld for xp in colormap.
+Red-coloured ﬁeld denotes higher visibility and the occluded region χocc
+such as [6], [7] and [8]. is illustrated with the same uniform color (dark blue). As an illustrative
+→
+example,weconsiderthecasewheretheobjectmovesp1 p2forashort
+B. Corridor generation time.Bothpositionsxc,1 andxc,2 wereabletoseep1.Whilethecamera-
+drone at xc,1 can still observe the target which moved to p2, the vantage
+Based on the proposed metric for safety and visibility, atxc,2 failstomaintainthevisibility.
+computation of the sequence of corridors for chasing is
+≤ ≤
+explained given the prediction xˆ (τ) (t τ t + H)
+p
+and the current position of the drone as xc(t). We ﬁrst dis- the second one enforces a safe clearance rsafe of each line
+cretize the planning window [t,t+H] into (t0,t1,t2,...,tN) L(vn−1,vn) and the third constraint means that vn should
+writing xˆp,n = xˆp(tn) and xc,0 = xc(t0). Now, we focus be a visible viewpoint for the predicted target at xˆp,k. The
+on the computation of a sequence of viewpoints σ = last constraint bounds the maximally connectable distance
+{ } ∈ R
+v0,v1,v2,...,vN where vn 3, as a skeleton for the between two points vn, vn+1 to prevent the excessive veloc-
+corridors. Rather than searching v⊂n i{n a|con≤tin(cid:107)uou−s dom(cid:107)ai≤n, ity of the drone. Due to the page limit, we refer the readers
+we choo∈se it from a ﬁ}nite set Vn x dl x xˆp,n to our previous work [12] where the optimal sequence of vn
+du, x χvis(xˆp,n) where x is a discrete point in the is computed from the graph search algorithm.
+operating grid (e.g. grid from octomap) in case of n > 0.
+From optimal viewpoint σ computed from (7), we now
+d and d are the minimum and maximum distance of
+l u generateasetofcorridorsconnectingtwoconsecutiveview-
+tracking. The discrete path σ is obtained from the following
+points in σ as visualized in Fig 5-(a). Once the width of
+optimization.
+(cid:88) corridor r < r is chosen, we can write the box region
+c safe ≤
+connecting v − and v as a linear inequality A x b .
+n 1 n n ≤ n
+N Due to the formulation of (7), every point in A x b
+n n
+argmin c(vn−1,vn) maintains a safe margin r < r guaranteeing the strict
+c safe
+σ n=1 safety for the trajectories bounded in the region. Also, the
+subject to v0 =xc,0 ≥ predicted point xˆp,n can be observed from vn ∈Vn without
+min φ(x) r occlusion by obstacles as all the elements of V belongs
+∈ safe n
+x L∈(vn−1,vn) to χvis(xˆp,n). For a large value of wv and small enough
+v(cid:107)n V−n (cid:107)≤ dmax,≤we empirically found that every point in the corridor
+v − v (cid:124)d (cid:123)(cid:122) (cid:125) (cid:124) (cid:123)(cid:122) (cid:125) A x b can maintain visibility for the prediction xˆ (τ)
+n 1 n max n ∈ n p
+where c(v − ,v )=(cid:107)v − −v (cid:107)2 +w c (v − ,v ) for τ [tn−1,tn].
+n 1 n n 1 n v v n 1 n
+These two properties of the chasing corridor provides a
+(cid:124) (cid:123)(cid:122) (cid:125)
+(cid:107) −inter(cid:107)va−ldistance visibility base to achieve A2 and A3 to a continuous trajectory within
++w ( xˆ v d )2
+d p,n n des it, which is discovered in the following section. We also
+highlight that the optimal solution of the multi-objectives
+trackingdistance
+(7)
+non-convex optimization of (7) was computed using graph-
+The objective function in (7) penalizes the interval dis-
+search rather than a numerical optimization. The approach
+tance between each point while rewarding the high score of
+can ensure the quality of solutions, which was mentioned
+visibility. The second term is deﬁned by
+in A4. In the remaining process, we will rapidly generate
+(cid:32)(cid:115) (cid:33)
+(cid:90) (cid:90)
+a continuous trajectory receiving the results of preplanning:
+c (v − ,v )=
+v n 1 n − viewpoints and the chasing corridors.
+1
+ψ(x;xˆ − )dx ψ(x;xˆ )dx .
+p,n 1 p,n
+L(vn−1,vn) L(vn−1,vn)
+(8)
+V. DYNAMICALLYFEASIBLETRAJECTORYGENERATION
+where the integral is computed as an accumulative sum in
+the grid ﬁeld.
+Thelastterminc(v − ,v )of(7)aimstokeeptherelative In this section, we generate a dynamically feasible trajec-
+n 1 n ∈ R
+distance as d . w and w are the weights for visibility tory for position and yaw [x (τ)T, r(τ)]T 4 using v
+des v d ≤ c k
+and relative distance respectively. Among the constraints, and A x b . The position trajectory x (τ) is represented
+k k c
+1246
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. Combining the smooth trajectory generation with the
+preplanning process where chasing corridors and viewpoints
+were obtained, a receding horizon planner for target follow-
+ingisconstructedasfollows:duringmission,weﬁrstpredict
+target future trajectory for a time window based on recent
+observations and the current cinematographic via-point g
+by solving (1). Based on the prediction, we compute the
+viewpoints σ and the corresponding chasing corridor, which
+isfollowedbythecontinuoustrajectorygenerationproposed
+in this section. If observation becomes unreliable where the
+Fig.5. (a):Illustrativeexampleofthechasingcorridorwiththeskeleton accumulated estimation error exceeds a deﬁned threshold,
+≤ ≤
+viewpoints vn (1 n 4). The blue line denotes target prediction. The prediction is re-triggered. This loop continues until the end
+r(eredd)edisgegdenbeorxaetesddwenitohtienctohrericdoorrrsidboertswfereonmv(na).anLdOvSns+ta1m.p(bs)a:rSemalosoothdrpaawthn of the videographic mission.
+withblackarrows.
+VI. VALIDATIONRESULTS
+(cid:80) A. Simulations
+with piece-wisepo(cid:80)lynomials as below: We validate the proposed algorithm in a dense environ-
+≤
+K p τk (t τ <t ) mentwithfourtargettrajectories.Forthesimulation,weused
+(cid:80)kK=0p1,kτk (t0 ≤τ <t1) complexcity(seeourpreviouswork[12]forthe3Dmodels)
+xc(τ)= k=0 2,k 1 2 (9) where ﬁve target via-points (from left to right) are deﬁned
+...
+≤ asbluecirclesinFig.6.Complexcityincludesmultiplenon-
+K p τk (t − τ <t )
+k=0 N,k N 1 N convexobstacles,andthetargetwasoperatedtohidebehind
+where p ∈ R3 (n = 1,...,N, k = 1,...,K) is the the obstacles at the moment denoted as green boxes (see
+n,k
+coefﬁcients of the polynomials and K denotes the order Fig. 6). In the simulation, we used rotors simulator [17]
+of it. Polynomial coefﬁcients of the chaser’s trajectory are for the chaser drone, and the target (turtlebot) was manually
+computed from the optimization below (10). The yaw y(τ) operated with a keyboard. A vision sensor is ﬁxed on the
+◦
+ischosensothatx (τ)headstowardx (τ)ateachtimestep drone (13 pitching down). The simulations were performed
+c p
+if observation(cid:90)of the target at τ is acquired. using gazebo in a laptop having Intel i7 CPU and 16GB
+(cid:88)
+RAM. Given target trajectories, chasing strategies with two
+differentlevelsofvisibilityweightsw weretested,totalling
+min tN (cid:107)x (3)(τ)(cid:107)2dτ + λ N (cid:107)x (t )−v (cid:107)2 8 simulations. v
+c c n n
+t0 n=1 Other than the visibility weight wv, the other parameters
+subject to x (t )=x were set to the same values for all tests. We used the
+c 0 0
+receding horizon period with H = 4s and discretization
+x˙ (t )=x˙
+c 0 0 N = 4. The results are summarized in Fig. 6 (A)-(D) and
+x¨c(t0)=x¨0 Table I. For each target scenario, the history of φ(x ) is
+≤ p
+A x (τ) b (t − <τ <t , n=1,...,N). plotted in the bottom row in Fig. 6 where a small value
+n c n n 1 n
+(10) of φ(x ) implies difﬁculty for securing visibility due to the
+p
+Our optimization setup (10) tries to minimize the magni- proximitytoobstacles.Asonecanobserve,theplannerwith
+tude of jerk along the trajectory and the deviation of xc(tk) high visibility wv = 5.0 tries to attain more visibility score
+from viewpoints vk where λ is an importance weight. In the ψ(xc;xp) resulting in the less occlusion duration compared
+constraints, x0, x˙0 and x¨0 are the states of the drone when to planner with wv = 1.0, at the cost of longer detours. In
+theplanningwastriggeredandusedastheinitialconditions. the all simulations, the safety of drone chaser was strictly
+Additionally, we enforce continuity conditions on the knots satisﬁed during entire mission. The average computation
+t . The last constraint restricts smooth path to be generated timeswere0.02s,0.15sand0.03sforprediction,preplanning
+n
+within the chasing corridors to ensure safety and visibility. and smooth trajectory generation respectively. We observed
+Theformulationin(10)canbeconvertedintothequadratic thattheentirepipelineoftherecedinghorizonplannerranat
+programming (QP) with respect to the coefﬁcients of the 5-6Hz, showing the capability pointed in A4 by re-planing
+polynomials in a similar manner with [10], [15], which fast enough.
+can be solved efﬁciently with the algorithm such interior
+B. Real world experiment
+point [16]. As investigated in [15], x (τ) can be executed
+c
+by the virtue of differential ﬂatness of quadrotors. From We tested the proposed method in an actual experiment
+the formulations (10), we captured the objective A1 by in an indoor classroom without GPS. In the test, the drone
+generating a trajectory with reduced high-order derivatives. wasequippedwithZED(stereovisionsensor)andpixhawk2
+Also, the QP framework yields the optimal solution in the auto-pilotforﬂightcontrol.Thehardwareofthedronechaser
+order of milliseconds in our implementation, which also can be found in Fig. 7. The vision-related algorithm ran on
+satisﬁes one of objectives of A4. Jetson TX2 while planning and control was processed in the
+1247
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. Fig.6. Flightresultsofthedronefromtherecedinghorizonplannergivenfourdifferenttrajectoriesofthetarget.Top:thetarget’shistoryisdenotedasa
+blacklineandthechaser’shistoryisdepictedwithskyblueforlowvisibility,andmagentaforhighvisibilityrespectively.Thesizeofthegridintheﬁgure
+is 4m. From (A) to (D), the target moves faster and it is more unpredictable due to its hiding behind obstacles, which increases difﬁculty for chasing.
+For all the simulations, the target passes through ﬁve via-points one-by-one (blue circles). The green boxes denote the locations where the target was
+intentionallyoperatedtohidebehindobstacleswithanabruptmaneuver.Toconﬁrmthesmoothnessoftheﬂighttrajectory,azoom-inimageisprovided
+in (D). Bottom: History of distance ﬁeld value of the target (black) and visibility score for a small wv (=1.0) and a large wv (=5.0) are plotted in
+magentaandbluerespectively.Thedottedverticalline(green)denotesthethetarget’sarrivaltimetoeachvia-point.
+Fig. 7. The camera-drone for the fully-onboard implementation of the
+proposedalgorithm.
+A B C D
+Fig. 8. The experimental result where a fully onboard camera drone is
+targetspeed[m/s] 0.36 0.57 0.67 0.75
+wv 1.0 5.0 1.0 5.0 1.0 5.0 1.0 5.0 chasing a ground robot in an indoor environment depicted in Fig. 1. The
+aovcgc..ψdu(rxacti;oxnp[)s[emc]] 00.6.009894 0.80433 0.74.85197 04.5.332330 0.45.52493 02.6.104551 09.5.756686 06.7.473951 twoviapointsg1 andg2 werepredetermined.Thedronetakestwodetours
+ﬂightdist.[m] 40.7761 49.9106 34.8218 47.5424 36.3040 50.6000 55.7393 77.2377 tomaintainthevisibilitytowardthetargetwhentheobstaclesareexpected.
+TABLEI
+SIMULATIONRESULT
+sible path is rapidly computed leveraging the QP framework
+onboard computer (NUC7i7BNH). The target is a ground in smooth planning step (A1). The bi-level structure could
+robot with green color (see Fig. 1). The target was operated handle the tradeoff commented in A4. We also proposed a
+manuallybyahumanoperatorwithlinearvelocityof0.2-0.3 predictionmodulewhichallowsthecamera-dronetoforecast
+m/s. The experimental environment and the paths taken by the future motion during a time horizon, which can be
+thetargetandchaserareshowninFig.8.Wecanobservethat applied in obstacle cases (A5). The whole pipeline was
+thesafetyandvisibilityweresatisﬁedfortheentireduration. validated in various simulation scenarios, satisfying all the
+The while pipeline ran at 10Hz for the future horizon of 4s. objectives A1-A5. Additionally, we explored the effect of
+visibility weights to the two conﬂicting objectives: travel
+VII. CONCLUSIONANDFUTUREWORKS distance and visibility. We also implemented a real drone
+In this work, we proposed a chasing planner to handle which operates fully onboard to perform the autonomous
+safety and occlusion against obstacles. The preplanning videography. In the future, we will extend the proposed
+phase provides a chasing corridor where the objectives such algorithmforthemulti-targetchasingscenario.Also,weplan
+as visibility, safety and travel distance (A1-A3) are incorpo- toenhancethealgorithmforthecaseofunknownmapwhere
+rated,yieldingthehigh-qualitysketchforthepathinthegrid the drone has to explore to gather information to generate
+space.Receivingtheresultsofpreplanner,adynamicallyfea- more efﬁcient trajectory.
+1248
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[1] T.Qin,P.Li,andS.Shen,“Vins-mono:Arobustandversatilemonoc-
+ular visual-inertial state estimator,” IEEE Transactions on Robotics,
+vol.34,no.4,pp.1004–1020,2018.
+[2] A.Hornung,K.M.Wurm,M.Bennewitz,C.Stachniss,andW.Bur-
+gard, “Octomap: An efﬁcient probabilistic 3d mapping framework
+based on octrees,” Autonomous robots, vol. 34, no. 3, pp. 189–206,
+2013.
+[3] H. Oleynikova, Z. Taylor, R. Siegwart, and J. Nieto, “Safe local
+exploration for replanning in cluttered unknown environments for
+microaerialvehicles,”IEEERoboticsandAutomationLetters,vol.3,
+no.3,pp.1474–1481,2018.
+[4] S.KaramanandE.Frazzoli,“Sampling-basedalgorithmsforoptimal
+motion planning,” The international journal of robotics research,
+vol.30,no.7,pp.846–894,2011.
+[5] F. Duchonˇ, A. Babinec, M. Kajan, P. Benˇo, M. Florek, T. Fico, and
+L.Jurišica,“Pathplanningwithmodiﬁedastaralgorithmforamobile
+robot,”ProcediaEngineering,vol.96,pp.59–69,2014.
+[6] T. Nägeli, J. Alonso-Mora, A. Domahidi, D. Rus, and O. Hilliges,
+“Real-time motion planning for aerial videography with dynamic
+obstacle avoidance and viewpoint optimization,” IEEE Robotics and
+AutomationLetters,vol.2,no.3,pp.1696–1703,2017.
+[7] B. Penin, P. R. Giordano, and F. Chaumette, “Vision-based reactive
+planning for aggressive target tracking while avoiding collisions and
+occlusions,” IEEE Robotics and Automation Letters, vol. 3, no. 4,
+pp.3725–3732,2018.
+[8] R.Bonatti,Y.Zhang,S.Choudhury,W.Wang,andS.Scherer,“Au-
+tonomous drone cinematographer: Using artistic principles to create
+smooth, safe, occlusion-free trajectories for aerial ﬁlming,” arXiv
+preprintarXiv:1808.09563,2018.
+[9] B.Penin,R.Spica,P.R.Giordano,andF.Chaumette,“Vision-based
+minimum-time trajectory generation for a quadrotor uav,” in 2017
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),pp.6199–6206,IEEE,2017.
+[10] J.Chen,T.Liu,andS.Shen,“Trackingamovingtargetincluttered
+environments using a quadrotor,” in 2016 IEEE/RSJ International
+Conference on Intelligent Robots and Systems (IROS), pp. 446–453,
+IEEE,2016.
+[11] P. Švec, A. Thakur, E. Raboin, B. C. Shah, and S. K. Gupta,
+“Targetfollowingwithmotionpredictionforunmannedsurfacevehicle
+operating in cluttered environments,” Autonomous Robots, vol. 36,
+no.4,pp.383–405,2014.
+[12] B.F.JeonandH.J.Kim,“Onlinetrajectorygenerationofamavfor
+chasing a moving target in 3d dense environments,” arXiv preprint
+arXiv:1904.03421,2019.
+[13] A.Gasparetto,P.Boscariol,A.Lanzutti,andR.Vidoni,“Pathplanning
+and trajectory planning algorithms: A general overview,” in Motion
+andoperationplanningofroboticsystems,pp.3–27,Springer,2015.
+[14] N. Ratliff, M. Zucker, J. A. Bagnell, and S. Srinivasa, “Chomp:
+Gradientoptimizationtechniquesforefﬁcientmotionplanning,”2009.
+[15] D. Mellinger and V. Kumar, “Minimum snap trajectory generation
+and control for quadrotors,” in 2011 IEEE International Conference
+onRoboticsandAutomation,pp.2520–2525,IEEE,2011.
+[16] S. Mehrotra, “On the implementation of a primal-dual interior point
+method,” SIAM Journal on optimization, vol. 2, no. 4, pp. 575–601,
+1992.
+[17] F.Furrer,M.Burri,M.Achtelik,andR.Siegwart,“Rotors—amodular
+gazebomavsimulatorframework,”inRobotOperatingSystem(ROS),
+pp.595–625,Springer,2016.
+1249
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 12:24:07 UTC from IEEE Xplore.  Restrictions apply. 

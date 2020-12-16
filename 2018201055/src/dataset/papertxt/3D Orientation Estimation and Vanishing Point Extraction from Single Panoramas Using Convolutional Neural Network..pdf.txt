@@ -1,0 +1,468 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Curvature sensing with a spherical tactile sensor
+using the color-interference of a marker array
+Xi Lin1,2, Laurence Willemet1, Alexandre Bailleul1 and Michae¨l Wiertlewski2
+Abstract—The only way to perceive a small object held set them apart is that they are endowed with a rich sense
+between our ﬁngers is to trust our sense of touch. Touch of touch, mediated by a collection of mechanoreceptors,
+provides cues about the state of the contact even if its view
+densely populated in the ﬁngertips. This wide-ranging ar-
+is occluded by the ﬁnger. The interaction between the soft
+ray of mechanoreceptors encodes the complex mechanical
+ﬁngers and the surface reveals crucial information, such as
+the local shape of the object, that plays a central role in ﬁne interaction that occurs at the contact between the skin and
+manipulation. In this work, we present a new spherical sensor the object. The sense of touch captures surface features [5],
+that endows robots with a ﬁne distributed sense of touch. [6], compliance of materials [7], [8] or the presence of
+This sensor is an evolution of our distributed tactile sensor
+edges [9]. Of importance for the present work, an estimate
+thatmeasuresthedense3-dimensionaldisplacementﬁeldofan
+of the curvature of an object can be extracted from a single
+elasticmembrane,usingthesubtractivecolor-mixingprinciple.
+We leverage a planar manufacturing process that enables the press[10]andguidethetimingofmotorcommandsrequired
+design and manufacturing of the functional features on a ﬂat for grasping and object manipulation [11], [12].
+surface. The ﬂat functional panels are then folded to create a Given the usefulness of touch in manipulation, it is not
+spherical shape able to sense a wide variety of objects.
+surprising that tactile sensors for robotics have shown great
+The resulting 40mm-diameter spherical sensor has 77 mea-
+promise in providing a rich image of the mechanical in-
+surement points, each of which gives an estimation of the
+local 3d displacement, normal and tangential to the surface. teraction on a par with human perception. A large vari-
+Each marker is built around 2 sets of colored patches placed ety of strategies can be used to transduce the mechanical
+at different depths. The relative motion and resulting hue of deformation into an electrical signal, for a full review the
+each marker, easily captured by an embedded RGB camera,
+reader can refer to [13]. Amongst these techniques, camera-
+providesameasurementoftheir3dmotion.Tobenchmarkthe
+based tactile sensors attract increasing attention due to their
+sensor,wecomparedthemeasurementsobtainedwhilepressing
+the sensor on a curved surface with Hertz contact theory, a higher spatial resolution and minimum wiring requirement
+hallmarkofcontactmechanics.Whilethemechanicsdidstrictly comparedtoothertactilesensingtechnologies.Thesesensors
+followHertzcontacttheory,usingtheshearandnormalsensing, typicallyuseacameratotrackthedisplacementsofmarkers
+ChromaTouch can estimate the curvature of an object after a
+embedded in a soft elastomer. This method delivers dense
+millimeter-size indentation of the sensor.
+tactileimageswitharelativelyﬁnetemporalresolutionwhen
+leveraging high frame-rate cameras [14], [15]. However,
+I. INTRODUCTION
+exceptforafewexceptionsdetailedinthenextsection,these
+Robots interact with their surroundings by sensing and
+sensorsusuallyarelimitedtomeasuringlateraldeformation,
+reacting to the mechanical behavior of the environment,
+whichprovidesvaluablemeasurementsbutrequirescomplex
+usually through an impedance control feedback loop [1].
+processing and approximations to gauge the normal motion
+In a classical impedance control, the mechanical interaction
+of each marker.
+with the environment is measured with a force sensor and
+The ChromaTouch sensor, introduced in [16], solves the
+serves as a basis to control the motion of the robotic arm
+at modulating its apparent stiffness. Yet, perceiving the
+mechanical world with only a single point of measurement (a) (b) (c)
+discards the abundance of information that the mechanical
+scene has to offer. A single 6-axis force sensor can indeed
+be used to ﬁnd the timing, location, and direction of a
+contact force [2], [3] but the limited spatial distribution of hue and centroid 
+the data prevents the estimation of the shape and the surface detection
+properties of an object without active exploration [4]. (d)
+Humans also use proprioception to gather kinematic in-
+formation to control the impedance of their limbs, but what RtRt
+This work was supported by Agence Nationale de la Recherche within
+thePHASEproject16-CE10-0003
+1Xi Lin, Laurence Willemet and Alexandre Bailleul are
+with ISM, CNRS and Aix-Marseille Universite´, France Fig.1. (a)Thesensor,mountedonaroboticarm,exploresanobject(b)
+{ }
+name.surname @univ-amu.fr Typical image retrieved by the embedded camera (c) Effect of lateral and
+2MichaelWiertlewskiiswiththeCognitiveRoboticsDepartmentofTU normalforcesontheshapeandhueofamarker.(d)Aftercalibration,the
+Delft,Netherlandsm.wiertlewski@tudelft.nl lateralandnormaldeformationofeachpointisestimated.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 603
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. problem by encoding the normal motion of each marker in contact [20], [15]. Because of its working principle, these
+the color channels of the camera, effectively converting a sensors can only be planar or have small curvature, and
+2-dimensional color image information into 3-dimensional therefore accommodate well only with convex objects. In
+deformation ﬁeld. Each marker is made by 2 overlapping [18],thetactilesensorusesthechangeofcolortodetermine
+submarkers,onediffusiveandmagenta,theothertranslucent normal pressure with 3×3 markers.
+and yellow. The full 3d relative motion of the submarkers TheChromaTouchsensorbuildsupontheseprinciplesand
+is found from both the centroid detection and the change of extends to the recovery of the full displacement ﬁeld to
+hueofthemarker.Wedemonstratedtheeffectivenessofthis gather a complete picture of the contact.
+transduction principle to detect dense 3d displacement ﬁelds
+B. Spherical-shaped sensors
+on a ﬂat sensing surface. The long-term goal of the work is
+to integrate this sensor in with a robotic end-effector with Soft spherical-cap artiﬁcial ﬁngertips are popular in
+curved ﬁngertips. In this paper, we introduce a new version robotic grasping as they help stabilizing the contact with an
+of ChromaTouch that uses the color-mixing transduction arbitrarilyshapedobject.Therefore,alargebodyofresearch
+principleonahemisphericalsensingsurface,abletoexplore has created artiﬁcial ﬁngertips with spherical or complex
+surfaces with arbitrary shapes, see 1a. The sensor embeds a convex shapes.
+camera equipped with a ﬁsheye lens, which has the double A wide array of manufacturing strategies has been de-
+beneﬁt of amplifying the signal used to estimate the normal ployed. Casting the body of the sensor in a spherical mold,
+displacementsaswellasunwrappingthesphericalprojection with grooves results in structures with soft and complex
+of the sensing hemisphere, see 1b. Figure 1c, illustrates the shape that can even incorporate markers if the grooves
+sensingmethod.Aftercalibration,thesensorretrievesthe3d are included in the mold [21]. Another popular fabrication
+deformationﬁeldatthelocationofthemarkerswhichcanbe method makes use of 3d printing with soft elastomer. 3d
+interpolatedintothefulldeformationofthebody,seeﬁg1d. printing offers a versatile method for producing complex-
+shaped sensors [19]. One of the downside of spherical
+II. RELATEDWORK sensors has to do with the fact that circular markers on a
+A. Camera-based sensors sphere will appear as ellipses when projected on the image
+The success of camera-based tactile sensors can be at- plane. Several sensors subsequently require image wrapping
+tributed to the decades of engineering that reﬁned camera to recover the proper shape of markers [21].
+sensors and allowed converting photons into digital data. Alternatively, piezoresistive and capacitive sensors can
+By relying on off-the-shelf camera, these sensors bypass the be mounted on a ﬂexible printed circuit board that is cut
+electronicengineeringthatisrequiredtomakecapacitiveand and wrapped around a rigid core, then covered with a
+piezo-resistive tactile sensors. For this reason, camera-based rigid layer [22]. The cover ﬁlters and blurs the signal from
+sensors often boast larger resolution and higher refresh-rate. the contact thus markers beneﬁt from being near to the
+Camera-basedtactilesensorsrelyonadeformablemedium surface [23].
+seen by the camera, which essentially converts the mechani-
+III. CONVEXSENSORTOMEASURE
+calinteractionintoavisiblechangeoftheimage.Therefore,
+CONVEXANDCONCAVEOBJECTS
+the necessary inventiveness to extract data about the contact
+A. The case for spherical shape when exploring objects
+lies in the engineering of this medium. The simplest method
+is to place black markers on a white background on a soft Simple reasoning can highlight why a curved sensor is
+elastomer and track the motion of these markers to infer beneﬁcialfortheversatilityofsensingwitharbitraryobjects.
+the interaction at the contact. The biomimetic approaches
+suggest amplifying motion via an array of pins attached to a
+deformable membrane [19]. However, the transduction from Ro−1 0 Cr=Rt−1+Ro−1 ...
+the 2D optical image to a 3D mechanical deformation ﬁeld
+remains a challenge [17], mainly because the distance from Ro−1<0
+theGmelaFrokrecres dtoevtehleopceadmebrya [is14u]nkemnopwlony.ing double layers of Ro−1=0 ... ill defined ...
+rigid markers to compute the 3D stress ﬁeld. The normal Ro−1>0 Cr>0
+stresses are calculated from the lateral distribution of the
+...
+markers. This implementation is effective but the spatial Ro−1 0 Cr<0
+resolution of the sensor is limited, because the markers
+on both layers cannot be overlaid. The GelSight sensor R−1 0 <0 =0 >0 0
+t
+measuresthetopographyofanelastomercoveredbyalight-
+reﬂecting membrane illuminated from 3 sides by 3 lights of Fig.2. ShapeofthecontactbetweenasensorwithcurvatureR−1andan
+− t
+complementary color. The 3d geometry of the deformation objectwithcurvatureRo1.WhenrelativecurvatureCr isnull,thecontact
+of the gel is reconstructed from the shadow of the asperities topologyisill-deﬁned.Sincetheenvironmentoftherobotcontainsobjects
+ofundeﬁnedcurvatures,asmallradiuswillprovidethebestversatility.The
+in contact with the membrane. The sensor has been used
+shaded area shows the operating range of curvature that spherical sensors
+with added markers to measure the slip and shear at the cantypicallysample.
+604
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. (a) (b) (c)
+Itallowsthesensortiptoconformtothetouchedobjectwith
+2πR
+a larger contacting surface [24], [25]. The shape and size of n
+the contact surface are determined by the relative curvature R
+πR
+at the contact point. Assuming concave or convex spherical
+2
+sensor and object, the relative curvature can be expressed as
+πR
+Cr =Rt−1+Ro−1, where Rt is the radius of the sensor, and 2m
+R is the local radius of the object, near the contact point.
+o
+The radius is positive for the convex object and negative for Fig.3. Constructionofthepolyconicpattern.(a)Oneofthenth segment
+—calledgore—ofthesphere(b)isconstructedbyprojectingmregularly
+the concave object. When the object is ﬂat, the radius is
+spacedpointsofaninnercirclewhosediameteristheequatorofasegment
+inﬁnite and the curvature of the object is null. If both the ontoaregularlinegridspacedbyπR/2m(c)Thesegmentisthencopied
+sensor and the objects are ﬂat, the relative curvature is null, ntimesandrotatedarounditsapextoproducetheﬁnalﬂatpattern.
+and in this special case, the contact is made on the higher
+asperities of both surfaces, therefore, relying on stochastic
+the distortion induced by stretch is reduced. In our case,
+properties and being ill-deﬁned at macroscopic scales [26].
+because we are using compliant elastomers which forgive
+On the other hand, when the relative curvature is negative
+some stretch, cutting the sphere in 4 gores was enough to
+— the concave object has a smaller radius than the convex
+ensure an easy manufacturing process, while reducing the
+object—thecontactismadeattheedgeoftheconvexobject
+number of seams.
+and therefore the mechanical interaction is discontinuous.
+Figure 3 illustrates the process used to create the shape
+From a sampling point of view, in order to have an unin-
+of the gores and assemble them into a spherical cap of
+terrupted contact surface, the best choice is to have positive
+radius R. The shape of each gore is found by constructing
+relative curvature (see Figure 2). In this case, the contact
+a semicircle with a diameter the equatorial edge of length
+follows Hertz theory and the contact area is elliptical.
+2πR/n. Then we divide the inner circle in m radii and
+This result is well known by the mechanical community
+projectthevectorﬁeldontoaregularlyspacedgridofwhich
+and is the reason why surface scanning instruments have
+extend from the equator line to a parallel line spaced by
+small diameter tips and can capture the small-scale changes
+πR/2. Placing the markers onto the ﬂat gores is effortless
+in curvature [26].
+comparedtoassemblingthemonasphericalsurface.Regular
+B. Flat to curved projection manufacturing techniques such as printing, laser cutting,
+molding can be used to create the required pattern.
+The manufacturing of the double overplayed layer needed
+for ChromaTouch requires the alignment of magenta and C. Manufacturing process
+yellow dots on two different planes. This sensitive operation
+The manufacturing process illustrated in ﬁgure 4 is an
+is relatively straightforward to process on ﬂat surface but
+update from the original ﬂat version [16]. First, the base is
+challenging when the alignment must be done on a curved
+cast from transparent elastomer (Sortaclear 12, Smooth-On,
+surface, such as a sphere.
+Macungie, PA, USA) in a high-resolution 3d-printed mold.
+Gauss’ Theorema Egregium provides an opportune frame- The grooves left by the cast are ﬁlled with the magenta
+work to understand how to design a ﬂat part that can be markers, made from the same elastomer in which a dye is
+folded. The remarkable theorem states that the Gaussian added. Then, a protective layer is molded, on top of which
+curvatureκ—deﬁnedbybeingtheproductofeachprincipal the yellow ﬁlter is placed. The yellow elements are laser cut
+curvature — of a surface is invariant under bending. A ﬂat andtherestoftheﬁlmarediscarded.Aprotectivetransparent
+plane of Gaussian curvature κ = 0 can be bent along one layer embeds the yellow transparent submarkers. The whole
+dimension for which one of the principal curvatures will be operation including curing takes approximately 2 days.
+non-zero, but cannot be deformed into a sphere for which Atthisstage,themanufacturingprocessrequiringthepart
+bothprincipalcurvatureswillbethereciprocalofthebending tobeﬂatarecompletedandthepatternisfoldedontoarigid
+radius R , i.e. κ=1/R2. Since bending and folding are not and transparent sphere made of acrylic. Lastly, the white
+b b
+sufﬁcient to make the sphere, in our production process, the outer layer is cast onto the exterior of the sphere to ensure
+surface has to be stretched or cut. thepropercohesionofthegores.Thelastexternallayeralso
+To work out a way around this fundamental constraint, acts as a barrier for external light and as a diffuser for the
+we used a production method that is popular for making marker illumination.
+spherical globes from ﬂat maps. The sphere is divided into
+D. Assembly and optical image correction
+n gores (i.e. segments), each of which can be worked on
+as it is a ﬂat surface. In globe production, each of the gore Withinthecurrentlimitofouroff-the-shelfmanufacturing
+contains a part of the map so that the shape and linearity process, we can create spherical sensors with 77 markers
+of the meridian are preserved. Once the gores are printed, measuring2mmindiameteranddistributedonthemeridians
+they are folded into a sphere to make the globe. The fold of a sphere of radius 40 mm. A USB-camera (Aria A15S-
+introduced a small distortion as the ﬂat gores still must be C, Alkeria, Cascina, Italy), with a 1/2.9” image sensor, is
+bent in both directions. However, as the number of gores placed at the center of the sphere. The camera is ﬁxed onto
+increases, the bendalong the equator isless pronounced and a mounting ﬁxture that is linked to the force sensor of the
+605
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. (1) Fill transparent base (2) Fill magenta markers (3) Laser cut yellow film (4) Remove surplus
+(8) release
+(5) transparent coating (6) fold (7) cohesive and 
+light diffusive coating
+Fig. 4. Manufacturing process. A ﬂat mold makes alignment of the magenta and yellow marker easier. Once the ﬂat pattern is completed, it is folded
+intoasphericalshape,andheldinplacebycuringadditionalelastomer,whichactsasadiffuserfortheillumination.
+(a) (b)
+robot arm. The overall assembly of the sensor is shown in
+mounting
+ﬁgure 5a. image sensor
+The camera is equipped with a f = 2.2 mm ﬁsheye wide f
+lens (Lensagon BF5M2223S129, Lensation GmbH, Karl- camera &
+sorfuhthee, Gmearmrkaenryi)s. Amsosfotunnodtapbrleeviwouhselny [th1e6],letnhse ihnatserfaersehnocret fisheye lens light ray R
+focal length, which provides a better signal to noise ratio. leds
+The ﬁsheye lens has a 180◦ ﬁeld of view, which usually
+sphere
+creates a characteristic distortion due to the equidistant
+array (c)
+projection.However,inthiscase,eachmarkerisatthesame
+distance from the focal of the lens and cancels exactly the
+distortion made by projecting the markers onto a plane. The
+image created by the combination of the ﬁsheye lens and
+spherical marker array creates an image without needing
+post-processing for image distortion. Fig.5. (a)Explodedviewoftheassembly.(b)Theﬁsheyelenscreatesaﬂat
+projectionofthesphericalarray,cancelingthedistortions.Themarkershave
+similarareathroughouttheimage.(c)Theresultingimageandestimation
+E. Signal processing
+ofthelocalshapeanddeformation.
+The 3-dimensional displacement of each marker with
+respect to the camera depends on the observed lateral dis-
+is used to isolate the marker in the original image. For each
+placement of the centroid and the change of hue of their
+marker, the average hue is stored. At this stage, we have the
+projection on the image sensor. To convert the image into a
+hue, which reﬂects the normal displacement, and the motion
+vectorﬁeld,aprocessingpipelineisasfollows.First,theraw
+of the centroid in 2 dimensions, which reﬂects the lateral
+imagesfromthecameraarecroppedusingacircularmaskto
+displacement of the markers.
+remove everything outside of the edge of the sensor. Then a
+tophat ﬁlter is applied to mitigate the effect of non-uniform
+IV. EXPERIMENTALVALIDATION
+lighting and the contrast is enhanced. Once the correction is
+A. Calibration
+done, the images are converted from RGB to HSV color
+space. The hue channel is used to segment the markers The link between the hue of the marker and the actual
+by thresholding around the yellow and magenta hue. The displacementitexperiencesisinﬂuencedbytheconstruction,
+centroidofeachmagentamarkerisdetectedfromthebinary illumination,andcameraparameters.Therefore,thisrelation-
+images using the regionprop function in Matlab. The mask ship needs to be calibrated against a ground truth.
+606
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. The calibration is done by pressing the sensor onto a ﬂat the normal deformation since the markers moved. The red
+plate, with a robot (UR3, Universal Robots, Odense, Den- dots in Fig 7 show the normal displacement at the original
+mark)equippedwithaforce-torquesensor(FT300,Robotiq, radial location of the markers.
+Le´vis, Canada) to measure interaction forces. During a
+(a)
+normal loading experiment, the force and the displacement
+of the robot are recorded to provide ground truth for the contact 
+load curve of the system. At the same time, the state of conditions
+each marker is determined to ﬁnd the distribution of the Ro=−80mm Ro=∞ Ro= 80 mm
+(b)
+displacement over the contact area.
+(a) δr (b)0.04 c) 15 image
+(c)
+ue px)10
+δt δr reference h0 0 0.7 1.4centroid shift ( 05 0 1 2 deofrmation(mm)01 R-10=0.98 0 10R-1=0o0.97 0 10 -R10=0.96 0 10
+(mm) (mm)
+2a δr δt radial position (mm) radial position (mm) radial position (mm)
+Fig. 6. (a) Effect of pressing the spherical sensor on a plane (b) The
+Fig. 7. (a) Comparison between Hertz contact theory and measurement
+referencehueasafunctionofthenormaldisplacementoftheroboticarm,
+givenbythesensorwhenpressingonanegative,nullandpositivecurvature
+anditslinearﬁtindashedline.(c)Resultsfromthetangentialcalibration.
+object.(b)Theimagedifferencebetweenthenormalstateandthedeformed
+state is affected by the curvature of the object. The negative difference
+As shown in ﬁgure 6a, the external force P applied by is in magenta and the positive in green. (c) The resulting proﬁle of the
+displacementofthemiddlecross-sectionofmarkers.Thevectorsshowthe
+the robot will induce a deformation δr of the soft sensor actualdisplacementofeachmarker,thereddotshighlightonlythenormal
+if the contacting surface is inﬁnitely stiff compared to the motionandthegraycurvesshowtheresultofcurve-ﬁttingwithaﬁltered
+complianceofthesoftelastomerofthesensor.Thisdeforma- Hertziancontact.
+tionδ alsocorrespondstothemaximumofthedeformation
+r The Hertz contact theory can be used to analyze the mea-
+ﬁeld measured by the tactile sensors, independently of the
+sured displacement and extract the radius of the contacting
+curvature of the object. Therefore, we can use the ground
+body[27].Inthefollowingparagraph,theassumptionisthat
+truth values to calibrate the variation of observed hue.
+the object is inﬁnitely rigid compared to the soft ﬁngertip.
+Figure 6b, shows typical traces obtained during calibra-
+The theory ﬁrst observes that the contact area between two
+tion. The relationship between the hue of the marker that
+spherical objects will lead to a circular contact area of
+experiences the maximum deformation (i.e. located in the
+center of the contact patch) and the displacement recorded radius a. The relative displacement of the two bodies δr
+by the robot is invariant with the curvature of the contacting is related to the contact area a2 by the equivalent radius
+object. A linear ﬁt gives the coefﬁcient to extrapolate the R=(Rs−1+Ro−1)−1 such as:
+displacementfromanyarbitraryobservedhue.Thegoodness a2 =Rδ (1)
+r
+ofﬁtonthesampleddataisR2 =0.89.Asimilarprocedure
+wheretheeffectiveradiusiscalculatedwiththeradiusofthe
+is done for the lateral displacement with the goodness of ﬁt
+R2 =0.99, see ﬁgure 6c. sensor Rs and the radius of the object Ro in contact. This
+equationcanbereversedtoﬁndtheradiusoftheobjectfrom
+thedisplacementandtheareaofcontact,knowingtheradius
+B. Example application: model-driven curvature estimation
+of the object.
+Once the relationship between the observed hue and
+According to Hertz theory, the contact at the surface
+the displacement is established, we can reconstruct the 3d shouldleadtonormaldisplaceme(cid:18)ntu oft(cid:19)hesoftbodywhich
+displacement ﬁeld of the sensor from the observed images z
+follows a parabolic shape such as:
+sampled at the location of the markers. The data is then
+interpolated again to provide a regularly spaced sampling. u (r)| =δ 1− r2 (2)
+Thecontactswithtwocurvedobjectsofradii±80mmand z z=0 r a2
+a ﬂat surface are illustrated in ﬁgure 7. The image reveals a where r is the radial coordinate. Curve ﬁtting this relation-
+difference in the extent to which the markers are disturbed. shiptothemeasurement,couldintheoryresolvefromtactile
+The measured displacement ﬁeld reveals the nature of the data the displacement of the sensor and the area of the
+interaction.Theﬁeldshowsapeakatthecenterofthecontact contact patch. However, the measured displacements from
+thattapersastheedgeofthecontactinamonotonicfashion. ChromaTouch come from the markers that are embedded
+It is interesting to note that the local contact force is not deeper in the elastomer. The elastomeric layer that cov-
+strictly normal to the surface but has a slight angle due to ers the markers acts as a mechanical ﬁlter and blurs the
+the work of friction and elastic stretch. The measurement of contact distribution. In order to simplify the ﬁtting proce-
+the lateral motion has importance in evaluating the shape of dure, the distribution is approximated by a gaussian curve
+607
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. uz(r)|z=2mm =δrexp(−r2/2a2), from which the amplitude istheoreticallyenoughtoreconstructthestresspatternatthe
+is the global displacement and the deviation is related to the surface. The current work shows that the deformation of the
+areaofcontact.Figure8aillustratestheﬁlteringdonebythe sensor is in good agreement with the Hertz contact theory
+softtissues,whichcanbeestimatedfromBoussinesq-Cerruti despite showing some striking differences.
+equations. The gaussian approximation has a goodness of ﬁt During the experiment, we made sure that the contact
+with the theoretical deformation of R2 =0.96. was lubricated, therefore as close to frictionless as possible,
+to follow the assumptions underlying Hertz contact theory.
+(a) (b) 60 26.7 20 16
+Upon contact, the section touching the object expanded
+2m)40 laterally to maintain its surface area. The displacement of
+individual points did not follow a pure normal path but was
+m
+uz(r)|z=0  (2 20 also shifted toward the outside of the contact patch contrary
+a
+tothepredictionofHertztheoryinwhichthedisplacementis
+0
+purely normal. The discrepancy with the linear small-strain
+(c) 0 0.7 1.4 theoryofHertzismostcertainlyduetolargedeformationsof
+e 50 ground truth motion (mm) thesoftlayersofthesensor.Thelateralmotioncouldbeused
+v
+ectim)40 toestimateslipperinessofthesurfacewithouthavingtoslide
+ed effus (m2300 tohfefsriecntsioonrlpaeterrcaelplyti.oSnomwheielevipdreenscseinsghoinwshusimmainlasr[c2a8p]a,b[i2li9ti]e.s
+atdi
+δrexp −2ra22 estimra100 noLrmasatllyf,ortchee,bluatteirtaalpcpaelaibrsrattoiobneiasffepcetrefdorbmyetdheoinnldyenattatoionne
+depth, which translates into an underestimation. Finer cali-
+uz(r)|z=2mm 0.8 1.0 1.2 1.4
+normal displacement (mm) bration procedure should lead to even more accurate results.
+Fig.8. (a)Sensorsembeddedintheelastomerinherentlyobserveablurry B. Future improvements
+picture of the contact. (b) Evolution of the contact area as the sensor is
+The analysis of the experimental results suggests several
+pushedintoacurvedobject.(b)Resultsoftheestimationofthecurvature
+at the beginning of the press. The estimated effective radius (plain lines) essential improvements. First of all, the rigid core inside the
+convergetotherealvalue(dashedlines). sensorshouldberemovedtohaveamorelineardeformation
+pattern and to avoid saturation of the sensor at higher
+We conducted measurements on three spherical objects loads. Along those lines, future sensors will use a softer
+mentioned earlier. Figure 8b shows the estimation of the compound to maximize the deformation and color changes
+area of contact a2 extracted from the gaussian ﬁt, when the of the markers inside the sensor.
+normaldisplacementoftherobotincreases.Theradiusofthe Second, in this study, the sphere was made using four
+contactareaincreaseswiththeappliednormaldisplacement. gores which is practical from the standpoint of folding but
+The equivalent curvature is computed from the deformation still induces too much stress and distortion when wrapped
+ﬁeld. Figure 8c reveals that the equivalent curvature con- around the spherical core. The sweet spot between low
+vergestotheactualcurvaturewhenthenormaldisplacement distortion and ease of manufacturing might be closer to 6 or
+increases,althoughsomediscrepanciesexist.Forindentation 8 gores. Increasing the number of markers to provide better
+lower than a millimeter, the noise of measurement has a spatial resolution will offer the possibility of digital spatial
+signiﬁcantinﬂuenceonthequalityofresults.Afteranormal ﬁltering that can improve the signal to noise ratio.
+displacement of 1 mm, the estimation converges to the real Lastly, the calibration procedure will be replaced by a
+value. When the total displacement reaches 1.4 mm, the machine-learning approach in the hope that it considers the
+estimations of the effective radius R corresponds well the deviation from the calibration of each marker.
+desired values, which are R = {26.7mm,20mm,16mm}
+for the sensor with the radius of R = 20 mm in contact C. Conclusion
+t
+with objects with the radius of R ={−80mm,∞,80mm} This work presents a new hemispherical version of the
+o
+respectively. camera-based tactile sensor developed by [16]. The sensor
+can measure the 3d deformation ﬁeld of the contact via
+V. DISCUSSIONANDCONCLUSIONS
+marker tracking and hue detection. With the hemispherical
+A. Discussion
+conﬁguration, the sensor is suited to explore surfaces with
+Tactile sensors are essential tools to enable robots to arbitrary curvature even if the object is slightly concave. We
+haptically explore their surroundings, perceive changes in proposedanalgorithmtoestimatethecurvatureoftheobject
+contact conditions and subsequently accomplish dexterous with a 1 mm indentation on the object. Experimental results
+manipulation tasks. The spherical shape associated with show a good agreement between the estimated effective
+the use of soft elastomer offers tactile sensing as well radius and the real value despite using Hertz contact in
+as intrinsic stability when grasping. The color subtraction the presence of friction. Future work will solve the existing
+method, presented in this work, enables access to the shear limitations of the sensor and extend the application of the
+aswellasthenormalcomponentsofthedeformation,which sensor to robotic manipulation tasks.
+608
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [16] X.LinandM.Wiertlewski,“Sensingthefrictionalstateofarobotic
+skin via subtractive color mixing,” IEEE Robotics and Automation
+[1] N.Hogan,“Impedancecontrol:Anapproachtomanipulation:Parti— Letters,vol.4,no.3,pp.2386–2392,2019.
+theory,” Journal of dynamic systems, measurement, and control, vol. [17] N. J. Ferrier and R. W. Brockett, “Reconstructing the shape of a
+107,no.1,pp.1–7,1985. deformable membrane from image data,” The International Journal
+[2] A. Bicchi, J. K. Salisbury, and D. L. Brock, “Contact sensing from ofRoboticsResearch,vol.19,no.9,pp.795–816,2000.
+forcemeasurements,”TheInternationalJournalofRoboticsResearch, [18] Z. Kappassov, D. Baimukashev, Z. Kuanyshuly, Y. Massalin,
+vol.12,no.3,pp.249–262,1993. A.Urazbayev,andH.A.Varol,“Color-codedﬁber-optictactilesensor
+[3] C. Hudin, S. Pane¨els, and S. Strachan, “Intact: Instant interaction for an elastomeric robot skin,” in 2019 International Conference on
+with3dprintedobjects,”inProceedingsofthe2016CHIConference RoboticsandAutomation(ICRA). IEEE,2019,pp.2146–2152.
+ExtendedAbstractsonHumanFactorsinComputingSystems. ACM, [19] B. Ward-Cherrier, N. Pestell, L. Cramphorn, B. Winstone, M. E.
+2016,pp.2719–2725. Giannaccini, J. Rossiter, and N. F. Lepora, “The tactip family: Soft
+[4] T. J. Prescott, M. E. Diamond, and A. M. Wing, “Active touch opticaltactilesensorswith3d-printedbiomimeticmorphologies,”Soft
+sensing,”2011. robotics,vol.5,no.2,pp.216–227,2018.
+[5] M. Wiertlewski, J. Lozada, and V. Hayward, “The spatial spectrum [20] W.Yuan,R.Li,M.A.Srinivasan,andE.H.Adelson,“Measurement
+of tangential skin displacement can encode tactual texture,” IEEE of shear and slip with a gelsight tactile sensor,” in 2015 IEEE
+TransactionsonRobotics,vol.27,no.3,pp.461–472,2011. InternationalConferenceonRoboticsandAutomation(ICRA). IEEE,
+[6] A.M.Kappers,“Humanperceptionofshapefromtouch,”Philosophi- 2015,pp.304–311.
+calTransactionsoftheRoyalSocietyB:BiologicalSciences,vol.366, [21] T. Sakuma, F. Von Drigalski, M. Ding, J. Takamatsu, and T. Oga-
+no.1581,pp.3106–3114,2011. sawara, “A universal gripper using optical sensing to acquire tactile
+[7] M. A. Srinivasan and R. H. LaMotte, “Tactual discrimination of informationandmembranedeformation,”in2018IEEE/RSJInterna-
+softness,”Journalofneurophysiology,vol.73,no.1,pp.88–101,1995. tionalConferenceonIntelligentRobotsandSystems(IROS). IEEE,
+[8] K. Fujita and H. Ohmori, “A new softness display interface by 2018,pp.1–9.
+dynamicﬁngertipcontactareacontrol,”in5thWorldMulticonference [22] A. Schmitz, M. Maggiali, M. Randazzo, L. Natale, and G. Metta,
+onSystemics,CyberneticsandInformatics,2001,pp.78–82. “A prototype ﬁngertip with high spatial resolution pressure sensing
+[9] J. Platkiewicz, H. Lipson, and V. Hayward, “Haptic edge detection for the robot icub,” in Humanoids 2008-8th IEEE-RAS International
+throughshear,”Scientiﬁcreports,vol.6,p.23551,2016. ConferenceonHumanoidRobots. IEEE,2008,pp.423–428.
+[10] A. Goodwin, K. John, and A. Marceglia, “Tactile discrimination of [23] M. Shimojo, “Mechanical ﬁltering effect of elastic cover for tactile
+curvature by humans using only cutaneous information from the sensor,”IEEETransactionsonRoboticsandAutomation,vol.13,no.1,
+ﬁngerpads,”Experimentalbrainresearch,vol.86,no.3,pp.663–672, pp.128–132,1997.
+1991. [24] R. S. Fearing and T. O. Binford, “Using a cylindrical tactile sensor
+[11] I. Birznieks, P. Jenmalm, A. W. Goodwin, and R. S. Johansson, fordeterminingcurvature,”inProceedings.1988IEEEInternational
+“Encodingofdirectionofﬁngertipforcesbyhumantactileafferents,” ConferenceonRoboticsandAutomation. IEEE,1988,pp.765–771.
+JournalofNeuroscience,vol.21,no.20,pp.8222–8237,2001. [25] A.M.OkamuraandM.R.Cutkosky,“Featuredetectionforhapticex-
+[12] R.S.JohanssonandJ.R.Flanagan,“Codinganduseoftactilesignals plorationwithroboticﬁngers,”TheInternationalJournalofRobotics
+from the ﬁngertips in object manipulation tasks,” Nature Reviews Research,vol.20,no.12,pp.925–938,2001.
+Neuroscience,vol.10,no.5,pp.345–359,2009. [26] J. N. Israelachvili, Intermolecular and surface forces. Academic
+[13] R.S.Dahiya,G.Metta,M.Valle,andG.Sandini,“Tactilesensing— press,2015.
+fromhumanstohumanoids,”IEEEtransactionsonrobotics,vol.26, [27] K.L.Johnson,Contactmechanics. Cambridgeuniversitypress,1987.
+no.1,pp.1–20,2009. [28] T. Maeno, T. Kawamura, and S.-C. Cheng, “Friction estimation by
+[14] K. Sato, K. Kamiyama, N. Kawakami, and S. Tachi, “Finger-shaped pressing an elastic ﬁnger-shaped sensor against a surface,” IEEE
+gelforce:sensorformeasuringsurfacetractionﬁeldsforrobotichand,” Transactions on Robotics and Automation, vol. 20, no. 2, pp. 222–
+IEEETransactionsonHaptics,vol.3,no.1,pp.37–47,2009. 228,2004.
+[15] D. Ma, E. Donlon, S. Dong, and A. Rodriguez, “Dense tactile force [29] J. Monnoyer, E. Diaz, C. Bourdin, and M. Wiertlewski, “Perception
+estimation using gelslim and inverse fem,” in 2019 International of ultrasonic switches involves large discontinuity of the mechanical
+Conference on Robotics and Automation (ICRA). IEEE, 2019, pp. impedance,”IEEEtransactionsonhaptics,vol.11,no.4,pp.579–589,
+5418–5424. 2018.
+609
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:46 UTC from IEEE Xplore.  Restrictions apply. 

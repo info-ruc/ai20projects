@@ -1,0 +1,504 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Preintegrated Velocity Bias Estimation to Overcome
+Contact Nonlinearities in Legged Robot Odometry
+David Wisth, Marco Camurri, Maurice Fallon
+Abstract—In this paper, we present a novel factor graph
+formulation to estimate the pose and velocity of a quadruped
+robot on slippery and deformable terrain. The factor graph
+introduces a preintegrated velocity factor that incorporates
+velocity inputs from leg odometry and also estimates related
+biases.Fromourexperimentationwehaveseenthatitisdifﬁcult
+to model uncertainties at the contact point such as slip or
+deforming terrain, as well as leg ﬂexibility. To accommodate
+fortheseeffectsandtominimizelegodometrydrift,weextend
+the robot’s state vector with a bias term for this preintegrated
+velocity factor. The bias term can be accurately estimated
+thanks to the tight fusion of the preintegrated velocity factor
+with stereo vision and IMU factors, without which it would
+be unobservable. The system has been validated on several Fig.1. ANYmaltrottingoveraﬁeldofsmallrocksattheSwissMilitary
+scenariosthatinvolvedynamicmotionsoftheANYmalroboton RescueCentreinWangenanderAare(Switzerland).Thegroundtruthwas
+looserocks,slopesandmuddyground.Wedemonstratea26% collectedusingaLeicaTS16lasertracker(visibleinthebackground).
+improvement of relative pose error compared to our previous Video:http://youtu.be/w1Sx6dIqgQo
+work and 52% compared to a state-of-the-art proprioceptive
+state estimator. These approaches model the contact locations as being
+ﬁxed and affected only by Gaussian noise. Both assumptions
+I. INTRODUCTION
+fail in conditions such as non-rigid terrain, kinematic chain
+Theincreasedmaturityofleggedroboticshasbeendemon-
+ﬂexibility, and foot slippage.
+strated by the initial industrial deployments of quadruped
+robots, as well as impressive results achieved by academic A. Motivation
+research. State estimation plays a key role in ﬁeld deploy- Our work is motivated by the observation that there is
+ment of legged machines: without an accurate estimate of an approximately constant velocity bias from the kinematic-
+its location and velocity, the robot cannot build a useful inertial state estimator on the ANYmal robot during dynamic
+representation of its environment or plan/execute trajectories locomotion.AnexampleisshowninFig.2,wheretherobot’s
+to reach goal positions. estimated altitude grows linearly as the robot moves. We
+Most legged robots are equipped with a high frequency attribute this behavior to the compression of legs and the
+(>250Hz) proprioceptive state estimator for control and ground during the contact events.
+local mapping purposes. These are typically implemented One approach would be to further model the dynamic
+as nonlinear ﬁlters fusing high frequency signals such as properties of the robot [5] or the terrain directly within the
+kinematicsandIMU[1].Inidealconditions(i.e.highfriction, estimator. However, this is likely to be robot speciﬁc and
+rigidterrain),theseestimatorshavealimited(yetunavoidable) terrain dependent: improving performance in one situation
+drift that is acceptable for local mapping and control. but degrading it elsewhere. Instead, we propose to extend
+However, deformable terrains, leg ﬂexibility and slippage the state of the estimator with a velocity bias term which is
+can degrade the estimation performance up to a point estimated using vision and then to reject all such effects.
+where local terrain reconstruction is unusable and multi-step Inspired by the IMU bias estimation and preintegration
+trajectories cannot be executed, even over short ranges. This methodsfrom[6],weproposeanovellegodometryfactorthat
+problemismoreevidentwhenarobotismovingdynamically. performs online velocity preintegration and bias estimation
+Recent works have attempted to improve kinematic-inertial to compensate for characteristic drift in leg odometry.
+estimation accuracy by detecting unstable contacts and This factor was implemented as a concurrent thread within
+reducing their inﬂuence on the overall estimation [2], [3]. ourVILENSframework[7],avisual-inertial-leggedestimator
+Alternatively, some works have focused on incorporating which uses GTSAM for optimization [8]. Thanks to forward
+additional exteroceptive sensing modalities into the estimator propagation, the thread can output the best pose and velocity
+to help reduce the pose error [4]. estimates at 400Hz directly, or just update the bias terms
+of the estimator running inside the robot’s control loop. The
+The authors are with the Oxford Robotics Institute, Department of
+optimized estimate is available from the optimizer thread at
+EngineeringScience,UniversityofOxford,UK.
+{davidw, mcamurri, mfallon}@robots.ox.ac.uk at 30Hz for effective local mapping.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 392
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. 10 Ground Truth Pronto TSIF Sensor Model Hz Specs
+8 ◦ |
+[m] 6 IMU XsensMTi-100 400 IBniiatsBSiatasb::01.20◦//sh|51m5mgg
+Z
+on 4 Resolution:848×480px
+Positi 2 CSatmereeora RealSenseD435i 30 FImoVag:e9r1:.I2R◦g×lo6b5a.l5s◦hutter
+0
+◦
+Encoder ANYdrive 400 Resolution:<0.025
+0 100 200 300 400 500 600 700 800
+Time [s] Torque ANYdrive 400 Resolution:<0.1Nm
+Fig.2. ComparisonbetweenestimatedrobotaltitudebyPronto[2](blue) TABLEI
+andTSIF[9](magenta)kinematic-inertialstateestimators,againstground
+truth(green)ontheSMR1dataset.Despitelocalﬂuctuations,thedrifthasa Ma et al. [10] proposed an Extended Kalman Filter
+characteristiclineargrowth. (EKF) design that was Visual Odometry (VO) driven. They
+B. Contribution incorporated kinematics only when VO failed or a simple
+heuristic criteria was met (e.g., when roll or pitch are greater
+This paper builds upon state-of-the-art methods for online ◦
+than 45 slippage was assumed and leg odometry ignored).
+IMU bias estimation [6] and the authors’ previous work [7]
+Using high-grade sensors, they were able to achieve 1% error
+to improve state estimation performance of legged robots
+over several kilometers of experiments.
+in a variety of difﬁcult scenarios where kinematic-inertial
+Camurrietal.[2]proposedanEKFfusingIMUanddiffer-
+estimates would drift signiﬁcantly. Compared to previous
+ential kinematics similar to [1]. Instead of the Mahalanobis
+research, we present the following contributions:
+distance on the ﬁlter innovation, they developed probabilistic
+• We present a novel factor graph approach that tightly
+contact and impact detectors. The contact detector learns the
+fuses leg odometry as velocity constraints (as opposed
+optimalforcethresholdtodetectafootincontactforaspeciﬁc
+to position constraints), with stereo vision and IMU
+gait, while the impact detector adapts the measurement
+measurements;
+covariance to reject unreliable measurements. We used this
+• We present the ﬁrst visual-inertial-legged odometry
+approach to fuse each leg’s kinematic measurements into a
+solutionthatexplicitlyaccountsforerrorinlegodometry
+single velocity measurement for our proposed factor graph
+(that can be caused by terrain/leg deformation and
+method.
+slippage) by extending the state with a velocity bias
+Recently,Jeneltenetal.[3]presentedaprobabilisticcontact
+term;
+and slip detector which used a Hidden Markov Model for
+• We show that estimating leg odometry error can reduce
+the ANYmal quadruped robot. Using differential kinematics,
+RPEby26%inextensiveoutdoorexperimentsonmuddy
+the authors were able to successfully detect slippage events
+ground, slopes, and rockbeds with the ANYmal robot
+and robustify locomotion on slippery surfaces. However, they
+(Fig. 1).
+did not address pose estimate drift.
+The remainder of this article is presented as follows: in
+Section II we review the literature on mobile state estimation III. PROBLEMSTATEMENT
+with a focus on challenging, outdoor conditions; Section Our quadruped robot has 12 active Degrees-of-Freedom
+III formally deﬁnes the problem addressed by the paper (DoF) and is equipped with a stereo camera, an IMU,
+and provides the required mathematical background; Section joint encoders and torque sensors (see Table I for the
+IV describes the factors used in our proposed formulation; speciﬁcations). We aim to estimate the history of the robot’s
+Section V presents the implementation details of our physical base link pose and its velocity (linear and angular) over
+system;SectionVIpresentstheexperimentalresultsandtheir time. In contrast to previous works, we propose to estimate
+interpretation; Section VII concludes with ﬁnal remarks. velocity biases (in addition to IMU biases) to compensate
+for leg odometry drift, as detailed in the following section.
+II. RELATEDWORK The relevant reference frames are speciﬁed in Fig. 3 and
+In legged robotics, slippage and/or deformation have been include: the left camera frame C, the IMU frame I, the ﬁxed-
+typically addressed by assuming the contact location of a world frame W, and the base frame B. When a foot is in
+stance foot is always static throughout the stance period contact with the ground, a contact frame K is also deﬁned.
+(yet affected by Gaussian noise). Thus, the main focus has Unless otherwise speciﬁed, position p and orientation
+been on detecting and ignoring the feet that are not in ﬁxed R ofthebaseareexpressedinworldcoWorWdBinates,velocities
+WB
+contact with the ground. These methods would typically ofthebase v , ω areinbasecoordinates(see[11]),IMU
+perform ﬁltering using only proprioceptive sensing, with a biases bg,B WbBaBareWBexpressed in the IMU frame, and the
+few exceptions. velocityIbiaseIs bω, bv are expressed in the base frame.
+Bloesch et al. [1] proposed an Unscented Kalman Filter B B
+A. State Deﬁnition
+design that fuses IMU and differential kinematics. The
+approachusedathresholdontheMahalanobisdistanceofthe The robot state at time t is deﬁned as follows:
+i
+ﬁlter innovation to infer outliers which were then ignored. (cid:44)
+x [R ,p ,v ,b ] (1)
+i i i i i
+393
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. I m ... m ... m ...
+π 0 (cid:96) N
+C
+StereoVisual
+B
+(m) x0 IMU x1 x2 x3 ...
+StatePrior Preint.Twist ZeroVelocityMode
+W m bQ bQ bQ bQ
+0 1 2 3
+K Fig.4. VILENSfactorgraphstructure,showinginitialprior,visual,IMU,
+RF
+andpreintegratedvelocityfactors.Whenazerovelocitystateisdetected
+(e.g. between x2 and x3) then the velocity bias is not used and is kept
+constant(weassumethebiasisonlypresentwhentherobotismoving).
+Fig.3. Referenceframesconventions.TheworldframeWisﬁxedtoearth,
+whilethebaseframeB,thecamera’sopticalframeC,andtheIMUframe,I
+arerigidlyattachedtotherobot’schassis.Whenafoottouchestheground As the measurements are formulated as conditionally inde-
+(e.g.,theRightFront,RF),acontactframeK(perpendiculartotheground pendent and corrupted by w(cid:88)hite Gaussian noi(cid:88)se, Eq. (5) can
+andparalleltoW’sy-axis)isdeﬁned.Theprojectionofalandmarkpointm be formulated as a least squares minimization problem:
+ontotheimageplaneisπ(m).
+whe∈reR:Ri ∈SO(3)istheorientation,pi ∈R3istheposition, Xk∗ =argXmin(cid:107)(cid:88)r0(cid:107)2Σ0+ ∈ (cid:107)rI(cid:88)ij(cid:107)2ΣI(cid:88)ij+ ∈ (cid:107)rVij(cid:107)2ΣVij
+vi 3 isthelinearvelocity.Thebiasvectorbi iscomposed k (cid:107) i(cid:107)Kk (cid:107)i Kk (cid:107)
+as follows: + r 2 + r 2 (6)
+b =[bg ba, bω, bv]∈R12 (2) i∈Kk bij Σb i∈Kk(cid:96)∈Mi i,m(cid:96) Σm
+i i i i i
+where each term is the residual associated to a factor type,
+where the ﬁrst two elements are the usual IMU gyro and
+weighted by its covariance matrix; speciﬁcally the residuals
+accelerometerbiases,andthelasttwo[bω, bv]=bQ areour
+i i i are: state prior, IMU, velocity, biases and landmarks.
+proposed angular/linear velocity biases from leg odometry.
+This builds upon the formulation from our previous work IV. FACTORGRAPHFORMULATION
+[7], by incorporating a preintegrated velocity factor (as
+In the following sections we describe the measurements,
+opposed to a relative pose factor where the integration was
+residuals and covariances of the factors which compose the
+operated by an external ﬁlter).
+factorgraphshowninFig.4.Forconvenience,wesummarize
+In addition to the robot state, we estimate the position
+the IMU factors from [6] in Section IV-A; our novel velocity
+of all observed visual landmarks m(cid:96). The objective of our factor is detailed in Section IV-B; Sections IV-C and IV-
+estimation problem is then(cid:34)the union of all t(cid:35)he robot states
+(cid:91) (cid:91) D describe the bias and stereo visual residuals, which are
+and landmarks visible up to the current time tk: adapted from [6], [7] to include the velocity bias term and
+stereo cameras, respectively.
+X (cid:44) { } { }
+x , m (3)
+k i (cid:96)
+∀∈ ∀ ∈ A. Preintegrated IMU Factors
+i Kk (cid:96) Mi
+where K ,M are the lists of all the keyframe indices up In the standard manner, the IMU measurements are
+k i
+to time t and all landmark indices visible at time t , preintegrated to constrain the pose and velocity between two
+k i
+respectively. consecutive nodes of th(cid:104)e graph, and provide(cid:105)high frequency
+state updates between them. This uses a residual of the form:
+B. Measurements Deﬁnition
+C
+For each new stereo camera frame , collected at time rI = rT ,rT ,rT (7)
+i I ij ∆Rij ∆vij ∆pij
+t , we receive a number of IMU measurements collected I
+i V ij where are the I(cid:16)MU measur(cid:17)ements between t and t . The
+between t and t . We also deﬁne as the angular and ij i j
+i j ij individual elements of the residual are deﬁned as:
+linear velocity measurements from an external source of
+lfeogr tohdeomfuestiroyn(oPfromntuoltioprleTSleIgFs).inThciosnstoacutrcientwooounledvaeclcoocuitnyt r∆Rij =Log(cid:18)∆−R˜ij(b−gi) RTiR−j (cid:19) (8)
+measurement per joint s(cid:91)tate measurement. The set of all r∆vij =RTi (vj vi g∆tij) ∆v˜ij(bgi,bai) (9)
+measurements up to time t is therefore deﬁned as: − − − 1
+k r =RT p p v ∆t g∆t2
+Z (cid:44) {C I V } ∆pij i j i i ij 2 ij
+, , (4) −
+k ∀i∈Kk i ij ij ∆p˜ij(bgi,bai) (10)
+C. Maximum-a-Posteriori Estimation for the deﬁnition of the preintegrated IMU measurements
+We wish to maximize the likelihood of the measurements ∆R˜ ,∆p˜ ,∆v˜ , the noise terms δφ,δv,δp, and the
+Z X ij ij ij
+given the history of states : covariance matrix ΣI , the reader is invited to consult [6].
+k k ij
+X∗ X |Z ∝ X Z |X
+=argmaxp( ) p( )p( ) (5)
+k X k k 0 k k
+k
+394
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. (cid:88)(cid:104) (cid:105)
+B. Preintegrated Velocity Factors the preintegrated position measurement ∆p˜ and noise δp as:
+1) Leg Odometry: When a leg is in rigid, non-slipping j−1
+(cid:44) −
+contact with the ground, the robot’s linear velocity can be ∆p˜ij (cid:88)(cid:104)∆R˜ik(v˜k bvi)∆t ((cid:105)18)
+computed from the foot velocity and position in base frame:
+k=i
+−
+BvWB =−BvBK−BωWB×BpBK (11) δpij (cid:44) j 1 ∆R˜ikηvk∆t−∆R˜ik(v˜k−bvi)∧δφij∆t
+From the sensed joint positions and velocities q˜,q˜˙ and k=i
+(19)
+noise ηq,ηq˙ we can rewrite Eq. (11) as a linear velocity
+measurement [1]: Note that both quantities still depend on the bias states bQ =
+− − · − − × − [bω,bv]; when these change, we would like to avoid the
+v˜ = J(q˜ ηq) (q˜˙ ηq˙) ω f(q˜ ηq) (12) recomputation of Eq. (18). Given a small change δbQ such
+where f(·) and J(·) are the forward kinematics function and that bQ =b¯Q+δbQ, we approximate the measurement as:
+its Jacobian, respectively. (cid:39) ∂∆p ∂∆p
+Eq. (12) is valid only when the corresponding leg is in ∆p˜ij(bQ) ∆p˜ij(b¯Q)(cid:104)+ ∂bωijδbω(cid:105)+ ∂bvijδbv (20)
+contactwiththeground.However,thishappensintermittently 4) Residuals: the velocity residual can be expressed as:
+while the robot moves. Since multiple legs can be in contact
+simultaneously, measurement fusion is necessary. To do this rVij = rT∆Rij,rT∆pij (21)
+we take advantage of the contact detection and sensor fusion where r has the same form as Eq. (8) and r is:
+features of the EKF ﬁlter in [2] and use it as an independent ∆Rij − − ∆pij
+source of uniﬁed velocity measurements v˜,ω˜. r∆pij =RTi (pj pi) ∆p˜ij(bωi,bvi) (22)
+2) Velocity Bias: On slippery/deformable terrains, the 5) Covariance: After simple manipulation of Eq. 19, the
+constraint from Eq. (11) might not be respected, leading covariance of the residual r can be expressed as a linear
+∆pij
+to leg odometry drift and inconsistency with visual odometry. combination of the preintegrated and current sensor noise:
+In our experience this drift is constant and gait dependent.
+ΣV =AΣV AT+B ΣηV BT (23)
+For these reasons, we relax Eq. (11) by adding a slowly ik+1 ik
+varying bias term bv to Eq. (12). As in [1], we also collect ΣV (cid:20)evolvesovertimewhileΣηV(cid:21)isﬁxed(cid:20)anddependssenso(cid:21)r
+ik
+all the effects of encoder noise into a single term, leading to: speciﬁcations. The multiplicative terms are:
+v˜ =−J(q˜)q˜˙ −ω×f(q˜)+bv+ηv (13) A= − ∆R˜−Tik ∧ 0 ,B = Jrk∆t 0
+∆R˜ (v˜ bv) ∆t I 0 ∆R˜ ∆t
+ω˜ =ω+bω+ηω (14) ik k ik(24)
+where the parameters for ηv,ηω are provided by the source where Jr is the right Jacobian of SO(3) and the other terms
+of velocity measurements. are manipulations of δφ and δp from [6] and Eq. (19).
+3) Preintegrated Measurements: In the following, we C. Bias Residuals
+derive the the preintegrated position and noise only. For
+The biases from Eq. (2) are intended to change slowly
+the respective rotational quantities ∆R˜ and δφ, we refer to
+and are therefore modeled as a Gaussian random walk. The
+[6], as they have the same form as for IMU measurements.
+residual term for the cost function is therefore:
+Assuming constant velocity between t and t , we can
+iteratively calculate th(cid:88)je−p1osition at time tjias: j (cid:107)rbij(cid:107)2Σb (cid:44)(cid:107)bgj+−(cid:107)bbgiω(cid:107)−2Σbbgω+(cid:107)2(cid:107)baj+−(cid:107)bbaiv(cid:107)2Σ−bab+v(cid:107)2 (25)
+p =p + [R (v˜ −bv−ηv)∆t] (15) j i Σbω j i Σbv
+j i k k i k wherethecovariancematricesaredeterminedbytheexpected
+k=i rate of change of these quantities, depending on the IMU
+(cid:88)
+From Eq. (15) a relative measurement can be obtained:
+speciﬁcations or the drift rate of the leg odometry.
+−
+− j 1 − − D. Stereo Visual Factors
+∆p =RT(p p )= [∆R (v˜ bv ηv)∆t)]
+ij i j i ik k k k Given a stereo pair of rectiﬁed images, the stereo vi-
+k=i (16) sual odometry residual is the difference between the mea-
+−
+With the substitution ∆R = ∆R˜ Exp( δφ ) to sured landmark pixel locations (uL,v),(uR,v), and the re-
+ik ik ik
+include the preintegrated rotation measurement, and the projection of the estimated landmark location into image
+approximati(cid:88)on (cid:104)Exp(φ)(cid:39)I+φ∧, Eq. (16) becomes(cid:105): coordinates, (πL,π ),(πR,π ) using the standard radial-
+u v u v
+− tangential distortionmodel. The residual atpose i for
+j 1
+∆p (cid:39) ∆R˜ (I−δφ∧)(v˜ −bv−ηv)∆t (17) landmark m(cid:96) is:  
+ij ik ik k i k −
+πL(R ,p ,m ) uL
+k=i u i i (cid:96) − i,(cid:96)
+By separating the measurement and noise components of ri,m(cid:96) = πuR(Ri,pi,m(cid:96))−uRi,(cid:96) (26)
+Eq. (17) and ignoring the higher order terms, we can deﬁne πv(Ri,pi,m(cid:96)) vi,(cid:96)
+where Σ is computed using an uncertainty of 0.5 pixels.
+m
+395
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. IMU Thread Image Thread
+IMU Preintegr. Feature Tracking
+Stereo Matching
+Leg Odom. Thread
+EKF
+Optimization Thread
+Marginalization
+Velocity Thread
+Vel. Preintegr. New Factors
+Incremental Opt.
+Forward Propagation
+Control Loop Local Mapping
+(400Hz) (30 Hz)
+Fig.6. Onboardcamerafeedfromthefourscenariosevaluated.Topleft:wet
+Fig.5. TheVILENSarchitecturewithpreintegratedvelocitybiasestimation. concrete(FSC);Topright:gravelandgrass(SMR1);Bottomleft:rockbeds
+(SMR2);Bottomright:muddygrassuphill(SMR3).
+V. IMPLEMENTATION
+The state estimation architecture is shown in Fig. 5.
+10mRelativePoseError(RPE)µ(σ)[m]
+Four parallel threads execute the following operations:
+Data TSIF[9] V-VI V-RP[7] V-VB
+preintegration of the IMU factor, preintegration of the
+velocity factor, stereo feature tracking, and optimization. FSC 0.49(0.36) 0.42(0.32) 0.47(0.40) 0.36(0.30)
+SMR1 0.96(0.44) 0.36(0.29) 0.36(0.32) 0.36(0.33)
+This approach outputs 400Hz velocity and pose estimates SMR2 0.69(0.23) 0.24(0.16) 0.45(0.10) 0.24(0.16)
+from the preintegration thread for use by the robot’s control SMR3 0.87(0.42) 0.43(0.48) 0.53(0.46) 0.39(0.48)
+system,anda30Hzoutputfromthefactor-graphoptimization
+TABLEII
+thread for use by local mapping. When a new keyframe
+is processed, the preintegrated measurements and tracked • FSC a 240m long trajectory consisting of three loops
+landmarks are collected by the optimization thread, while on wet concrete, standing water/oil, gravel and mud;
+the other threads process the next set of measurements. The • SMR1 a 106m straight trot over concrete, gravel and
+factor graph optimization is implemented using the efﬁcient high grass, followed by two loops on short grass
+incremental optimization solver iSAM2 [12], which is part alternating between dynamic and static gaits;
+of the GTSAM library [13]. We limit the number of states in • SMR2 a 22m straight trot on rockbeds;
+the graph to 500 to keep the optimization time approximately • SMR3 a 35m trot in a loop uphill with grass, mud
+constant. and external disturbances applied to the robot to cause
+slippage events.
+A. Visual Feature Tracking
+The ﬁrst dataset was collected at Fire Service College (FSC),
+We detect features using the FAST corner detector, and Moreton-on-Marsh, UK; the other three at the Swiss Military
+track them between successive frames using the KLT feature Rescue Center (SMR), Wangen an der Aare, Switzerland.
+tracker.OutliersarerejectedusingaRANSAC-basedrejection Different copies of the ANYmal robot were used in the ex-
+method. Thanks to the parallel architecture and incremental periments.Theattachedvideogivesasenseoftheconditions.
+optimization, all frames are used as keyframes, achieving To generate ground truth, we tracked the robot using the
+30Hznominaloutput.Incontrastto[7],weusetheDynamic Leica TS16 laser tracker (shown in Fig. 1), which provides
+Covariance Scaling (DCS) [14] robust cost function to millimeter accurate position measurements at 5Hz. The
+reduce the effect of landmark correspondence outliers on orientation was reconstructed with an optimization method
+the optimization. similar to that used by the EuRoC dataset [15].
+We have evaluated the Relative Pose Error (RPE) over a
+B. Zero Velocity Update Factors
+distance of 10m for the following algorithms:
+To limit drift and factor graph growth when the robot is
+• V-VB:VILENSwithourproposedvelocitybiasfactors;
+stationary, we enforce zero velocity updates on the different
+• V-RP: VILENS with leg odometry integrated as relative
+sensormodalities(camera,IMU,andlegodometry).Iftwoout
+pose factors, as used in our previous work [7];
+ofthreemodalitiesreportnomotion,azerovelocityconstraint
+• V-VI: a pure visual inertial navigation system (i.e.,
+factor is added to the graph. The IMU and leg odometry
+VILENS without leg odometry factors);
+threads report zero velocity when position (rotation) is less
+◦ • TSIF:defaultANYmalstateestimator[9],ourbaseline.
+than0.1mm(0.5 )betweentwokeyframes.Theimagethread
+Note that the same IMU and camera settings have been used
+reports zero velocity when less than 0.5pixels displacement
+forallconﬁgurationsanddatasets.Also,incomparisontoour
+of all the features is detected over the same period.
+previous work [7], the robustness of visual feature tracking
+VI. EXPERIMENTALRESULTS has been improved due to the introduction of stereo factors,
+We have tested our proposed algorithm on a variety of higher framerates and robust cost functions.
+terrain types for a total time of 53min and 403m traveled The results are summarized in Table II. In three of the
+distance. The datasets consist of four scenarios (Fig. 6): four datasets (FSC, SMR2 and SMR3), V-VI is able to
+396
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. GT 0.03
+V-VB /s] Estimated Actual
+m
+Z [0.02
+as 
+Bi
+city 0.01
+o
+el
+V 0
+0 100 200 300 400 500 600 700 800
+Time [s]
+0 5 10 m
+Fig.9. Usingvisualinformation,VILENSisabletoaccuratelyandstably
+estimatethebiasofthekinematic-inertialestimate.Experiment:SMR1.
+cm
+Fig.7. AerialviewofthetrajectoriesformethodV-VBandthegroundtruth
+20
+ontheFSCdataset(240mtraveled).Thecommonstartpointisindicated
+with a circle and the two endpoints with a cross. The lower part of the
+15
+trajectoryhasnogroundtruth.NotethatV-VBhasnoloop-closuresystem.
+10
+GT V-VB V-VI
+5
+0
+-5
+Fig.10. TerrainreconstructioncomparisonbetweenTSIF[9](left)and
+VILENS(right).Therobotwalksfromthebottomrightcornertothecenter
+0 1 2 m oftheimageandturns90◦ right.VILENSeliminatesthe15cmdriftand
+drasticallyreducesthenumberofartifactsontheelevationmap.
+Fig.8. Left:Onboardimageofavisuallychallengingscenecontaining
+reﬂectionsfromalarge,oilypuddle.Right:Top-downcomparisonofV-VB between the two signals demonstrates the effectiveness of leg
+andV-VItrajectoriesalignedwithgroundtruthwhilecrossingthepuddle.
+odometry drift rejection.
+outperformV-RP.Thisisbecausethedatasetsaredesignedto C. Terrain Reconstruction Assessment
+be particularly challenging for leg odometry. Therefore, the We have evaluated the quality of local terrain mapping
+inclusionofrelativeposefactorswithoutcompensatingforleg during a sequence of walking and turning on ﬂat ground
+odometrydriftactuallydegradestheperformancecomparedto fromtheFSCdataset(Fig.10).DuetodriftintheANYmal’s
+a visual-inertial only system. With the preintegrated velocity internal ﬁlter [9], the elevation map contains a phantom
+bias estimation, leg odometry improves the estimate up to discontinuity in front of the robot (encircled in black). With
+14% compared to V-VI and 26% compared to V-RP. VILENS, the drift is reduced for effective footstep planning.
+The global performance is shown in Fig. 7, which depicts
+VII. CONCLUSION
+the estimated and ground truth trajectories on the 240m FSC
+dataset. By incorporating visual information to reject drift, We have presented a novel factor graph formulation for
+the ﬁnal z position of V-VB is 8.6cm above ground truth, state estimation that estimates preintegrated velocity factors
+compared to a drift of 4.02m from the TSIF kinematic- forlegodometryandvelocitybiasestimationtoaccommodate
+inertial estimator. Note that since VILENS is an odometry for leg odometry drift. These bias effects are difﬁcult to
+system, no loop closures have been performed. directly model, we instead infer them from vision. The
+redundancy of our approach is also demonstrated in visual
+A. Analysis of Visually Challenging Episodes
+impoverishedsituationswhichvisionalongwouldstruggle.In
+Most of the datasets presented favorable conditions for VO these situations, our system gracefully relies on leg odometry
+(well lit static scenes with texture). However, there were also and the velocity bias estimation compensates for its drift.
+certain locations where feature tracking struggled. We have demonstrated the robustness of our method with
+Fig. 8 shows a situation from FSC dataset where the robot outdoorexperimentswhichincludeconditionssuchasslippery
+traversesalargepuddle.V-VItracksthefeaturesonthewater, and deformable terrain, reﬂections, and external disturbances
+causing drift in the lateral direction. Instead, V-VB maintains applied to the robot.
+a better pose estimate by relying on leg odometry, whose
+VIII. ACKNOWLEDGEMENTS
+drift is suppressed using the estimated velocity bias.
+This research has been conducted as part of the ANYmal
+B. Velocity Bias Evolution
+research community. It was part funded by the EU H2020
+We have compared the estimated online bias in the z-axis Projects THING and MEMMO, a Royal Society University
+to a lowpass ﬁltered version of the same signal from the Research Fellowship (Fallon) and a Google DeepMind
+Pronto EKF [2] (Fig. 9). The sequence analyzed is the same studentship (Wisth). Special thanks to Ruben Grandia and
+as the one shown in Fig. 2. Since the z-axis position and Matthew Jose Pollayil for the support during experiments
+average velocity of the robot are zero, the high correlation and the RSL group (ETH) for general support.
+397
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[1] M.Bloesch,C.Gehring,P.Fankhauser,M.Hutter,M.A.Hoepﬂinger,
+and R. Siegwart, “State estimation for legged robots on unstable
+andslipperyterrain,”inIEEEInternationalConferenceonIntelligent
+RobotsandSystems,2013,pp.6058–6064.
+[2] M.Camurri,M.Fallon,S.Bazeille,A.Radulescu,V.Barasuol,D.G.
+Caldwell,andC.Semini,“Probabilisticcontactestimationandimpact
+detectionforstateestimationofquadrupedrobots,”IEEERoboticsand
+AutomationLetters,vol.2,no.2,pp.1023–1030,2017.
+[3] F.Jenelten,J.Hwangbo,F.Tresoldi,C.D.Bellicoso,andM.Hutter,
+“Dynamic locomotion on slippery ground,” IEEE Robotics and
+AutomationLetters,vol.4,no.4,pp.4170–4176,Oct2019.
+[4] R.Hartley,M.G.Jadidi,L.Gan,J.-K.Huang,J.W.Grizzle,andR.M.
+Eustice,“Hybridcontactpreintegrationforvisual-inertial-contactstate
+estimationwithinfactorgraphs,”inIEEEInternationalConferenceon
+IntelligentRobotsandSystems,2018.
+[5] T. Koolen, S. Bertrand, G. Thomas, T. De Boer, T. Wu, J. Smith,
+J. Englsberger, and J. Pratt, “Design of a momentum-based control
+frameworkandapplicationtothehumanoidrobotatlas,”International
+JournalofHumanoidRobotics,vol.13,no.01,p.1650007,2016.
+[6] C.Forster,L.Carlone,F.Dellaert,andD.Scaramuzza,“On-manifold
+preintegrationforreal-timevisual-inertialodometry,”IEEETransac-
+tionsonRobotics,vol.33,no.1,pp.1–21,2017.
+[7] D. Wisth, M. Camurri, and M. Fallon, “Robust legged robot state
+estimation using factor graph optimization,” IEEE Robotics and
+AutomationLetters,2019.
+[8] F.Dellaert,“FactorGraphsandGTSAM:AHands-onIntroduction,
+Tech.Rep.September,2012.[Online].Available:https://research.cc.
+gatech.edu/borg/sites/edu.borg/ﬁles/downloads/gtsam.pdf
+[9] M.Bloesch,M.Burri,S.Omari,M.Hutter,andR.Siegwart,“Iterated
+extended Kalman ﬁlter based visual-inertial odometry using direct
+photometric feedback,” International Journal of Robotics Research,
+vol.36,no.10,pp.1053–1072,2017.
+[10] J. Ma, M. Bajracharya, S. Susca, L. Matthies, and M. Malchano,
+“Real-timeposeestimationofadynamicquadrupedinGPS-denied
+environmentsfor24-houroperation,”InternationalJournalofRobotics
+Research,vol.35,no.6,pp.631–653,2016.
+[11] P. Furgale, “Representing Robot Pose: The good, the bad, and the
+ugly,”2014.[Online].Available:http://paulfurgale.info/news/2014/6/9/
+representing-robot-pose-the-good-the-bad-and-the-ugly
+[12] M. Kaess, H. Johannsson, R. Roberts, V. Ila, J. J. Leonard, and
+F.Dellaert,“ISAM2:Incrementalsmoothingandmappingusingthe
+Bayestree,”InternationalJournalofRoboticsResearch,vol.31,no.2,
+pp.216–235,2012.
+[13] F.DellaertandM.Kaess,FactorGraphsforRobotPerception,2017,
+vol. 6, no. 1-2. [Online]. Available: http://www.nowpublishers.com/
+article/Details/ROB-043
+[14] K.MacTavishandT.D.Barfoot,“AtAllCosts:Acomparisonofrobust
+costfunctionsforcameracorrespondenceoutliers,”inConferenceon
+ComputerandRobotVision,2015,pp.62–69.
+[15] M. Burri, J. Nikolic, P. Gohl, T. Schneider, J. Rehder, S. Omari,
+M.W.Achtelik,andR.Siegwart,“TheEuRoCmicroaerialvehicle
+datasets,”InternationalJournalofRoboticsResearch,vol.35,no.10,
+pp.1157–1163,2016.
+398
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 16:05:57 UTC from IEEE Xplore.  Restrictions apply. 

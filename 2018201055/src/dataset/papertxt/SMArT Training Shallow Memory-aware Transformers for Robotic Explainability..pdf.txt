@@ -1,0 +1,544 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Kimera: an Open-Source Library for Real-Time
+Metric-Semantic Localization and Mapping
+Antoni Rosinol, Marcus Abate, Yun Chang, Luca Carlone
+Fig.1: Kimera is an open-source C++ library for real-time metric-semantic SLAM. It provides (a) visual-inertial state estimates at IMU
+rate,andagloballyconsistentandoutlier-robusttrajectoryestimate,computes(b)alow-latencylocalmeshofthescenethatcanbeused
+forfastobstacleavoidance,andbuilds(c)aglobalsemanticallyannotated3Dmesh,whichaccuratelyreﬂectsthegroundtruthmodel(d).
+Abstract—We provide an open-source C++ library for real- I. INTRODUCTION
+time metric-semantic visual-inertial Simultaneous Localization
+AndMapping(SLAM).Thelibrarygoesbeyondexistingvisual Metric-semantic understanding is the capability to simul-
+and visual-inertial SLAM libraries (e.g., ORB-SLAM, VINS-
+taneously estimate the 3D geometry of a scene and attach a
+Mono, OKVIS, ROVIO) by enabling mesh reconstruction and
+semantic label to objects and structures (e.g., tables, walls).
+semantic labeling in 3D. Kimera is designed with modularity
+in mind and has four key components: a visual-inertial odom- Geometricinformationiscriticalforrobotstonavigatesafely
+etry (VIO) module for fast and accurate state estimation, a and to manipulate objects, while semantic information pro-
+robustpose graphoptimizerforglobal trajectoryestimation,a vides the ideal level of abstraction for a robot to understand
+lightweight3Dmeshermoduleforfastmeshreconstruction,and
+and execute human instructions (e.g., “bring me a cup of
+a dense 3D metric-semantic reconstruction module. The mod-
+coffee”, “exit from the red door”) and to provide humans
+ules can be run in isolation or in combination, hence Kimera
+can easily fall back to a state-of-the-art VIO or a full SLAM with models of the environment that are easy to understand.
+system. Kimera runs in real-time on a CPU and produces a Despite the unprecedented progress in geometric recon-
+3D metric-semantic mesh from semantically labeled images, struction (e.g., SLAM [1], Structure from Motion [2], and
+which can be obtained by modern deep learning methods. We
+Multi-View Stereo [3]) and deep-learning-based semantic
+hope that the ﬂexibility, computational efﬁciency, robustness,
+segmentation(e.g.,[4]–[10]),researchinthesetwoﬁeldshas
+and accuracy afforded by Kimera will build a solid basis for
+future metric-semantic SLAM and perception research, and traditionally proceeded in isolation. However, recently there
+will allow researchers across multiple areas (e.g., VIO, SLAM, hasbeenagrowinginteresttowardsresearchandapplications
+3D reconstruction, segmentation) to benchmark and prototype at the intersection of these areas [1], [11]–[15].
+their own efforts without having to start from scratch.
+This growing interest motivated us to create and release
+SUPPLEMENTARYMATERIAL Kimera, a library for metric-semantic localization and map-
+https://github.com/MIT-SPARK/Kimera ping that combines the state of the art in geometric and
+https://www.youtube.com/watch?v=-5XxXRABXJs semantic understanding into a modern perception library.
+Contrary to related efforts targeting visual-inertial odometry
+(VIO) and SLAM, we combine visual-inertial SLAM, mesh
+A.Rosinol,M.Abate,Y.Chang,L.CarlonearewiththeLaboratoryforIn-
+formation&DecisionSystems(LIDS),MassachusettsInstituteofTechnol- reconstruction, and semantic understanding. Our effort also
+ogy,Cambridge,MA,USA,{arosinol,mabate,yunchang,lcarlone}@mit.edu complements approaches at the boundary between metric
+This work was partially funded by ARL DCIST CRA W911NF-17-2-
+and semantic understanding in several aspects. First, while
+0181,MITLincolnLaboratory,and‘laCaixa’Foundation(ID100010434),
+undertheagreementLCF/BQ/AA18/11680088(A.Rosinol). existingeffortsfocusonRGB-Dsensing,Kimerausesvisual
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1689
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. Method Sensors Back-end Geometry Sema- the hybrid nature of our library, that uniﬁes state-of-the-
+ntics
+ORB-SLAM[22] mono g2o points  art efforts across research areas, including VIO, pose graph
+DSO[23] mono g2o points  optimization (PGO), mesh reconstruction, and 3D semantic
+VINS-mono[24] mono/IMU Ceres points 
+segmentation. Kimera includes four key modules:
+VINS-Fusion[25] mono/stereo/IMU Ceres points 
+ROVIOLI[26] stereo/IMU EKF points  • Kimera-VIO: a VIO module for fast and accurate
+SVO-GTSAM[27] mono/IMU GTSAM points 
+IMU-rate state estimation. At its core, Kimera-VIO fea-
+ElasticFusion[18] RGB-D alternation surfels 
+Voxblox[28] RGB-D [26] TSDF  tures a GTSAM-based VIO approach [45], using IMU-
+SLAM++[16] RGB-D alternation objects  preintegration and structureless vision factors [27], and
+SemanticFusion[17] RGB-D [18] surfels 
+achieves top performance on the EuRoC dataset [19];
+Mask-fusion[29] RGB-D [30] surfels 
+SegMap[31] lidar GTSAM points/segments  • Kimera-RPGO:arobustposegraphoptimization(RPGO)
+XIVO[32] mono/IMU EKF objects 
+method that capitalizes on modern techniques for outlier
+Voxblox++[14] RGB-D [26] TSDF 
+rejection [46]. Kimera-RPGO adds a robustness layer that
+Kimera mono/stereo/IMU GTSAM mesh/TSDF 
+avoids SLAM failures due to perceptual aliasing, and
+TABLE I: Related open-source libraries for visual and visual-
+relieves the user from time-consuming parameter tuning;
+inertial SLAM (top) and metric-semantic reconstruction (bottom).
+• Kimera-Mesher:amodulethatcomputesafastper-frame
+(RGB) and inertial sensing, which works well in a broader and multi-frame regularized 3D mesh to support obstacle
+varietyof(indoorandoutdoor)environments.Second,while avoidance. The mesher builds on previous algorithms by
+related works [16]–[18] require a GPU for 3D mapping, we the authors and other groups [43], [47]–[49];
+provideafast,lightweight,andscalableCPU-basedsolution. • Kimera-Semantics: a module that builds a slower-but-
+Finally, we focus on robustness: we include state-of-the- more-accurate global 3D mesh using a volumetric ap-
+art outlier rejection methods to ensure that Kimera executes proach[28],andsemanticallyannotatesthe3Dmeshusing
+robustly and with minimal parameter tuning across a variety 2D pixel-wise semantic segmentation.
+ofscenarios,fromrealbenchmarkingdatasets[19]tophoto-
+Kimeracanworkbothwithofﬂinedatasetsoronlineusing
+realistic simulations [20], [21].
+the Robot Operating System (ROS) [50]. It runs in real-time
+Related Work. We refer the reader to Table I for a
+on a CPU and provides useful debugging and visualization
+visual comparison against existing VIO and visual-SLAM
+tools. Moreover, it is modular and allows replacing each
+systems, and to [1] for a broader review on SLAM. While
+module or executing them in isolation. For instance, it
+earlyworkonmetric-semanticunderstanding[11],[33]were
+can fall back to a VIO solution or can simply estimate a
+designed for ofﬂine processing, recent years have seen a
+geometric mesh if the semantic labels are not available.
+surgeofinteresttowardsreal-timemetric-semanticmapping,
+triggered by pioneering works such as SLAM++ [16]. Most II. KIMERA
+of these works (i) rely on RGB-D cameras, (ii) use GPU Fig. 2 shows Kimera’s architecture. Kimera takes stereo
+processing, (iii) alternate tracking and mapping (“alterna- frames and high-rate inertial measurements as input and
+tion” in Table I), and (iv) use voxel-based (e.g., Trun- returns (i) a highly accurate state estimate at IMU rate, (ii)
+cated Signed Distance Function, TSDF), surfel, or ob- a globally-consistent trajectory estimate, and (iii) multiple
+ject representations. Examples include SemanticFusion [17], meshes of the environment, including a fast local mesh and
+the approach of Zheng et al. [15], Tateno et al. [34], a global semantically annotated mesh. Kimera is heavily
+and Li et al. [35], Fusion++ [36], Mask-fusion [29], Co- parallelized and uses four threads to accommodate inputs
+fusion [37], and MID-Fusion [38]. Recent work investigates andoutputsatdifferentrates(e.g.,IMU,frames,keyframes).
+CPU-based approaches, e.g., Wald et al. [39], PanopticFu- Here we describe the architecture by threads, while the
+sion [40], and Voxblox++ [14]; these also rely on RGB- descriptionofeachmoduleisgiveninthefollowingsections.
+D sensing. A sparser set of contributions address other The ﬁrst thread includes the Kimera-VIO front-end (Sec-
+sensingmodalities,includingmonocularcameras(e.g.,CNN- tion II-A) that takes stereo images and IMU data and
+SLAM [41], VSO [42], VITAMIN-E [43], XIVO [32]) and outputs feature tracks and preintegrated IMU measurements.
+lidar(e.g.,SemanticKitti[44],SegMap[31]). XIVO[32]and The front-end also publishes IMU-rate state estimates. The
+Voxblox++ [14] are the closest to our proposal. XIVO [32] second thread includes (i) the Kimera-VIO back-end, that
+is an EKF-based visual-inertial approach and produces an outputs optimized state estimates, and (ii) Kimera-Mesher
+object-basedmap.Voxblox++[14]reliesonRGB-Dsensing, (Section II-C), that computes low-latency (< 20ms) per-
+wheel odometry, and pre-built maps using maplab [26] to frame and multi-frame 3D meshes. These two threads allow
+obtainvisual-inertialposeestimates.Contrarytotheseworks, creating the per-frame mesh in Fig. 2(b) (which can also
+Kimera(i)providesahighly-accuratereal-timeoptimization- come with semantic labels as in Fig. 2(c)), as well as
+based VIO, (ii) uses a robust and versatile pose graph opti- the multi-frame mesh in Fig. 2(d). The last two threads
+mizer, and (iii) provides a lightweight mesh reconstruction. operate at slower rate and are designed to support low-
+Contribution. We release Kimera, an open-source C++ frequency functionalities, such as path planning. The third
+library that uses visual-inertial sensing to estimate the state thread includes Kimera-RPGO (Section II-B), a robust PGO
+of the robot and build a lightweight metric-semantic mesh implementation that detects loop closures, rejects outliers,
+model of the environment. The name Kimera stems from andestimatesagloballyconsistenttrajectory(Fig.2(a)).The
+1690
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. Fig. 2: Kimera’s architecture. Kimera uses images and IMU data as input (shown on the left) and outputs (a) pose estimates and (b-e)
+multiplemetric-semanticreconstructions.Kimerahas4keymodules:Kimera-VIO,Kimera-RPGO,Kimera-Mesher,Kimera-Semantics.
+last thread includes Kimera-Semantics (Section II-D), that model of [27]. The factor graph is solved using iSAM2 [56]
+uses dense stereo and 2D semantic labels to obtain a reﬁned in GTSAM [57]. At each iSAM2 iteration, the structureless
+metric-semanticmesh,using Kimera-VIO’sposeestimates. vision model estimates the 3D position of the observed
+features using DLT [58] and analytically eliminates the
+A. Kimera-VIO: Visual-Inertial Odometry Module
+corresponding 3D points from the VIO state [59]. Before
+Kimera-VIO implements the keyframe-based maximum- elimination,degeneratepoints(i.e.,pointsbehindthecamera
+a-posteriori visual-inertial estimator presented in [27]. In or without enough parallax for triangulation) and outliers
+our implementation, the estimator can perform both full (i.e., points with large reprojection error) are removed, pro-
+smoothingorﬁxed-lagsmoothing,dependingonthespeciﬁed vidinganextrarobustnesslayer.Finally,statesthatfalloutof
+time horizon; we typically use the latter to bound the the smoothing horizon are marginalized out using GTSAM.
+estimation time. We also extend [27] to work with both
+B. Kimera-RPGO:RobustPoseGraphOptimizationModule
+monocularandstereoframes.Kimera-VIOincludesa(visual
+and inertial) front-end which is in charge of processing the Kimera-RPGO is in charge of (i) detecting loop closures
+raw sensor data, and a back-end, that fuses the processed between the current and past keyframes, and (ii) computing
+measurementstoobtainanestimateofthestateofthesensors globally consistent keyframe poses using robust PGO.
+(i.e., pose, velocity, and sensor biases). 1) Loop Closure Detection: The loop closure detection
+1) VIO Front-end: Our IMU front-end performs on- relies on the DBoW2 library [60] and uses a bag-of-word
+manifoldpreintegration[27]toobtaincompactpreintegrated representation to quickly detect putative loop closures. For
+measurements of the relative state between two consecutive each putative loop closure, we reject outlier loop closures
+keyframes from raw IMU data. The vision front-end detects using mono and stereo geometric veriﬁcation (as described
+Shi-Tomasicorners[51],tracksthemacrossframesusingthe in Section II-A), and pass the remaining loop closures to
+Lukas-Kanade tracker [52], ﬁnds left-right stereo matches, the robust PGO solver. Note that the resulting loop closures
+and performs geometric veriﬁcation . We perform both can still contain outliers due to perceptual aliasing (e.g., two
+mono(cular) veriﬁcation using 5-point RANSAC [53] and identical rooms on different ﬂoors of a building).
+stereo veriﬁcation using 3-point RANSAC [54]; the code 2) RobustPGO: ThismoduleisimplementedinGTSAM,
+also offers the option to use the IMU rotation and perform and includes a modern outlier rejection method, Incremental
+mono and stereo veriﬁcation using 2-point [55] and 1-point Consistent Measurement Set Maximization (PCM) [46], that
+RANSAC, respectively. Feature detection, stereo matching, we tailor to a single-robot and online setup. We store sep-
+and geometric veriﬁcation are executed at each keyframe, arately the odometry edges (produced by Kimera-VIO) and
+while we only track features at intermediate frames. the loop closures (produced by the loop closure detection);
+2) VIO Back-end: At each keyframe, preintegrated IMU each timethe PGO is executed,we ﬁrst selectthe largest set
+and visual measurements are added to a ﬁxed-lag smoother ofconsistentloopclosuresusingamodiﬁedversionofPCM,
+(a factor graph) which constitutes our VIO back-end. We and then execute GTSAM on the pose graph including the
+usethepreintegratedIMUmodelandthestructurelessvision odometry and the consistent loop closures.
+1691
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. PCMisdesignedforthemulti-robotcaseandonlychecks end,whichresultsinatightcouplingbetweenVIOandmesh
+that inter-robot loop closures are consistent. We developed regularization, see [47] for further details.
+a C++ implementation of PCM that (i) adds an odometry
+D. Kimera-Semantics: Metric-Semantic Segmentation
+consistencycheck ontheloopclosuresand(ii)incrementally
+We adapt the bundled raycasting technique introduced in
+updates the set of consistent measurements to enable online
+[28] to (i) build an accurate global 3D mesh (covering the
+operation.Theodometrycheckveriﬁesthateachloopclosure
+entire trajectory), and (ii) semantically annotate the mesh.
+(e.g., l in Fig. 2(a)) is consistent with the odometry (in red
+1 1) Global mesh: Our implementation builds on Voxblox
+in the ﬁgure): in the absence of noise, the poses along the
+[28] and uses a voxel-based (TSDF) model to ﬁlter out
+cycleformedbytheodometryandtheloopl mustcompose
+1 noise and extract the global mesh. At each keyframe, we
+to the identity. As in PCM, we ﬂag as outliers loops for
+use dense stereo (semi-global matching [62]) to obtain a
+whichtheerroraccumulatedalongthecycleisnotconsistent
+3D point cloud from the current stereo pair. Then we apply
+with the measurement noise using a Chi-squared test. If
+bundled raycasting using Voxblox [28], using the “fast”
+a loop detected at the current time t passes the odometry
+option discussed in [28]. This process is repeated at each
+check, we test if it is pairwise consistent with previous loop
+keyframe and produces a TSFD, from which a mesh is
+closures as in [46] (e.g., check if loops l and l in Fig. 2(a)
+1 2 extracted using marching cubes [63].
+are consistent with each other). While PCM [46] builds an
+∈ R × 2) Semantic annotation: Kimera-Semantics uses 2D se-
+adjacency matrix A L L from scratch to keep track of
+mantically labeled images (produced at each keyframe) to
+pairwise-consistentloops(whereListhenumberofdetected
+semantically annotate the global mesh; the 2D semantic
+loop closures), we enable online operation by building the
+labelscanbeobtainedusingoff-the-shelftoolsforpixel-level
+matrix A incrementally. Each time a new loop is detected,
+2D semantic segmentation, e.g., deep neural networks [7]–
+we add a row and column to the matrix A and only test
+[9], [64]–[69] or classical MRF-based approaches [70]. To
+the new loop against the previous ones. Finally, we use the
+this end, during the bundled raycasting, we also propagate
+fast maximum clique implementation of [61] to compute the
+thesemanticlabels.Usingthe2Dsemanticsegmentation,we
+largest set of consistent loop closures. The set of consistent
+attachalabeltoeach3Dpointproducedbythedensestereo.
+measurementsareaddedtotheposegraph(togetherwiththe
+Then, for each bundle of rays in the bundled raycasting, we
+odometry) and optimized using Gauss-Newton.
+build a vector of label probabilities from the frequency of
+C. Kimera-Mesher: 3D Mesh Reconstruction the observed labels in the bundle. We then propagate this
+information along the ray only within the TSDF truncation
+Kimera-Mesher can quickly generate two types of 3D
+distance (i.e., near the surface) to spare computation. In
+meshes: (i) a per-frame 3D mesh, and (ii) a multi-frame 3D
+other words, we spare the computational effort of updating
+meshspanningthekeyframesintheVIOﬁxed-lagsmoother.
+probabilities for the “empty” label. While traversing the
+1) Per-frame mesh: As in [47], we ﬁrst perform a 2D
+voxels along the ray, we use a Bayesian update to update
+Delaunay triangulation over the successfully tracked 2D
+the label probabilities at each voxel, similar to [17]. After
+features (generated by the VIO front-end) in the current
+bundledsemanticraycasting,eachvoxelhasavectoroflabel
+keyframe. Then, we back-project the 2D Delaunay triangu-
+probabilities, from which we extract the most likely label.
+lation to generate a 3D mesh (Fig. 2(b)), using the 3D point
+Themetric-semanticmeshisﬁnallyextractedusingmarching
+estimatesfromtheVIOback-end.Whiletheper-framemesh
+cubes[63].Theresultingmeshissigniﬁcantlymoreaccurate
+isdesignedtoprovidelow-latencyobstacledetection,wealso
+than the multi-frame mesh of Section II-C, but it is slower
+provide the option to semantically label the resulting mesh, ≈
+by texturing the mesh with 2D labels (Fig. 2(c)). to compute ( 0.1s, see Section III-D).
+2) Multi-frame mesh: The multi-frame mesh fuses the E. Debugging Tools
+per-frame meshes collected over the VIO receding horizon
+Whilewelimitthediscussionforspacereasons,itisworth
+into a single mesh (Fig. 2(d)). Both per-frame and multi-
+mentioning that Kimera also provides an open-source suite
+frame 3D meshes are encoded as a list of vertex positions,
+of evaluation tools for debugging, visualization, and bench-
+together with a list of triplets of vertex IDs to describe the
+markingofVIO,SLAM,andmetric-semanticreconstruction.
+triangular faces. Assuming we already have a multi-frame
+− Kimera includes a Continuous Integration server (Jenkins)
+mesh at time t 1, for each new per-frame 3D mesh that that asserts the quality of the code (compilation, unit tests),
+wegenerate(attimet),weloopoveritsverticesandtriplets but also automatically evaluates Kimera-VIO and Kimera-
+and add vertices and triplets that are in the per-frame mesh
+RPGO on the EuRoC’s datasets using evo [71]. Moreover,
+but are missing in the multi-frame one. Then we loop over
+weprovideJupyterNotebookstovisualizeintermediateVIO
+the multi-frame mesh vertices and update their 3D position
+statistics (e.g., quality of the feature tracks, IMU preintegra-
+according to the latest VIO back-end estimates. Finally, we
+tion errors), as well as to automatically assess the quality of
+remove vertices and triplets corresponding to old features
+the 3D reconstruction using Open3D [72].
+observed outside the VIO time horizon. The result is an
+up-to-date 3D mesh spanning the keyframes in the current III. EXPERIMENTALEVALUATION
+VIO time horizon. If planar surfaces are detected in the Section III-A shows that (i) Kimera attains state-of-the-
+mesh, regularity factors [47] are added to the VIO back- art state estimation performance and (ii) our robust PGO
+1692
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. TABLEII:RMSEofstate-of-the-artVIOpipelines(reportedfrom TABLEIII:RMSEATE[m]vs.loopclosurethresholdα(V1 01).
+[77] and [24]) compared to Kimera, on the EuRoC dataset. In
+bold the best result for each category: ﬁxed-lag smoothing, full α=10 α=1 α=0.1 α=0.01 α=0.001
+×
+smoothing, and PGO with loop closure. indicates failure. PGOw/oPCM 0.05 0.45 1.74 1.59 1.59
+Kimera-RPGO 0.05 0.05 0.05 0.045 0.049
+RMSEATE[m]
+Fixed-lagSmoothing FullSmoothing LoopClosure 3D meshes produced by Kimera. We evaluate each mesh
+againstthegroundtruthusingtheaccuracyandcompleteness
+Seq. OKVIS MSCKF ROVIO VINS-Mono Kimera-VIO SVO-GTSAM Kimera-VIO VINS-LC Kimera-RPGO msaemtrpiclisngasoiunr[m78es,hSewci.th4.a3]u:n(iif)owrmedcoenmspituyteofa1p0o3inptocinlotsu/dmb2y,
+MH1 0.16 0.42 0.21 0.15 0.11 0.05 0.04 0.12 0.08 (ii)weregistertheestimatedandthegroundtruthcloudswith
+MH2 0.22 0.45 0.25 0.15 0.10 0.03 0.07 0.12 0.09 ICP[79]usingCloudCompare[80],and(iii)weevaluatethe
+MH3 0.24 0.23 0.25 0.22 0.16 0.12 0.12 0.13 0.11 average distance from ground truth point cloud to its nearest
+MH4 0.34 0.37 0.49 0.32 0.24 0.13 0.27 0.18 0.15
+MH5 0.47 0.48 0.52 0.30 0.35 0.16 0.20 0.21 0.24 neighbor in the estimated point cloud (accuracy), and vice-
+V11 0.09 0.34 0.10 0.08 0.05 0.07 0.06 0.06 0.05 versa (completeness). Fig. 3(a) shows the estimated cloud
+V12 0.20 0.20 0.10 0.11 0.08 0×.11 0.07 0.08 0.11 (corresponding to the global mesh of Kimera-Semantics on
+V13 0.24 0.67 0.14 0.18 0.07 0.09 0.19 0.12
+V21 0.13 0.10 0.12 0.08 0.08 0.07 0.07 0.08 0.07 V1 01)color-codedbythedistancetotheclosestpointinthe
+×
+V22 0.16 0.16 0.14 0.16 0.10 0.09 0.16 0.10 ground-truth cloud (accuracy); Fig. 3(b) shows the ground-
+×
+V23 0.29 1.13 0.14 0.27 0.21 0.19 1.39 0.19 truthcloud,color-codedwiththedistancetotheclosest-point
+in the estimated cloud (completeness).
+relieves the user from time-consuming parameter tuning.
+SectionIII-BdemonstratesKimera’s3Dmeshreconstruction
+on EuRoC, using the subset of scenes providing a ground-
+truthpointcloud.SectionIII-CinspectsKimera’s3Dmetric-
+semantic reconstruction using a photo-realistic simulator
+(see video attachment), which provides ground-truth 3D
+semantics. Finally, Section III-D highlights Kimera’s real-
+time performance and analyzes the runtime of each module.
+A. Pose Estimation Performance
+Table II compares the Root Mean Squared Error (RMSE)
+of the Absolute Translation Error (ATE) of Kimera-
+VIO against state-of-the-art open-source VIO pipelines:
+OKVIS [73], MSCKF [74], ROVIO [75], VINS-Mono [24],
+and SVO-GTSAM [76] using the independently reported
+values in [77] and the self-reported values in [24]. Note
+Fig. 3: (a) Kimera’s 3D mesh color-coded by the distance to the
+that these algorithms use a monocular camera, while we use
+ground-truthpointcloud.(b)Ground-truthpointcloudcolor-coded
+a stereo camera. We align the estimated and ground-truth
+by the distance to the estimated cloud. EuRoC V1 01 dataset.
+trajectories using an SE(3) transformation before evaluating
+Table IV provides a quantitative comparison between the
+theerrors.UsingaSim(3)alignment,asin[77],wouldresult
+fast multi-frame mesh produced by Kimera-Mesher and the
+in an even smaller error for Kimera: we preferred the SE(3)
+slow mesh produced via TSDF by Kimera-Semantics. To
+alignment, since it is more appropriate for VIO, where the
+obtain a complete mesh from Kimera-Mesher we set a large
+scale is observable thanks to the IMU. We group the tech-
+VIO horizon (i.e., we perform full smoothing). As expected
+niques depending on whether they use ﬁxed-lag smoothing,
+from Fig. 3(a), the global mesh from Kimera-Semantics is
+fullsmoothing,andloopclosures.Kimera-VIOandKimera- −
+RPGO achieve top performance across the spectrum. very accurate, with an average error of 0.35 0.48m across
+datasets. Kimera-Mesher produces a more noisy mesh (up
+Furthermore, Kimera-RPGO ensures robust performance,
+and is less sensitive to loop closure parameter tuning. Ta- to24%errorincrease),butrequirestwoordersofmagnitude
+less time to compute (see Section III-D).
+ble III shows the PGO accuracy with and without outlier
+rejection (PCM) for different values of the loop closure
+TABLEIV:EvaluationofKimeramulti-frameandglobalmeshes’
+thresholdαusedinDBoW2.Smallvaluesofαleadto more completeness [78, Sec. 4.3.3] with an ICP threshold of 1.0m.
+loopclosuredetections,butthesearelessconservative(more
+outliers).TableIIIshowsthat,byusingPCM,Kimera-RPGO RMSE[m] Relative
+Improvement[%]
+isfairlyinsensitivetothechoiceofα.TheresultsinTableII Seq. Multi-Frame Global
+use α=0.001. V101 0.482 0.364 24.00
+V102 0.374 0.384 -2.00
+B. Geometric Reconstruction V103 0.451 0.353 21.00
+V201 0.465 0.480 -3.00
+We use the ground truth point cloud available in the
+V202 0.491 0.432 12.00
+EuRoC V1 and V2 datasets to assess the quality of the V203 0.530 0.411 22.00
+1693
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. C. Semantic Reconstruction TABLE V: Evaluation of Kimera-Semantics.
+To evaluate the accuracy of the metric-semantic recon- Kimera-Semanticsusing:
+struction from Kimera-Semantics, we use a photo-realistic GTDepth GTDepth Dense-Stereo
+Unity-based simulator provided by MIT Lincoln Lab, that Metrics GTPoses Kimera-VIO Kimera-VIO
+provides sensor streams (in ROS) and ground truth for both mIoU[%] 80.10 80.03 57.23
+Semantic
+the geometry and the semantics of the scene, and has an Acc[%] 94.68 94.50 80.74
+interface similar to [20], [21]. To avoid biasing the results ATE[m] 0.0 0.04 0.04
+Geometric
+RMSE[m] 0.079 0.131 0.215
+towards a particular 2D semantic segmentation method, we
+use ground truth 2D semantic segmentations and we refer
+the reader to [70] for potential alternatives.
+Kimera-Semantics builds a 3D mesh from the VIO pose
+estimates, and uses a combination of dense stereo and bun-
+dledraycasting.Weevaluatetheimpactofeachofthesecom-
+ponentsbyrunningthreedifferentexperiments.First,weuse
+Kimera-Semanticswithground-truth(GT)posesandground-
+truthdepthmaps(availableinsimulation)toassesstheinitial
+loss of performance due to bundled raycasting. Second,
+we use Kimera-VIO’s pose estimates. Finally, we use the
+full Kimera-Semantics pipeline including dense stereo. To
+analyze the semantic performance, we calculate the mean Fig. 5: Runtime breakdown for Kimera-VIO, RPGO, and Mesher.
+IntersectionoverUnion(mIoU)[13],andtheoverallportion
+D. Timing
+of correctly labeled points (Acc) [81]. We also report the
+ATE to correlate the results with the drift incurred by Fig. 5 reports the timing performance of Kimera’s mod-
+Kimera-VIO. Finally, we evaluate the metric reconstruction ules. The IMU front-end requires around 40µs for prein-
+registering the estimated mesh with the ground truth and tegration, hence can generate state estimates at IMU rate
+computing the RMSE for the points as in Section III-B. (> 200Hz ). The vision front-end module shows a bi-
+Table V summarizes our ﬁndings and shows that bundled modal distribution since, for every frame, we just perform
+raycasting results in a small drop in performance both featuretracking(whichtakesanaverageof4.5ms),while,at
+geometrically (<8cm error on the 3D mesh) as well as se- keyframerate,weperformfeaturedetection,stereomatching,
+mantically(accuracy>94%).UsingKimera-VIOalsoresults andgeometricveriﬁcation,which,combined,takeanaverage
+in negligible loss in performance since our VIO has a small of 45ms. Kimera-Mesher is capable of generating per-frame
+drift (< 0.2%, 4cm for a 32m long trajectory). Certainly, 3D meshes in less than 5ms, while building the multi-frame
+the biggest drop in performance is due to the use of dense meshtakes15msonaverage.Theback-endsolvesthefactor-
+stereo. Dense stereo [62] has difﬁculties resolving the depth graph optimization in less than 40ms. Kimera-RPGO and
+of texture-less regions such as walls, which are frequent in Kimera-Semantics run on slower threads since their outputs
+simulated scenes. Fig. 4 shows the confusion matrix when are not required for time-critical actions (e.g., control, ob-
+running Kimera-Semantics with Kimera-VIO and ground- stacle avoidance). Kimera-RPGO took an average of 55ms
+truth depth (Fig. 4(a)), compared with using dense stereo in our experiments on EuRoC, but in general its runtime
+(Fig. 4(b)). Large values in the confusion matrix appear depends on the size of the pose graph. Finally, Kimera-
+between Wall/Shelf and Floor/Wall. This is exactly where Semantics(notreportedinﬁgureforclarity)takesanaverage
+dense stereo suffers the most; texture-less walls are difﬁcult of 0.1s to update the global metric-semantic mesh at each
+×
+to reconstruct and are close to shelves and ﬂoor, resulting in keyframe, fusing a 720 480 dense depth image, as the one
+increased geometric and semantic errors. produced by our simulator.
+IV. CONCLUSION
+Kimeraisanopen-sourceC++libraryformetric-semantic
+SLAM.Itincludesstate-of-the-artimplementationsofvisual-
+inertial odometry, robust pose graph optimization, mesh
+reconstruction,and3Dsemanticlabeling.Itrunsinreal-time
+onaCPUandprovidesasuiteofcontinuousintegrationand
+benchmarking tools. We hope Kimera can provide a solid
+basis for future research on robot perception, and an easy-
+to-use infrastructure for researchers across communities.
+Fig. 4: Confusion matrices for Kimera-Semantics using bundled Acknowledgments. We are thankful to Dan Grifﬁth, Ben
+raycastingand(a)groundtruthstereodepthor(b)densestereo[62]. Smith, Arjun Majumdar, and Zac Ravichandran for kindly
+Both experiments use ground-truth 2D semantics. Values are satu-
+sharing the photo-realistic simulator, and to Winter Guerra
+rated to 104 for visualization purposes.
+and Varun Murali for the discussions about Unity.
+1694
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [22] R.Mur-Artal,J.Montiel,andJ.Tardo´s,“ORB-SLAM:Aversatileand
+accurate monocular SLAM system,” IEEE Trans. Robotics, vol. 31,
+no.5,pp.1147–1163,2015.
+[1] C.Cadena,L.Carlone,H.Carrillo,Y.Latif,D.Scaramuzza,J.Neira,
+I. Reid, and J. Leonard, “Past, present, and future of simultaneous [23] J.Engel,V.Koltun,andD.Cremers,“Directsparseodometry,”IEEE
+localization and mapping: Toward the robust-perception age,” IEEE Trans.PatternAnal.MachineIntell.,2018.
+Trans.Robotics,vol.32,no.6,pp.1309–1332,2016,arxivpreprint: [24] T.Qin,P.Li,andS.Shen,“Vins-mono:Arobustandversatilemonoc-
+1606.05830,(pdf). ular visual-inertial state estimator,” IEEE Transactions on Robotics,
+[2] O. Enqvist, F. Kahl, and C. Olsson, “Non-sequential structure from vol.34,no.4,pp.1004–1020,2018.
+motion,” in Intl. Conf. on Computer Vision (ICCV), 2011, pp. 264– [25] T. Qin, J. Pan, S. Cao, and S. Shen, “A general optimization-based
+271. frameworkforlocalodometryestimationwithmultiplesensors,”arXiv
+[3] T. Scho¨ps, J. L. Scho¨nberger, S. Galliani, T. Sattler, K. Schindler, preprint:1901.03638,2019.
+M. Pollefeys, and A. Geiger, “A multi-view stereo benchmark with [26] T. Schneider, M. T. Dymczyk, M. Fehr, K. Egger, S. Lynen,
+high-resolution images and multi-camera videos,” in Conference on I. Gilitschenski, and R. Siegwart, “maplab: An open framework for
+ComputerVisionandPatternRecognition(CVPR),2017. research in visual-inertial mapping and localization,” IEEE Robotics
+[4] A.Garcia-Garcia,S.Orts-Escolano,S.Oprea,V.Villena-Martinez,and andAutomationLetters,2018.
+J. Garc´ıa-Rodr´ıguez, “A review on deep learning techniques applied [27] C.Forster,L.Carlone,F.Dellaert,andD.Scaramuzza,“On-manifold
+tosemanticsegmentation,”ArXivPreprint:1704.06857,2017. preintegrationtheoryforfastandaccuratevisual-inertialnavigation,”
+[5] A.Krizhevsky,I.Sutskever,andG.E.Hinton,“ImageNetclassiﬁcation IEEETrans.Robotics,vol.33,no.1,pp.1–21,2017,arxivpreprint:
+with deep convolutional neural networks,” in Advances in Neural 1512.02363,(pdf),technicalreportGT-IRIM-CP&R-2015-001.
+InformationProcessingSystems(NIPS),ser.NIPS’12,2012,pp.1097– [28] H. Oleynikova, Z. Taylor, M. Fehr, R. Siegwart, and J. Nieto,
+1105. “Voxblox: Incremental 3d euclidean signed distance ﬁelds for on-
+[6] J. Redmon and A. Farhadi, “YOLO9000: Better, faster, stronger,” in board mav planning,” in IEEE/RSJ Intl. Conf. on Intelligent Robots
+IEEE Conf. on Computer Vision and Pattern Recognition (CVPR), andSystems(IROS). IEEE,2017,pp.1366–1373.
+2017,pp.6517–6525. [29] M.Runz,M.Bufﬁer,andL.Agapito,“Maskfusion:Real-timerecogni-
+[7] S. Ren, K. He, R. Girshick, and J. Sun, “Faster R-CNN: Towards tion,trackingandreconstructionofmultiplemovingobjects,”inIEEE
+realtimeobjectdetectionwithregionproposalnetworks,”inAdvances InternationalSymposiumonMixedandAugmentedReality(ISMAR).
+inNeuralInformationProcessingSystems(NIPS),2015,pp.91–99. IEEE,2018,pp.10–20.
+[8] K. He, G. Gkioxari, P. Dollar, and R. Girshick, “Mask R-CNN,” in [30] M.Keller,D.Leﬂoch,M.Lambers,S.Izadi,T.Weyrich,andA.Kolb,
+Intl.Conf.onComputerVision(ICCV),2017,pp.2980–2988. “Real-time 3d reconstruction in dynamic scenes using point-based
+[9] R. Hu, P. Dollar, and K. He, “Learning to segment every thing,” in fusion,”inIntl.Conf.on3DVision(3DV),2013.
+Intl.Conf.onComputerVision(ICCV),2017,pp.4233–4241. [31] R.Dube´,A.Cramariuc,D.Dugas,J.Nieto,R.Siegwart,andC.Ca-
+[10] V. Badrinarayanan, A. Kendall, and R. Cipolla, “SegNet: A deep dena, “SegMap: 3d segment mapping using data-driven descriptors,”
+convolutional encoder-decoder architecture for image segmentation,” inRobotics:ScienceandSystems(RSS),2018.
+IEEETrans.PatternAnal.MachineIntell.,2017. [32] J.Dong,X.Fei,andS.Soatto,“Visual-inertial-semanticscenerepre-
+[11] S. Y.-Z. Bao and S. Savarese, “Semantic structure from motion,” in sentationfor3Dobjectdetection,”2017.
+IEEE Conf. on Computer Vision and Pattern Recognition (CVPR), [33] G.J.Brostow,J.Shotton,J.Fauqueur,andR.Cipolla,“Segmentation
+2011. and recognition using structure from motion point clouds,” in Euro-
+[12] S.Bowman,N.Atanasov,K.Daniilidis,andG.Pappas,“Probabilistic peanConf.onComputerVision(ECCV),2008,pp.44–57.
+data association for semantic slam,” in IEEE Intl. Conf. on Robotics [34] K. Tateno, F. Tombari, and N. Navab, “Real-time and scalable in-
+andAutomation(ICRA),2017,pp.1722–1729. cremental segmentation on dense slam,” in IEEE/RSJ Intl. Conf. on
+[13] T. Hackel, N. Savinov, L. Ladicky, J. D. Wegner, K. Schindler, IntelligentRobotsandSystems(IROS),2015,pp.4465–4472.
+and M. Pollefeys, “Semantic3d.net: A new large-scale point cloud [35] C. Li, H. Xiao, K. Tateno, F. Tombari, N. Navab, and G. D. Hager,
+classiﬁcationbenchmark,”arXivpreprintarXiv:1704.03847,2017. “IncrementalsceneunderstandingondenseSLAM,”inIEEE/RSJIntl.
+[14] M.Grinvald,F.Furrer,T.Novkovic,J.J.Chung,C.Cadena,R.Sieg- Conf.onIntelligentRobotsandSystems(IROS),2016,pp.574–581.
+wart,andJ.Nieto,“VolumetricInstance-AwareSemanticMappingand [36] J.McCormac,R.Clark,M.Bloesch,A.J.Davison,andS.Leuteneg-
+3DObjectDiscovery,”IEEERoboticsandAutomationLetters,vol.4, ger,“Fusion++:Volumetricobject-levelSLAM,”inIntl.Conf.on3D
+no.3,pp.3037–3044,2019. Vision(3DV),2018,pp.32–41.
+[15] L. Zheng, C. Zhu, J. Zhang, H. Zhao, H. Huang, M. Niessner, and [37] M.Ru¨nzandL.Agapito,“Co-fusion:Real-timesegmentation,tracking
+K. Xu, “Active scene understanding via online semantic reconstruc- andfusionofmultipleobjects,”inIEEEIntl.Conf.onRoboticsand
+tion,”arXivpreprint:1906.07409,2019. Automation(ICRA). IEEE,2017,pp.4471–4478.
+[16] R.F.Salas-Moreno,R.A.Newcombe,H.Strasdat,P.H.J.Kelly,and [38] B. Xu, W. Li, D. Tzoumanikas, M. Bloesch, A. Davison, and
+A.J.Davison,“SLAM++:Simultaneouslocalisationandmappingat S. Leutenegger, “MID-Fusion: Octree-based object-level multi-
+thelevelofobjects,”inIEEEConf.onComputerVisionandPattern instancedynamicslam,”2019,pp.5231–5237.
+Recognition(CVPR),2013. [39] J. Wald, K. Tateno, J. Sturm, N. Navab, and F. Tombari, “Real-time
+[17] J.McCormac,A.Handa,A.J.Davison,andS.Leutenegger,“Seman- fully incremental scene understanding on mobile platforms,” IEEE
+ticFusion: Dense 3D Semantic Mapping with Convolutional Neural RoboticsandAutomationLetters,vol.3,no.4,pp.3402–3409,2018.
+Networks,”inIEEEIntl.Conf.onRoboticsandAutomation(ICRA), [40] G.Narita,T.Seno,T.Ishikawa,andY.Kaji,“Panopticfusion:Online
+2017. volumetric semantic mapping at the level of stuff and things,” arxiv
+[18] T.Whelan,S.Leutenegger,R.Salas-Moreno,B.Glocker,andA.Davi- preprint:1903.01177,2019.
+son,“ElasticFusion:DenseSLAMwithoutaposegraph,”inRobotics: [41] K.Tateno,F.Tombari,I.Laina,andN.Navab,“CNN-SLAM:Real-
+ScienceandSystems(RSS),2015. time dense monocular slam with learned depth prediction,” in IEEE
+[19] M. Burri, J. Nikolic, P. Gohl, T. Schneider, J. Rehder, S. Omari, Conf.onComputerVisionandPatternRecognition(CVPR),2017.
+M. Achtelik, and R. Siegwart, “The EuRoC micro aerial vehicle [42] K.-N. Lianos, J. L. Scho¨nberger, M. Pollefeys, and T. Sattler, “Vso:
+datasets,”Intl.J.ofRoboticsResearch,2016. Visual semantic odometry,” in European Conf. on Computer Vision
+[20] R. Sayre-McCord, W. Guerra, A. Antonini, J. Arneberg, A. Brown, (ECCV),2018,pp.246–263.
+G.Cavalheiro,Y.Fang,A.Gorodetsky,D.McCoy,S.Quilter,F.Ri- [43] M. Yokozuka, S. Oishi, S. Thompson, and A. Banno, “VITAMIN-
+ether,E.Tal,Y.Terzioglu,L.Carlone,andS.Karaman,“Visual-inertial E:visualtrackingandmappingwithextremelydensefeaturepoints,”
+navigation algorithm development using photorealistic camera simu- CoRR,vol.abs/1904.10324,2019.
+lation in the loop,” in IEEE Intl. Conf. on Robotics and Automation [44] J.Behley,M.Garbade,A.Milioto,J.Quenzel,S.Behnke,C.Stach-
+(ICRA),2018,(pdf)(code). niss, and J. Gall, “SemanticKITTI: A Dataset for Semantic Scene
+[21] W.Guerra,E.Tal,V.Murali,G.Ryou,andS.Karaman,“FlightGog- Understanding of LiDAR Sequences,” in Intl. Conf. on Computer
+gles: Photorealistic sensor simulation for perception-driven robotics Vision(ICCV),2019.
+using photogrammetry and virtual reality,” in arXiv preprint: [45] F.Dellaertetal.,“GeorgiaTechSmoothingAndMapping(GTSAM),”
+1905.11377,2019. https://gtsam.org/,2019.
+1695
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. [46] J. G. Mangelson, D. Dominic, R. M. Eustice, and R. Vasudevan, [63] W. Lorensen and H. Cline, “Marching cubes: A high resolution 3d
+“Pairwiseconsistentmeasurementsetmaximizationforrobustmulti- surfaceconstructionalgorithm,”inSIGGRAPH,1987,pp.163–169.
+robotmapmerging,”inIEEEIntl.Conf.onRoboticsandAutomation [64] H.Lang,Y.Yuhui,G.Jianyuan,Z.Chao,C.Xilin,andW.Jingdong,
+(ICRA),2018,pp.2916–2923. “Interlaced sparse self-attention for semantic segmentation,” arXiv
+[47] A. Rosinol, T. Sattler, M. Pollefeys, and L. Carlone, “Incremental preprintarXiv:1907.12273,2019.
+Visual-Inertial 3D Mesh Generation with Structural Regularities,” [65] L.Zhang,X.Li,A.Arnab,K.Yang,Y.Tong,andP.H.Torr,“Dual
+in IEEE Intl. Conf. on Robotics and Automation (ICRA), 2019, graph convolutional network for semantic segmentation,” in British
+(pdf), (web). [Online]. Available: https://www.mit.edu/%7Earosinol/ MachineVisionConference,2019.
+research/struct3dmesh.html [66] L.-C.Chen,G.Papandreou,I.Kokkinos,K.Murphy,andA.L.Yuille,
+[48] W.N.GreeneandN.Roy,“Flame:Fastlightweightmeshestimation “Deeplab:Semanticimagesegmentationwithdeepconvolutionalnets,
+using variational smoothing on delaunay graphs,” in 2017 IEEE atrous convolution, and fully connected crfs,” IEEE Trans. Pattern
+InternationalConferenceonComputerVision(ICCV). IEEE,2017, Anal.MachineIntell.,vol.40,no.4,pp.834–848,2017.
+pp.4696–4704. [67] H.Zhao,J.Shi,X.Qi,X.Wang,andJ.Jia,“Pyramidsceneparsing
+[49] L.TeixeiraandM.Chli,“Real-timemesh-basedsceneestimationfor network,”inIEEEConf.onComputerVisionandPatternRecognition
+aerial inspection,” in IEEE/RSJ Intl. Conf. on Intelligent Robots and (CVPR),2017,pp.2881–2890.
+Systems(IROS). IEEE,2016,pp.4863–4869. [68] G.Yang,H.Zhao,J.Shi,Z.Deng,andJ.Jia,“Segstereo:Exploiting
+[50] M. Quigley, K. Conley, B. Gerkey, J. Faust, T. Foote, J. Leibs, semanticinformationfordisparityestimation,”inProceedingsofthe
+R. Wheeler, and A. Y. Ng, “Ros: an open-source robot operating European Conference on Computer Vision (ECCV), 2018, pp. 636–
+system,”inICRAworkshoponopensourcesoftware,vol.3,no.3.2. 651.
+Kobe,Japan,2009,p.5. [69] A. Paszke, A. Chaurasia, S. Kim, and E. Culurciello, “Enet: A
+[51] J. Shi and C. Tomasi, “Good features to track,” in IEEE Conf. on deepneuralnetworkarchitectureforreal-timesemanticsegmentation,”
+Computer Vision and Pattern Recognition (CVPR), 1994, pp. 593– arXivpreprintarXiv:1606.02147,2016.
+600. [70] S. Hu and L. Carlone, “Accelerated inference in Markov Random
+[52] J. Bouguet, “Pyramidal implementation of the Lucas Kanade feature Fields via smooth Riemannian optimization,” IEEE Robotics and
+tracker,”2000. AutomationLetters(RA-L),2019,extendedArXivversion:(pdf).
+[53] D. Niste´r, “An efﬁcient solution to the ﬁve-point relative pose prob- [71] M.Grupp,“evo:Pythonpackagefortheevaluationofodometryand
+lem,” IEEE Trans. Pattern Anal. Machine Intell., vol. 26, no. 6, pp. slam.”https://github.com/MichaelGrupp/evo,2017.
+756–770,2004. [72] Q.-Y. Zhou, J. Park, and V. Koltun, “Open3D: A modern library for
+[54] B. Horn, “Closed-form solution of absolute orientation using unit 3Ddataprocessing,”arXiv:1801.09847,2018.
+quaternions,”J.Opt.Soc.Amer.,vol.4,no.4,pp.629–642,Apr1987. [73] S. Leutenegger, P. Furgale, V. Rabaud, M. Chli, K. Konolige, and
+[55] L.Kneip,M.Chli,andR.Siegwart,“Robustreal-timevisualodometry R. Siegwart, “Keyframe-based visual-inertial slam using nonlinear
+with a single camera and an IMU,” in British Machine Vision Conf. optimization,”inRobotics:ScienceandSystems(RSS),2013.
+(BMVC),2011,pp.16.1–16.11. [74] A. Mourikis and S. Roumeliotis, “A multi-state constraint Kalman
+[56] M.Kaess,H.Johannsson,R.Roberts,V.Ila,J.Leonard,andF.Del- ﬁlter for vision-aided inertial navigation,” in IEEE Intl. Conf. on
+laert,“iSAM2:IncrementalsmoothingandmappingusingtheBayes RoboticsandAutomation(ICRA),April2007,pp.3565–3572.
+tree,”Intl.J.ofRoboticsResearch,vol.31,pp.217–236,Feb2012. [75] M. Bloesch, S. Omari, M. Hutter, and R. Siegwart, “Robust visual
+[57] F. Dellaert, “Factor graphs and GTSAM: A hands-on introduction,” inertial odometry using a direct EKF-based approach,” in IEEE/RSJ
+Georgia Institute of Technology, Tech. Rep. GT-RIM-CP&R-2012- Intl.Conf.onIntelligentRobotsandSystems(IROS). IEEE,2015.
+002,September2012. [76] C.Forster,L.Carlone,F.Dellaert,andD.Scaramuzza,“IMUpreinte-
+[58] R.I.HartleyandA.Zisserman,MultipleViewGeometryinComputer grationonmanifoldforefﬁcientvisual-inertialmaximum-a-posteriori
+Vision,2nded. CambridgeUniversityPress,2004. estimation,” in Robotics: Science and Systems (RSS), 2015, accepted
+[59] L. Carlone, Z. Kira, C. Beall, V. Indelman, and F. Dellaert, “Elim- asoralpresentation(acceptancerate4%)(pdf)(video)(supplemental
+inating conditionally independent sets in factor graphs: A unifying material:(pdf)).
+perspective based on smart factors,” in IEEE Intl. Conf. on Robotics [77] J. Delmerico and D. Scaramuzza, “A benchmark comparison of
+andAutomation(ICRA),2014,pp.4290–4297. monocular visual-inertial odometry algorithms for ﬂying robots,” in
+[60] D.Ga´lvez-Lo´pezandJ.D.Tardo´s,“Bagsofbinarywordsforfastplace 2018 IEEE International Conference on Robotics and Automation
+recognition in image sequences,” IEEE Transactions on Robotics, (ICRA). IEEE,2018,pp.2502–2509.
+vol.28,no.5,pp.1188–1197,October2012. [78] A. Rosinol, “Densifying Sparse VIO: a Mesh-based approach using
+[61] B.Pattabiraman,M.M.A.Patwary,A.H.Gebremedhin,W.K.Liao, StructuralRegularities.”Master’sthesis,ETHZurich,2018.
+and A. Choudhary, “Fast algorithms for the maximum clique prob- [79] P.J.BeslandN.D.McKay,“Amethodforregistrationof3-Dshapes,”
+lem on massive graphs with applications to overlapping community IEEETrans.PatternAnal.MachineIntell.,vol.14,no.2,1992.
+detection,”InternetMathematics,vol.11,no.4-5,pp.421–448,2015. [80] Cloudcompare.org, “CloudCompare - open source project,” https://
+[62] H. H. Hirschmu¨ller, “Stereo processing by semiglobal matching and www.cloudcompare.org,2019.
+mutual information,” IEEE Trans. Pattern Anal. Machine Intell., [81] D.Wolf,J.Prankl,andM.Vincze,“Enhancingsemanticsegmentation
+vol.30,no.2,pp.328–341,2008. forrobotics:Thepowerof3-dentangledforests,”IEEERoboticsand
+AutomationLetters,vol.1,no.1,pp.49–56,2015.
+1696
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 00:58:09 UTC from IEEE Xplore.  Restrictions apply. 
