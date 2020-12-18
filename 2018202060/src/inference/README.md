@@ -1,4 +1,4 @@
-# Web App
+# Inference Web Project
 
 ## Files
 
@@ -7,7 +7,7 @@
 
 ## Usage
 
-Please download our pretrained ResNet-101 model from [here](链接: https://pan.baidu.com/s/12VAHFFPW9i1DQsBYYNtuXg  密码: 28ss) with password `28ss`, and store the file `leafsnap_model2.pth` at `/static/model` before you run the inference project.
+Please download our pretrained ResNet-101 model from [here](https://pan.baidu.com/s/12VAHFFPW9i1DQsBYYNtuXg) with password `28ss`, and store the file `leafsnap_model2.pth` at `/static/model` before you run the inference project.
 
 To run the web, run `python3 page.py`
 
