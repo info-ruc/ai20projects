@@ -1,0 +1,516 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Sim-to-Real Transfer for Optical Tactile Sensing
+Zihan Ding1, Nathan F. Lepora2, and Edward Johns1
+Abstract—Deep learning and reinforcement learning meth-
+odshavebeenshowntoenablelearningofﬂexibleandcomplex
+robot controllers. However, the reliance on large amounts of
+training data often requires data collection to be carried out
+in simulation, with a number of sim-to-real transfer methods
+being developed in recent years. In this paper, we study these
+techniques for tactile sensing using the TacTip optical tactile
+sensor, which consists of a deformable tip with a camera
+observing the positions of pins inside this tip. We designed
+amodelforsoftbodysimulationwhichwasimplementedusing
+the Unity physics engine, and trained a neural network to
+predict the locations and angles of edges when in contact with
+the sensor. Using domain randomisation techniques for sim-
+Fig. 1: Our experimental setup for real world testing, with a
+to-real transfer, we show how this framework can be used to
+accurately predict edges with less than 1 mm prediction error TacTip sensor mounted onto a Sawyer robot. Here, we show
+in real-world testing, without any real-world data at all. the image of the sensor’s pins, whose positions change as
+the tip deforms due to external contact.
+I. INTRODUCTION
+Tactiledataoffersalevelofsensinggranularitythatisnot
+available through vision, proprioception, or force sensing, a neural network to predict positions and angles of edges
+and understanding how best to use this is an important step using supervised learning, and tested the network in the
+towards dexterous robot manipulation. In recent years, data- real world by mounting the TacTip onto a Sawyer robot,
+driven methods and robot learning have offered scalable so- as in Figure 1. We studied the effect of different amounts
+lutions to a wide range of tasks, such as object grasping [1], of randomisation required during simulation, and different
+[2], contact-rich control [3], [4], and dexterous manipulation representationsofthesensor’spinpositions.Ourresultsshow
+[5], [6].Building uponthese ideas,learning withtactile data that sim-to-real transfer for tactile sensing is possible, and
+has also been studied for tasks such as object recognition we achieve an error of less than 1 mm in predicting the
+[7] and edge detection [8]. However, whilst learning-based point of contact. A video of our experiments is available at
+methods can offer ﬂexible solutions for developing complex www.robot-learning.uk/sim-to-real-tactile-icra-2020.
+controllers, they rely on large datasets – particularly those
+involving deep learning and reinforcement learning (RL) – II. RELATEDWORK
+which are typically very challenging to acquire from real-
+Present work on tactile sensing for robotic control can be
+world data collection.
+divided into two main categories: (1) methods which use
+The ﬁeld of sim-to-real transfer has made important
+tactile signals for basic tasks such as object identiﬁcation,
+progress in addressing this, by enabling robots to be trained
+slip detection, and edge following [7], [8], [14], [15], [16],
+in simulation with no real-world data at all [1], [9], [10]. In
+[17], [18]; (2) methods which use tactile signals as input to
+this paper, we study sim-to-real transfer for tactile sensing
+reinforcement learning (RL) algorithms, for learning control
+with domain randomisation [11], where simulation parame-
+policies [19], [20], [21]. However, these methods primarily
+ters are randomised to provide robustness to the difference
+operate with only real-world data, and as such, our work
+between dynamics in simulation and reality. We use the
+offers the potential to scale these methods to new levels of
+TacTip optical sensor [12], which consists of two compo-
+complexity via large-scale training in simulation.
+nents: a deformable tip containing 127 pins on the inside
+Formethodsintheﬁrstcategory,Leporaetal.[14]classi-
+surface, and a camera observing the pins as they move due
+ﬁededgepositionandanglewithaprobabilisticclassiﬁer,to
+to external contact. This sensor is particularly suited to sim-
+controlthemotionofarobotexploringcomplex2Dcontours.
+to-real transfer because simulation of the tip’s deformation
+This as later extended with the use of convolutional neural
+is sufﬁcient to capture the tactile data, rather than directly
+networks(CNNs)forprocessingthetactileimages[8].Linet
+simulating forces as would be necessary with sensors based
+al. [7] used CNNs to identify different objects from image-
+on electrical signals [13]. In our experiments, we trained
+based tactile signals using the GelSight sensor. Hogan et
+al. [16] used CNNs and the GelSlim sensor to predict a
+1TheRobotLearningLabatImperialCollegeLondon.
+grasping gesture for regrasping. Zhang et al. [17] applied
+2BristolRoboticsLaboratory,UniversityofBristol.
+ThisworkwassupportedbytheRoyalAcademyofEngineering. a convolutional long-short-term-memory (LSTM) network
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1639
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. for slip detection using the FingerVision sensor. Garcia et offers soft-body simulation, we found it to be very slow. We
+al.[18]appliedagraphconvolutionalnetworkforpredicting also investigated PyBullet [26] which also offers soft body
+the grasp stability using the BioTac sensor. simulation, but we found the simulation to be unstable in
+For the second category, Hoof et al [19] used auto- practice. Therefore, rather than using off-the-shelf soft body
+encoders to process tactile and visual data for input to an simulation models, we designed our own model in Unity.
+RLalgorithm.Huangetal.[20]exploreddeepRLforgentle Wenowintroducethreecomponentsforapproximatingthe
+but contact-rich learning tasks, using the BioTac sensor and elastic soft-body deformation [27]: the pushing force fpush,
+a Shadow robotic hand. Hoof et al. [21] studied in-hand the pulling force fpull, and the damping coefﬁcient d for
+manipulation using tactile data, with a policy based on a decaying the velocity caused by pushing and pulling forces.
+{ | ∈ }
+Gaussian process representation. Wedeﬁnethesetofcollisionpointsas p c C andtheset
+{ | ∈ c}
+However, because real-world data collection is time- ofverticesontheobjectmeshas p i V ,whereC andV
+i
+consumingandcancausesensorstodegradeovertime,sim- are index sets correspondingly. p and p are 2-dimensional
+c i
+to-realapproachescouldbehighlybeneﬁcialfortactile-based (x,y) positions for collision points and vertices, respectively,
+robot learning. Our work is based upon the use of domain relative to the sensor’s centre. We also deﬁne the vertex set
+⊂
+randomisation [11], [10] for sim-to-real transfer, where sim- of pin (centre) positions as P V.
+ulation parameters are randomised to offer robustness to the The pushing force causes the mesh’s vertices to undergo
+difference between simulated and real-world dynamics. acceleration,andisapproximatedwiththefollowingsecond-
+Existing works on sim-to-real transfer for optical tactile orderinvers(cid:18)e-distancerelationsh(cid:19)ip(the1inthedenominators
+sensors include those which learn simulation models with is for scaling and to prevent division by zero):
+real-world data [22], [23]. Those which do not require
+real-world data, such as ours, include methods based on fpush= fpush +τ fpush ·dic,∀i∈I,∀c∈C (1)
+costly Finite-Element Analysis [24], and those which forego ic 1+di2c 1+dic dic
+complexphysicssimulationentirelyandassumeasimpliﬁed
+Here, τ is a trade-off factor between linear and quadratic
+model of deformations [25]. Our work differs in that we − | − |
+inverse terms, dic=pi pc and dic= pi pc are the vector
+explore the use of domain randomisation to avoid the need
+and scalar distances from the contact point c to the vertex i,
+to manually determine optimal simulation parameters, and fpush isthevectorpushingforcefrompointctovertexi,and
+additionally,weproposetheﬁrstworkonsim-to-realtransfer ic
+I is the index set of vertices excluding the contact point
+for the TacTip sensor [12]. {| (cid:54)
+set∀C ∈in th}e overall vertex set V of the object: I = i pi=
+III. METHODS pc, c C . Typically, very few of≈the overall vertices are
+actuallyincontact,andthereforeI V. fpush isaconstant
+A. Physics Simulation
+for manually changing the magnitude of the force, which is
+WeusedtheUnityphysicsenginetosimulatethetip’sde- now referred to as the factor of pushing force.
+formation. Unity allows for operations to be applied directly As a result of the pushing force, the velocity change over
+to vertices on an object mesh, which provides the freedom time dt for vertex i can be represented as follows:
+to build complex dynamic functions. We designed a model
+for soft body dynamics based on an approximation of real- ∆vi= ∑ fipcush·dt,∀i∈I (2)
+∈
+worldelasticbehaviour.ThemembraneoftheTacTipsensor c C
+in Unity before and after collision is shown in Figure 2. Meanwhile, the pulling force causes displaced vertices
+to be pulled back to their original positions, due to the
+(a) (b) (c) object’s elasticity. It is deﬁned using a ﬁrst-order linear
+approximation of Hooke’s law [28], in which the force
+magnitudeisproportionaltothedisplacementofeachvertex:
+· ∀ ∈
+(d) (e) (f) fipiull = fpull dii, i I (3)
+−
+Here,dii=pti=0 pi isthevectordistancefromthedisplaced
+vertex i at p (caused by the pushing force), to its original
+i
+position pt=0 (assuming no collision at timet=0), and fpull
+i ii
+is the corresponding pulling force. fpull is a constant for
+Fig. 2: The TacTip sensor’s pins with no deformation (top manually changing the magnitude of the force, which is
+row) and undergoing deformation due to contact (bottom now referred to as the factor of pulling force. A schematic
+row). (a), (b), (d), and (e) show the simulation, (c) and (f) diagram showing the pushing and pulling forces is shown in
+show the real sensor.. Figure 3.
+If we only consider the pushing and pulling forces, the
+The original STL ﬁle of the TacTip sensor was ﬁrst object will continually oscillate as the pushing and pulling
+imported into Blender, and the number of vertices was forces alternate in their relative magnitudes. In reality, there
+reducedtoenableefﬁcientcomputation.WhilstBlenderitself is an energy dissipation effect during soft body deformation,
+1640
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. Tactile Sensor
+which may be more tolerant to differences between the
+p f p
+i=3 33 f i=2 simulator and reality. In our experiments, Ct is chosen
+22
+pt=0 pt=0 tobeadaptiveovertimebasedonthecurrentamountof
+i=3 f i=2
+31 f deformation, by using a modiﬁed average value of pin
+21
+Object p displacements:
+c=1
+Ct =max(|1.2| ∑(|pt−pt=0|),0.05) (7)
+P ∈ i i
+i P
+Fig.3:Thepushingandpullingforcesduringcollisionofthe
+sensorandanobject.Thelefthalfshowsthecollisionscene; whereP istheindexsetof91pincentres,andpti isa2-
+the right half shows the forces during collision. p is one dimensionalpositionvectorofpincentreionthesensor
+c=1
+ofthecollisionpoints,andpi=2,pi=3 aretwoverticesonthe mesh at time t. The 1.2 and 0.05 in above equation are
+object mesh. For example, f is the ‘pushing’ force from constant coefﬁcients for adopting the threshold repre-
+21
+p to p , and f is the ‘pulling’ force in the direction sentation,whichweredeﬁnedempirically.Thisleadsto
+c=1 i=2 22
+opposite to the displacement of vertex p . the following latent representation:
+i=2
+| − |− ∈
+Rt =H[pt pt=0 Ct],i P (8)
+i i i
+which we approximate as a damping coefﬁcient d on a whereH[.]isthediscreteHeavisidestepfunction.Rt is
+∈
+vertex’s velocity: a list of Rt with i P.
+i
+• Weighted-averagerepresentation:theweightedaverage
+positionofallpinsiscalculated,witheachpin’sposition
+∆vti→t+dt =(∑ fipcush+fipiull)·dt (4) weightedbyitsdisplacement,toapproximatethecentre
+∈
+c C point of the collision. The weighted-average represen-
+− · →
+vti+dt =(1 d) (vti+∆vti t+dt) (5) tation returns the averaged 2-dimensional coordinates,
+together with the average displacement magnitude, and
+and the new position of vertex i is:
+is therefore of length 3. In practice, we found that a
+·
+pt+dt =vt dt+pt (6) quadratic function of the displacements leads to a more
+i i i
+effective weighting:
+Using the above model, there are three key dynamics
+−
+parameters to deﬁne: (1) the factor of pushing force fpush; (xt,yt)= ∑ (pti pti−=0)2pti (9)
+(2) the factor of pulling force fpull; (3) the damping co- i∈P∑i∈P(pti pti=0)2
+efﬁcient d. By manually tuning these three parameters, we
+The average displacement magnitude is deﬁned as:
+adjusted the deformation model such that it approximately
+mimics soft-body deformation with visually realistic be- d¯t = |1| ∑ |pt−pt=0| (10)
+haviour. When incorporating this model into a sim-to-real P ∈ i i
+i P
+framework, these three parameters were then randomised to
+Finally, the weighted-average representation is:
+offer robustness to their true underlying values in real-world
+deformations. Rt =(xt,yt,d¯t) (11)
+B. Representation of the Tactile Signal IV. SIM-TO-SIMEVALUATION
+Using this simulation model, we can then train a neural A. Tasks
+network with supervised data, based on the sensor’s 2D pin Sim-to-sim transfer evaluation is a useful way to gain
+positions within the observed image of the tip’s interior. In initial insights into the robustness of a sim-to-real transfer
+practice, we used 91 pins instead of all 127 pins, since the method, by training and testing under different simulation
+outermost pins were not always visible during deformation. parameters. We studied this in a supervised learning setting,
+Designing a representation for these positions is important where the task is to predict (i) the object’s position, (ii)
+in ensuring robust sim-to-real transfer, and we study three the object’s orientation, and (iii) the object’s identity. The
+different representations R as follows: scene for these tests is shown in Figure 4, which contains
+• Pin positions representation: the most direct way of theTacTipsensorandthreedifferentobjects:acylinder(red),
+representingTacTipdeformationisdirectlyusingthe2D a cuboid (green), and a plane (orange).
+×
+pin positions. The total length of the vector is 91 2= During both training and testing, objects were randomly
+182. rotated about the x, y, and z axes, with the sensor repeatedly
+• Threshold representation: we select pins with a dis- lowered onto the object to create a set of episodes. Each
+placement larger than a time-dependent threshold Ct, episodecorrespondstoonetapofthesensorontotheobject,
+andassignthesepinsavalueof1,and0otherwise.The and includes several simulation steps during deformation.
+total length of this vector is 91. The motivation behind The objects shown in the left half of Figure 4 are at zero
+thisrepresentationistoremoverelianceonprecisemod- rotation about each axis. We restricted the possible rotation
+−
+elling of pin locations, and use a coarser representation angles to within the range [ 30,30] degrees for each axis.
+1641
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. (a) (b)
+(b) (c) (d)
+(a) (e) (f) (g)
+Fig. 4: The three objects used during sim-to-sim evaluation. (c) (d)
+(a)showstheobjectswithzerorotation,(b)-(g)showrandom
+rotations.
+Rotationswereuniformlysampledfromthisrangeatthestart
+of each episode, and ﬁxed for the entire episode.
+B. Training
+Fig. 5: Sim-to-sim comparison of different representations,
+A neural network was trained to take in the pin position withtraininginﬁxedenvironmentsbuttestinginrandomised
+representation, and predict the central position of collision, environments.Weevaluatedonthreetasks:(a)predictingthe
+the rotation angles of the object, and the object identity. object’s identity, (b) predicting the central position of the
+We used a four-layer fully-connected neural network, with collision, (c) predicting the rotation angle of the object. (d)
+500 hidden units per layer and ReLU activation [29]. In our shows the MSE of these predictions over all three tasks.
+experiments, we found that a convolutional neural network
+did not provide any improvement over a fully-connected
+network. The network contained two heads, with one head
+randomisation factor of 0.2 and 0.5. We can see that the
+regressing the position and rotation with a mean squared
+performance generally degraded as the amount of randomi-
+error (MSE) loss, and the other head predicting the object
+sation in the test environment increased, due to a greater
+identitywithaSoftmaxactivationandMSEloss.Theoverall
+discrepancy between training and testing simulation models.
+loss was the overall MSE across all predictions.
+The basic pin positions representation was generally more
+In order to test the effects of domain randomisation, we accurate and robust than the other two representations, with
+trained the predictor with both ﬁxed-dynamics and random- the weighted-average representation performing the worst.
+dynamics environments, and tested the predictor with both With the threshold representation, we can see that there is
+ﬁxedandrandomenvironments.Theenvironmentswithran- overﬁtting to the training data since the test error under
+dom dynamics were achieved by randomising the pushing, ﬁxed dynamics is very low, but high when randomisation
+pulling, and damping factors, as described previously. To is introduced. This may be due to the reliance on a single
+generate training and testing datasets, we ﬁrst empirically threshold value, which is not ﬂexible enough to generalise
+chose a baseline value for each parameter, which provides a acrossenvironments.Wefoundthattheoverﬁttinghappened
+good overall imitation of the real-world deformation during even when using early stopping during training.
+collisions. For the ﬁxed-dynamics environment, we used
+Figure 6 shows test results when trained in the random-
+theseﬁxedbaselinevaluesandcollecteddataacrossdifferent
+dynamics environment with a randomisation factor of 0.2,
+positions and rotation angles of the objects relative to the
+and tested in environments with factors 0.2 and 0.5. We ﬁnd
+sensor, as well as across different object identities. For the
+that training with random dynamics signiﬁcantly improved
+random-dynamicsenvironments,weadditionallyrandomised
+the test performance when compared to training with ﬁxed
+the values of the three dynamics parameters by applying a
+dynamics, and that using the same randomisation factor of
+multiplier α. We experimented with two different ranges for
+∈ ∈ 0.2 in both training and testing led to the best results. As
+α:α [0.8,1.2](randomisationfactor0.2)andα [0.5,1.5] before,weseethatthepinpositionsrepresentationperformed
+(randomisation factor 0.5). For each task, 1000 training
+best. In both Figures 5 and 6, the object index prediction
+episodes and 100 testing episodes were collected separately,
+∼ shows relatively large mean prediction error. We ascribe this
+with 3 5 simulation steps per episode, during which the
+tothefactthattheobjectidentityisgenerallynotpredictable
+sensorwasloweredontotheobject(eachepisodehasaﬁxed
+with a single tap of the sensor, since the objects in our
+object identity, position, and orientation, and a ﬁxed set of
+∼ ∼ testshavesimilarlocalsurfacegeometry,eveniftheirglobal
+dynamicsparameters).Therefore, 4000trainingand 400
+geometry is distinct.
+examples were collected in simulation for each task.
+C. Results V. SIM-TO-REALEVALUATION
+Figure 5 shows test results when trained on the ﬁxed- Wethenevaluatedourmethodwithreal-worldexperiments
+dynamics environment, and tested on both the ﬁxed en- and sim-to-real transfer, by mounting the TacTip onto a
+vironment, and the random-dynamics environment with a Sawyer robot arm, as shown in Figure 1. Experiments were
+1642
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. (a) (b) (a) (b) (c)
+(d) (e) (f)
+(c) (d)
+Fig. 7: The scenes of three tasks in both reality (a)-(c) and
+simulation (d)-(f). (a) and (d) are task I. (b) and (e) are task
+II. (c) and (f) are task III.
+B. Tasks
+As illustrated in Figure 7, we tested sim-to-real transfer
+Fig.6:Comparisonofdifferentrepresentations,withtraining on three different tasks:
+and testing both in randomised environments. We evaluated I. Rotation Angle Prediction. We tested predicting the
+on three tasks: (a) predicting the object’s identity, (b) pre- polarcoordinateangleofthesensorwithrespecttoacircular
+dicting the central position of the collision, (c) predicting shape, as shown in Figure 7 (a). 10000 examples were
+the rotation angle of the object. (d) shows the MSE of these collected in simulation, containing 1000 different angles
+{ | }
+predictions over all three tasks. α = 2πi i = 0,1,2,...,999 . In the real-world test, the
+1000
+sensor was moved along the circular object in a tapping
+manner,andtestedon12uniformly-distributedanglesaround
+{ | }
+conducted in a similar manner to the sim-to-sim setting, but the circle α = 2πi i=0,1,2,...,11 . Each round therefore
+12
+with a different set of tasks and objects. contained 12 taps. In both simulation and reality, small
+perturbations were added to the radius.
+A. Normalisation of Pin Positions II. Position Prediction on Edge. We tested predicting
+First, the positions of pins when observed in the real theone-dimensionalpositionofthesensorwhentouchingan
+camera need to be made consistent with those in simulation. edge,asshowninFigure7(b).5000exampleswerecollected
+In simulation, the pin positions are taken directly from insimulation.Inthereal-worldtest,eachroundcontained10
+the environment state, whereas in reality, the pin positions taps on the edge. In both simulation and reality, the sensor’s
+are estimated by use of contour localisation in the camera position was sampled uniformly from the range [-5, 5] mm
+images. As such, normalisation is required to align the pin between the sensor’s centre and the edge.
+positions across the two domains. III.PositionPredictiononPole.Wetestedpredictingthe
+two-dimensional position of the sensor when touching the
+Tonormalisethespatialunit,weﬁrstrepresentedeachpin
+tip of a pole. 5000 examples were collected in simulation,
+position as the relative position from the central pin, in both
+simulation and reality, denoted by {(xi,yi)} for simulation recording the x- and y-coordinates of the sensor’s centre
+and {(xi,yi)} for reality, where i∈Psansd P is the vertex relative to the pole’s tip. Each round of testing contained 10
+set of prin rcentres. The normalised positions {(x˜i,y˜i)} were taps. During both training and testing, the sensor’s position
+was sampled uniformly from the range [-5, 5] mm from the
+calculated as follows:
+centre of the pole’s tip.
+x¯+y¯
+(x˜i,y˜i)=(xi,yi)/ (12) As with the sim-to-sim experiments, data was collected
+2
+in simulation across a range of randomisation factors. The
+x¯= |1| ∑ |xi|, (13) total amount of real time to collect the simulated data was
+P ∈
+i P less than one hour for each task. For all tasks, each test
+y¯= |1| ∑ |yi|, (14) was conducted for 10 rounds in the real world, and the
+P ∈ mean absolute error (MAE) and the standard deviation of
+i P
+the absolute error were calculated across these rounds.
+{ } { }
+whichappliesforbothpositions (xi,yi) and (xi,yi) .The
+s s r r
+x¯,y¯ are the average absolute positions over all pin centres C. Training
+along the x- and y-axes. As with the sim-to-sim experiments, training was done
+However, there were still small differences in normalised with a 4-layer fully-connected neural networks, with 500
+pin positions in simulation and reality after normalisation. hidden nodes per layer, and ReLU activations.. The rotation
+To handle these differences, we added extra Gaussian noise angle prediction used a Sigmoid function, and the position
+−
+(withzeromeanandstandarddeviationof10 2)oneachpin prediction used a Tanh function. A mean squared error loss
+position during training on the simulated data. was used for all tasks.
+1643
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. D. Results (a)
+Results for sim-to-real transfer are displayed in Table I,
+where we also show the effect of different randomisation
+factors. Figure 8 (a)-(c) show the prediction performances
+on all tasks with a subset of data samples, using the pin
+positions representation, and the best randomisation range (b)
+for each task (i.e. this shows our best results for each task).
+Figure 9 then plots the performance of the pin positions
+representation, as a function of the randomisation factor.
+We can see three interesting outcomes from these ex-
+periments. Firstly, we show that, as with the sim-to-sim
+(c)
+experiments, the representation which directly uses the (nor-
+malised) pin positions performs the best, and further manual
+engineering of the representation actually degrades perfor-
+mance.Secondly,weseethatwhenusingthisrepresentation,
+the sim-to-real transfer is robust across a wide range of
+parameter randomisation factors. Thirdly, we see that this
+method is able to achieve low errors of less than 1 mm in
+predicting the position of a point of contact.
+Sim-to-real Performance: Mean Absolute Error Fig. 8: Prediction results for three tasks on a subset of data.
+Randomisation Factor
+Representation 0.0 0.2 0.4 0.6
+Positions 0.686 0.325 0.254 0.579 (a) (b)
+Task I Threshold 3.12 2.71 3.31 3.20
+WA 2.98 3.02 3.31 3.14
+Positions 0.88 1.21 0.45 0.80
+Task II Threshold 2.44 4.05 3.83 2.27
+WA 2.24 2.80 1.41 1.24
+Positions 1.02 0.73 1.14 1.29
+Task III Threshold 3.13 5.23 4.52 5.74
+(c)
+WA 3.23 4.38 5.24 3.63
+TABLE I: Real-world results studying three tasks, three
+pin representations, and four randomisation factors. Bold
+indicates the lowest error for each task.
+VI. CONCLUSIONS
+In this work, we investigated optical tactile sensing via Fig. 9: Comparison of different randomisation ranges for
+sim-to-real transfer, and we showed this to be effective in three tasks with the pin positions representation.
+supervised learning tasks. A soft-body simulation method
+with Unity was ﬁrst designed to simulate the deformation
+of the TacTip sensor during contact. This was then used to
+generate training data for a number of supervised learning sim-to-real transfer with tactile data is possible at all. As
+tasks, which involved predicting the positions, angles, and such, this work now opens up future studies into using this
+identities of objects which the sensor is in contact with. for learning more complex tasks, such as those requiring
+Whentrainingwithaneuralnetwork,weshowedthatdirectly reinforcement learning, where learning directly from data
+using the pin positions as input to the network is superior is required. Evaluation on more complex objects beyond
+to other manually-engineered representations. Our sim-to- simple primitive shapes, where there is greater sensitivity
+real results, using domain randomisation of the simulation to the difference between simulation and reality, would also
+physics parameters, show that our method can achieve less beusefulinunderstandingreal-worldapplicability.Addition-
+than 1 mm position prediction error, and is robust across ally,limitationsofthecurrentsimulationmodelremaintobe
+different parameter randomisation ranges. addressed:simulationspeediscurrentlyrestrictedbyUnity’s
+Whilst predicting contact points may be trivial through collision detection module, and static and sliding friction
+a manually-engineered method without requiring machine effects could be incorporated during deformation, with a
+learning, the purpose of these experiments was to show that view towards simulating more complex object interactions.
+1644
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. REFERENCES International Joint Conference on Neural Networks (IJCNN), pages
+1–8,2019.
+[1] Edward Johns, Stefan Leutenegger, and Andrew J Davison. Deep
+[19] HerkevanHoof,NutanChen,MaximilianKarl,PatrickvanderSmagt,
+learningagraspfunctionforgraspingundergripperposeuncertainty.
+and Jan Peters. Stable reinforcement learning with autoencoders for
+In2016IEEE/RSJInternationalConferenceonIntelligentRobotsand tactile and visual data. In 2016 IEEE/RSJ International Conference
+Systems(IROS),pages4461–4468.IEEE,2016. on Intelligent Robots and Systems (IROS), pages 3928–3934. IEEE,
+[2] Sergey Levine, Peter Pastor, Alex Krizhevsky, Julian Ibarz, and
+2016.
+DeirdreQuillen. Learninghand-eyecoordinationforroboticgrasping
+[20] Sandy H Huang, Martina Zambelli, Jackie Kay, Murilo F Martins,
+withdeeplearningandlarge-scaledatacollection. TheInternational
+Yuval Tassa, Patrick M Pilarski, and Raia Hadsell. Learning gentle
+JournalofRoboticsResearch,37(4-5):421–436,2018.
+objectmanipulationwithcuriosity-drivendeepreinforcementlearning.
+[3] SergeyLevine,ChelseaFinn,TrevorDarrell,andPieterAbbeel. End- arXivpreprintarXiv:1903.08542,2019.
+to-endtrainingofdeepvisuomotorpolicies. TheJournalofMachine
+[21] Herke Van Hoof, Tucker Hermans, Gerhard Neumann, and Jan Pe-
+LearningResearch,17(1):1334–1373,2016.
+ters. Learning robot in-hand manipulation with tactile features. In
+[4] Roberto Mart´ın-Mart´ın, Michelle Lee, Rachel Gardner, Silvio 2015IEEE-RAS15thInternationalConferenceonHumanoidRobots
+Savarese, Jeannette Bohg, and Animesh Garg. Variable impedance (Humanoids),pages121–127.IEEE,2015.
+control in end-effector space. an action space for reinforcement
+[22] PhilippRuppel,YannickJonetzko,MichaelGo¨rner,NormanHendrich,
+learning in contact rich tasks. In Proceedings of the International
+and Jianwei Zhang. Simulation of the syntouch biotac sensor. In
+ConferenceofIntelligentRobotsandSystems(IROS),2019. International Conference on Intelligent Autonomous Systems, pages
+[5] OpenAI:MarcinAndrychowicz,BowenBaker,MaciekChociej,Rafal
+374–387.Springer,2018.
+Jo´zefowicz, Bob McGrew, Jakub Pachocki, Arthur Petron, Matthias
+[23] Carmelo Sferrazza, Adam Wahlsten, Camill Trueeb, and Raffaello
+Plappert, Glenn Powell, Alex Ray, Jonas Schneider, Szymon Sidor,
+D’Andrea. Ground truth force distribution for learning-based tactile
+Josh Tobin, Peter Welinder, Lilian Weng, and Wojciech Zaremba. sensing: a ﬁnite element approach. IEEE Access, 7:173438–173449,
+Learning dexterous in-hand manipulation. The International Journal
+2019.
+ofRoboticsResearch,39(1):3–20,2020.
+[24] CarmeloSferrazza,ThomasBi,andRaffaelloD’Andrea.Learningthe
+[6] VikashKumar,EmanuelTodorov,andSergeyLevine.Optimalcontrol
+sense of touch in simulation: a sim-to-real strategy for vision-based
+with learned local models: Application to dexterous manipulation. tactilesensing. arXivpreprintarXiv:2003.02640,2020.
+In2016IEEEInternationalConferenceonRoboticsandAutomation
+[25] Daniel Fernandes Gomes, Achu Wilson, and Shan Luo. Gelsight
+(ICRA),pages378–383.IEEE,2016. simulationforsim2reallearning. InICRAViTacWorkshop,2019.
+[7] Justin Lin, Roberto Calandra, and Sergey Levine. Learning to
+[26] Erwin Coumans and Yunfei Bai. Pybullet, a python module for
+identifyobjectinstancesbytouch:Tactilerecognitionviamultimodal physicssimulationforgames,roboticsandmachinelearning. GitHub
+matching. arXivpreprintarXiv:1903.03591,2019. repository,2016.
+[8] NathanFLepora,AlexChurch,ConradDeKerckhove,RaiaHadsell, [27] ErastusHLee. Elastic-plasticdeformationatﬁnitestrains. Journalof
+and John Lloyd. From pixels to percepts: Highly robust edge appliedmechanics,36(1):1–6,1969.
+perception and contour following using deep learning and an optical [28] JRychlewski. Onhooke’slaw. JournalofAppliedMathematicsand
+biomimetic tactile sensor. IEEE Robotics and Automation Letters, Mechanics,48(3):303–314,1984.
+4(2):2101–2107,2019.
+[29] VinodNairandGeoffreyEHinton. Rectiﬁedlinearunitsimprovere-
+[9] Stephen James, Andrew J Davison, and Edward Johns. Transferring strictedboltzmannmachines.InProceedingsofthe27thinternational
+end-to-end visuomotor control from simulation to real world for a conferenceonmachinelearning(ICML-10),pages807–814,2010.
+multi-stagetask. InConferenceonRobotLearning(CoRL),2017.
+[10] XueBinPeng,MarcinAndrychowicz,WojciechZaremba,andPieter
+Abbeel. Sim-to-real transfer of robotic control with dynamics ran-
+domization. In2018IEEEInternationalConferenceonRoboticsand
+Automation(ICRA),pages1–8.IEEE,2018.
+[11] Josh Tobin, Rachel Fong, Alex Ray, Jonas Schneider, Wojciech
+Zaremba, and Pieter Abbeel. Domain randomization for transferring
+deep neural networks from simulation to the real world. In 2017
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),pages23–30.IEEE,2017.
+[12] Benjamin Ward-Cherrier, Nicholas Pestell, Luke Cramphorn, Ben-
+jamin Winstone, Maria Elena Giannaccini, Jonathan Rossiter, and
+Nathan F Lepora. The tactip family: Soft optical tactile sensors
+with 3d-printed biomimetic morphologies. Soft robotics, 5(2):216–
+227,2018.
+[13] JeremyAFishelandGeraldELoeb. Sensingtactilemicrovibrations
+with the biotac—comparison with human sensitivity. In 2012 4th
+IEEERAS&EMBSinternationalconferenceonbiomedicalrobotics
+andbiomechatronics(BioRob),pages1122–1127.IEEE,2012.
+[14] NathanFLepora,KirstyAquilina,andLukeCramphorn. Exploratory
+tactile servoing with active touch. IEEE Robotics and Automation
+Letters,2(2):1156–1163,2017.
+[15] Siyuan Dong, Wenzhen Yuan, and Edward H Adelson. Improved
+gelsight tactile sensor for measuring geometry and slip. In 2017
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+(IROS),pages137–144.IEEE,2017.
+[16] FrancoisRHogan,MariaBauza,OleguerCanal,ElliottDonlon,and
+AlbertoRodriguez. Tactileregrasp:Graspadjustmentsviasimulated
+tactile transformations. In 2018 IEEE/RSJ International Conference
+on Intelligent Robots and Systems (IROS), pages 2963–2970. IEEE,
+2018.
+[17] Yazhan Zhang, Zicheng Kan, Yu Alexander Tse, Yang Yang, and
+MichaelYuWang.Fingervisiontactilesensordesignandslipdetection
+using convolutional lstm network. arXiv preprint arXiv:1810.02653,
+2018.
+[18] Alberto Garcia-Garcia, Brayan Stiven Zapata-Impata, Sergio Orts,
+Pablo Gil, and J. A. Rodriguez. Tactilegcn: A graph convolutional
+network for predicting grasp stability with tactile sensors. 2019
+1645
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:12 UTC from IEEE Xplore.  Restrictions apply. 

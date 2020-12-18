@@ -1,0 +1,554 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Learning-based Path Planning for Autonomous Exploration of
+Subterranean Environments
+Russell Reinhart, Tung Dang, Emily Hand, Christos Papachristos, and Kostas Alexis
+Abstract—In this work we present a new methodology on
+learning-based path planning for autonomous exploration of
+subterranean environments using aerial robots. Utilizing a
+recently proposed graph-based path planner as a “training
+expert” and following an approach relying on the concepts
+of imitation learning, we derive a trained policy capable of
+guiding the robot to autonomously explore underground mine
+driftsandtunnels.Thealgorithmutilizesonlyashortwindowof
+range data sampled from the onboard LiDAR and achieves an
+exploratorybehaviorsimilartothatofthetrainingexpertwith
+amorethananorderofmagnitudereductionincomputational
+cost, while simultaneously relaxing the need to maintain a
+consistent and online reconstructed map of the environment.
+The trained path planning policy is extensively evaluated both
+in simulation and experimentally within ﬁeld tests relating to
+Fig. 1. An instance of the underground mine ﬁeld deployments on the
+the autonomous exploration of underground mines.
+basisofwhichlearning-basedpathplanningpolicyresultsarepresented.
+GBPlanner-andothersimilarmethods[9–11]-achievesuch
+I. INTRODUCTION
+results on the basis of dense sampling, exhaustive collision
+Robotic systems are paving their way to be utilized in
+checking and volumetric gain calculations on an occupancy
+an ever-increasing set of applications in both the civilian
+map representation of the map, thus requiring signiﬁcant
+and military domains alike. Aerial robots, for example,
+computation time and resources.
+are currently integrated in a multitude of surveillance [1],
+Motivated by the above, the potential use-cases of sub-
+inspection [2–4], search and rescue [5,6], and commercial
+terranean robotics and the limitations of methods such as
+applications[7].However,noteveryenvironmentiscurrently
+GBPlanner, in this work we present a Learning-Based ex-
+rendered possible for robotic entry and autonomous explo-
+ploration Planner (LBPlanner) policy that aims to provide
+ration. In this work, we speciﬁcally focus on the problem of
+planning performance analogous to that of GBPlanner (and
+autonomousexplorationofsubterraneanenvironmentswhich
+similarmethods[9–11])butatafractionofthecomputational
+can often be dull, dirty, and dangerous thus calling for
+cost, while simultaneously relaxing the need to maintain
+robotic access. Subterranean environments present certain
+a consistent online reconstructed map of the environment.
+characteristics that challenge the problem of exploration
+The latter is equally important as underground environments
+autonomy, namely that they are often a) sensor-degraded, as
+can span across multiple kilometers, thus challenging the
+wellasb)longandlarge-scale,narrow,andmulti-branching.
+state-of-the-art in GPS-denied localization and mapping. To
+Nevertheless, the beneﬁts of robotic autonomy underground
+achieve this goal, LBPlanner builds upon the principles of
+can be major. Robots for mine rescue, monitoring of subter-
+imitation learning, employs a network design that encodes
+ranean metropolitan infrastructure, or cave exploration, are
+solution multi-modality and utilizes the GBPlanner as an
+all indicative examples of relevant applications.
+“expert” to provide training data. The proposed network
+With the goal of addressing the problem of autonomous
+architecture accounts for the topological characteristics of
+exploration in the large-scale, often narrow, and multi-
+typical subterranean settings involving multiple branches,
+branching underground environments, we recently proposed
+longandpossiblyinclinedpaths,alongsidealargevarietyin
+a Graph-based exploration planner (GBPlanner) [8]. It pro-
+terms of size. Furthermore, the LBPlanner departs from the
+vides paths that ensure high exploration gain, as evaluated
+assumption of an always-available volumetric representation
+in terms of uncovering previously unexplored volume given
+of the environment (e.g., through Octomap [12]) and only
+a depth sensor, while simultaneously avoiding obstacles and
+employs a sliding window of direct LiDAR range obser-
+exploiting key observations with respect to the topology of
+vations for its training and inference steps. As evaluated
+subterranean settings such as mines and tunnels. However,
+through experimental data including ﬁeld tests inside un-
+derground mines (Figure 1), the trained policy provides an
+ThismaterialisbaseduponworksupportedbytheDefenseAdvancedRe-
+searchProjectsAgency(DARPA)underAgreementNo.HR00111820045. exploratorybehaviorsimilartothatofitsexpert(GBPlanner)
+Thepresentedcontentandideasaresolelythoseoftheauthors. but with an order of magnitude reduction in computational
+The authors are with the Autonomous Robots Lab, University
+cost, a fact particularly useful for its deployment in in-
+of Nevada, Reno, 1664 N. Virginia, 89557, Reno, NV, USA
+rreinhart@nevada.unr.edu creasingly smaller, and more agile ﬂying robots operating in
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1215
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. subterranean domains. The training and test data from this spaces or narrow pockets may not be fully explored thus
+M ⊂M
+workareopenlyreleasedtogetherwiththissubmission[13]. leading to a residual map ∗ which is infeasible
+,res U
+The remainder of this manuscript is structured as follows: toexploregiventherobot’sconstraints.Withtheoverallgoal
+M →M
+Section II presents related work, Section III outlines the toexplorethefeasiblevolumeandthusmake ∗ ,
+U ,res
+problem, followed by the proposed approach in Section IV. it must be noted that the learning-based exploration path
+Evaluation studies are presented in Sections V. Finally, planning problem is deﬁned per iteration, as the trained
+M
+conclusions are drawn in Section VI. policy does not assume the availability of the map
+E
+but only a sliding window of N point cloud observations
+II. RELATEDWORK LS
+coming from the depth sensor (typically a LiDAR, an
+Robotic exploration of unknown environments remains a RGBD sensor, or a stereo camera).
+key area of interest in the robotics community and over the
+Deﬁnition 1 (Iterative Exploration) Given an environment
+years a number of methods focusing on the exploration path M
+represented by map from which a sequence of N
+planning problem have been proposed [14–17]. Volumetric S L
+observations from a depth sensor have been sampled,
+exploration of unknown spaces has been historically ad-
+derive a locally optimized path σ that maximizes the
+dressed by frontier-based methods [15], where the objective M opt
+volume of expected to be uncovered within a given
+of the path-planning algorithm is to actively guide the U M
+time duration ∆T . Note that map is not assumed to
+robot towards the frontiers of its sensor perception range. P
+be estimated online.
+Similarly,samplingbasedmethodshavealsobeenemployed
+where the objective is to sample the “next–best–view” [14] IV. PROPOSEDAPPROACH
+whichmaximizesthevolumetricobservationoftheunknown Theproposedlearning-basedapproachonexplorationpath
+space. More recent efforts in this domain have focused planning is based on the principles of imitation learning
+onmulti-objectiveplanning[10,11],alongsidemulti-layered and utilizes “expert” paths from the previously developed
+architectures [8] combining efﬁcient local exploration with GBPlanner - a graph based exploration planner tailored
+a global re-planning step to reposition the robot towards to subterranean environments [8]. The utility of imitation
+frontiers previously discovered along large-scale topologies. learning has been demonstrated within the framework of the
+Contributing into the same domain, a set of methods have problemofautonomousplanning,forexampleinthecontext
+been proposed to utilize machine learning for the problem of navigating through forest trails [22], and for the purposes
+of exploration planning [18–20], while a great amount of of autonomous driving [23]. In this work, which in turn
+work has focused on learning for navigation [21]. Motivated focuses on exploration planning which further requires con-
+by the progress in the literature, but also cognizant of the siderations with respect to the anticipated information gain,
+speciﬁc challenges of subterranean environments, the lack a fully-convolutional neural network is trained to imitate the
+of extensively ﬁeld-veriﬁed learning-based path planning short term behavior of the sampling-based GBPlanner.
+methods, and the fact that algorithms shown to provide
+A. Imitation Learning from Expert Planner
+good behavior in such challenging conditions typically are
+{ }
+both computationally expensive (e.g., the work in [8]) and We begin with some datasets D = (o ,a ) of range
+e n e
+require a consistent real-time reconstruction of the map of image observations o and subsequent actions (paths) a
+n e
+the environment, this contribution aims to provide a mean- generated by an expert policy π (in this case, the GBPlan-
+e
+ingful learning-based alternative. As such, the LBPlanner is ner) during exploration of an unknown environment. A deep
+both very efﬁcient, with more than an order of magnitude neuralnetworkπ withparametersθistrainedtominimizea
+L θ
+reduction of computational time compared to its “training loss function (a ,π (o )) via stochastic gradient descent.
+e θ n
+expert”, and simultaneously a method that relaxes the need Once this “novice” policy has been trained on expert data, it
+for consistent online 3D mapping. isdeployedinasimulationenvironmentandproposesactions
+a = π (o ) based on N recent sensor observations. If
+III. PROBLEMSTATEMENT n θ n L
+this novice’s action a is viable (in this case, the action
+n
+The exploration planning problem, as considered in this does not lead to collision with the environment), then the
+work, is that of autonomously exploring an initially un- action a is executed. At each time the planner is triggered,
+n M
+known subterranean environment in the sense of identifying the expert policy also proposes an action a = π ( ),
+e e E
+the robot paths that ensure that an onboard depth sensor which in conjunction with the novice’s observation at this
+incrementally unveils and uncovers previously unexplored time, o , becomes a new training data point (o ,a ). Note
+M n n e
+volume. Let be the map of the environment consisting of that the observations for the novice and expert policies are
+M M
+the explored subset and the unexplored regions = different; the novice receives concatenated range images
+M\M E U
+. Furthermore, let d be the maximum effective calculated from recent point cloud measurements, while the
+E S max
+range of the depth sensor , and F ,V its horizontal and sampling-based expert depends on the current volumetric
+H H M
+verticalﬁeldofview.Inaddition,lettherobot’sconﬁguration mapreconstructionof .Thismethod,knownasimitation
+E
+at time t be deﬁned as the ﬂat state of robot position learningwithdatasetaggregation[24],orDAGGER,enables
+and heading ξ = [x ,y ,z ,ψ ]. Furthermore, since for thegenerationoftrainingdatawhichwouldnotbegenerated
+t t t t t
+mostrangesensorstheirperceptionstopsatsurfaces,hollow by an expert policy which is less likely to take sub-optimal
+1216
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. or dangerous actions and then have to recover. Algorithm 1 corresponding to forward directions and i as indices for
+b
+outlines this method performing nepoch data collection and backward directions. At inference time, the maximum for-
+training epochs. ward predicted score is s = maxs[i ] corresponding
+f,max f
+to direction d = argmaxs[i ]. If s is less than some
+f f,max
+Algorithm1ImitationLearningwithOnboardExpertDAG- threshold(i.e.,thereislowpredictedscoreforforwardpaths)
+GER then the direction d becomes d = argmaxs[i ]. Once the
+← b
+1: π rand (cid:46) initialize novice policy parameters direction is determined, the d-th row of the angular offset
+θ← { (cid:80)}
+2: D D = (o ,a ) matrixDisaddedtothed-thdirection’sangularcoordinates
+e n e
+3: for i=←0,1,...,nepoch do L and the robot proceeds along a 2m path in this direction.
+4: θ argmin ∈ (a ,π (o )) Thisdivisionintoforwardandbackwarddirectionsenables
+5: for i=0,1,.θ..,n(on,aed)oD e θ n the robot to reverse exploration directions if forward direc-
+← max
+6: a π (o ) (cid:46) action from novice policy tionshavelowpredictedscoreasdetailedinSectionV.This
+n← θ Mn
+7: a π ( ) (cid:46) action from expert policy heuristic also prevents the robot from oscillating between
+e← e∪{E }
+8: D D (o ,a ) (cid:46) add new training data forward and backward motion in a tunnel where each direc-
+n e
+9: if a is valid then tion may look equally promising (similar predicted score)
+n
+10: Execute a (cid:46) explore with novice policy to a model with no notion of time history or access to a
+n
+11: else reconstructed map.
+12: Execute a (cid:46) collision-free expert action
+e
+13: return π
+θ
+B. Model Design
+We require the model to be able to identify multiple
+potential exploration directions. For example in a tunnel,
+the model should always identify the dominant directions
+of the tunnel as potential paths, and must be able to select
+between different branches of an intersection. We achieve
+thisbehaviorbydividingthespacearoundtherobotintooc-
+Fig.2. Networkarchitectureofthelearning-basedexplorationplanner.
+tants and constructing a network with 8-dimensional output
+where each dimension is responsible for proposing paths in C. Training Data Generation
+a speciﬁc octant around the robot.
+Within this work, training data are generated using the
+The input to the deep neural network model is a stack
+× GBPlanner [8] as follows. First, a set of simulated un-
+of NL =3 [16 90] range images calculated from recently- derground environments are considered and the GBPlanner
+receivedpointclouds.Featuresareextractedfromthisimage,
+is set to enable their autonomous exploration based on a
+and the features are then input into three subnetworks with × ×
+simulated 1.4m 1.4m 0.5m multirotor equipped with
+outputs:
+a LiDAR sensor with horizontal and vertical ﬁeld-of-view
+• Predictedscoresfortrajectoriesineachoctant,an8×1 of [F ,F ] = [360,30]◦ and a range of d = 100m.
+H V max
+vector s. × At roughly 2m intervals in the simulation environment, the
+• Angular offsets from each direction, an 8 2 matrix D sampling-based GBPlanner is triggered and generates a set
+{ }
+wherethei-throw,[∆ψi,∆θi],containsangularoffsets of scored exploration paths σexp . Sampled paths that are
+from the i-th octant around the robot. ∆ψ is a pitch still viable after some cut-off distance δmax from the robot,
+±
+• aAng1l6e×of9fs0et×, a3ndma∆trθixisoa, oruotlpluatngblyeaofdfesecto.der network, aronbdowtahriechusleiedwtoitgheinneraπte/8thorefeorneegroefsstihoenotcatragnettsa,xsˆes(8o×f t1h)e,
+× × ×
+whichisthereconstructedinputrangeimagestack.This Dˆ (8 2), and oˆ (16 90 3) for the model whose outputs
+is used for model training and not during navigation. are described in the preceding section. A schematic diagram
+Note that the decision for the network to represent an 8- of training data being generated is shown in Figure 3.
+modal distribution is an engineering one. It was found that The path score is calculated such that directions (corre-
+this level of discretization enabled the model to learn to sponding to indices in the score vector sˆ, and rows in the
+effectively navigate narrow, branching, tunnel-like environ- angular offset matrix Dˆ) which have no viable paths get 0
+ments. The selected resolution can be increased, at the cost score. Scores for directions with viable paths are normal-
+of increasing the dimensionality of the underlying network. ized so that the path with the highest expected volumetric
+Figure 2 presents a diagram of the network architecture. exploration gain gets score 1, while the path with lowest
+These eight directions are further divided into “forward” exploration gain (often a backtracking path) gets score 0.5.
+and “backward” directions. Forward directions are those Initial training data were generated by running the GB-
+−
+in [ π/2,π/2] of the most recent direction chosen and Plannerinanumberofsimplesimulationenvironmentswith
+backward directions lie in (π/2,3π/2). Deﬁne i as indices geometries relevant to the subterranean exploration task.
+f
+1217
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. a)
+1 3
+2
+b)
+GBPlanner
+LBPlanner
+4
+Start
+Exp path
+Color code
+5
+1.0 0.5 0.0 -0.5-1.0
+Fig.4. ComparisonofexplorationdirectionsproposedbyLBPlannerand
+GBPlanner in test simulation environments. Both planners were triggered
+Fig. 3. Training data generation by organizing the expert solutions in at each point shown, but the LBPlanner paths were executed. The color
+octantsandwithinthosederivingthedirectionsofproposedexploration. code for each planner iteration is determined by the dot product between
+the exploration directions proposed by each planner. Subﬁgure a) shows
+This includes straight tunnels, tunnels with branches, turns, high correlation between the proposed exploration directions at all points
+◦
+inclines, declines, intersections, and obstructions. Once the (average19 absoluteangledifference).Subﬁgureb)showstheGBPlanner
+identifying the dead-end (4) before the LBPlanner (5), as well as the
+LBPlanner agent has been trained on this data, the agent LBPlanner’sfailuretoexploretheotherbranch.
+is put into the same simulation environments. Additional
+aerial robot equipped with an onboard 3D LiDAR was uti-
+trainingdataarethengeneratedastheagenttakestrajectories
+lized and deployed inside an underground mine in Northern
+that would have been ignored by the GBPlanner due to their
+Nevada.Thedatafromthisenvironmentwerenotutilizedin
+lack of exploration gain, inefﬁciency, or close proximity
+any training phase.
+to occupied space (thus leading to a possible impending
+collision). Meanwhile, the GBPlanner concurrently labels
+A. Simulation Studies
+observationswithmoreoptimalactions.Alltrainingdatasets
+Models trained using the methods described above were
+were duplicated by shifting pixels in the range image ob-
+tested extensively in simulation environments from which
+servations and rotating the corresponding path directions
+± ◦ ◦ no training data were acquired. Figure 5 shows trajectories
+accordingly over an angular range of 80 in 4 increments
+taken by the LBPlanner trained model in a square circuit, a
+toreducedirectionalbiasintrainingdata.Atotal97ktraining
+T intersection, and a mesh reconstruction of an underground
+samples were collected across 14 simulation environments,
+mine. Exploration trajectories taken by the model trainer
+5%ofwhichweresetasideasavalidationset.Thecomplete
+(GBPlanner) in the same environments are also shown.
+training dataset is released online at [13].
+The T and square environments were built from different
+D. Training model components than those used in the training environ-
+The loss function minimized is a weighted sum of mean- ments, thus indicating that the model which was trained
+squared errors between predicted scores, predicted angular in tubular tunnels seems to generalize to more rectangular
+offsets, and reconstructed images. For each sample, this is: tunnel environments. All LBPlanner trajectories shown were
+(cid:88) (cid:88)(cid:88)
+collision-free despite not explicitly checking for collision
+prior to executing any proposed paths (e.g., through using a
+L 8 − 8 2 −
+= α (cid:88)(sˆj(cid:88)s(cid:88)j)2+β (Dˆjk Djk)2 (1) map).Theexplorationrateser,thecomputationtimestc per
+iteration (using an Intel i7-7820HQ CPU at 2.90GHz), and
+j=1 j=1k=1
+16 90 3 − the number of paths planned Nc of both planners for these
++γ (oˆ o )2 simulations and the ﬁeld experiments are listed in Table I.
+mnp mnp
+As discussed, the primary goal of this work is to approx-
+m=1n=1p=1
+where α,β,γ are hyperparameters controlling the relative imate the local exploration behavior of the sampling-based
+weight of each regression target. Training was done on expert (GBPlanner), without assuming the availability of an
+batches of 600 samples with a learning rate 5×10−6 and online reconstructed map or other way to store or access
+using an ADAM optimizer. temporal information regarding the robot mission. This fact
+caninturnleadtosomeundesiredbehaviorwhenfacedwith
+V. EVALUATIONSTUDIES
+multiple viable directions. The trajectory of the LBPLanner
+Inordertoevaluatethelearning-basedexplorationplanner, while exploring a “T” shaped environment exempliﬁes this
+we performed a series of both simulation and experimental (see Figure 4b). After exploring one branch of the T and
+studies.Withintheexperimentalﬁeldresults,anautonomous returning to the intersection, the predicted highest-score
+1218
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. TABLEI
+LBPlanner GBPlanner
+Env. e [m3/s] t [s] N e [m3/s] t [s] N
+r c c r c c
+T 3.48 0.046 54 4.31 3.13 17
+Square 4.66 0.041 73 6.09 2.82 21
+Minesim 4.69 0.028 45 4.27 3.69 25
+Minereal 8.37 0.031 60 8.43 3.0 12
+a) LBPlanner
+Range Image
+Feasible directions &
+scores
+0.8
+0.9 0.500.55 E1 E2
+Fig.6. Systemoverviewofouraerialsubterraneanroboticscout.
+E3
+velocity of 0.5m/s, while the path length for the LBPlanner
+b) GBPlanner
+solutions was set to 2.0m. Figure 7 presents the respective
+Shortest paths from
+graph experimentalresultswitharobottraversingmorethan170m
+E1
+E2 insidethisundergroundmineinvolvingmultipleintersections
+and in completely autonomous exploration mode on the
+basis of LBPlanner. It is noted that the side-drifts in the
+mine are identiﬁed as feasible directions by the LBPlanner,
+E Test environments
+Start however the predicted scores for these directions are less
+Exploration trajectory E3
+thanthatoftheforwarddirection,sotherobotneverchooses
+to enter these. This behavior is desirable, as these are
+Fig.5. TrajectoriestakenbyLBPlannera)andGBPlannerb)corresponding
+to the exploration rate results in Table I. As visually observed, the paths very short and offer little exploration gain. Furthermore,
+are highly similar which indicates the ability of LBPlanner to mimic the Table I offers a comparison of the average exploration rate
+performanceofitstrainingexpert.
+e and planning time per iteration between LBPlanner and
+r
+GBPlanner, alongside the total number of planning steps
+required to explore the Lucerne mine. The respective result
+trajectory lies toward the starting position and the other
+for GBPlanner deployed to explore the same environment
+branchoftheenvironmentremainsunexplored.Thisbehavior
+waspresentedin[29].AsshownLBPlannerachievessimilar
+is an inevitable consequence of the network data input used,
+exploration rate (Figure 8) at a fraction of the associated
+as the inference of waypoints only depends on very recent
+computational cost. Finally, a second experimental study
+sensor measurements, and the network architecture which
+took place within the same underground mine with the
+encodes no notion of time-history or map.
+robot now being deployed from inside one of the muckbays
+B. Experimental Studies (Figure 7c). With the left side of the mine being blocked by
+In order to ﬁeld demonstrate and evaluate the LBPlanner introducedstructureweobservethattheLBPlannercorrectly
+we further conducted an experimental study in an actual navigates and explores the mine by taking the appropriate
+undergroundmine.Thepresentedﬁeldevaluationstudytook rightturnandthenprogressingtoexploretheremainingdrift.
+place utilizing an autonomous aerial robot developed around
+aDJIMatriceM100andintegratingaNUCi7andcombined
+2000
+LiDAR Odometry And Mapping, as well as visual-inertial
+localization. The system relies on Model Predictive Control 1500
+(MPC) for its automated operation. The LBPlanner sub- 1000
+scribes to the LiDAR sensor stream, calculates the reference
+500
+pathandthisisinturntrackedbytheonboardMPC.Details
+0
+for the overall system can be found in [25–28], while an 0 50 100 150 200 250
+overviewisillustratedinFigure6.Theintegrateddepthsen-
+S ◦ Fig.8. ExplorationrateofthetwoplannersintheLucernemine.
+sor is a Velodyne PuckLITE with [F ,F ] = [360,30] ,
+H V
+C. Discussion on the Computational Cost
+and a maximum range of 100m.
+This robotic system, integrating the LBPlanner, was de- The design and training of the LBPlanner delivers a
+ployed at the “Lucerne” underground mine in Northern performance similar to that of its expert (GBPlanner), but
+Nevada. This is a portal mine which allowed the robot at a fraction of the computational cost as detailed in Table I.
+to be deployed from outside and be tasked to explore the This “compression” operation corresponds to a key feature
+complete mine drift. During its operation, paths commanded of the method. To allow further understanding, we relate the
+by LBPlanner were set to be followed with an average computational analysis of this new method with GBPlanner.
+1219
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. a) First Planner Iteration b) 3-way Junction 3D Map of Underground Mine
+Mine Portal
+n+16
+n+8
+Intersection n
+n+16
+n+8
+n
+Range images from PCL
+Planner solutions Exploration Trajectory: 170m
+Best direction
+Feasible directions
+c) Experiment 2: started inside a branch
+End
+Obstacles
+Exploration Trajectory
+Start
+Mine Branch
+Fig.7. Learning-basedexplorationplannernavigatinga170mdriftofanundergroundminestartingfromthemainportal.Feasibledirectionsidentiﬁed
+bytheLBPlanner(arrowlengthsproportionaltopredictedscore)atthestartofthetunnelandanintersectionareshownalongwithcorrespondinglocal
+pointclouds,rangeimages,andimagescapturedbytheonboardcamera(sub-ﬁguresa-b).Theproposedplannerwasfurtherevaluatedinanotherscenario
+wheretherobotstartedatthebaseofaT-junction;hence,theplannerhadtosafelyguidetherobottoentertheintersectionthenkeepexploringtowards
+theleftortherightbranch.Asshowninsub-ﬁgurec),theplannercorrectlyproposedsafeandhighexplorationgainpathstowardstherightbranch.
+As detailed in [8], the local exploration step of the fact that for a single iteration of the GBPlanner it typically
+∼
+GBPlanner (which is “imitated” by LBPlanner) has a com- requires multiple LBPlanner iterations ( 4) due to the
+putational growth rate function that depends, among others, shorter horizon of its commanded paths, it is revealed that
+on the amount of vertices and edges sampled, and the ratio the method achieves an order of magnitude in complexity
+between the volume evaluated in terms of volumetric gain reduction with average time for path calculation around
+∼
+or the length of the edges evaluated for collision against 35ms.Infact,itpresentsaconstantandsmallcomplexity,
+the resolution of the volumetric representation. Indicatively, whereasGBPlannerisbothingeneralexpensiveanditscom-
+only the process of evaluating the volumetric gain for each plexity grows with the size of the map. Future research will
+vertex of the sampled graph has a growth rate that takes focus on retaining this important achievement and address
+O ×
+theform (NVF F d /(r r r) log(V /r3)),where the limitation of LBPlanner with respect to not exploiting
+H V max H V DG
+NV the number of vertices, r ,r the sensor resolution, information from the full history of robot observations.
+H V
+V the size of the volume of the environment and r the
+DG
+resolution of the underlying occupancy map. Similarly, the
+O × VI. CONCLUSIONS
+collision checking step has a growth rate of (V /r3
+× DR
+d /r log(V /r3)),whereV istheconsideredvolume
+foarvgtherobot,aDnGdd theaveraDgeRlengthofthegraphedge. An imitation learning-based exploration path planning
+avg
+As this brief analysis indicates, the GBPlanner operation policy capable to enable the autonomous exploration in
+can become computationally very demanding for sensors subterranean environments was presented. By ensuring that
+with long measurement distance (e.g., a Velodyne LiDAR), the training data include challenging conﬁgurations of the
+for planning over large subsets of maps, or for planning state space, while explicitly accounting for planning results
+with high resolution of the occupancy map (which may be organized in a selected set of cardinal directions, the trained
+required to ensure collision avoidance in narrow settings). policy is able to negotiate challenging multi-branching un-
+dergroundenvironments.Asshownbothinsimulationandin
+On the contrary LBPlanner has a computational cost per ﬁeldexperiments,thenewplannerpresentsefﬁcientbehavior
+iteration that only depends on the designed complexity of at a fraction of the computational cost of the expert trainer,
+its neural network and the associated calculations during and without the need for a consistent map. Future work will
+an inference step. The presented network architecture in focus on extending the network architecture of the planner
+LBPlanner contains 160k weights and an inference step to further relate to the previous history of observations of
+requires 311k ﬂoat operations. As such, and despite the the robot but still without the need to build a map.
+1220
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [14] C. Connolly et al., “The determination of next best views,” in IEEE
+InternationalConferenceonRoboticsandAutomation1985.
+[1] B.Grocholsky,J.Keller,V.Kumar,andG.Pappas,“Cooperativeair
+[15] B.Yamauchi,“Afrontier-basedapproachforautonomousexploration,”
+and ground surveillance,” IEEE Robotics & Automation Magazine,
+inCIRA’97. IEEE,1997,pp.146–151.
+vol.13,no.3,pp.16–25,2006.
+[2] A.Bircher,M.Kamel,K.Alexis,M.Burri,P.Oettershagen,S.Omari, [16] M. Popovic, G. Hitz, J. Nieto, I. Sa, R. Siegwart, and E. Galceran,
+T.MantelandR.Siegwart,“Three-dimensionalcoveragepathplanning “Onlineinformativepathplanningforactiveclassiﬁcationusinguavs,”
+via viewpoint resampling and tour optimization for aerial robots,” arXivpreprintarXiv:1609.08446,2016.
+AutonomousRobots,pp.1–25,2015. [17] M. Nieuwenhuisen and S. Behnke, “Search-based 3d planning and
+[3] A. Bircher, K. Alexis, M. Burri, P. Oettershagen, S. Omari, trajectoryoptimizationforsafemicroaerialvehicleﬂightundersensor
+T. Mantel and R. Siegwart, “Structural inspection path planning visibilityconstraints,”arXiv:1903.05165,2019.
+via iterative viewpoint resampling with application to aerial [18] B.Chen,B.Dai,andL.Song,“Learningtoplanvianeuralexploration-
+robotics,” in IEEE International Conference on Robotics and exploitationtrees,”arXivpreprintarXiv:1903.00070,2019.
+Automation (ICRA), May 2015, pp. 6423–6430. [Online]. Available:
+[19] R. Martinez-Cantin, N. de Freitas, E. Brochu, J. Castellanos, and
+https://github.com/ethz-asl/StructuralInspectionPlanner
+A.Doucet,“Abayesianexploration-exploitationapproachforoptimal
+[4] C. Papachristos, M. Kamel, M. Popovic´, S. Khattak, A. Bircher,
+online sensing and planning with a visually guided mobile robot,”
+H. Oleynikova, T. Dang, F. Mascarich, K. Alexis, and R. Siegwart,
+AutonomousRobots,vol.27,no.2,pp.93–103,2009.
+“Autonomous exploration and inspection path planning for aerial
+[20] R.Martinez-Cantin,N.deFreitas,A.Doucet,andJ.A.Castellanos,
+robotsusingtherobotoperatingsystem,”inRobotOperatingSystem
+“Active policy learning for robot planning and exploration under
+(ROS). Springer,2019,pp.67–111.
+uncertainty.”inRobotics:ScienceandSystems,vol.3,2007,pp.321–
+[5] H.Balta,J.Bedkowski,S.Govindaraj,K.Majek,P.Musialik,D.Ser-
+328.
+rano, K. Alexis, R. Siegwart, and G. De Cubber, “Integrated data
+[22] A.Giusti,J.Guzzi,D.C.Cires¸an,F.-L.He,J.P.Rodr´ıguez,F.Fontana,
+managementforaﬂeetofsearch-and-rescuerobots,”JournalofField
+M.Faessler,C.Forster,J.Schmidhuber,G.DiCaroetal.,“Amachine
+Robotics,vol.34,no.3,pp.539–582,2017.
+learning approach to visual perception of forest trails for mobile
+[6] T. Tomic, “Toward a fully autonomous uav: Research platform for
+robots,” IEEE Robotics and Automation Letters, vol. 1, no. 2, pp.
+indoor and outdoor urban search and rescue,” IEEE robotics &
+661–667,2015.
+automationmagazine,vol.19,no.3,pp.46–56,2012.
+[7] B.Rao,A.G.Gopi,andR.Maione,“Thesocietalimpactofcommer- [23] M. Bojarski, D. Del Testa, D. Dworakowski, B. Firner, B. Flepp,
+cialdrones,”TechnologyinSociety,vol.45,pp.83–90,2016. P.Goyal,L.D.Jackel,M.Monfort,U.Muller,J.Zhangetal.,“Endto
+[8] T. Dang, F. Mascarich, S. Khattak, C. Papachristos, and K. Alexis, end learning for self-driving cars,” arXiv preprint arXiv:1604.07316,
+“Graph-based path planning for autonomous robotic exploration in 2016.
+subterraneanenvironments,”inIEEE/RSJInternationalConferenceon [24] S.Ross,G.Gordon,andD.Bagnell,“Areductionofimitationlearning
+IntelligentRobotsandSystems(IROS),November2019. andstructuredpredictiontono-regretonlinelearning,”inProceedings
+[9] A. Bircher, M. Kamel, K. Alexis, H. Oleynikova and R. Siegwart, ofthefourteenthinternationalconferenceonartiﬁcialintelligenceand
+“Receding horizon ”next-best-view” planner for 3d exploration,” in statistics,2011,pp.627–635.
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA), [25] C. Papachristos, S. Khattak, F. Mascarich, and K. Alexis, “Au-
+May2016.[Online].Available:https://github.com/ethz-asl/nbvplanner tonomousnavigationandmappinginundergroundminesusingaerial
+[10] T. Dang, C. Papachristos, and K. Alexis, “Visual saliency-aware robots,” in 2019 IEEE Aerospace Conference, March 2019, p. to
+receding horizon autonomous exploration with application to aerial appear.
+robotics,”inIEEEInternationalConferenceonRoboticsandAutoma-
+[26] C. Papachristos, and K. Alexis, “Thermal-inertial localization for
+tion(ICRA),May2018.
+autonomousnavigationofaerialrobotsthroughobscurants,”in2017
+[11] C. Papachristos, S. Khattak, and K. Alexis, “Uncertainty–aware re-
+International Conference on Unmanned Aircraft Systems (ICUAS).
+cedinghorizonexplorationandmappingusingaerialrobots,”inIEEE
+IEEE,2018.
+International Conference on Robotics and Automation (ICRA), May
+[27] M.Kamel,T.Stastny,K.Alexis,andR.Siegwart,“Modelpredictive
+2017.
+controlfortrajectorytrackingofunmannedaerialvehiclesusingros,”
+[12] A.Hornung,K.M.Wurm,M.Bennewitz,C.Stachniss,andW.Bur-
+SpringerBookonRobotOperatingSystem(ROS).
+gard, “OctoMap: An efﬁcient probabilistic 3D mapping framework
+basedonoctrees,”AutonomousRobots,2013. [28] S. Khattak, C. Papachristos, and K. Alexis, “Keyframe-based direct
+[13] R. Reinhart, T. Dang, E. Hand, C. Papachristos, and thermal–inertial odometry,” in IEEE International Conference on
+K. Alexis, “LBPlanner Open Dataset.” [Online]. Available: RoboticsandAutomation(ICRA),May2019.
+https://www.autonomousrobotslab.com/lbplanner-release.html [29] T. Dang, F. Mascarich, S. Khattak, H. Nguyen, N. Khedekar, C.
+[21] A.Loquercio,A.I.Maqueda,C.R.Del-Blanco,andD.Scaramuzza, Papachristos, and K. Alexis, “Field-hardened robotic autonomy for
+“Dronet:Learningtoﬂybydriving,”IEEERoboticsandAutomation subterranean exploration,” in 12th Conference on Field and Service
+Letters,vol.3,no.2,pp.1088–1095,2018. Robotics(FSR),August2019.
+1221
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:56:03 UTC from IEEE Xplore.  Restrictions apply. 

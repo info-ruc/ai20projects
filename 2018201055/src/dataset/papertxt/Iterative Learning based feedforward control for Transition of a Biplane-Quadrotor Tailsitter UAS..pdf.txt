@@ -1,0 +1,600 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Long-term Place Recognition through Worst-case Graph Matching to
+Integrate Landmark Appearances and Spatial Relationships
+Peng Gao and Hao Zhang
+Abstract—Place recognition is an important component for
+Worst-case Graph Matching
+simultaneouslylocalizationandmappinginavarietyofrobotics
+applications. Recently, several approaches using landmark in- Aspipmeialarraintyce siSmpialatiraitl y
+formation to represent a place showed promising performance
+to address long-term environment changes. However, previous Worst case
+Graph matching
+approachesdonotexplicitlyconsiderchangesofthelandmarks,
+i,e., old landmarks may disappear and new ones often appear
+Template (summer)
+overtime.Inaddition,representationsusedintheseapproaches
+torepresentlandmarksarelimited,baseduponvisualorspatial Same Place? Graph  Low similarity
+Representation Appearance Spatial 
+cuesonly.Inthispaper,weintroduceanovelworst-casegraph Query (winter) similarity similarity
+matchingapproachthatintegratesspatialrelationshipsofland-
+New  Worst case
+marks with their appearances for long-term place recognition. landmark
+Graph matching
+Ourmethoddesignsagraphrepresentationtoencodedistance
+and angular spatial relationships as well as visual appearances
+oflandmarksinordertorepresentaplace.Then,weformulate
+High similarity
+placerecognitionasagraphmatchingproblemundertheworst-
+case scenario. Our approach matches places by computing the Fig. 1: Illustration of the proposed worst-case graph match-
+similarities of distance and angular spatial relationships of the
+ingapproachforlong-termplacerecognitionwithnewlyap-
+landmarks that have the least similar appearances (i.e., worst-
+pearinglandmarks.Givenanimagewithdetectedlandmarks,
+case).Iftheworstappearancesimilarityoflandmarksissmall,
+two places are identiﬁed to be not the same, even though their our approach constructs a graph representation that encodes
+graphrepresentationshavehighspatialrelationshipsimilarities. visual appearances, distance relationships, and angular rela-
+Weevaluateourapproachovertwopublicbenchmarkdatasets tionships of the landmarks in order to represent the place.
+forlong-termplacerecognition,includingSt.LuciaandCMU-
+Then, our approach formulates place recognition as a graph
+VL.Theexperimentalresultshavevalidatedthatourapproach
+matching problem under the worst-case scenario. It matches
+obtainsthestate-of-the-artplacerecognitionperformance,with
+a changing number of landmarks. places by computing the similarities of distance and angular
+spatial relationships of the landmarks with the least similar
+I. INTRODUCTION appearances (i.e., worst-case).
+Placerecognition(alsoknownasloopclosuredetection)is
+afundamentalcomponentinvisualsimultaneouslocalization
+versusmidnight),weather(rainversussnow),andvegetation
+and mapping (SLAM) [1]–[3], which has been a very active
+(with leaves versus without leaves).
+research area over the past decades [4]–[6]. The purpose of
+Due to the importance of long-term place recognition, it
+placerecognitionistodeterminewhetherthecurrentvisiting
+has been intensively investigated [16]–[18]. Conventionally,
+placehasbeenvisitedbeforebyarobot.Thematchedplaces
+many approaches use visual appearances of the environment
+canbeemployedtoreduceambiguityandaccumulatederrors
+to represent and match places, e.g., based on key-point fea-
+[7]–[9] during SLAM to signiﬁcantly improve the accuracy
+tures [19], region-based features [20], [21] or representative
+of mapping and localization, which has be widely used in a
+features[22]–[24].Recently,severalapproachesareproposed
+variety of robotics applications [10]–[12].
+to use landmark-based representations for place recognition,
+More recently, motivated by long-term autonomy applica-
+whichshowperformanceimprovementsandaremorerobust
+tions [13]–[15], long-term place recognition has become a
+tolong-termvariations[25],[26].However,thechallengeof
+rapidly growing research area to perform visual SLAM over
+integrating both spatial relationships and appearance cues of
+longperiodsoftime.Thegoaloflong-termplacerecognition
+landmarks, and the challenge caused by newly appearing or
+istoidentifypreviouslyvisitedplacesduringlong-termrobot
+disappearing landmarks have not been well addressed yet.
+operationsatdifferenttimesoftheday,months,andseasons.
+Inthispaper,weproposeanovelworst-casegraphmatch-
+Forinstance,whenanautonomousvehiclevisitsasameplace
+ingapproachforplacerecognitioninlong-termautonomy,as
+over different seasons, the same place can look signiﬁcantly
+demonstrated in Figure 1. Given a template or query image
+different caused by the variations of illumination (e.g., noon
+withdetectedlandmarks,wegenerateagraphrepresentation
+This work was partially supported by IIS-1942056, IIS-1849348, IIS- thatsimultaneouslyencodesthevisualappearances,distance
+1849359,DOTPHMSA693JK31850005CAAP,andDOEDE-FE0031650. relationships,andangularrelationshipsofthelandmarks.The
+PengGaoandHaoZhangarewiththeHuman-CenteredRoboticsLabin
+distance relationship is calculated as the distance between a
+theDepartmentofComputerScience,ColoradoSchoolofMines,Golden,
+{ }
+CO80401. gaopeng, hzhang @mines.edu pairoflandmarks,andtheangularrelationshipisrepresented
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1070
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. bytheanglesinatriangleconstructedusingthreelandmarks, of landmarks detected from proposal generation [26], Edge
+which is robust to landmark scale changes. Given graph box [29] and bounding box obtained from YOLO v2 [30].
+representations of places built from the query and template Several representation learning-based methods were imple-
+images,weformulateplacerecognitionasaworst-casegraph mented to encode cues of visual landmarks into the holistic
+matchingproblem,withthegoalofaddressingappearingand environment [31], [32].
+disappearing landmarks. During long-term robot operations, The spatial relationship between landmarks can also be
+landmarkswithintheenvironmentcanbeaddedorremoved, utilized for place recognition. [26] used CNN technique to
+which means there always exists landmarks only existing in generatelandmarkdistributiondescriptortoaddressenviron-
+either the query or template image. For example, a building ment and view changes. [33] introduced landmark geometry
+is newly constructed and a stop sign is newly removed. Our information obtained from the laser scan to visual SLAM.
+approach matches two places by computing the similarities [25] stacked landmark features into a horizontal position in
+ofdistanceandangularspatialrelationshipsofthelandmarks order to construct a feature descriptor to encode the spatial
+thatexhibittheleastsimilarappearances(i.e.,theworst-case information of landmarks.
+scenario).Iftheworstappearancesimilarityofthelandmarks Most existing methods only used visual feature or simple
+issmall,thesetwoplacesaredeterminednotasamatch,even spatialrelationshipsofthelandmarksanddidnotconsidered
+thoughthegraphrepresentationsofthetwoplaceshavehigh high order spatial relationships between the landmarks. In
+spatial relationship similarities. this paper, the proposed approach can explicitly encode
+The main novelty of this paper focuses on the proposal of visual feature and various spatial relationships of the land-
+the worst-case graph matching approach that integrates both marks.
+landmark appearances and spatial relationships. Speciﬁcally,
+B. Matching Paradigms for Place Recognition
+wedesignauniﬁedgraphrepresentationthatsimultaneously
+encodes landmarks’ appearance cues as well as distance and Given the representation of places, a matching procedure
+angular relationships, which improves the expressiveness of is required to compute the matching score between a query
+the representation to encode places. Second, we introduce a observation and templates to identify the previously visited
+novelformulationoflong-termplacerecognitionasaworst- places for place recognition.
+casegraphmatchingproblem,whichaddressesthechallenge Existing matching methods can be broadly classiﬁed into
+causedbynewlyappearinganddisappearinglandmarks,and two major categories; one is image-based matching and the
+isabletocomputethematchingscoredirectlyfromthegraph otherissequence-basedmatching.Forimage-basedmatching
+representations of the query and template images, instead of methods,generallyasimilarityscorebetweenqueryandtem-
+requiring a separate matching procedure as in most existing plateimageneedtobecalculated,andthesimilarityfunction
+methods using vector-based place representations. can use the Euclidian or cosine distance [34], [35]. Another
+strategy utilized in image matching is based on the nearest
+II. RELATEDWORK neighborsearch,includingKDtrees[36]andChowLiutrees
+Inthissection,webrieﬂyreviewexistingmethodsonland- [37]. For sequence-based matching methods, the procedure
+markrepresentationsbasedonvisualandspatialinformation, of matching places is typically based on a sequence of con-
+as well as matching paradigms for place recognition. secutiveimages,insteadofindividualimages[38].Giventhe
+obtained vector-based representation of places, consecutive
+A. Representations for Place Recognition
+pairwise matching [39], minimizing cost ﬂow [40], Hidden
+Forlong-termplacerecognition,itisessentialtoconstruct Markov Models [41], and Conditional Random Fields [42]
+a robust representation for places with challenges caused by can be used for sequence-based matching.
+environment variances during long periods of time [17]. We Ourproposedworst-casegraphmatchingmethodforlong-
+dividetheexistingmethodsintotwomajorcategories,based termplacerecognitioncanintegrateplacerepresentationand
+onvisualfeatureofholisticenvironments,orbasedonvisual matching as a uniﬁed problem, which is different from the
+or spatial information of semantic landmarks. previous vector-based matching methods. And also we can
+For representations of holistic environments, using local address the challenge caused by newly appearing landmarks
+features were shown less effective to represent long-term and spatial deformation through integrating spatial relation-
+placechanges[20].Thus,region-basedmethodsusingglobal ships and the worst appearance of landmarks.
+features, such as GIST [21], HOG [20], and CNN [18], are
+proposedtoencodetheholisticenvironmentthatisobserved III. APPROACH
+byarobot.Basedontheregion-basedrepresentation,several Inthissection,wediscusstheproposedprincipledmethod
+approaches integrated multiple types of features to represent forworst-casegraphmatchingthatfusesthespatialrelation-
+places [22], [27]. ships of landmarks with appearance cues. We also introduce
+The other category of approaches using semantic land- thesolvertoaddresstheformulatednon-convexoptimization
+marks have promising performance for place recognition problem for worst-case graph matching.
+withlong-termappearancevariance.[28]combinedmultiple Notation.Werepresentmatrixandtensor(i.e.,3Dmatrix)
+{ } ∈ R × (cid:48)
+local feature to generate a CNN description. Similarly, other by bold capital letters, e.g., M= m n n and T=
+{ } ∈ R × (cid:48)× (cid:48)(cid:48) ij
+CNN-basedfeatures[18]wereusedtoencodevisualfeatures t n n n , respectively. Vectors are represented
+ijk
+1071
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. by bold lowercase letters. Furthermore, we represent the
+vectorized form of the matrix M∈Rn×n(cid:48) using m∈Rnn(cid:48)        
+that is a concatenation of the columns of M into a vector.
+                 
+  Correct match Incorrect match 
+A. Problem Formulation
+Fig. 2: Illustration of incorrect matches caused by the newly
+(cid:48)
+Given an input image, we extract landmarks to generate a appearing landmark p and deformation. Left Figure: The
+o ↔ (cid:48) ↔ (cid:48) ↔
+graphrepresentation,whichencodesthespatialrelationships correct match should be (p p ), (p p ) and (p
+(cid:48) 1 a 2(cid:48) b 3
+of the landmarks to represent a place. Assume n landmarks pc), even when the triangles t123 and tabc do not look the
+aredetectedfromtheinputimage.Then,thepositionsofthe same because of landmark deformation. Right Figure: When
+(cid:48)
+landmarksintheimagespacearerepresentedbythenodeset a newly appearing landmark exists, represented by node p ,
+P { ··· } o
+= p ,p , ,p ,wherep =[x,y]denotesthecentral thedistanceandangularafﬁnitiesofsubgraphconstructedby
+1 2 n i { } { (cid:48) (cid:48) (cid:48)}
+position of the i-th landmark in the image at coordinate p1,p2,p3 and pa,pb,pc canbesmalle{rthanthes}patial
+[x,y]. Given the position information, we construct the a{fﬁ(cid:48)nity(cid:48)bet(cid:48)w}een subgraphs constructed by p1,p2,p3↔an(cid:48)d
+spatial relationships of landmarks, which are divided into p ,p ,p ,whichresultsinanincorrectmatch(p p )
+a c ↔o (cid:48) 2 a
+two categories, including distance spatial relationship and and (p p ), denoted by red lines.
+1 o
+angularspatialrelationship.Thedistancespatialrelationships
+E { }
+are represented by a distance set = e , where e
+i,j i,j We can rewrite Eq. (1) into a matrix form as following:
+denotes the distance of an edge constructed by nodes p
+i
+and p . The angular spatial relationships are denoted by a ⊗ ⊗ ⊗ (cid:62)
+angulajr set T = {t }, where t = [θ ,θ ,θ ],i,j,k = argmWaxλ1A 1w 2w 3w+λ2w Dw
+(cid:54) i,(cid:54)j,k i,j,k i j k ≤ (cid:62) ≤
+1,2,...,n,i = j = k represents the three angles of a s.t. W1n(cid:48)×1 1n×1,W 1n×1 1n(cid:48)×1 (3)
+triangle constructed by nodes pi, pj and pk. The angular ∈ R (cid:48)
+relationship is robust to scale change, since angles of a where w nn is the vectorized form of correspondence
+{ } ∈ { } × (cid:48)
+triangle is invariant to scale change. Given the node set, matrix W = wiPi(cid:48) 0,1 n(cid:48) n , with wiPi(cid:48)(cid:48)= 1 denoting
+distanceset,andangularset,wecanrepresentaninputimage the i-th node in and the i-th node in are matched,
+as a graph G =(P,T,E). ⊗ is a tensor product, ⊗l,l = 1,2,3 means multiplication
+between w and the l-th order matricization of A [43] and
+For place recognition, given one query image and one
+G 1 is an all-ones vector. In Eq. (3), the ﬁrst term denotes
+template image, from which two graph representations =
+P T E G(cid:48) P(cid:48) T(cid:48) E(cid:48) the accumulation of the angular similarities given the corre-
+( , , ) and = ( , , ) can be generated. The
+spondence matrix W, which is controlled by hyperparamter
+afﬁnity between these two graphs can be computed by the
+E E(cid:48) λ . Similarly, the second term represents the accumulation
+sumupoftheafﬁnityofthedistancesets( , )andangular 1
+T T(cid:48) of distance similarities, which is controlled by λ . The
+sets ( , ). 2
+constraint is used to enforce the one-to-one correspondence
+The distance afﬁnity d (cid:48) (cid:48) between two distances e G
+ii,jj −| i−,j for W, e.g. one landmark within can at most have one
+and e(cid:48) (cid:48) is generally calculated by d (cid:48) (cid:48) = exp( e G(cid:48)
+|i,(cid:80)j ii,jj i,j corresponding landmark in .
+e(cid:48) (cid:48) ).Theangularafﬁnitya (cid:48) (cid:48) (cid:48) betweenanglesoftwo
+i,j ii,jj ,kk
+triang−les ti,j,k| and ti(cid:48),j−(cid:48),k(cid:48) can be|calculated b∈y a{ii(cid:48),jj(cid:48),}kk(cid:48) = B. Worst-case Graph Matching
+exp( cos(θ ) cos(θ )), where u i,j,k and
+v ∈{i(cid:48),j(cid:48)u,,kv(cid:48)}.Bytuakingadvavntagesofnonlinearprojection Due to long-term environmental changes, the spatial rela-
+function exp, the calculated afﬁnities can be normalized tionship of landmarks often has deformation caused by view
+to [0,1]. Then, we generate the distance afﬁnity matrix changes (the ﬁeld of view of a robot has deviation when it
+D = {d (cid:48) (cid:48)} ∈ Rnn(cid:48)×nn(cid:48) and angular afﬁnity tensor observesthesameplace)whichwillhurtthematchingaccu-
+A = {a i(cid:48)i,jj(cid:48) (cid:48)} ∈ Rnn(cid:48)×nn(cid:48)×nn(cid:48) given two graph rep- racy for long-term place recognition. Besides the challenge
+resentatioinis,jjG,kaknd G(cid:48) generated from one query image and caused by spatial deformation, some landmarks will newly
+one template image. appear or disappear in the query and template images, like
+a building is occluded by trees in summer but can be seen
+Given the afﬁnity matrix D and A, generally, we can for-
+in winter when trees have no leaves. The newly appearing
+mulate a graph matching for place recognition as following:
+(cid:88) (cid:88) (cid:88) landmarks will introduce useless spatial relationships which
+can be harmful to the matching accuracy, especially when
+(cid:48) (cid:48) (cid:48)
+nn nn nn there exists spatial deformation, as illustrated in Figure. 2.
+argmaxλ a (cid:48) (cid:48) (cid:48)w (cid:48)w (cid:48)w (cid:48)
+1(cid:88)(cid:88) ii,jj ,kk ii jj kk Giventhesechallenges,weintroduceappearancecuesinto
+W (cid:48) (cid:48) (cid:48)
+ii=1jj =1kk=1 spatial relationships to improve the expressiveness and also
+(cid:48) (cid:48)
+nn nn propose a principled worst-case graph matching approach
++λ d (cid:48) (cid:48)w (cid:48)w (cid:48) (1)
+2 ii,jj ii jj whichcanmaximizedistanceandangularspatialsimilarities
+(cid:48) (cid:48)
+ii jj ≤ (cid:62) ≤ of landmarks that have least similar appearance (i.e., the
+s.t. W1n(cid:48)×1 1n×1,W 1n×1 1n(cid:48)×1 (2) worst-case scenario), in order to address the challenges
+1072
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. introduced by newly appearing landmarks and spatial de- Algorithm 1: The algorithm to solve the formulated
+formation. For example, in the left ﬁgure in Figure 2, due to non-convex optimization problem in Eq. (4).
+(cid:48) (cid:48) (cid:48)
+thechallenges(thetriangleconstructedbynodes(cid:48)pa,pc,po), Input : A∈Rnn(cid:48)×nn(cid:48)×nn(cid:48), D∈Rnn(cid:48)×nn(cid:48) and
+introduced by the newly appearing landmark p and spatial ∈R (cid:48)
+deformation, the matching result will be incororect. In this Output : ZW∗ =n∈n {0,1}n×n(cid:48)
+situation, the worst case can be represented by the worst ∈{ } (cid:48)
+similarity between a pair of landmark appearances given 1: Initialize the vectorized matrix w{ 0,1 nn};
+correspondences, e.g. the appearance similarity between the 2: CLom=pu{tle s(cid:48)toc(cid:48)h}a:stic matrix K= kii(cid:48),jj(cid:48),kk(cid:48) and
+(cid:48) ii,jj { }
+corresponding nodes p1 and po, which is a small value. 3: kii(cid:48),jj(cid:48),kk(cid:48) =aii(cid:48),jj(cid:48){,kk(cid:48)min z}ii(cid:48),zjj(cid:48),zkk(cid:48) /max(A);
+Bsiymimlaruilttyiplsycionrge tchailscuwlaotresdt baeptpweeaeranncseubsgirmapilhari{typ, ,thpe,ﬁpna}l 45:: lwiih(cid:48),ijlej(cid:48)n=otdcioi(cid:48)n,jvjermgeindozii(cid:48),zjj(cid:48) /max(D);
+{ (cid:48) (cid:48) (cid:48)} 1 2 3 6: Compute the jump vector j=exp(wr/max(wr));
+and pb,pc,po will be weakened. In other word, our 7: Normalize j using the bistochastic normalization;
+proposed worst-case graph matching method maximizes the 8: Update
+⊗ ⊗ (cid:62) −
+overall similarity under the worst case. wr+1 =γ(K wr wr+wr L)+(1 γ)j;
+G 2 3
+Formally, for each node p in graph , the appearance 9: end
+of its associated landmark isidescribed as a feature vector 10: Recover w to W;
+f ∈ Rd, where d is the length of the feature vector. 1112:: UresteurgnreWedy search to discretize W [44];
+The feature can describe the shape, texture or color of
+the landmark. Thus, the appearance set can be denoted as
+F { (cid:62) (cid:62) ··· (cid:62)} ×
+= (f ) ,(f ) , ,(f ) n d. Thus, the appearance
+1 2 { }∈nR × (cid:48) However, the number of nodes of input graph representation
+afﬁnitymatrixZ= z (cid:48) n n canbecomputedthrough
+|| − || ii is always different and the matching score calculated in
+z (cid:48) = f f . And place recognition can be formulated
+ii i (cid:88)j 2 (cid:88) (cid:88) Eq. (5) is proportional to the number of nodes. In order to
+as the following worst-case graph matching problem:
+generalize our proposed method to the input graphs with
+(cid:48) (cid:48) (cid:48)
+nn nn nn { } different nodes, we calculate the ﬁnal matching score as
+argmaxλ1 aii(cid:48),jj(cid:48),kk(cid:48)min zii(cid:48),zjj(cid:48),zkk(cid:48) following: (cid:88) (cid:88) (cid:88)
+W (cid:48) (cid:48) (cid:48)
+ii=1jj =1kk=1
+(cid:88)(cid:88) (cid:48) (cid:48) (cid:48)
+wii(cid:48)nwn(cid:48)jjn(cid:48)wn(cid:48)kk(cid:48) { } S =mλ13 n(cid:48)n n(cid:48)n n(cid:48)n aii(cid:48),jj(cid:48),kk(cid:48)min{zii(cid:48),zjj(cid:48),zkk(cid:48)}
+ii=1jj =1kk=1
++λ2 dii(cid:48),jj(cid:48)min zii(cid:48),zjj(cid:48) wii(cid:48)wjj(cid:48) ∗ (cid:88)∗ (cid:88)∗
+ii(cid:48) jj(cid:48) wii(cid:48)wjj(cid:48)wkk(cid:48)
+≤ (cid:62) ≤ (cid:48) (cid:48)
+s.t. W1n(cid:48)×1 1n×1,W 1n×1 1n(cid:48)×1 (4) +λ2 nn nn d (cid:48) (cid:48)min{z (cid:48),z (cid:48)}w∗(cid:48)w∗ (cid:48) (6)
+where min function offers the worst case during matching. m2 (cid:48) (cid:48) ii,jj ii jj ii jj
+ii jj
+To solve this formulated optimization problem for worst- { (cid:48)}
+where m = min n,n . Due to the existence of newly
+casegraphmatching,weimplementaniterativeoptimization (cid:48)
+appearing/disappearing landmarks, n and n can be differ-
+algorithmaspresentedinAlgorithm1.Thecomplexityofour
+ent. The number of matched landmarks between query and
+algorithm is O(n4). Details of the algorithm are provided in
+template image is dominated by the smallest number of
+the supplementary material1.
+landmarks in either query or template image. Given the
+AftersolvingtheoptimizationproblemutilizingAlgorithm ∗
+optimal solution W , there are m3 angular similarities and
+1, we are able to obtain the optimal correspondence matrix
+∗ { ∗}∈R × (cid:48) m2 distancesimilaritiesaccumulatedtotheﬁnalscore.Since
+W = w n n ,whichdescribesthecorrespondences
+ij thespatialsimilaritya (cid:48) (cid:48) (cid:48) andd (cid:48) (cid:48) arebetween[0,1],
+of the landmarks in the query and template images. ii,jj ,kk ii,jj
+the ﬁnal matching score calculated in Eq. (6) is divided
+C. Place Recognition by its upper bound of each term to normalize the score
+Given the correspondence matrix W∗, we can directly always between [0,1]. Then, if two places are matched is
+computethematchingscorebetweenthequeryandtemplate determined by comparing the normalized matching score
+image as fo(cid:88)llowi(cid:88)ng (cid:88) with a manually set threshold. By applying Eq. (6) to
+obtain the normalized similarity score, our worst-case graph
+(cid:48) (cid:48) (cid:48)
+nn nn nn { } matching approach can compute a matching score directly
+S =λ a (cid:48) (cid:48) (cid:48)min z (cid:48),z (cid:48),z (cid:48)
+1 ii,jj ,kk ii jj kk fromgraphrepresentationsofthequeryandtemplateimages.
+(cid:48) (cid:48) (cid:48)
+ii=1jj =1kk=1
+∗(cid:88)∗(cid:88)∗
+w (cid:48)w (cid:48)w (cid:48) IV. EXPERIMENTALRESULTS
+ii jj kk
+nn(cid:48) nn(cid:48) { } ∗ ∗ A. Experiment Setup
++λ2 dii(cid:48),jj(cid:48)min zii(cid:48),zjj(cid:48) wii(cid:48)wjj(cid:48) (5) We utilize two large-scale benchmarks to evaluate our
+(cid:48) (cid:48)
+ii jj proposed method for long-term place recognition, including
+CMU-VL dataset and St. Lucia dataset. And the evaluation
+1http://hcr.mines.edu/publication/ICRA20_GraphPR_
+Supp.pdf metric is the precision-recall curve that demonstrates the
+1073
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Description of the two public benchmark datasets TABLE II: The experimental results over the St. Lucia and
+for long-term place recognition. CMU-VLdatasets.Thevaluein[0,1]describesthearearatio
+undertheprecisionandrecallcurve.Alargervalueindicates
+Dataset St.Lucia[45] CMU-VL[46]
+a better performance.
+Scenario Differenttimesofaday Differentmonthsofayear
+∼ ∼
+Statistic 10 ×22,000frames 5 ×13,000frames Approach St Lucia Dataset CMU-VL Dataset
+640 480at15FPS 1024 768at15FPS
+Color [47] 0.3186 0.3947
+Illumination,shadow, Vegetation,weather,
+Description dynamicvariations view,dynamicvariations Hog [20] 0.5517 0.5396
+Gist-Brief [48] 0.5206 0.5530
+HALI [32] 0.5569 0.5430
+trade-off impact between precision and recall with variant
+Ours 0.6249 0.6274
+matchingthreshold.Precisionmeansthefractionofretrieved
+locations that are relevant and recall means the fraction of
+truth information is offered by a GPS for experimental
+retrievedlocationstoallrelevantlocations.Theperformance
+evaluation of place recognition. There are various scenarios
+withhighrecallandhighprecisionisrepresentedbyacurve
+included in the dataset, which contains different challenges
+with a large area under it.
+for long-term place recognition, including the variation of
+In the experiment, following recently landmark-based
+illumination at various times over a day, perspective change
+method [31], [32] ,only static and stable landmarks are used
+caused by road bumps, highly dynamic objects in the street.
+to construct our proposed graph representation of a place,
+The detail of the dataset is shown in Table I.
+e.g., houses, trafﬁc signs, antenna, etc. For the appearance
+Thequantitativeresultsobtainedfromourmethodandthe
+feature of each landmark, we use histogram of oriented gra-
+other baselines are demonstrated in Figure3 (a) based on
+dient(HOG)featuretodescribetheappearanceoflandmarks.
+the precision-recall curve. From the results, we can observe
+We compare our proposed worst-case graph matching
+thatourproposedmethodoutperformsthevisualappearance-
+method with four long-term place recognition methods,
+based and landmark-based methods. To further evaluate the
+which includes three appearance-based methods: Color that
+precision-recall curves, we calculate the ratio between the
+uses color feature of downsampled images [47], HOG that
+area under each curve and the whole precision-recall area
+uses histogram of oriented gradient feature of downsampled
+images to describe the shape of landmarks [20] and Brief- space. Thus, the range of the area ratio is between [0,1]
+andahighervaluerepresentsbetterperformance.Theresults
+Gist that uses brief-gist feature of downsampled images
+are listed in Table II, which demonstrate that our score is
+[48], and one landmark-based method: HALI that learns the
+0.6249,andourmethodoutperformstheothermethods.The
+projection from semantic landmarks to vector-based features
+improvement obtained from our method is caused by our
+for long-term place recognition [32].
+representation of spatial information that is robust to spatial
+deformation and also by our worst-case graph matching
+which is robust to objects only appeared in one image.
+1
+The qualitative results obtained from our method are
+demonstrated in Figure 3(b), which include three pairs of
+0.8
+matched places between query and template images in St.
+n0.6 Lucia dataset. Based on the results, we can see that the
+Precisio0.4 iblelurmoifnadteitoenctoedf tlhaendsmamareksplaarceedcihffaenrgeenst baeltowteaenndqtuheerynuamnd-
+Hog
+Brief-Gist template images. Thus, we can observe that our methods
+0.2 Color
+HALI can well address the long-term variations and identify the
+Ours
+correct matches based on the visual and spatial information
+0
+0 0.2 0.4 0.6 0.8 1
+of landmarks.
+Recall
+(a)Precision-recallcurves (b)Matchedplaces
+C. Results on the CMU-VL Dataset
+Fig. 3: Experimental results on the St. Lucia dataset. Fig-
+The CMU Visual Localization (CMU-VL) dataset [46] is
+ure 3(a) demonstrates the quantitative results based on the
+recorded on an 8.8km route in urban areas over different
+precision-recallcurve.Figure3(b)presentsqualitativeresults
+months of a whole year. The visual images are collected by
+of matched places between the query and template images,
+twocamerasorientedtoleftandrightseparately.Theground
+which are recorded at 3:00 PM (left) and 8:00 AM (right),
+truth for place recognition evaluation is gathered through a
+respectively. The ﬁgures are best viewed in color.
+GPS. The challenges in this dataset are on environmental
+conditions, like the variations of vegetation (green and fall
+B. Results on the St. Lucia Dataset
+leaves), weather (snow, cloudy and sunny), which make the
+TheStLuciadataset[45]isgatheredina9.5kmcircuitin dataset very challenging.
+Australia at different times of several days. The visual data The quantitative results are shown in Figure 4(a). We can
+are collected through a calibrated stereo camera mounted on observe that our method outperforms the other state-of-the
+acarandeachvideoinstancehas20-25minutes.Theground art methods under the precision-recall evaluation metric. We
+1074
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. can conclude that the angular relationship is more important
+1 than the distance relationship. Since angles of a triangle are
+invarianttoscalechange,andangularrepresentationismore
+0.8 robust to spatial deformation.
+2) HyperparameterAnalysis: Thecross-validationresults
+n0.6
+Precisio0.4 oFnigubroeth5(dca)t.asWetesaonbatlayizneedthferopmerfoourrmmanectehovdaraiaretiosnhoowfnouinr
+Hog method with different hyperparameter λ and λ .
+Brief-Gist 1 2
+0.2 Color Similar to the quantitative analysis, we use the ratio
+HALI
+Ours between the area under the precision-recall curve and whole
+0
+0 0.2 0.4 0.6 0.8 1 area space as the single value evaluation metric. Since the
+Recall
+ﬁnal matching score is inﬂuenced by the ratio between λ
+(a)Precision-recallcurves (b)Matchedplaces − 1
+and λ , we evaluate their ratio in range [10 8,108]. Based
+Fig. 4: Experimental results over the CMU-VL dataset. Fig- 2
+on the results shown in Figure 5(c), the peak of the curve
+ure 4(a) demonstrates the quantitative results on precision-
+on St. Lucia dataset is when λ1 = 10, which can obtain
+recallcurves.Figure4(b)presentsqualitativeresultsofplace the best performance. And alsoλt2he best performance can be
+matches between the query and template images, which are
+obtained on CMU-VL dataset is when λ1 = 1. In addition,
+recordedinDecember(left)andOctober(right),respectively. λ2
+we can observe that the performance is better when λ1 is
+The ﬁgures are best viewed in color. largerandtheperformanceisworsewhentheratioissmλa2ller.
+This phenomenon demonstrates that the angular relationship
+obtainedthelargestarearatioof0.6274listedinTableII.The is more important than the distance relationship, which is
+qualitativeresultsarepresentedinFigure4(b),whichcontain consistent with our analysis in Figure 5(a) and (b).
+three pairs of matched places recorded in October and
+December separately. The environment condition changes
+1 1 0.66
+a lot from query image to template image caused by the 0.64 CMU-VL
+variation of vegetation, weather and dynamic objects. And 0.8 0.8 0.62 St.Lucia
+aolfsotr,eseosmaendlansodmmearknsewarelanddismapaprkesareadredaudedetod.thOeuorcmcleutshioond Precision00..46 2nd-orderspatial Precision00..46 2nd-orderspatial Arearatio000...0555.4686
+can still well address these challenges by correctly ﬁnd the 0.2 3rd-orderspatial 0.2 3rd-orderspatial 0.52
+Ours Ours 0.5−−−−
+mBeactcahuesse oofflathnedmcoarrkresctbemtwaetcehnesquoefrylaannddmtaermksp,lattheeimspaagteiasl. 00 0.2 0R.4eca0l.l6 0.8 1 00 0.2 0R.4eca0l.l6 0.8 1 8 6 4 2log0λλ122 4 6 8
+(a)St.Lucia (b)CMU-VL (c)Hyperparameters
+relationship of landmarks can be well preserved so that we
+can obtain a high similarity. Fig.5:Analysisoftheproposedapproachoverbothdatasets.
+Figures5(a)and(b)comparemethodsusingdifferentspatial
+D. Discussion
+relationships over the St. Lucia and CMU-VL datasets, re-
+Without losing generality, the importance of different spectively.Figure5(c)presentstheresultsofhyperparameter
+spatial relationships and the main hyperparameters of our analysis,whichshowsperformancechangesofourapproach
+proposed approach will be studied on both of the datasets. given different hyperparameter ratios using both datasets.
+1) The Importance of Different Spatial Relationships:
+The performance on St. Lucia dataset obtained from partial
+and complete of our approach that uses different spatial V. CONCLUSION
+relationshipsaredemonstratedinFigure5(a).Wecanseethat
+the angular relationship is more important than the distance Weproposethenovelworst-casegraphmatchingapproach
+relationship. If we only use distance relationship, based on thatintegratesspatialrelationshipsoflandmarkswithappear-
+theareaundertheprecision-recallcurve,weobtainthescore ance cues to perform long-term place recognition. Our ap-
+of0.5054andthescoreobtainedfromonlyutilizingangular proachemploysgraphrepresentationstoencodeappearances
+relationships is 0.6152. The combination of distance and and spatial relationships of landmarks in order to represent
+angular relationships can achieve a score of 0.6249 which places. Then, our approach formulates place recognition as
+is slightly higher than the score obtained from using angular a worst-case graph matching problem, which maximizes the
+relationships. spatialsimilarityofthelandmarkswiththeworstappearance
+OndatasetCMU-VL,wesimilarlyevaluatetheimportance similarity in order to address challenges caused by appear-
+of each spatial relationship and the results are presented in ing and disappearing landmarks. In addition, the matching
+Figure 5(b). We can also see that the angular relationship score of two places is directly computed by our approach
+is more important than the distance relationship for long- withoutrequiringfurthermatchingprocedures.Experimental
+term place recognition. Using distance relationships obtains results on two public benchmark datasets have shown that
+ascoreof0.5765andusingangularrelationshipsgetsascore our approach obtains promising long-term place recognition
+of 0.5928. Combining them obtains a score of 0.6274. We performance, with a changing number of landmarks.
+1075
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [25] P. Panphattarasap and A. Calway, “Visual place recognition using
+landmarkdistributiondescriptors,”inAsianConferenceonComputer
+[1] R.Mur-ArtalandJ.D.Tardo´s,“ORB-SLAM2:anopen-sourceSLAM Vision,2016.
+system for monocular, stereo, and RGB-D cameras,” IEEE Transac-
+[26] Z. Chen, F. Maffra, I. Sa, and M. Chli, “Only look once, mining
+tionsonRobotics,vol.33,no.5,pp.1255–1262,2017.
+distinctivelandmarksfromConvNetforvisualplacerecognition,”in
+[2] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardos, “ORB-SLAM: a IEEE International Conference on Intelligent Robots and Systems,
+versatile and accurate monocular SLAM system,” IEEE transactions
+2017.
+onrobotics,vol.31,no.5,pp.1147–1163,2015.
+[27] A.Pronobis,O.MartinezMozos,B.Caputo,andP.Jensfelt,“Multi-
+[3] J.Engel,T.Scho¨ps,andD.Cremers,“LSD-SLAM:large-scaledirect modal semantic place classiﬁcation,” The International Journal of
+monocularSLAM,”inEuropeanconferenceoncomputervision,2014. RoboticsResearch,vol.29,no.2-3,pp.298–320,2010.
+[4] I. Ulrich and I. Nourbakhsh, “Appearance-based place recognition
+[28] A. Babenko and V. Lempitsky, “Aggregating local deep features for
+for topological localization,” in IEEE International Conference on imageretrieval,”inIEEEinternationalconferenceoncomputervision,
+RoboticsandAutomation,2000.
+2015.
+[5] D.Ga´lvez-Lo´pezandJ.D.Tardos,“Bagsofbinarywordsforfastplace
+[29] C. L. Zitnick and P. Dolla´r, “Edge boxes: locating object proposals
+recognition in image sequences,” IEEE Transactions on Robotics, fromedges,”inEuropeanconferenceoncomputervision,2014.
+vol.28,no.5,pp.1188–1197,2012.
+[30] Y.Hou,H.Zhang,andS.Zhou,“Evaluationofobjectproposalsand
+[6] S. Lowry and M. J. Milford, “Supervised and unsupervised linear convnetfeaturesforlandmark-basedvisualplacerecognition,”Journal
+learningtechniquesforvisualplacerecognitioninchangingenviron- ofIntelligentandRoboticSystems,vol.92,no.3-4,pp.505–520,2018.
+ments,”IEEETransactionsonRobotics,vol.32,no.3,pp.600–613,
+[31] K. Liu, H. Wang, F. Han, and H. Zhang, “Visual place recognition
+2016.
+via robust l2-norm distance based holism and landmark integration,”
+[7] R.Mur-ArtalandJ.D.Tardo´s,“Visual-inertialmonocularSLAMwith inAAAIConferenceonArtiﬁcialIntelligence,2019.
+mapreuse,”IEEERoboticsandAutomationLetters,vol.2,no.2,pp.
+[32] F.Han,H.Wang,G.Huang,andH.Zhang,“Sequence-basedsparse
+796–803,2017.
+optimization methods for long-term loop closure detection in visual
+[8] C.Kerl,J.Sturm,andD.Cremers,“DensevisualSLAMforRGB-D SLAM,”AutonomousRobots,vol.42,no.7,pp.1323–1335,2018.
+cameras,”inIEEEInternationalConferenceonIntelligentRobotsand
+[33] K. L. Ho and P. Newman, “Loop closure detection in SLAM by
+Systems,2013. combiningvisualandspatialappearance,”RoboticsandAutonomous
+[9] H.Zhou,D.Zou,L.Pei,R.Ying,P.Liu,andW.Yu,“StructSLAM: Systems,vol.54,no.9,pp.740–749,2006.
+visual SLAM with building structure lines,” IEEE Transactions on
+[34] P. Newman, D. Cole, and K. Ho, “Outdoor SLAM using visual
+VehicularTechnology,vol.64,no.4,pp.1364–1375,2015. appearance and laser ranging,” in IEEE International Conference on
+[10] X. Gao and T. Zhang, “Unsupervised learning to detect loops using RoboticsandAutomation,2006.
+deepneuralnetworksforvisualSLAMsystem,”Autonomousrobots,
+[35] T.Naseer,M.Ruhnke,C.Stachniss,L.Spinello,andW.Burgard,“Ro-
+vol.41,no.1,pp.1–18,2017. bustvisualSLAMacrossseasons,”inIEEEInternationalConference
+[11] H. Strasdat, J. M. Montiel, and A. J. Davison, “Visual SLAM: Why onIntelligentRobotsandSystems,2015.
+ﬁlter?”ImageandVisionComputing,vol.30,no.2,pp.65–77,2012.
+[36] M.J.Milford,G.F.Wyeth,andD.Prasser,“RatSLAM:ahippocampal
+[12] B.M.Kitt,J.Rehder,A.D.Chambers,M.Schonbein,H.Lategahn, model for simultaneous localization and mapping,” in IEEE Interna-
+andS.Singh,“Monocularvisualodometryusingaplanarroadmodel tionalConferenceonRoboticsandAutomation,2004.
+tosolvescaleambiguity,”2011.
+[37] M. Cummins and P. Newman, “FAB-MAP: probabilistic localization
+[13] P. Neubert, N. Su¨nderhauf, and P. Protzel, “Superpixel-based ap- and mapping in the space of appearance,” The International Journal
+pearancechangepredictionforlong-termnavigationacrossseasons,” ofRoboticsResearch,vol.27,no.6,pp.647–665,2008.
+RoboticsandAutonomousSystems,vol.69,pp.15–27,2015.
+[38] H.Zhang,F.Han,andH.Wang,“Robustmultimodalsequence-based
+[14] S.Yang,S.A.Scherer,X.Yi,andA.Zell,“Multi-cameravisualSLAM loop closure detection via structured sparsity.” in Robotics: Science
+for autonomous navigation of micro aerial vehicles,” Robotics and andsystems,2016.
+AutonomousSystems,vol.93,pp.116–134,2017.
+[39] E.JohnsandG.-Z.Yang,“Featureco-occurrencemaps:Appearance-
+[15] H.Lategahn,A.Geiger,andB.Kitt,“VisualSLAMforautonomous basedlocalisationthroughouttheday,”inIEEEInternationalConfer-
+groundvehicles,”inIEEEInternationalConferenceonRoboticsand enceonRoboticsandAutomation,2013.
+Automation,2011.
+[40] S.M.SiamandH.Zhang,“Fast-SeqSLAM:afastappearancebased
+[16] R. Arandjelovic, P. Gronat, A. Torii, T. Pajdla, and J. Sivic, place recognition algorithm,” in IEEE International Conference on
+“NetVLAD: CNN architecture for weakly supervised place recogni- RoboticsandAutomation,2017.
+tion,”inIEEEconferenceoncomputervisionandpatternrecognition,
+[41] P. Hansen and B. Browning, “Visual place recognition using HMM
+2016. sequencematching,”inIEEEInternationalConferenceonIntelligent
+[17] S.Lowry,N.Su¨nderhauf,P.Newman,J.J.Leonard,D.Cox,P.Corke, RobotsandSystems,2014.
+andM.J.Milford,“Visualplacerecognition:Asurvey,”IEEETrans- [42] C.Cadena,D.Ga´lvez-Lo´pez,J.D.Tardo´s,andJ.Neira,“Robustplace
+actionsonRobotics,vol.32,no.1,pp.1–19,2015. recognition with stereo sequences,” IEEE Transactions on Robotics,
+[18] N.Su¨nderhauf,S.Shirazi,F.Dayoub,B.Upcroft,andM.Milford,“On
+vol.28,no.4,pp.871–885,2012.
+the performance of convnet features for place recognition,” in IEEE [43] S. Rabanser, O. Shchur, and S. Gu¨nnemann, “Introduction to tensor
+internationalconferenceonintelligentrobotsandsystems,2015. decompositionsandtheirapplicationsinmachinelearning,”Machine
+[19] F.Endres,J.Hess,N.Engelhard,J.Sturm,D.Cremers,andW.Bur- Learning,vol.98,no.1-2,pp.1–5,2015.
+gard,“AnevaluationoftheRGB-DSLAMsystem.”inIEEEInterna-
+[44] H.E.RomeijnandD.R.Morales,“Aclassofgreedyalgorithmsfor
+tionalConferenceonRoboticsandAutomation,2012. thegeneralized assignmentproblem,”DiscreteApplied Mathematics,
+[20] T.Naseer,L.Spinello,W.Burgard,andC.Stachniss,“Robustvisual
+vol.103,no.1-3,pp.209–235,2000.
+robot localization across seasons using network ﬂows,” in AAAI
+[45] A.J.Glover,W.P.Maddern,M.J.Milford,andG.F.Wyeth,“FAB-
+ConferenceonArtiﬁcialIntelligence,2014.
+MAP+ RatSLAM: Appearance-based SLAM for multiple times of
+[21] Y. Latif, G. Huang, J. J. Leonard, and J. Neira, “An online sparsity- day,”inIEEEInternationalConferenceonRoboticsandAutomation,
+cognizant loop-closure algorithm for visual navigation.” in Robotics:
+2010.
+ScienceandSystems,2014.
+[46] H.Badino,D.Huber,andT.Kanade,“Real-timetopometriclocaliza-
+[22] F. Han, X. Yang, Y. Deng, M. Rentschler, D. Yang, and H. Zhang, tion,”inIEEEInternationalConferenceonRoboticsandAutomation,
+“SRAL:sharedrepresentativeappearancelearningforlong-termvisual 2012.
+place recognition,” IEEE Robotics and Automation Letters, vol. 2, [47] D. Lee, H. Kim, and H. Myung, “2D image feature-based real-
+no.2,pp.1172–1179,2017. time RGB-D 3D SLAM,” in Robot Intelligence Technology and
+[23] F. Han, S. El Beleidy, H. Wang, C. Ye, and H. Zhang, “Learning of Applications,2013.
+holism-landmarkgraphembeddingforplacerecognitioninlong-term [48] N.Su¨nderhaufandP.Protzel,“Brief-Gist-Closingtheloopbysimple
+autonomy,”IEEERoboticsandAutomationLetters,vol.3,no.4,pp. means,” in IEEE International Conference on Intelligent Robots and
+3669–3676,2018. Systems,2011.
+[24] S. Siva and H. Zhang, “Omnidirectional multisensory perception
+fusion for long-term place recognition,” in IEEE International Con-
+ferenceonRoboticsandAutomation,2018.
+1076
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:03:59 UTC from IEEE Xplore.  Restrictions apply. 

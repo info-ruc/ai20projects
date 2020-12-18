@@ -1,0 +1,537 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Demonstration of Autonomous Nested Search for Local Maxima
+Using an Unmanned Underwater Vehicle
+Andrew Branch1, James McMahon2, Guangyu Xu3, Michael V. Jakuba4, Christopher R. German4, Steve Chien1,
+James C. Kinsey4, Andrew D. Bowen4, Kevin P. Hand1, Jeffrey S. Seewald4
+Abstract—Ocean Worlds represent one of the best chances
+for extra-terrestrial life in our solar system. A new mission
+conceptmustbedevelopedtoexploretheseoceans.Thismission
+would require traversing the 10s of km thick icy shell and
+releasingasubmersibleintotheoceanbelow.Duringthetransit
+of the icy shell and the exploration of the ocean, the vehicle(s)
+would be out of contact with Earth for weeks or potentially
+months at a time. During this time the vehicle must have
+sufﬁcient autonomy to locate and study scientiﬁc targets of
+interest.Onesuchtargetofinterestishydrothermalventing.We
+havepreviouslydevelopedanautonomousnestedsearchmethod Fig. 1: Notional Europa submersible mission showing the communication
+to locate and investigate sources of hydrothermal venting by pathwayfromthesubmersiblevehicletoEarth.Approximateicethickness
+locating local maxima in hydrothermal vent emissions. In this andoceandeptharelabeled.
+work we demonstrate this approach on board an OceanServer
+vehicle would also be operating in a signiﬁcantly more dy-
+Iver2AUVinChesapeakeBay,MDusingsimulatedsensordata
+namic environment than previous surface operation mission
+from a hydrothermal plume model. This represents the ﬁrst
+step towards the deployment of this approach in conditions (e.g. Mars rovers), preventing the use of traditional human
+analogous to those that we might expect on an Ocean World. in the loop operations. Due to these constraints, the vehicle
+would need to operate fully autonomously for weeks or
+monthsatatime.Duringthisexplorationmissionthevehicle
+I. INTRODUCTION wouldberequiredtoautonomouslylocate,detect,andsurvey
+A speciﬁc targets of scientiﬁc interest. One potential target
+T least eight bodies in our solar system are thought to
+of scientiﬁc interest is hydrothermal venting. Evidence for
+harbor liquid oceans. In some cases, such as Europa
+hydrothermal venting has been found on one Ocean World,
+and Enceladus, this ocean is perhaps habitable and encased
+Enceledus [2], [3]. On Earth, these geological phenomena
+inanicyshellkilometersthick[1].Toexploretheseoceansa
+harbor unique ecosystems and are potentially critical to the
+newmissionconceptmustbedevelopedusingicepenetrating
+origin of life. Similar vents on Ocean Worlds could be the
+submersible vehicles. A notional mission concept for such
+best chance at extra-terrestrial life in our Solar System.
+a mission is outlined in Figure 1. This concept contains
+We have previously developed a fully autonomous nested
+three main components. A submersible vehicle, an under-
+search strategy for the localization of hydrothermal venting
+ice base station, and a surface relay. Long mission duration
+based on a human-in-the-loop three phase nested search
+– one or more years to transit the icy shell and a one year
+commonlyusedintheﬁeld[4],[5].Thisworkpresentsaﬁeld
+exploration mission – requires a low power vehicle, limiting
+demonstrationofthispreviouslydevelopedfullyautonomous
+thepotentialinstrumentsonboard.Thevehiclewouldideally
+search strategy. In June 2019 we deployed an Iver2 AUV
+travel hundreds or thousands of kilometers from the base
+in Chesapeake Bay to test this search strategy. As there is
+stationwhilestillbeingabletoreturntotransmitdatathrough
+no hydrothermal venting in the deployment area, we used
+the under-ice base station and back to Earth. When the
+simulated data from an FVCOM based hydrothermal plume
+surface relay does not have line-of-sight to Earth ground
+model [6].
+stations (approximately 42.5 hours and 33 hours per orbital
+The remainder of the paper is organized as follows. We
+period of Europa and Enceledus respectively) and when the
+discuss the structure of hydrothermal venting, the hydrother-
+submersiblevehicleisdistantfromtheunder-icebasestation,
+mal plume model, and our nested search approach. Finally
+no communication with the vehicle would be feasible. The
+we discuss the experiment, results, and future work.
+1JetPropulsionLaboratory,CaliforniaInstituteofTechnology,4800Oak
+GroveDrPasadena,CA
+2Code7130,PhysicalAcousticsBranch,NavalResearchLaboratory,4555
+OverlookAveSWWashington,DC
+3Applied Physics Laboratory, University of Washington, 1013 NE 40th
+St,Seattle,WA
+4Woods Hole Oceanographic Institution, 266 Woods Hole Rd, Woods
+Hole,MA
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1888
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. II. RELATEDWORK inclusion on a submersible mission to an Ocean World due
+to their compact form factor (100s of grams) and low power
+Adaptive sampling and control of autonomous underwater
+consumption (10s of milliwatts).
+vehicleshasbeenextensivelystudied,includingfoundational
+work with the Autonomous Ocean Sampling Network [7],
+[8], [9], [10], [11].
+Hydrothermal vent localization on Earth is often done
+~10 km
+with a non-autonomous three-phase nested search [4]. [12]
+~100 m
+demonstrates this method in a number of cruises. [13]
+Overshoot
+presents a method to autonomously revisit areas of interest
+after the primary mission is completed. [14] uses occupancy Non-Buoyant Plume Pacific Atlantic
+grid mapping in order to localize vents. [15] uses a trigger m m
+based approach in order to gather higher resolution data in Buoyant Plume Entrainment ~150  ~300 
+areas of strong sensor readings. These three approaches are
+notfullyautonomousandrequirehumanstodevelopthebase
+mission used. Fig.2:Demonstrationofahydrothermalplumeperformedinanaquarium
+[16]ﬁeldtestsastrategyinspiredbymothsinordertotrace tank. The buoyant and non-buoyant components of the hydrothermal vent
+plumearelabeledwithapproximatescales.ImagecourtesyofC.German,
+chemical plumes. [17] and [18] use moth based strategies in
+WHOI
+order to localize hydrothermal venting. These methods are
+IV. HYDROTHERMALPLUMEMODEL
+susceptible to local maxima from plume ﬂuid that detached
+from the main plume source and can be misled by changes A simulation environment was developed using a hy-
+in tidal currents. Our method reduces the issues posed from drothermalplumedispersionsimulationandavehiclemodel.
+localmaximaandtidalcurrentsbyperformingcoarsesurveys A numerical simulation of hydrothermal plume dispersion is
+overtheplumeextentbeforeprogressivelyreﬁningregionsof performedusingFVCOM[6],anocean-circulationmodel,at
+high plume concentration, as opposed to following gradients Axial Seamount on the Juan de Fuca Ridge. The abundant
+upstream. [19] uses a belief-maximization algorithm to ﬁnd lavasupplytoAxialsupportsvigoroushydrothermalsystems
+a target of interest in simulation. Additionally, the above and frequent volcanic activity, which have drawn extensive
+approaches have been tested in idealized plume simulation on-going scientiﬁc research that makes Axial one of the
+environments. Our hydrothermal plume simulation provides best-studied seamounts on this planet. A snapshot of this
+more realistic plume dynamics for initial testing. simulation is shown in Figure 3. The unstructured grid
+employed in FVCOM supports grid size variation, therefore,
+proves efﬁcient for the simulation of motion over a broad
+III. HYDROTHERMALVENTING
+rangeoflengthscales.Inaddition,FVCOMsupportstheuse
+Hydrothermal venting produces a plume which can be of large-scale ocean circulation and tidal model outputs to
+used to locate the source. The structure of the plume is drive ﬂow across a broad range of frequencies inside the
+shown in Figure 2. Hydrothermal ﬂuid exiting the vent model domain [27].
+is less dense than the surrounding water, resulting in the Our model domain covers 300 by 300 km, centered on
+formationofabuoyantplume.Duetoentrainment,theplume the Axial Seamount caldera and is open to ﬂow across all
+is continuously diluted by the ambient water column and four sides of that region. Horizontal resolution varies from
+expands from ~10 cm at the vent source to ~100 m at 200 m within a 10 by 10 km region enclosing Axial’s
+equilibrium. Upon reaching equilibrium, the plume expands caldera to 10km at the domain’s boundary. The vertical
+horizontally — ten to hundreds of kilometers — to form the dimensionhas127uniformlydistributedlayers,covering the
+non-buoyant plume [20]. The non-buoyant plume height is full water column. This results in a ~12 m layer thickness
+a function of the properties of the hydrothermal vent ﬂuid above Axial’s summit. The duration of the simulation is 58
+as well as the surrounding water column [21]. In the Paciﬁc days with model outputs sampled hourly. We add a seaﬂoor
+the non-buoyant plume is normally observed at 100-150 m heat source of 1 gigawatt at the center (0,0) of the model
+above the seaﬂoor, while in the Atlantic it is normally closer domain inside Axial’s caldera. The model output consists of
+to 200-400 m [22]. current,temperature,salinity,andapassivetracer,dye,which
+Hydrothermal plumes are the main source of information is released at the vent source. This tracer has a value range
+when localizing venting. However, tidal ﬂows lead to local of [0,100]. After 30 days the tracer content in a 20 by 20
+maxima [23], turbulent ﬂow disrupting smooth gradients, kmregionsurroundingtheventsourcereachesaquasi-steady
+differing vent types and strengths, and an unknown number state.Ina50by50kmregionsurroundingtheventsourceno
+of sources increase the difﬁculty of determining the plume quasi-steadystateisreachedbeforetheendofthesimulation.
+source. More information about this model can be found in [5].
+[4] uses three primary sensors in the detection of hy-
+drothermal plumes: temperature, optical backscatter [24], V. SPATIALNESTEDSEARCH
+[25], and a chemical sensor such as oxidation-reduction Given a vehicle’s starting location, the goal is to produce
+potential [26]. These sensors may be good candidates for a control strategy that results in locating the hydrothermal
+1889
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. andacross track.Eachtracklineofthelawnmowerpattern
+consists of sections with length equal to the spacing. At
+least min sections sections are completed per track line. If
+sections limitsectionshaveaverageplumestrengthsbelow
+plume and the sections have monotonically decreasing
+t
+average plume strengths, then the track line is completed
+and the next track line is commenced. min sections and
+sections limit are manually speciﬁed search parameters. If
+themaximumvalueofanentiretracklineislessthanplume
+(a) Snapshottakenat1400mdepth (b) W-Etransectacrossthecenterof t
+then the current lawnmower survey is ended and the next
+themodeldomain
+begins. The data from each dynamic lawnmower is binned
+Fig.3:ModelsnapshottakenonMar1,201100:00UTCofthesimulated
+into survey bins.
+concentration(normalizedbythesourcevalue)ofaneutrallybuoyanttracer
+originating from a hydrothermal vent source of 1 GW heat ﬂux located An example dynamic lawnmower is shown in Figure 4.
+insidethecalderaofAxialSeamountatcoordinatecenter. The plot is subdivided into track line sections. The average
+plume strength is listed in each section; a green background
+vent. The vent is considered found when the region around indicates that the average plume strength is greater than the
+the vent has been surveyed at a speciﬁed resolution. The speciﬁedthreshold,plume .Twoboundariestothesurveyare
+t
+strategy mimics the ﬁeld-proven methods of [4]. Due to shown. Upon reaching the right-most boundary, the vehicle
+the limited resolution of the simulation environment, we completes the current trackline. The boundaries correspond
+focus speciﬁcally on search in the non-buoyant plume. (The to the shared edges of the four quadrants deﬁned during the
+buoyant plume is approximately 100 m, placing it below search process.
+our 200 m resolution). This corresponds to the ship based Upon the completion of each dynamic lawnmower, local
+CTD casts and — to some extent — phase 1 of the [4] maxima of survey bins are found. A maximum is declared
+method. Our strategy allows for the localization of plume when the 8 neighboring bins of the same resolution have a
+sourceswithdifferingstrengthsandmaintainsarobustnessto max plume detection value less than that of the center bin.
+local maxima in vent ﬂuid concentrations and to small scale Once a maximum has been found a nested ”lawnmower”
+turbulence. We do this by performing a coarse search over survey begins. An example of this process is shown in
+the plume extent and then progressively reﬁne the resolution Figure 5. The local maximum — shown in green — and
+of surveys in regions of highest plume strength. Before we its neighbors are subdivided into smaller bins with one-third
+can search for hydrothermal venting, we must have some the side length of their parents. A lawnmower with spacing
+method for detecting plumes. Ideally this would involve equal to one-third that of the previous lawnmower survey
+modeled sensors for temperature, optical backscatter, and and with track lines centered on each row of nested bins
+oxidation reduction potential. However, currently we only is initiated. The new nested lawnmower survey covers the
+usethepassivetracerinthemodelasadirectmeasureofthe local maximum and all surrounding neighbors. If any bin
+hydrothermal plume. This is an area of future improvement. has previously been surveyed at the current resolution it will
+Thedescriptionofthealgorithmfrom[5]isincludedhere. not be surveyed again. If multiple local maxima have been
+A spiral is initiated at the start location. The horizontal found, they are prioritized on plume strength. This process
+spacing of the spiral is manually selected to be the expected repeats recursively until a survey spacing of final spacing,
+size of the feature, insuring it is seen during this initial is reached. If no local maxima are found during a dynamic
+survey. During this spiral the vehicle completes vertical lawnmower, or all local maxima have been exhausted before
+proﬁles through the extent of the water column. When the the survey spacing offinal spacing is reached, then the
+max plume strength value of a single proﬁle exceeds the dynamiclawnmowersresume. Afteralldynamic lawnmower
+speciﬁedthreshold,plume inAlgorithm1,thesecondphase surveys are completed the spiral is resumed. Another set of
+t
+of surveys begins. The height of the detected feature, p , is dynamiclawnmowersisstartedifaplumeisdetectedoutside
+h
+determined by binning the data from the vertical proﬁle, p , of the previously searched area.
+d
+at a 10 m resolution and selecting the bin with the largest
+average value. The subsequent surveys are performed at a
+VI. EXPERIMENT
+depth of p .
+h
+A. Vehicle
+During the second phase of surveys, the search space
+is partitioned into bins, survey bins, of size spacing . The vehicle used to demonstrate the autonomous nested
+0
+These bins are separated into four quadrants centered on search algorithm is an OceanServer Iver2 AUV (see ﬁg.6).
+the corner of the bin closest to the location of the plume The Iver2 AUV is a lightweight vehicle that employs several
+detection. A dynamic lawnmower survey is executed in each sensors for navigation and data collection. Speciﬁcally, the
+of the four quadrants. The dynamic lawnmower algorithm AUVusesaninternalcompass,dopplervelocitylogs(DVL),
+is outlined in Algorithm 2. The spacing of the lawnmower and GPS receiver to estimate the current position while on
+pattern, track spacing, is speciﬁed beforehand. The direc- the surface (GPS) and underway (compass + DVL). Inter-
+tion of the lawnmower pattern is deﬁned by along track nally, the AUV is equipped with two computers operating
+1890
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. Algorithm 1 Autonomous Nested Search
+procpvelidasuirnetseNdE←S←TEeDmepmStEypAtsyRtaCsceHkt
+psularnvse.ypubisnhs(s←pirbiansl)ofsizespacing0
+whileplans.size>0andnottimedoutdo
+ExecuteorContinueplans.top()
+ifexecutingspiralthen
+Waituntilendofverticalproﬁle
+pd←←Getdatafromproﬁle
+difdb>inm=s←a←pxl(uppmdr)oeftialneddd.altoacabtininoednanto1t0emxpeltoerresdanthdenaveraged
+p(xh,y)←mabxin(cboirnnesr)cl.ohseesitgtohdt.position ◦ ◦
+plans.push(dynamiclawnmower(x,y,ph,9−0 ,◦0 ,◦spacing0))
+plans.push(dynamiclawnmower(x,y,ph,−90◦,0 ,◦spacing0))
+plans.push(dynamiclawnmower(x,y,ph, 9◦0 ,18◦0 ,spacing0))
+plans.push(dynamiclawnmower(x,y,ph,90 ,180 ,spacing0))
+Executeplans.top()
+else
+whileplans.top()isnotcompleteddo
+Wait
+surveydata←Getdatafromlatestsurvey
+surveybi←ns.adddata(surveydata)
+maxima getbinmaxima(surveybins)
+sortmaxima
+forbininmaximado
+ifbinnotinvisitedthen
+Partitionbinandbin.neighbors() Fig. 4: Plot showing an example dynamic lawnmower survey. The survey
+visited.add(bin) area is partitioned into regions representing sections of each track line.
+plans.push(nestedlawnmower(bin))
+break Regions shaded green have an average plume strength over the speciﬁed
+whilep←lans.size>0andplans.top()iscompletedo threshold. The average value is labeled in the upper left corner of each
+f plans.pop()
+iff.spacing<finalspacingandfcontainsventsourcethen region. The two survey boundaries are shown as thick black lines on the
+returnFailruerteurnSuccess right and bottom of the plot. The starting location is marked with a black
+star.
+Algorithm 2 Execute Dynamic Lawnmower
+procedureEXEC←UTEDYNAMICLAWNMOWER(x,y,∗h,alongtrack,acrosstrack,trackspacing)
+startx←x+cos(alongtrack) ∗trackspacing/2
+starty y+sin(acrosstrack) trackspacing/2
+Goto(startx←,starty,h)
+currtrack ←0
+currsectio←n 0
+csoecmtipolneteddata←Faelmspetylist
+Startcurrenttracklineonheadingalongtrack
+whilenotcompleteddo
+Donextsectiononcurrenttrack
+sectiondata[c←urrsection]←Getdatafromlastsection
+currsection currsection+1
+ifcurrsection>=minsectionsorsurveyboundaryreachedthen
+ifavg(sectiondata[i])<plumetforlastsectionslimitsectionsandmonotoni-
+callydecreasingthen
+←
+currtrack currtrack+1
+ifmax(section←data)<plumethreshthen
+csoecmtipolneteddata←Treumeptylist Fig.5:Exampleoftheplanningprocessforthenestedlawnmowersearch.
+Traveltrackspacingonheadingacrosstrack The search space is divided into square bins with sides equal to the
+ifcurrtrackiseventhen lawnmower spacing. Upon ﬁnding a local maximum bin, the bin and all
+Startnexttracklineonheadingalongtrack
+else itsneighborsaresubdividedintonestedbinsofone-thirdthesidelength.A
+Startnexttracklineonheading−alongtrack lawnmowerpatternisthenexecutedsuchthateachtracklineiscenteredon
+arowofbins.Thevehiclepathandobservedtracerisplotted.Theplanned
+nestedlawnmowerisshowindarkred.Thestartinglocationismarkedwith
+in a frontseat-backseat conﬁguration. The frontseat, a main a black star. Note that the measured passive tracer does not remain the
+sameonsubsequentmeasurementsofthesamelocationduetothetemporal
+vehicle computer developed by OceanServer, controls the
+variationinﬂuidconcentrations.
+actuationofthevehicleandgeneratesthenavigationsolution
+mission. IvP Helm then arbitrates between safety behaviors
+(Geodesic coordinates, heading, speed, depth/altitude). The
+(battery monitoring, region monitoring, etc.) and waypoints
+backseat computer is built in-house and runs the MOOS-
+that deﬁne the nested search plan resulting in the desired
+IvP autonomy architecture onboard a PC104 stack running
+heading, depth, and speed.
+Ubuntu 18.04 on an Intel Core-i7 (2.4 GHz) with 4 GB of
+RAM. The architecture of the autonomy system leverages
+B. Mission Setup
+MOOS-IvP to handle the passing of data between different
+processes and to arbitrate several behaviors in order to Two operational constraints required the modiﬁcation of
+generate a desired navigation solution (Heading, Depth, and the hydrothermal model, vehicle endurance and water depth.
+Speed). The Iver2 AUV used in the experiment has an endurance
+In this work we add two main components to MOOS- of 25-30 km. This is not sufﬁcient for a convincing test
+IvP: (i) The Nested Search Planner application, and (ii) the of the nested bin search given the size of the hydrothermal
+FVCOM plume simulator app (see ﬁg.7). The navigation plume model. To compensate for this, the model was scaled
+solution generated by the frontseat is passed through to both in the xy direction by a factor of 1/8, resulting in a model
+the planning and simulator app. Simulated sensor readings resolution of 25m. An experiment area of 1.5 km by 1.5 km
+from the FVCOM simulation are also passed forward to was also deﬁned to focus the search and prevent the vehicle
+the planning application which then generates updated plans from travelling too far from the shore. The water depth in
+for the IvP Helm to follow throughout the course of the this experiment region was approximately 7 meters deep.
+1891
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. demonstrate the algorithm running on board an AUV and
+prepare for deployments without a plume model. The results
+of the modiﬁcation of the model can be seen in Figure 8.
+Analysis in simulation of the search method can be found
+here, [5].
+WedeployedtheAUVfromshoreeachdayfromJune4th
+to June 7th. The proﬁle of a single run is as follows. The
+vehicle traversed near the surface to the target experiment
+region, performed the autonomous nested search described
+Fig. 6: Iver2 AUV parked on the shore at NRL’s Chesapeake Beach
+Detachmentafterperforminganexperiment. previously then returned to the shore for recovery. The
+resolution of the spiral and initial lawnmowers was set to
+200m and 150m respectively, with a ﬁnal survey goal of
+FVCOM Model 
+Server 25m,thesameresolutionasthemodiﬁedhydrothermalplume
+model. If the vehicle was unable to locate the hydrothermal
+MOOSDB vent before a speciﬁed timeout it would return to shore. The
+Nested Search  Simulated Sensor  Current State  vehicle maintained accurate localization by surfacing every
+Planner Measurement Estimate OceanServerUVC
+(Iver2 control) 10 minutes for a GPS ﬁx. Each day the location of the
+Nested Search  Desired 
+Trajectory Navigation hydrothermalventandthestartinglocationofthevehiclewas
+set.Thelocationofthehydrothermalplumewasmodiﬁedby
+IvPHelm
+moving the origin of the model in the experiment region. In
+Fig. 7: Simpliﬁed version of the autonomy architecture showing the main totalweperformed5runsonthevehicle.Wealwaysstartthe
+components required for autonomous nested search using an OceanServer
+vehicle south of the hydrothermal vent. Due to the design of
+Iver2AUV.
+the algorithm, this results in shorter distances travelled and
+As the original hydrothermal plume model is approximately allowed us to better demonstrate the search algorithm while
+1400 meters deep at the vent site it could clearly not be remaining within the vehicle’s endurance.
+used in this form. In addition the bathymetry of the model
+seaﬂoor is not as ﬂat at the experiment operation region. VII. RESULTS
+To compensation for this we removed the portion of the A total of 5 runs were run over the 4 days of the
+model in the vertical direction that contains no hydrothermal experiment. On the ﬁrst day, 2 runs were performed with
+plume and uniformly selected 9 layers from the remaining the primary goal of testing the interface between the nested
+portion of the model. This resulted in a modiﬁed model search planner. There were no issues with the interface
+with 9 layers with a 0.66 meter layer size, for a total of betweentheplanner,themodel,andthevehicle.Theprimary
+6 meters of vertical depth. We also gave the model a ﬂat goal of all subsequent runs was to demonstrate the nested
+seabedbymakingthelayersofuniformheight.Thisresulted search planner. The experiment region was set to 1.5 by 1.5
+in a model that ﬁt in our experiment region and with a kilometers and the run timeout was set to 3.5 hours. These
+vertical resolution within the vehicles ability to maintain parameters ensure that the vehicle has the opportunity to
+depth.Wedonotethatthisextrememodiﬁcationofthemodel demonstrate the nested search algorithm while still returning
+isnotideal.However,visualinspectionoftheresultingmodel to the shore before the end of the vehicles endurance. On
+showsthattheimportantfeaturesforourparticularalgorithm the day 2 run, Figure 9, we see intermittent data sampled
+are still present (multiple local maxima and varying plume from the model. The search algorithm selected the height of
+strength with depth). The goal of this experiment was to the lawnmower surveys to be at the bottom of the model.
+As the vehicle is not able to perfectly hold depth it was
+periodically at a depth lower than the model, resulting in no
+valid data. There is also a known issue with this methods
+performance, as currently implemented, when searching in
+the death direction. The depth at which all lawnmower sur-
+veysareperformedindeterminedonlyonceduringtheinitial
+contact with the plume. As the plume depth varies based on
+water density and location, the vehicle is not guaranteed to
+maintain contact with the strongest depth band of the plume
+throughoutthesearch.Thiscanresultinfailuretoidentifythe
+plume source. For the purposes of the remaining runs in this
+demonstrations, the depth at which the lawnmower surveys
+were performed was ﬁxed to be roughly the center of the
+plume. In future iterations we want to improve the search
+Fig. 8: Snapshot taken at 7 m depth of the modiﬁed hydrothermal plume
+model. The plume concentration is plotted in the form of the neutrally algorithm to also search in the depth direction throughout
+buoyanttracer.Atthisdepthweseethelargestplumedispersion. the entire run to maintain contact with the plume.
+1892
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. During all runs we see similar behavior. The vehicle
+performsaspiraluntilcontactingtheplume,thenperformthe
+dynamiclawnmowerbehavioruntilalocalmaximumisseen,
+ﬁnallytheyperformnestedlawnmowersurveysatsubsequent
+local maxima until the ﬁnal survey size is reached.
+The day 2 run can be seen in Figure 9 and the day 3
+(top) and day 4 (bottom) runs can be seen in Figure 10.
+Theday4runresultedinthemostinterestingdemonstration.
+We see the vehicle performing the dynamic lawnmower then
+transitioningtothenestedsurvey.Thelargestmaximumseen
+at this point is south of the hydrothermal vent location,
+resulting in a nested lawnmower survey that does not cover
+theventlocation.Uponcompletion,thislawnmowersurveyis
+extendedfurthernorthtocoveranadditionallocalmaximum
+thatisco-locatedwiththeventsite.Thisbehaviorisexpected
+in real operations due multiple local maxima in the plume
+that are not associated with the vent location.
+Fig. 10: (top) Day 3 run. (bottom) Day 4 run. Sensed plume strength is
+plotted.
+be explored for their applications to Ocean Worlds: thermo-
+clines [28], [29], [30], ocean fronts [31], [32], algal bloom
+Fig.9:Day2Run.Sensedplumestrengthisplotted.
+patch[33],[34],[35],[36],andsubmesoscalestructures[37].
+VIII. FUTUREWORK Autonomous science is only one autonomy task required
+The primary future work to be completed is full real by an ocean worlds submersible. The vehicle would also be
+world testing at a hydrothermal venting site. In addition to required to handle resource constraints, selectively choose
+more testing, the algorithm can be improved in a number of which data to transmit back to Earth over the limited band-
+ways.Thelawnmowersurveyscanbeimprovedtoguarantee width, and perform underwater navigation.
+closing contours for local maxima, the search can include a
+depth component through the duration of the run, temporal IX. CONCLUSION
+variation in the plume from should be accounted for, and
+Wedemonstratedanautonomousnestedsearchmethodfor
+other search strategies should be developed for comparison.
+hydrothermal venting, based on a ﬁeld tested manual three-
+This work was originally developed for the localization
+phase search approach [4]. We deployed an OceanServer
+of hydrothermal venting. However, as the search operates by
+Iver2 AUV into Chesapeake Bay, MD running the nested
+locating local maxima, a similar approach could be applied
+search method on board as well as a hydrothermal plume
+in other underwater vehicle search problems. The approach
+model to simulate the required sensor data. Over a 1 week
+could be applied to any oceanographic measure such as
+period we ran 5 mission on board the vehicle demonstrating
+temperature, salinity, chlorophyll, or other chemical sensors.
+the performance of the algorithm.
+An additional application is acoustic source localization.
+Given some acoustic source determine the location of that
+source based on the strength of the received sound wave. ACKNOWLEDGMENT
+Adaptationsof thisalgorithmforother useswillalso expand PortionsofthisworkwereperformedbytheJetPropulsion
+the potential for real world experiments. Laboratory,CaliforniaInstituteofTechnology,undercontract
+Hydrothermal venting is not the only target of interest. with the National Aeronautics and Space Administration.
+While not all ocean processes on Earth are expected to recur Portions of this work were funded by the Naval Research
+onotheroceanworldsdistantfromthesun,thefollowingcan Laboratory and Woods Hole Oceanographic Institution.
+1893
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [15] G. Ferri, M. V. Jakuba, and D. R. Yoerger, “A novel trigger-based
+method for hydrothermal vents prospecting using an autonomous
+underwaterrobot,”AutonomousRobots,vol.29,no.1,pp.67–83,2010.
+[1] NationalAeronauticsandSpaceAdministration.(2018)Oceanworlds.
+[16] J.A.Farrell,S.Pang,andW.Li,“Chemicalplumetracingviaanau-
+[Online].Available:https://www.nasa.gov/specials/ocean-worlds
+tonomousunderwatervehicle,”IEEEJournalofOceanicEngineering,
+[2] H.-W.Hsu,F.Postberg,Y.Sekine,T.Shibuya,S.Kempf,M.Hora´nyi, vol.30,no.2,pp.428–442,2005.
+A. Juha´sz, N. Altobelli, K. Suzuki, Y. Masaki, et al., “Ongoing
+[17] S. Pang, “Plume source localization for auv based autonomous hy-
+hydrothermalactivitieswithinenceladus,”Nature,vol.519,no.7542,
+drothermalventdiscovery,”inOCEANS2010. IEEE,2010,pp.1–8.
+p.207,2015.
+[18] Y. Tian, A. Zhang, W. Li, J. Yu, Y. Li, and J. Zeng, “A behavior-
+[3] J.H.Waite,C.R.Glein,R.S.Perryman,B.D.Teolis,B.A.Magee,
+basedplanningstrategyfordeep-seahydrothermalplumetracingwith
+G. Miller, J. Grimes, M. E. Perry, K. E. Miller, A. Bouquet, J. I.
+autonomousunderwatervehicles,”inOCEANS2014-TAIPEI. IEEE,
+Lunine, T. Brockwell, and S. J. Bolton, “Cassini ﬁnds molecular
+2014,pp.1–10.
+hydrogen in the enceladus plume: Evidence for hydrothermal
+[19] Z. Saigol, R. Dearden, J. Wyatt, and B. Murton, “Belief change
+processes,”Science,vol.356,no.6334,pp.155–159,2017.[Online].
+maximisationforhydrothermalventhuntingusingoccupancygrids,”in
+Available:http://science.sciencemag.org/content/356/6334/155
+ProceedingsoftheEleventhConferenceTowardsAutonomousRobotic
+[4] C.R.German,D.R.Yoerger,M.Jakuba,T.M.Shank,C.H.Langmuir,
+Systems(TAROS-10),2010,pp.247–254.
+andK.-i.Nakamura,“Hydrothermalexplorationwiththeautonomous
+[20] C. German and W. Seyfried, “Hydrothermal processes,” Treatise on
+benthicexplorer,”DeepSeaResearchPartI:OceanographicResearch
+geochemistry,vol.8,pp.191–233,2014.
+Papers,vol.55,no.2,pp.203–219,2008.
+[21] J.S.Turner,Buoyancyeffectsinﬂuids. CambridgeUniversityPress,
+[5] A. Branch, G. Xu, M. V. Jakuba, C. R. German, S. Chien,
+1979.
+J. C. Kinsey, A. D. Bowen, K. P. Hand, and J. S.
+[22] K.G.SpeerandP.A.Rona,“Amodelofanatlanticandpaciﬁchy-
+Seewald, “Autonomous nested search for hydrothermal venting,”
+drothermalplume,”JournalofGeophysicalResearch:Oceans,vol.94,
+in Workshop on Planning and Robotics, International
+no.C5,pp.6213–6220,1989.
+Conference on Automated Planning and Scheduling (ICAPS
+PlanRob 2018), Delft, Netherlands, June 2018. [Online]. Available: [23] S. R. Veirs, “Heat ﬂux and hydrography at a submarine volcano:
+Observations and models of the main endeavour vent ﬁeld in the
+https://ai.jpl.nasa.gov/public/papers/branch planrob2018 hydrothermal.pdf
+northeastpaciﬁc,”Ph.D.dissertation,UniversityofWashington,2003.
+[6] C. Chen, H. Liu, and R. C. Beardsley, “An unstructured
+[24] E.T.Baker,C.R.German,andH.Elderﬁeld,“Hydrothermalplumes
+grid, ﬁnite-volume, three-dimensional, primitive equations ocean
+model: Application to coastal ocean and estuaries,” Journal overspreading-centeraxes:Globaldistributionsandgeologicalinfer-
+of Atmospheric and Oceanic Technology, vol. 20, no. 1, pp. ences,”Seaﬂoorhydrothermalsystems:Physical,chemical,biological,
+andgeologicalinteractions,pp.47–71,1995.
+159–186, 2003. [Online]. Available: https://doi.org/10.1175/1520-
+0426(2003)020¡0159:AUGFVT¿2.0.CO;2 [25] E. T. Baker and C. R. German, “On the global distribution of
+hydrothermalventﬁelds,”Mid-oceanridges,pp.245–266,2004.
+[7] T. B. Curtin, J. G. Bellingham, J. Catipovic, and D. Webb,
+“Autonomous oceanographic sampling networks,” Oceanography, [26] K.Nakamura,S. Veirs,C.P.Sarason, R.E.McDuff,F. Stahr,D.R.
+vol. 6, no. 3, pp. 86–94, 1993. [Online]. Available: Yoerger,andA.M.Bradley,“Electrochemicalsignalsinrisingbuoyant
+http://www.jstor.org/stable/43924649 plumesandtidallyoscillatingplumesatthemainendeavourventﬁeld,
+juande fucaridge,” EOS,Transactions ofthe AmericanGeophysical
+[8] T. B. Curtin and J. G. Bellingham, “Progress toward
+Union,vol.81,no.48,2000.
+autonomous ocean sampling networks,” Deep Sea Research
+Part II: Topical Studies in Oceanography, vol. 56, no. 3, pp. [27] L. Zheng and R. H. Weisberg, “Modeling the west
+62 – 67, 2009, aOSN II: The Science and Technology of ﬂorida coastal ocean by downscaling from the deep ocean,
+an Autonomous Ocean Sampling Network. [Online]. Available: across the continental shelf and into the estuaries,” Ocean
+http://www.sciencedirect.com/science/article/pii/S0967064508002531 Modelling, vol. 48, pp. 10 – 29, 2012. [Online]. Available:
+http://www.sciencedirect.com/science/article/pii/S1463500312000327
+[9] S. Ramp, R. Davis, N. Leonard, I. Shulman, Y. Chao, A. Robinson,
+J. Marsden, P. Lermusiaux, D. Fratantoni, J. Paduan, F. Chavez, [28] N.A.CruzandA.C.Matos,“Adaptivesamplingofthermoclineswith
+F. Bahr, S. Liang, W. Leslie, and Z. Li, “Preparing to autonomousunderwatervehicles,”inOCEANS2010. IEEE,2010,pp.
+predict: The second autonomous ocean sampling network (aosn- 1–6.
+ii) experiment in the monterey bay,” Deep Sea Research Part [29] Y. Zhang, J. G. Bellingham, M. Godin, J. P. Ryan, R. S. McEwen,
+II: Topical Studies in Oceanography, vol. 56, no. 3, pp. B. Kieft, B. Hobson, and T. Hoover, “Thermocline tracking based
+68 – 86, 2009, aOSN II: The Science and Technology of onpeak-gradientdetectionbyanautonomousunderwatervehicle,”in
+an Autonomous Ocean Sampling Network. [Online]. Available: OCEANS2010. IEEE,2010,pp.1–4.
+http://www.sciencedirect.com/science/article/pii/S0967064508002609 [30] L. Sun, Y. Li, S. Yan, J. Wang, and Z. Chen, “Thermocline tracking
+[10] P. Haley, P. Lermusiaux, A. Robinson, W. Leslie, O. Logoutov, using a portable autonomous underwater vehicle based on adaptive
+G.Cossarini,X.Liang,P.Moreno,S.Ramp,J.Doyle,J.Bellingham, threshold,”inOCEANS2016-Shanghai. IEEE,2016,pp.1–4.
+F. Chavez, and S. Johnston, “Forecasting and reanalysis in [31] A. Branch, M. M. Flexas, B. Claus, E. B. Clark, A. F. Thompson,
+the monterey bay/california current region for the autonomous S.Chien,J.C.Kinsey,D.M.Fratantoni,Y.Zhang,B.Kieft,B.Hob-
+ocean sampling network-ii experiment,” Deep Sea Research Part son, and F. P. Chavez, “Front delineation and tracking with multiple
+II: Topical Studies in Oceanography, vol. 56, no. 3, pp. 127 underwatervehicles,”J.FieldRobotics,p.submitted,2018.
+– 148, 2009, aOSN II: The Science and Technology of [32] N. A. Cruz and A. C. Matos, “Autonomous tracking of a horizontal
+an Autonomous Ocean Sampling Network. [Online]. Available: boundary,”inOceans-St.John’s,2014. IEEE,2014,pp.1–6.
+http://www.sciencedirect.com/science/article/pii/S0967064508002634 [33] M. A. Godin, Y. Zhang, J. P. Ryan, T. T. Hoover, and J. G. Belling-
+[11] N.E.Leonard,D.A.Paley,F.Lekien,R.Sepulchre,D.M.Fratantoni, ham, “Phytoplankton bloom patch center localization by the tethys
+and R. E. Davis, “Collective motion, sensor networks, and ocean autonomous underwater vehicle,” in OCEANS’11 MTS/IEEE KONA,
+sampling,” Proceedings of the IEEE, vol. 95, no. 1, pp. 48–74, Jan Sept2011,pp.1–6.
+2007. [34] D. Magazzeni, F. Py, M. Fox, D. Long, and K. Rajan, “Policy
+[12] D.R.Yoerger,A.M.Bradley,M.Jakuba,M.A.Tivey,C.R.German, learning for autonomous feature tracking,” Autonomous Robots,
+T. M. Shank, and R. W. Embley, “Mid-ocean ridge exploration with vol. 37, no. 1, pp. 47–69, Jun 2014. [Online]. Available:
+anautonomousunderwatervehicle,”Oceanography,vol.20,no.4,pp. https://doi.org/10.1007/s10514-013-9375-7
+52–61,2007. [35] J. Das, F. Py, T. Maughan, T. OReilly, M. Messie´, J. Ryan, G. S.
+[13] D. R. Yoerger, M. Jakuba, A. M. Bradley, and B. Bingham, “Tech- Sukhatme,andK.Rajan,“Coordinatedsamplingofdynamicoceano-
+niquesfordeepseanearbottomsurveyusinganautonomousunderwa- graphic features with underwater vehicles and drifters,” The Interna-
+tervehicle,”TheInternationalJournalofRoboticsResearch,vol.26, tionalJournalofRoboticsResearch,vol.31,no.5,pp.626–646,2012.
+no.1,pp.41–54,2007. [36] S.Petillo,H.Schmidt,andA.Balasuriya,“Constructingadistributed
+[14] M.JakubaandD.R.Yoerger,“Autonomoussearchforhydrothermal auvnetworkforunderwaterplume-trackingoperations,”International
+ventﬁeldswithoccupancygridmaps,”inProc.ofACRA,vol.8,2008, Journal of Distributed Sensor Networks, vol. 2012, pp. Article ID
+p.2008. 191235,12pp,2012.
+1894
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. [37] M. M. Flexas, M. I. Troesch, S. Chien, A. F. Thompson,
+S. Chu, A. Branch, J. D. Farrara, and Y. Chao, “Autonomous
+sampling of ocean submesoscale fronts with ocean gliders and
+numerical model forecasting,” Journal of Atmospheric and Oceanic
+Technology, vol. 35, no. 3, pp. 503–521, 2018. [Online]. Available:
+https://doi.org/10.1175/JTECH-D-17-0037.1
+1895
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:04:29 UTC from IEEE Xplore.  Restrictions apply. 

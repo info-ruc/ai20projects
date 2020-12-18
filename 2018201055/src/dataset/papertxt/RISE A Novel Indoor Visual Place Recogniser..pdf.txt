@@ -1,0 +1,468 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Association-Free Multilateration Based on Times of Arrival
+Daniel Frisch and Uwe D. Hanebeck
+Abstract—Multilaterationsystemsreconstructthelocationof For multi target tracking, the main challenge is that the
+atargetthattransmitselectromagneticoracousticsignals.The association between measurements and targets is unknown. If
+employedmeasurementsforlocalizationarethetimesofarrival
+the associations were known because transmissions contain
+(TOAs) of the transmitted signal, measured by a number of
+individual codes, the problem can simply be reduced to
+spatiallydistributedreceiversatknownpositions.Wepresenta
+novelmultilaterationalgorithmtolocalizemultipletargetsthat single target tracking, separately for every target. Multi target
+transmit indistinguishable signals at unknown times. That is, trackingcanbetreatedwiththeJointProbabilisticDataAsso-
+eachreceivermeasuresmerelyasetofTOAswithnoassociation ciation Filter [11], but this requires enumerating all possible
+tothetargets.Ourmethoddoesnotneedanypriorinformation.
+association hypotheses. Other methods like the probability
+Therefore, it can provide uncorrelated, static measurements
+hypothesis density ﬁlter avoid the measurement associations
+to be introduced into a separate tracker subsequently, or an
+initialization routine for multi target trackers. intheirformulation[12],[13].Furtherinterestingpossibilities
+are symmetric and association-invariant transformations like
+I. INTRODUCTION the SME Filter [14], the Kernel-SME Filter [15], [16], or
+methods based on association-invariant set distance measures
+Context: Electromagnetic and acoustic signals have
+[17], [18]. Most methods however have been proposed for
+various properties that carry information and, when received
+linear measurement models or measurements with the full
+at multiple sites, can be exploited to obtain the location of
+dimensionalityonly,andcannoteasilybeappliedtononlinear
+the signal transmitter (target). In multilateration (MLAT),
+subspace measurements like TOA for emitter localization.
+the time of arrival (TOA) is used for target localization. Contribution: In this paper, we will consider a multi
+A typical example is found in aircraft surveillance, where
+targetlocalizationsetupwithrealisticTOAmeasurementsthat
+transmittersoneveryaircraftemitso-calledModeA/Csignals.
+implicate a nonlinear measurement model. Our approach can
+Since that standard only allows for 4096 addresses, there are
+be used to instantly locate a number of objects transmitting
+often multiple aircraft with the same address in one airspace.
+identical messages without any prior knowledge.
+ModeA/Ctransmissionsaretriggeredbyinterrogatorstations,
+therefore it is common that many targets transmit shortly II. PROBLEMFORMULATION
+after each other. As a consequence, receivers often cannot We consider the localization of multiple targets based on
+separate targets just by temporal distance of the TOAs. noisyTOAmeasurementsfromareceivernetwork,wherethe
+Other application scenarios of the presented method include target-to-measurement associations are unknown. Speciﬁcally,
+localizing objects emitting indistinguishable acoustic events. we make the following assumptions:
+P
+State of Art: Signal properties that carry information A1 The number of targets is known.
+about the location of its emitter are for example received A2 There can be missed detections or false measurements
+signal strength (RSS) [2] and angle of arrival (AOA), also (but not both) at one receiver.
+known as bearings measurements [3], [4]. The most accurate A3 TOA measurements are obtained from synchronized,
+location estimates can typically be obtained with TOA passive receivers at known locations.
+P
+measurements [5], [6], or differences of TOA [7], [8], [9] We consider a set of stationary or moving targets during
+∈ { }
+for precisely time-synchronized receiver networks. This is a number of dense transmission events k 1,2,...,K .
+generally referred to as MLAT. In secondary surveillance With dense transmission events, we indicate situations where
+radar (SSR), signal transmissions are actively triggered multiple targets transmit quickly in a row, such that the
+by an interrogator, and the duration between sending the messagesarereceivedindifferentordersondifferentreceivers.
+interrogation and reception of the target’s response gives an Target positions are denoted by jp ∈ RD, where j ∈
+additional indication of the target’s distance [10]. However, {1,2,...,P}isthetargetindex,anddkimensionDistypically
+if the time lag the target needs to process the interrogation is two or three. Every target emits electromagnetic or acoustic
+not accurately known, this information should be used with messages at time steps jt which propagate with uniform
+care. Two common SSR variants are Mode S and Mode A/C. propagation speed c . Theske target transmission times (TTTs)
+0
+do not need to be known beforehand. Therefore, the target
+ThisworkwasfundedbyourcollaborationpartnerFrequentisComsoft
+clock does not need to be synchronized with any other
+GmbH.Themethodsdescribedhereinareprotectedbyapatentapplication
+from Frequentis Comsoft GmbH and Karlsruhe Institute of Technology clock, and transmissions can be equi-spaced in time or not.
+(KIT) [1]. Daniel Frisch and Uwe D. Hanebeck are with the Intelligent Target transmissions also do not need to be triggered by an
+Sensor-Actuator-SystemsLaboratory(ISAS),InstituteforAnthropomatics
+interrogation signal. It merely must be provided that each
+andRobotics,KarlsruheInstituteofTechnology(KIT),Germany.E-mails:
+daniel.frisch@posteo.de,uwe.hanebeck@kit.edu. target does transmit from time to time, because its location
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1294
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply. (a) (b)
+∈{ }
+Fig.1:Geometry plot(a)shows thepositionofthreeaircraft(targets) jp , j 1,2,3 atthetimeinstances jt .Transmitted
+k ∈{ } k
+messages propagate with velocity c into all directions and are detected by the receivers si, i 1,2,3 . In (b) you can
+0
+study the same scenario on a time axis. Transmission of target one 1p takes place at 1t =0.1µs. From there, the signal
+k k
+travels through space (blue arrows) and reaches the individual receivers at times 1ti (indicated with fat plus signs). Targets
+k
+two and three transmit at 2t =1.1µs and 3t =0.6µs, respectively, and these transmissions propagate likewise (red and
+k k
+yellow arrows). Because targets transmit in quick succession, the order of TOA measurements from the three targets varies
+among the receivers. Therefore, a dense transmission event takes place, indicated with k.
+can be measured only for the moments of transmission. Also, Obviously, already taking differences of TOAs increases the
+the signal must be shaped in a way that a speciﬁc TOA can number of possible wrong combinations and does not seem
+be extracted on all receivers referring to the same event. to be a sensible approach here. Therefore, we decide to go
+S
+Measurements are obtained by receivers stationed at back to the raw TOA measurements and work directly with
+∈RD ∈{ S}
+knownlocationssi , i 1,2,..., .Thesereceivers these. Consequently, our targe(cid:20)t stat(cid:21)e jx will consist of TTT
+k
+record the TOAs jti of the transmissions. Thereby the jt and target positions jp
+receivers are synchronkized among each other, but they need k k
+not to be synchronized with a(cid:13)(cid:13)ny target.(cid:13)(cid:13)The basic equation jx = jpk .
+that connects aforementioned(cid:13)variables(cid:13)is k jt
+k
+−
+jp si First we deﬁne a notation that bundles the states jx of
+jti = jt + k , (1) all targets j ∈{1,2,...,P} into a combined target statekX ,
+k k c0 and also the P TOA measurements jti of one receiver i intko
+see also FiPg. 1. Our goal is to detePrm·Sine the target positions the measurement vector ti  k   
+jp of all targets based on the ( ) TOAs jti measured k
+k S k      
+in the receivers.      
+Traditional MLAT m(cid:13)ethods usu(cid:13)ally emplo(cid:13)y differenc(cid:13)es of 1xk hi(1xk) 1tik
+TOA measurements fr(cid:13)(cid:13)om differen(cid:13)(cid:13)t receivers,(cid:13)(cid:13)i.e., (cid:13)(cid:13) X = 2x.k , hi(X )= hi(2.xk) , ti = 2t.ik ,
+− − k .. k .. k ..
+jti2 −jti1 = j t + jpk si2 − j t − jpk si1 . Pxk hi(Pxk) Ptik
+k k k c k c
+0 0
+That way, the unknown TTT jtk is gone from the measure- where hi(jxk) is the measureme(cid:13)(cid:13)nt equatio(cid:13)(cid:13)n (1) for receiver
+ment equation and does not need to be estimated. Of course, i at location si, (cid:13) (cid:13)
+this works only if the two transmissions come from the same
+−
+target j. As we do not know which pairs of TOAs come jp si
+from the same target, we do not know which pairs to use. hi(jxk)= jtk+ kc . (2)
+0
+1295
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply. Summarizing, we have a nonlinear measurement equation j^p
+Sensors Permutation- k Target
+system for each receiver i, namely j^ti Optimizer
+k Invariant Distance Positions
+tik =hi(Xk) . (3) hi(jxk) Predictor j^pk,jtk
+Hypothesized 
+Therealmeasurements πki(j)tˆi areadditionallydistortedwith TOA
+k
+additive noise jvi caused by e.g. a low signal-to-noise ratio. Fig.2:Blockdiagramoftheproposedmultitargetlocalization
+k
+But most notably, πki(j)tˆi can be correctly compared with the algorithm.
+k
+hypothesized measurements (3) onlyif the truemeasurement-
+to-target association function πi(j) has been found
+(cid:124)πππkikkii((((cid:123)P12...(cid:122))))ttˆˆtˆikiki(cid:125)=(cid:124)hhhiii((((cid:123)P12...(cid:122)kxxxkkk)))(cid:125)+(cid:124)P12(cid:123)vvv...(cid:122)kkiiki(cid:125) . ts(cid:16)hoπˆemMkelLwi,khXeˆaliMkthLmo(cid:17)oodr=emianπratgkux,imiXtmivkiinezlayti(cid:88)aio=Ssn1d(cid:88)jpis=Prtoa1b(cid:32)ncleeπmkim(ji)cntˆaikinmj−σizbkihaetii(ofjonxrkmp)ruo(cid:33)lb2alteemd.
+k Either way this turns out to be a mixed combinatorial and
+πkitˆikS  hi(Xk)  vik ccoonmtipnluexoiutsy,opwteimwizialltioinndpicroabtelemth.eTnoucmobnevreyoafnpiodsesaiboilfittihees
+Combined for all receivers, we obtain the equation system
+  for the combinatorial part. For one speciﬁc receiver i, the
+      ∈ { P} P
+πkitˆ1k h1(Xk) v1k adsifsfoecrieanttiopnerfmunucttaitoionnπs.ki(Tjh)e,ojverall1,n.u.m.,ber o,fcpanosysiibeilldities!
+(cid:124)ππ(cid:123)kiki...t(cid:122)ˆtˆS2k(cid:125)=(cid:124)hhS2(((cid:123)X...X(cid:122)kk))(cid:125)+(cid:124)vv(cid:123)...Sk(cid:122)2k (cid:125) , trroeedcbeueicvecedorntionsidd(eePpree!)dn·dSfeonirftlayal.slsSocriaetcieoinvsercsainsb(ePo!)pSti,mwizheicdhfomraeyacbhe
+k III. KEYIDEA
+πkTˆk H(Xk) Vk Instead of going through all possible associations, we
+or in short form propose a mathematical composition of an outer continuous
+optimization loop and an inner combinatorial optimization,
+πkTˆ =H(X )+V .
+k k k seeFig.2.Theouterloopalwayschoosesnewtargetpositions
+S
+This equation system contains all information from and TTT. The inner combinatorial part then calculates the
+P
+receivers with TOA measurements each. As no prior maximumlikelihoodthatispossibleforthesevalues,i.e.,how
+information is assumed, we want to obtain the maximum well they ﬁt to the measurements. Based on that information,
+likelihood estimate. In order to obtain the likelihood, we ﬁrst the outer optimization loop can proceed to the next iteration
+deﬁne the conditional density step and try other target positions until the likelihood is
+| − − maximized globally. We will now describe in detail how this
+f(Tˆk πk,Xk,Vk)=δ(πkTˆk H(Xk) Vk) , alternating optimization procedure can be achieved efﬁciently.
+and by the law of conditional densities, the joint density
+IV. COMBINATORIALOPTIMIZATIONPROCEDURE
+| − − ·
+f(Tˆ ,V π ,X )=δ(πkTˆ H(X ) V ) fV(V ) , In the view of the inner combinatorial optimization loop,
+k k k k k k k k k
+wearealwaysgivenaﬁxedcombinedtargetstateXˆ (target
+where fkV(Vk) is the joint density of all measurement noises positions and TTT at iteration l) that is suggestekd,lby the
+Vk. Now we marginalize over Vk, this yields the likelihood outer loop. We then have to ﬁnd the association permutation
+function Λ of the unknowns πk,Xk πˆ that aligns both(cid:110)sets of TOA(cid:111)s such that the likelihood is
+| k,l
+Λ(π ,X )=fL(Tˆ π ,X ) maximized
+k=fkkV(πkTˆkk−kH(Xk k))k. πˆk,l =argmaxΛ(cid:88)(π(cid:88)k,Xˆk,l) 
+The maximum likelihood estimate of measurement asso- πk  
+ciations a(cid:16)nd combin(cid:17)ed target state can be obtained by  S P πki(j)tˆi −hi(jxˆ ) 2
+=argmin k k,l .
+maximizing the likelihood function π jσi
+k i=1j=1 k
+{ }
+πˆML,XˆML =argmax Λ(π ,X ) .
+k k k k Infact,wemaynotevenbeinterestedintheactualassociation
+πk,Xk but only in the maximum likelihood Λˆ or the minimum
+Assuming(cid:110)that fV is a(cid:111)mul(cid:16)tivariat(cid:17)e Gaussian density with a distance Dˆ to be ob(cid:110)tained over al(cid:111)l possible permutations π
+k k
+diagonal covariance matrix, i.e., for the given Xˆ
+k,l
+2
+Cov j1vki11,j2vki22 = j1σki11 δj1,j2δk1,k2δl1,l2 , Λˆ(Xˆk,l)=mπax Λ(πk,Xˆk,l) ,
+k
+1296
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply.  
+ 
+(cid:88)(cid:88) 
+ 
+Dˆ(Xˆ )=min S P πki(j)tˆik−hi(jxˆk,l) 2 . Wonhlyen(Pth+ere1)arpeoisn(cid:18)ssibteilai(cid:19)dtieMs, omr i12ss(ePd+me2a)s(uPre+me1n)tsf,orw(eFh=av2e).
+k,l πk i=1j=1 jσki P P!
+M = P −M ·M
+Fortunately, changing only the measurement association πi ( )! !
+k M P
+at one receiver while keeping the combined target state possibilities to exclude of the TOAs from association.
+ﬁxed does not inﬂuence the quadratic difference terms Trying out all possibilities and applying Sec. IV-A each time
+contributedbytheotherreceiversinDˆ.Therefore,association can be feasible for small numbers of F or M.
+permutations(cid:88)can be optim(cid:88)ized for each receiver individually
+ 
+    C. Minimum of a List
+S  P πki(j)tˆi −hi(jxˆ ) 2 If only one measurement has been detected at the con-
+Dˆ(Xˆ )= min k k,l . P −M
+k,l πi jσi sidered receiver, i.e., = 1, then simply the nearest
+i=1 k j=1 k TOA is assigned to it, so the necessary operation is taking
+Now what happens exactly for an individualreceiver the minimum of a list. Vice versa, the same holds if tPhere are
+intuitively? We want to(cid:88)calculate the function  multiple clutter measurements but only one target ( =1).
+ 
+ P πki(j)tˆi −hi(jxˆ ) 2 D. Linear Programming F M
+Dˆi(Xˆ )=min k k,l . (4) If the number of false or missed measurements is
+k,l πki j=1 jσki toohightoapplySec.IV-B,orifTOAsfrommultipletargets
+have individual variances, i.e., the TOA differences in (4)
+It consists of simply calculating the expected TOA mea-
+have individual weightings jσi, then the association problem
+surements based on jxˆ using (2). As a result, we have k
+k,l shouldbesolvedwithadedicatedlinearassignmentalgorithm
+two sets of TOAs for each receiver: the hypothesized TOAs
+like the Hungarian algorithm [20] or Munkres assignment
+hi(jxˆ ) based on the suggested state jxˆ , and the TOAs
+k,l k,l algorithm [21]. It was originally proposed for square cost
+jtˆi that were actually measured by the receiver. We want matrices but can be extended to rectangular matrices [22].
+k
+to ﬁnd a permutation πk to reorder the latter, such that the These algorithms always ﬁnd the optimal assignment in
+j
+sumoftheweightedquadraticdifferencesbetweenassociated
+polynomial time. An alternative is the Auction algorithm
+TOA is minimized. This is an optimal transport problem,
+[23], which may obtain a suboptimal solution, but is faster
+or more speciﬁcally, a discrete Monge problem, which is
+and can be solved in real time even for larger sets of objects
+an assignment problem. The resulting Dˆi (4) is a squared [24], [25].
+Wasserstein distance [19].
+V. CONTINUOUSOPTIMIZATIONPROCEDURE
+A. Sorting the TOAs
+The outer optimization loop performs standard continuous
+TOAmeasurementsareofcourseone-dimensionalandthus
+optimization, where the objective function Dˆ is a sum of
+have a natural order that can be easily obtained by sorting.
+squared Wasserstein distances Dˆi (4). Therefore, it is a
+Now if two sets (A,B) of TOAs with the same cardinality
+nonconvex nonlinear least-squares problem. Such nonlinear
+are ordered from earliest to latest, and the weighting of the
+least-squares problems can be solved with the Levenberg-
+individual squared differences is uniform, then obviously
+Marquardt algorithm [26] or a trust-region algorithm [27].
+the smallest overall distance can be obtained by associating
+The solver must be given a suitable initial value, for example
+elements according to their indices in the sorted lists, i.e.,
+randomly chosen target positions over the area covered by
+associating the earliest TOA of set A with the earliest TOA
+receivers, if no prior knowledge about target positions is
+of set B, and so on. In other words, if there are no missed
+available. As the problem is not convex, the solver tends to
+detectionsandnoclutter,andthemeasurementnoisevariances
+get trapped in local minima. To be sure to ﬁnd the global
+jσi for all targets j are the same at receiver i, then the
+k optimum without using prior knowledge, multiple runs with
+contribution Dˆi(Xˆ ) of that receiver to the overall distance
+k,l randomly chosen initial values should be performed. The
+Dˆ(Xˆ ) can be very efﬁciently obtained by sorting. set of target positions found by the optimization run that
+k,l
+B. Try Few Possibilities yielded the smallest residual norm (objective function value)
+F after convergence is selected then. For better convergence
+In the case of false measurements in a clutter envi-
+and performance, the least squares solver should also be
+ronment, the cardinality of the two sets of TOAs is not
+P F provided with analytical gradients in addition to the squared
+equal anymore: the set of measured TOAs consists of +
+F Wasserstein distances Dˆi (4).
+measurements. Bot(cid:18)h sets m(cid:19)ay still be sorted, but elements
+from the set with more elements are not assigned. There are VI. EVALUATION
+P F P F
++ ( + )! A. Synthetic Data
+F = P ·F
+! ! Inordertoevaluatethebasicapplicabilityofouralgorithm
+F
+possibilities to choose the elements to exclude. In the and implementation, a two-dimensional synthetic setup with
+F
+case of one single false measurement ( =1), these are ﬁve receivers and two targets was compiled, see Fig. 3 (a).
+1297
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply. resnorm = 4.9825e-13 err = 2.242e-12
+1
+0.5
+y 0
+-0.5
+-1
+-1.5 -1 -0.5 0 0.5 1 1.5
+x
+1.5
+1
+Offset 0.5
+0
+-0.5
+0 1 2 3 4 5 6 7 8 9 10
+Iteration
+(a) (b)
+Fig. 3: (a) Visualization of the iterations of the continuous optimization routine. True positions of aircraft and receivers are
+indicated by pictograms. The randomly chosen start points are shown as open circles, and the ﬁnal result of the optimization
+as open squares. In between, the intermediate iteration steps are shown as red and blue dots and curves. The lower part of the
+− (cid:62)
+ﬁgure visualizes the optimization progress of the TTT. The true TTT of the upper target 1p =[ 1,0.7] is 1t =0.5, and
+− − (cid:62) k k
+that of the lower target 2p =[ 1, 0.3] is 2t =0. Propagation velocity c has been set to one here, so everything can
+k k 0
+be done without units. (b) Target positions resulting from several optimization runs with different, randomly chosen initial
+points (to circumvent local minima) and additive measurement noise. Points are colored by the ﬁnal residual norm. Evidently,
+the turquoise points represent local minima. On the other hand, the result with the smallest residual norm, i.e., the global
+optimum, is additionally indicated by an open square and agrees well with the true target positions (aircraft pictograms). See
+the supplemental video for an animated version of this ﬁgure.
+Neither measurement noise nor detection misses were in- with the codes 2415, 2416, 4442, 5403. This restricted the
+cluded here. Initial points for the two targets were randomly data set to 157585 TOAs from 14 receivers covering roughly
+chosen with an equal distribution over the entire plotted area, 30000km2, where the four considered targets stayed within
+and initial TTT were chosen equally distributed in a window an area of about 3500km2. Frequentis Comsoft Quadrant
+of one around the respective true value. interrogators always transmit in a speciﬁc A-C-A-A pattern
+In a second step, simulations were performed where Gaus- of four Mode A and Mode C requests, in order to be able to
+sian noise with jσk =0.02 was added to the measurements, recognize Mode A/C messages that were triggered by own
+k
+but no detection misses. The resulting target positions of interrogations. Furthermore, the four answers in combination
+(cid:112)
+500 runs with randomly chosen start points are shown in provide a more accurate single TOA measurement. The data
+Fig. 3 (b). Results are also colored by their residual norm, set has been speciﬁcally chosen for testing our association-
+i.e., the ﬁnal value of Dˆ. The supplemental video shows a free multi target localization method. Targets perform quite
+similar plot for moving targets. Calculation time for the 500 complex maneuvers simultaneously, two of them in close
+runs was about 1.1s without multithreading. formation. On the other hand, the environment is chosen
+such that there are no other major difﬁculties like reﬂections
+B. Real Data present. We can thus assume that measurements are free of
+TogetherwithFrequentisComsoftGmbHweanalyzedreal clutter, but with missed detections.
+data from a 20min national air trafﬁc control data set based
+C. Procedure
+on the Mode A/C radio frequency communication protocol.
+Overall, it provided 440532 TOA events with 4090different The Mode C transmissions contain pressure altitude, but
+Mode C target identiﬁcation codes. All targets actually had this information was not used – only the TOA measure-
+individual codes and the targets thus could also be localized ments of the transmissions together with the known receiver
+withoutassociation-freeMLAT,butthisinformationwasused positions. Mode A transmissions contain a 12-bit code to
+for ground truth only. We focused on four speciﬁc targets identify the targets and all considered targets had unique
+1298
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply. (a) (b)
+Fig. 4: MLAT results for four targets based on real data from Frequentis Comsoft Quadrant air trafﬁc surveillance. The
+problemgeometryis3D,butaltitudeisnotshownhere.(a)ReceivedTOAeventsweretreatedasassociation-free(ambiguous)
+measurements and target localization was performed with the proposed association-free MLAT algorithm. (b) Corresponding
+ground truth. Codes of the Mode A messages were used to identify targets and perform separate single target localizations.
+Each color indicates an individual Mode A code, i.e., a speciﬁc target. Supplemental video contains animated version of (a).
+IDs, but this information was only used as ground truth just entails a sorting procedure. Furthermore, the optimal
+in order to evaluate the proposed multi target localization permutation can be obtained for each receiver independently,
+method. The maximum distance between two receivers was which reduces overall complexity and facilitates parallel
+233km, so pauses of 0.78ms and more could be seen as execution.
+a guaranteed separation between dense transmission events.
+TheA-C-A-A interrogation sequencewasemittedin intervals VIII. FUTUREWORK
+of at least 10ms, therefore 10711 dense transmission events
+So far, the problem was assumed to be static, i.e., we
+were clearly separated. According to the Mode A codes from
+obtain single-shot point estimates that are independent from
+ground truth, 9873 of the dense transmission events actually
+each other. We plan to expand this method to a target
+contained messages from more than one target. In order to
+tracking system. Therefore, we introduce prior knowledge
+be able to apply our method without further modiﬁcations,
+P and combine suitable dynamic motion models with the
+we determined the number of targets from ground truth
+proposed measurement model. This might also vastly reduce
+for every dense transmission event. For the MLAT algorithm,
+computational power if the iterative continuous optimization
+the actual number of targets behind a set of TOA is however
+loop can be replaced with a single Kalman ﬁlter step, for
+not known in reality. This will be addressed in future works.
+example. Batch processing algorithms could be interesting
+D. Results to determine inherent system properties like measurement
+variances and typical deviations in clock synchronization.
+The multi target localization performance on real data
+An important extension is the automatic detection of the
+achieved by the proposed method can be seen in Fig. 4 (a).
+number of targets behind a set of received TOA events. For
+The plot shows only point estimates based on six or more
+example, suppose that 14 receivers detected one TOA event
+TOA measurements per point. In the supplemental video, the
+each. It could be that all of them come from one target, or
+same MLAT results are shown over time, and the evolution
+seven from two different targets, respectively. We plan to
+of the four tracks can be followed more intuitively there.
+heuristically narrow down the possible number of targets and
+VII. CONCLUSION exploit hypothesis probabilities based on the chi distribution.
+Finally, in many applications it is necessary to deal with both
+We propose an efﬁcient algorithm for MLAT that does
+clutter and missing measurements at the same time.
+not require the association between receiving events and
+tracked targets. Evaluations with synthetic and real data
+IX. ACKNOWLEDGMENT
+demonstrated good localization accuracy with ambiguous
+TOA measurements. The authors would like to thank Michael Sharples from
+Usually, the receiving events comprise scalar (TOA) mea- Frequentis Comsoft GmbH for selecting and providing data
+surements. For scalar measurements, the proposed method is sets with real data from a Quadrant wide area multilateration
+especially fast and efﬁcient as ﬁnding optimal permutation (WAM) air trafﬁc surveillance system.
+1299
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [13] O. Erdinc, P. Willett, and Y. Bar-Shalom, “Probability Hypothesis
+Density Filter for Multitarget Multisensor Tracking,” in 2005 7th
+[1] U. Hanebeck, D. Frisch, B. Noack, and M. Sharples, “Method for
+InternationalConferenceonInformationFusion,vol.1. IEEE,2005,
+DeterminingtheLocationofaPluralityofTargets,”2018,European
+pp.8–pp.
+PatentApp.EP18214798.3.
+[14] E.Kamen,“MultipleTargetTrackingBasedonSymmetricMeasure-
+[2] Q. Wang, Z. Duan, X.-R. Li, and U. D. Hanebeck, “Convex Com-
+mentEquations,”IEEETransactionsonAutomaticControl,vol.37,
+bination for Source Localization Using Received Signal Strength
+no.3,pp.371–374,1992.
+Measurements,”inProceedingsofthe21stInternationalConference
+onInformationFusion(Fusion2018),Cambridge,UnitedKingdom, [15] M.Baum,S.Yang,andU.D.Hanebeck,“TheKernel-SMEFilterwith
+Jul.2018. FalseandMissingMeasurements,”inProceedingsofthe19thInterna-
+[3] S. Radtke, K. Li, B. Noack, and U. D. Hanebeck, “Comparative tionalConferenceonInformationFusion(Fusion2016),Heidelberg,
+Study of Track-to-Track Fusion Methods for Cooperative Tracking Germany,Jul.2016.
+withBearing-onlyMeasurements,”inProceedingsofthe2019IEEE [16] M.BaumandU.D.Hanebeck,“TheKernel-SMEFilterforMultiple
+InternationalConferenceonMultisensorFusionandIntegrationfor TargetTracking,”inProceedingsofthe16thInternationalConference
+IntelligentSystems(MFI2019),Taipei,RepublicofChina,May2019. onInformationFusion(Fusion2013),Istanbul,Turkey,Jul.2013.
+[4] J. Hörst, F. Sawo, V. Klumpp, U. D. Hanebeck, and D. Fränken,
+[17] U.D.Hanebeck,M.Baum,andP.Willett,“SymmetrizingMeasurement
+“Extension of the Sliced Gaussian Mixture Filter with Application
+Equations for Association-free Multi-target Tracking via Point Set
+toCooperativePassiveTargetTracking,”inProceedingsofthe12th
+Distances,”inSPIE-SignalProcessing,Sensor/InformationFusion,
+InternationalConferenceonInformationFusion(Fusion2009),Seattle,
+andTargetRecognitionXXVI,Anaheim,California,USA,Apr.2017.
+Washington,USA,Jul.2009.
+[5] F.BeutlerandU.D.Hanebeck,“ATwo-StepApproachforOffsetand [18] U. D. Hanebeck and M. Baum, “Association-Free Direct Filtering
+PositionEstimationfromPseudo-RangesAppliedtoMultilateration of Multi-Target Random Finite Sets with Set Distance Measures,”
+Tracking,” in Proceedings of the 13th International Conference on inProceedingsofthe18thInternationalConferenceonInformation
+InformationFusion(Fusion2010),Edinburgh,UnitedKingdom,Jul. Fusion(Fusion2015),WashingtonD.C.,USA,Jul.2015.
+2010. [19] G.PeyréandM.Cuturi,“ComputationalOptimalTransport,”arXiv
+[6] R. Kaune, C. Steffes, S. Rau, W. Konle, and J. Pagel, “Wide Area e-prints,p.arXiv:1803.00567,Mar2018.
+Multilateration using ADS-B Transponder Signals,” in 2012 15th [21] J.Munkres,“AlgorithmsfortheAssignmentandTransportationProb-
+InternationalConferenceonInformationFusion,July2012,pp.727– lems,”Journalofthesocietyforindustrialandappliedmathematics,
+734. vol.5,no.1,pp.32–38,1957.
+[7] J.SmithandJ.Abel,“Closed-FormLeast-SquaresSourceLocation
+[22] F. Bourgeois and J.-C. Lassalle, “An Extension of the Munkres
+EstimationfromRange-DifferenceMeasurements,”IEEETransactions
+Algorithm for the Assignment Problem to Rectangular Matrices,”
+on Acoustics, Speech, and Signal Processing, vol. 35, no. 12, pp.
+CommunicationsoftheACM,vol.14,no.12,pp.802–804,1971.
+1661–1669,1987.
+[23] D.P.Bertsekas,“ADistributedAlgorithmfortheAssignmentProblem,”
+[8] J.SmithandJ.Abel,“TheSphericalInterpolationMethodofSource
+Localization,”IEEEJournalofOceanicEngineering,vol.12,no.1, Lab.forInformationandDecisionSystemsWorkingPaper,MIT,1979.
+pp.246–252,January1987. [24] F.Pfaff,C.Pieper,G.Maier,B.Noack,H.Kruggel-Emden,R.Gruna,
+[9] R.Morrissey,J.Ward,N.DiMarzio,S.Jarvis,andD.Moretti,“Passive U. D. Hanebeck, S. Wirtz, V. Scherer, T. Längle, and J. Beyerer,
+Acoustic Detection and Localization of Sperm Whales (Physeter “Simulation-BasedEvaluationofPredictiveTrackingforSortingBulk
+Macrocephalus)intheTongueoftheOcean,”AppliedAcoustics,vol.67, Materials,”inProceedingsofthe2016IEEEInternationalConference
+no.11,pp.1091–1105,2006,DetectionandLocalizationofMarine onMultisensorFusionandIntegrationforIntelligentSystems(MFI
+MammalsUsingPassiveAcoustics. 2016),Baden-Baden,Germany,Sep.2016.
+[10] D. Fränken and A. Hüpper, “Aircraft Positioning with Secondary [25] C.N.VasconcelosandB.Rosenhahn,“BipartiteGraphMatchingCom-
+SurveillanceRadarandTimeofArrivalMeasurements,”in201314th putationonGPU,”inInternationalWorkshoponEnergyMinimization
+InternationalRadarSymposium(IRS),vol.1,June2013,pp.355–360. MethodsinComputerVisionandPatternRecognition. Springer,2009,
+[11] Y. Bar-Shalom, F. Daum, and J. Huang, “The Probabilistic Data pp.42–55.
+AssociationFilter,”IEEEControlSystemsMagazine,vol.29,no.6,
+[26] D. W. Marquardt, “An Algorithm for Least-Squares Estimation of
+pp.82–100,2009.
+NonlinearParameters,”JournalofthesocietyforIndustrialandApplied
+[12] R.P.Mahler,“MultitargetBayesFilteringviaFirst-OrderMultitarget
+Mathematics,vol.11,no.2,pp.431–441,1963.
+Moments,”IEEETransactionsonAerospaceandElectronicsystems,
+vol.39,no.4,pp.1152–1178,2003. [27] J. J. Moré and D. C. Sorensen, “Computing a Trust Region Step,”
+[20] H.W.Kuhn,“TheHungarianMethodfortheAssignmentProblem,” SIAMJournalonScientiﬁcandStatisticalComputing,vol.4,no.3,
+Navalresearchlogisticsquarterly,vol.2,no.1-2,pp.83–97,1955. pp.553–572,1983.
+1300
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:13 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,542 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Iterative Learning based feedforward control for Transition of a
+Biplane-Quadrotor Tailsitter UAS
+Nidhish Raj, Ashutosh Simha, Mangal Kothari, Abhishek and Ravi N. Banavar
+Abstract—This paper provides a real time on-board algo- challenge because during the maneuver, the UAS operates
+rithm for a biplane-quadrotor to iteratively learn a forward in a wide aerodynamic regime including stall. Conventional
+transitionmaneuverviarepeatedﬂighttrials.Themaneuveris
+feedback control methods such as regulating the pitch angle
+controlled by regulating the pitch angle and propeller thrust
+and net thrust according to a commanded acceleration are
+according to feedforward control laws that are parameterized
+by polynomials. Based on a nominal model with simpliﬁed not applicable. This is because the aerodynamic lift and
+aerodynamics, the optimal coefﬁcients of the polynomials are drag forces are complicated functions of the pitch angle
+chosenthroughsimulationsuchthatthemaneuveriscompleted and airspeed, and therefore feedback laws can not be ex-
+with speciﬁed terminal conditions on altitude and air speed.
+plicitly computed in a closed form. Moreover, even if one
+In order to compensate for modeling errors, repeated ﬂight
+couldaffordsophisticatedon-boardcomputationalcapability,
+trials are performed by updating the feedforward control
+paramtersaccordingtoaniterativelearningalgorithmuntilthe the numerically computed feedback requires a high ﬁdelity
+maneuver is perfected. A geometric attitude controller, valid aerodynamic model in order to be practically applicable.
+for all ﬂight modes is employed in order to track the pitch Some approaches to the transition control problem can be
+angleaccordingtothefeedforwardlaw.Further,ahigh-ﬁdelity
+foundinliteratureasfollows.In[2],[3],[4],[5],anoptimal
+thrust model of the propeller for varying advance-ratio and
+maneuver is designed by dynamically varying the angle of
+orientation angle is obtained from wind tunnel data which is
+capturedusinganeuralnetworkmodel.Thisfacilitatesaccurate attackofthewing,orthepropelleraxis,orregulatingcontrol
+application of feedforward thrust for varying ﬂow conditions surfacessuchasslatsorﬂaps,andin[6],[7],[8],theoptimal
+during transition. Experimental ﬂight trials are performed transitionproblemhasbeensolvedinsimulation.Atailsitter
+to demonstrate the robustness and rapid convergence of the
+with no additional moving parts is considered in [9], [10],
+proposed learning algorithm.
+[11], [12], and the transition maneuver has been performed
+Index Terms—VTOL UAS, transition maneuver, iterative
+learning based on high-ﬁdelity aerodynamic models, via optimal
+feedforwardcontrol.Afeedbackcontrolsolutionisproposed
+in [13], where the nonlinear equation governing the pitch
+I. INTRODUCTION
+angle and net thrust for achieving a desired acceleration has
+The technological revolution in the area of Unmanned
+been numerically solved on-board, after obtaining accurate
+Aerial Systems (UAS) has opened up new avenues for the
+aerodynamicmodels.Arecentwork[14]hasappliediterative
+applicationofsmallUAS.Amongthemyriadofapplications,
+learning for performing Pugachev’s Cobra maneuver with a
+precision delivery of package containing small consumer
+quadrotortailsitter.Thisusesthetechniquedescribedin[15]
+goods or life saving drugs or blood to its destination is
+which results in solving a convex optimization problem.
+fast capturing attention. This requires the UAS to precisely
+In the above literature, the optimal feedforward control
+hover at low altitude and ﬂy long distances efﬁciently.
+trajectory depends heavily on the accuracy of the aerody-
+Conventional UAS solutions such as ﬁxed wing and quadro-
+namicmodelandparameterssuchasliftanddragcoefﬁcients
+tors and helicopters, fail to meet these requirements. This
+of the vehicle. Since the vehicle undergoes high angle
+has motivated researchers to design hybrid vertical take-
+of attack ﬂight at low Reynolds number and due to the
+off and landing (VTOL) UAS, such as tilt-rotors, tilt-wings,
+complex geometry of a biplane, the aerodynamic parameters
+compoundhelicoptersandtailsitterconﬁgurations[1].These
+commonly available for airfoils are not accurate enough,
+hybrid designs are capable of precise and agile hovering as
+and thus need to be determined from wind tunnel data or
+well as efﬁcient high speed forward ﬂight like an airplane.
+highﬁdelitycomputationalﬂuiddynamicssimulations.Both
+Thetransitionfromhovertoforwardﬂightandfromforward
+of the above methods are expensive and time consuming.
+ﬂight to hover remains a challenging task that governs the
+In order to address this issue, an alternative approach is to
+success of these hybrid UAS.
+employ iterative learning techniques ([16], [17], [18], [15]).
+Automatic control design for performing seamless tran-
+Here,forapredeﬁnedmaneuver,anoptimallyparameterized
+sition maneuvers of hybrid vehicles is indeed a formidable
+feedforward control trajectory is ﬁrst computed based on a
+nominalaerodynamicmodel.Then,thetrajectoryparameters
+Nidhish Raj, Abhishek, and Mangal Kothari are with the Department
+are iteratively updated through repeated experimental ﬂight
+of Aerospace Engineering, Indian Institute of Technology Kanpur, India.
+Emails:{nraj,abhish,mangal}@iitk.ac.in.RaviNBanavariswiththeSys- trials using the on-board computer, until the maneuver is
+temsandControlGroup,IndianInstituteofTechnologyBombay,Mumbai, perfected. This approach appreciably compensates modeling
+India. Email: ravi.banavar@gmail.com. Ashutosh Simha is a researcher at
+errors, and moreover can be easily implemented on-board in
+the Institute of Cybernetics, Tallinn University of Technology, Estonia.
+Email:ashutosh.iisc@gmail.com real-time due to its computational simplicity.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 321
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. A. Contribution
+The main contribution of this paper is to perform an au-
+tonomous forward transition of the biplane-quadrotor using
+iterativelearning.A2Dmodel(correspondingtolongitudinal
+dynamics)ofthevehicleisusedwhereinthethrustandpitch
+angleofthevehicleareassumedtobecontrolinputsfortran-
+sition.Bothcontrolinputsareparameterizedaspolynomials,
+and the iterative learning algorithm (based on [16]) is em-
+ployedindeterminingtheoptimalparametersofthefeedfor-
+ward trajectory through repeated experiments, such that the
+maneuver is completed with minimal terminal state errors.
+This relieves the controller designer from determining the
+Fig. 1: Biplane quadrotor with body frame axes
+accurate aerodynamic parameters through extensive testing.
+As the propeller disk moves through the air in a wide range
+ofadvance-ratiosandanglesofattack,thestaticthrustmodel
+typically used for quadrotor is no longer valid. In order to separationiskeptmorethan1.5timesthechordtominimize
+apply the desired feedforward thrust accurately throughout interference between the wings [10]. The vehicle geometric
+the operating range of the vehicle, the thrust model of the parameters are given in Table I.
+motor-propeller combination is completely characterized in
+Parameter Values
+the wind tunnel and a simple neural network based data
+Wingspan 1m
+ﬁtting is done. This relaxes the requirement on the learning
+Wingchord 0.22m
+algorithm to capture the high non-linearity associated with Mass 2.72kg
+the thrust model. Additionally, in order to perform manual Motorseparation 0.34m
+Wingseparation 0.36m
+ﬂightsatpitchanglesrangingfromquadrotorhovercondition
+toforwardﬂightmodeofbiplane,312Euleranglesareused TABLE I: Biplane Quad geometric parameters
+to specify the desired attitude. This avoids the singularity
+present in the commonly used 321 Euler angles. A rotation
+matrix based attitude controller is used to track the desired B. Equations of Motion
+rotationangles,therebyachievingthedemandedfeedforward The equations of motion of the vehicle are given by
+pitch control as well as restricting the dynamics to the
+vertical plane. R˙=Rωˆ,
+× (1)
+Iω˙ +ω Iω =M,
+II. VEHICLEDYNAMICS
+mX¨ =FA+Re3fT+mge3, (2)
+A. Vehicle Description
+∈
+whereR SO(3)istherotationmatrixwhichtransformsvec-
+The biplane quadrotor conﬁguration consists of a quadro-
+tor with two wings attached to it as shown in Fig. 1. The tors from the body ﬁxed frame of reference, (Ob,Xb,Yb,Zb),
+vehicle takes off in the quadrotor hover mode and the entire to the spatial frame of reference, (Oe,Xe,Ye,Ze), M =
+body gradually tilts forward about body frame Y -axis to [Mx,My,Mz] is the external moment acting on the vehicle, I
+enter into ﬁxed-wing cruise ﬂight mode. As shownb in Fig. is the body moment of inertia tensor, ω=[ωx,ωy,ωz] is the
+1, the motors of the quadrotor are tilted inward by 10 angula·rvelocityofthebod×yframeande3=[0,0,1]T.Thehat
+degree to improve the yaw control authority in hover (which map,ˆ,issuchthataˆb=a b.FA isthesumofaerodynamic
+forces, lift f and drag f , and f is the propeller thrust.
+correspondstorollcontrolincruiseﬂightmode)[10].There L D T
+is greater disturbance and damping about the roll axis (Zb- Aerodynamic Model
+axis) in the ﬁxed wing mode due to the wing aerodynamics.
+The aerodynamic model given here is detailed in [9]. The
+In order to reject the disturbance and augment the control
+totalliftisgivenbythesumofliftgeneratedbyareaofwing
+authority of motors about the Z -axis, the front wing is
+b under the inﬂuence of propwash, S , and the area outside
+w
+provided with ailerons.
+propwash, S ,
+nw
+NACA 0015 airfoil is chosen for designing the wings to
+1 1 1
+fhaicgihlitlaitfet alotwloswpeaendgﬂleyionfgaatstacitk.isTahethicchkoiacierfooifl saynmdmofefterrics fL= 2ρV2SCL(α,Re)= 2ρV2SnwCLnw+2ρV2SwCLw. (3)
+airfoil is dictated by the fact that the movement of center Similarly the drag is given by
+of pressure for a symmetric airfoil is minimal, even for
+1 1 1
+large variation in angle of attack. This ensures that the fD= 2ρV2SCD(α,Re)= 2ρV2SnwCDnw+2ρV2SwCDw.
+airfoilpitchingmomentremainslowandvaryinaconsistent (4)
+manner. The GPS is mounted on a tilting mechanism to HereC andC are the equivalent lift and drag coefﬁcients
+L D
+get continuous signal throughout the transition. The wing oftheentirevehicle.Forthepurposeofdeterminingoptimal
+322
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. thrust and pitch inputs for level forward transition, we use a
+simple lift and drag model proposed in [19]
+CL(α)=b1sin(2α)
+(5)
+CD(α)=b2+2b1sin2(α),
+where the constants b1,b2 are determined from ﬂight data.
+Thrust Model
+The thrust model conventionally used for quadrotors is
+based on blade element momentum theory for hover condi-
+tion and is given by
+Tprop=ρπR4propCTΩ2prop.
+This relation is a good approximation for quadrotor mode
+ﬂight as there is no signiﬁcant axial inﬂow and as a result
+thecoefﬁcientofthrustC isconstantwithpropellerangular (a) αs=0 deg
+T
+speed Ω . This model is not appropriate for propellers
+prop
+which enter into high speed edgewise and axial ﬂight as
+C variessigniﬁcantlywithaxialspeed,propellerorientation
+T
+with ﬂow, and Ω . Therefore, the thrust is obtained from
+prop
+wind tunnel data for the given motor-propeller combination.
+The data is collected for airspeed varying from 0 to 16 m/s
+and shaft angle (α ) ranging from 0 to 90 deg in steps of
+s
+22.5degattheNationalWindTunnelFacilityofIITKanpur
+(See Fig. 2).
+swivelaxis
+V
+(b) αs=67.5 deg
+Fig. 3: Surface ﬁt of coefﬁcient of thrust (C ) measurement
+T
+from wind tunnel with forward speed V, rotor rpm Ω
+prop
+for various ﬂow angles αs. αs=0 represents edgewise ﬂow
+(quadrotor mode) and αs = 90 deg represents axial ﬂow
+(ﬁxedwing mode).
+Fig. 2: Thrust measurement setup in windtunnel.
+The thrust produced by the propeller is not inﬂuenced sig-
+The wind tunnel data depicting variation of thrust with
+niﬁcantlybythewingsincethewingsareplacedsufﬁciently
+variousﬂowconditionscorrespondingtoshaftangleofαs= below the propeller. The thrust data obtained from the
+0 and αs = 67.5 deg is shown in Fig. 3. The following wind tunnel data is approximated with a neural network to
+observations can be made from Fig. 3:
+obtain the following relation which is subsequently used for
+1) CT does not vary signiﬁcantly when the shaft angle realizing the feedforward thrust demanded by the iterative
+is close to zero. This is the typical quadrotor ﬂight learning algorithm
+regime. As the propeller shaft is inclined further to-
+wards the ﬂow, there is a signiﬁcant reduction in C Tprop=Tnn(Ωprop,V,αs),
+T
+with forward speed. Ωprop=Ωnn(Tprop,V,αs).
+2) C is no longer a constant, but varies with forward
+T The task of obtaining propeller performance data from the
+speed and propeller rpm. For a given rpm, no thrust
+wind tunnel is much cheaper and simpler than a complete
+is produced beyond a certain forward speed. This
+aerodynamic characterization of the entire biplane model in
+is critical for the biplane quadrotor as the attitude
+the wind tunnel.
+controller might become ineffective at higher speeds
+of ﬁxed wing mode. This warrants a separate control III. ITERATIVELEARNINGBASEDCONTROL
+allocation scheme dependent on α and V for the Wenowdescribeaniterativealgorithmforexperimentally
+s
+attitude controller. learning the forward transition maneuver similar to the one
+323
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. used for performing aggressive maneuvers of quadrotors Then, an optimal parameter set P0 is obtained as the
+in [16]. For this maneuver, the translational dynamics (2) solution to
+in the vertical plane are considered, and the pitch-angle || ||
+min Φ(P) ,
+(corresponding to R) and the net rotor thrust f are taken as ∈
+T P S
+inputs.Thedynamics(2(cid:20))intheverticalpla(cid:21)n(cid:20)eca(cid:21)nbe(cid:20)wr(cid:21)itten such that P2(0,P)= f0,
+as
+P1(0,P)=θ0,
+−
+mX¨¯ = F¯A(X˙¯,θ)+ csoins((θθ)) cosisn((θθ)) f0T + m0g , P1(T,P)=θf (9)
+Here, S is an admissible set of parameters determined
+(6)
+based on actuator limitations, and X0,f0,θ0 are the initial
+where X¯ and F¯ are the ﬁrst two components of X and F state, thrust and pitch angle corresponding to the hover
+A A
+acting in the vertical plane, and θ is the and pitch angle. equilibrium respectively.
+B. Experimentally Updating Feedforward Parameters using
+Transition problem: The VTOL transition problem
+Iterative Learning
+is to maneuver the UAS within a time T, from a hover
+equilibrium condition i.e. θ =0, X˙¯ =0 to a cruise ﬂight If the aerodynamic model were accurately known, then
+trim condition X¯2(T)=zf, X˙¯2=Vzf, X˙¯1=Vxf,θ(T)=θf, the parameter set P0 obtained as described above through
+simulationswouldindeedgeneratefeedforwardinputswhich
+where the trim conditions are determined experimentally
+achieve a perfect transition maneuver. However, due to
+according to the vehicle speciﬁcations.
+modeling inaccuracies, the parameter set needs to be exper-
+DuetothecomplexnatureofF¯ ,itisintractabletodirectly imentally updated until the maneuver is perfected. For this
+A
+we adopt the iterative learning algorithm proposed in [16]
+solve for θ and f in order to track a desired position
+T
+trajectory X¯ . As such, one would have to solve a nonlinear wherein, ﬁrst an experimental ﬂight trial is performed using
+d feedforward control with initial parameter P0, and subse-
+system, which may not yield a closed form solution. While
+quentlytheparameterisupdatedandﬂighttrialsarerepeated
+numerical techniques can be employed given sufﬁciently
+with the updated feedforward input, until the maneuver is
+capable hardware, the solutions itself are heavily dependent
+on the accuracy of the aerodynamic model F¯ . In order to achieved with minimal terminal error.
+A
+overcome these issues, the following simple methodology is 1) Ofﬂine computation (One-(cid:12)time):
+(cid:12)
+employed. • Using numerical differe(cid:12)ntiation, compute
+(cid:12)
+∂Φ
+A. Optimal Feedforward Control from Simulation J= , (10)
+∂P
+First,thefeedforwardcontroltrajectoriesforθ and f are P=P0
+T
+where P0 is obtained from (??) and Φ is obtained
+parameterized with time and coefﬁcients as
+from (8) using numerical simulations.
+θ(t) = P1(t,P)=p10+p11t+p12t2+p13t3+p14t4, • Compute C as the right inverse of J, assuming
+fT(t) = P2(t,P)=p20+p21t+p22t2+p23t3+p24t4, that it exists. This is guaranteed as long as there
+are sufﬁcient number of parameters in P such that
+(7)
+theerrorΦ(P)canbearbitrarily,locallymodiﬁed.
+where P=(p10,...,p24) are scalar coefﬁcients to be deter- 2) Online experimental update:
+mined. It has been observed from manual ﬂight data that • LetX¯t(Pi,X0)denotetheexperimentallyobtained
+the variation in thrust and pitch angle could be sufﬁciently ﬁnal state of (6), from initial (hover) condition X
+0
+captured with a fourth-order polynomial. Then, having ﬁxed and feedforward control θ(t)=P1(t,Pi), fT(t)=
+a transition time period T (based on initial manual experi- P2(t,Pi), and Φ¯(Pi) the corresponding terminal
+ments), initial condition X¯(0), initial inputs fT(0),θ(0), and error as in (8).
+ﬁnal pitch angle θ(T), the coefﬁcients P of the feedforward • The parameter set is updated after each ﬂight trial
+polynomial inputs P1 and P2 which optimally perform the via a gradient descent scheme
+transition maneuver are obtained as the solution of a static −
+optimization problem, as follows. Pi+1=Pi γiCΦ¯(Pi), (11)
+DenoteXt(P,X0)=[X¯(t)(cid:62),X˙¯(cid:62)(t)](cid:62),whereX¯(t),X˙¯(t)are where γi∈(0,1).
+the solution of (6) at time t (obtained from numerical Assuming ﬁrst order dynamics of Φ¯, it can be shown (see
+simulation) with initial condition X¯(0) = X0 and control [16]) that the terminal error dynamics are obtained as
+inputs θ and f as in (7). 
+Deﬁne the teTrminal error cost function Φ:R8→R3 as Φ¯(Pi+1)=(1−γi)Φ¯(Pi), P0=P0, (12)
+ 
+−
+X2T(P,X0)− zf w∗hich converges to 0, with experimental optimal parameters
+Φ(P)= X3T(P,X0)−Vxf . (8) P .Notethatγicanbevariedsuchthatthejumpinparameter
+X4T(P,X0) Vzf decreases in the iterations.
+324
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. C. Feedback Control for Transition operating point of the vehicle. The 312 sequence suffers
+±
+from singularity at roll angles of 90 degree, but this is
+During the transition maneuver, the vehicle is maintained
+a far away conﬁguration for the normal operation of the
+in a plane using the lateral directional controller given by
+vehicle. Another advantage of 312 sequence is that for a
+(13). It is a PD controller on the cross track error which
+given pitch angle, a change in roll command rotates the
+speciﬁes the desired lateral acceleration which in turn sets
+vehicleaboutahorizontalaxis,thusmaintainingtheangleof
+thedesiredrollangle.Thedesiredyawangleissetsuchthat
+attack. This facilitates an easy manual control of the vehicle
+the side-slip is maintained zero.
+(cid:18) (cid:19)
+during transition and ﬁxed wing mode unlike the 321 Euler
+− −
+alat = kχpPχ kχdP˙χ, sequence which introduces side slip with a variation in roll
+φd =tan−1 (cid:18)aglat(cid:19) , (13) angTlhee. desired Euler angles (φd,ψd) are obtained from (13)
+ψd =tan−1 vvy , acnodrreθsdpoinsdoinbgtairnoetadtiaosnPma1t(rti,xPiR)dfoisr oeabctahinietedraftrioomn, tahned3t1h2e
+x
+Euler angle representation. The desired angular velocity is
+wtrahcekreearrloatr,isanthdeφdesainreddψlatearraelraecscpeelecrtiavteiolyn,thPeχ disesthireedcrrooslsl obtained as ωd =RTdR˙d.
+d d Ageometricattitudecontrollerisdesignedwithacascaded
+and yaw angles.
+structure, with the inner loop being angular rate and outer
+loopdeﬁnedonattitude.Notethatthoughthedesiredattitude
+is parameterized, the actual attitude of the UAS is intrinsi-
+R
+Transition Plane Lateral Controller roll_des 312 EulRe_r dAngle to  R_des Attitude Controller csyalsltyemdesﬁtanteed. TonheSeOr(ro3r),futhnecrteiobny oavnoSidOin(3g)suinsgedulatoritdieesﬁnine tthhee
+yaw_des controller is
+pitch_des 1 −
+Desired Altitude Longitudinal  delta pitch torque_des ψ(Re)= 2tr(I Re) (14)
+Controller
+delta thrust thrust_des Thrust Model whe−re Re∨=RTdR. Its time −derivative ψ˙ =eTReω, where eR=
+GTreanjeecratotoryr  pitch_ff rotor RPM (ψ˙R=e −RkTeR)(cid:107)e/R2(cid:107),2a,nbdyecωh=ooωsingRωTeωtod.tψr˙acckanbemadenegative,
+thrust_ff
+−
+Fig. 4: Block diagram of the transition controller. ωD= kReR+RTeωd. (15)
+−
+Deﬁningωe=ω ωD,theinnerloopa(cid:90)ngularratecontroller
+The longitudinal controller is responsible for maintaining is a PID on ωe given by
+the altitude during the transition. In the helicopter mode,
+the altitude is controlled by varying the thrust command M=kPωe+kDω˙e+kI ωe. (16)
+whereas in the cruise ﬂight mode it is actuated by changing
+The stability of the attitude controller can be derived on
+thepitchangle(indirectlytheangle-of-attack)ofthevehicle.
+similar lines as in [20], [21]. Note that the above controller
+Therefore during the transition from hover to forward ﬂight
+is second order in angular rate which makes the attitude
+mode, the control input for the longitudinal controller is
+controller third order. It is experimentally observed that this
+weighedbasedtotheﬂightregimedeterminedbythecurrent
+control structure is more robust for quadrotor than the more
+pitch angle of the vehicle. The weighing parameters were
+prevalent second order controller found in the literature,
+determined based on experimental ﬂight data. The control
+especially with regard to handling steady state error. This
+block diagram used for the transition maneuver is given in
+is particularly important in case of biplane quadrotor as
+Fig 4. Here, pitch ff and thrust ff terms are the pitch and
+the vehicle undergoes rapid transition maneuvers with large
+thrust feedforward components determined by the learning
+aerodynamic disturbance moments.
+algorithm.
+IV. ATTITUDECONTROLLER V. EXPERIMENTALFLIGHT
+In this section we develop a robust attitude controller for The iterative learning algorithm is applied on the biplane
+the biplane quadrotor which tracks the feedforward pitch tailsitter depicted in Fig. 1 and described in Sec. II-A. The
+angle θd =P(t,Pi) in each iteration, as well as ψd,φd as vehicle is instrumented with a Pixhawk autopilot running
+deﬁned in (13) in order to restrict the UAS dynamics to the PX4 ﬂight stack. The autopilot consists of a 3-axis
+the vertical plane. First, a singularity free expression for the inertialmeasurementunit,3-axismagnetometer,abarometer
+desired rotation matrix is obtained using 312 Euler angles and a GPS. We use the stock EKF based state estimator
+which is uniformally valid for both the quadrotor mode and for obtaining the full state of the vehicle from the sensor
+ﬁxedwing mode and the intermediate transition region. This data. The guidance and control algorithms are implemented
+is important as the conventionally used 321 Euler angle has as separate modules and runs independently based on the
+±
+a singularity at pitch angle of 90 degree, which is an assigned priority.
+325
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. The initial set of parameters for the thrust and pitch angle
+14
+proﬁles for forward transition are determined from simu-
+lation after solving (9). The corresponding Jacobian J and m)13.5
+correction matrixC are also determined based on numerical de ( 13
+u
+simulation. The initial thrust is constrained to be the hover Altit12.5
+thrust(fT(T)=26.73N),theterminaldesiredspeedandpitch 12
+0 1 2 3 4 5 6
+angle are set to be the cruise ﬂight condition (Vxf =14m/s
+Vzf =0, θf =80 deg). Multiple ﬂight trials are performed to 15
+check the convergence properties of the iterative learning m)
+algorithm (video: https://youtu.be/0cXGagMbBtg). It is d (10
+otobsseartvisefdacftroormyltehveelﬂsiginhtﬁtvriealtsotshiaxtittheeraotiuotnpsutasersrhoorwconnivnerFgiegs. Air spee 5
+0
+5. 0 1 2 3 4 5 6
+Time (s)
+Fig. 7: Altitude and speed of the vehicle for the learned
+Trial 1
+10 forward trajectory of iteration 5 of ﬂight trial 1.
+z err (m) vel x err (m/s) vel z err (m/s)
+5
+or
+Err 0
+shown in Fig. 7. Note that the learned feed-forward thrust
+-5
+1 2 3 4 5 and pitch command is dependent upon wind conditions and
+Iteration
+therefore the feedback controller is designed to compensate
+Trial 2
+10
+for such disturbances.
+5 z err (m) vel x err (m/s) vel z err (m/s)
+Error 0 VI. CONCLUSIONANDFUTUREWORK
+A simple on-board experimental technique for learning a
+-5 forward transition maneuver of a biplane-quadrotor tailsit-
+1 2 3 4 5
+Iteration ter UAS was proposed. A simpliﬁed nominal aerodynamic
+Fig. 5: Error convergence properties of the iterative learning model was utilized for ﬁrst numerically computing an op-
+algorithm for 2 ﬂight trials. timally parameterized feedforward control trajectory which
+wassubsequentlyreﬁnedthroughﬂightexperimentsinorder
+tocompensateformodelingerrors.Itwasdemonstratedover
+The variation of thrust and pitch proﬁles during the separate trials that the iterative learning algorithm enabled
+iterations of ﬂight trial 1 are given in Fig. 6. The thrust the UAS in perfecting the maneuver within 5 iterations,
+requirementbelowzeroisconstrainedtozerobeforepassing despite modeling inaccuracies. The reduced dependence on
+ittotheneuralnetworkwhichdeterminesthepropellerRPM. the aerodynamic model signiﬁcantly minimizes the pre-
+ﬂight testing and characterization effort, as well as enables
+operation in varying external environment. Moreover, the
+30
+simplicityinimplementationrenderstheproposedtechnique
+20
+N) ideal for off-the-shelf low cost autopilot hardware. The
+hrust ( 10 iter 1 iter 2 accurate thrust model of the propeller obtained from the
+T 0 iter 3 iter 4 wind tunnel data enabled precise application of the learned
+iter 5
+-10 feedforward thrust.
+0 1 2 3 4 5 6
+Some avenues for further research include learning back
+100 transition, cobra maneuvers, and developing a feedforward
+control map for varying initial conditions, learnt through
+g)
+h (de 50 multiple ﬂight trials.
+Pitc iiittteeerrr   135 iitteerr  24 VII. ACKNOWLEDGEMENT
+0
+0 1 2 3 4 5 6 A part of this work was partially supported through a
+Time (s)
+project from CEFIPRA.
+Fig. 6: Throttle and pitch command during the iterations of
+ﬂight trial 1. REFERENCES
+[1] Adnan S Saeed, Ahmad Bani Younes, Shaﬁqul Islam, Jorge Dias,
+The maximum altitude variation is less than to 0.5 m Lakmal Seneviratne, and Guowei Cai. A review on the platform
+design, dynamic modeling and control of hybrid uavs. In 2015
+during the transition and the forward speed attained is off
+International Conference on Unmanned Aircraft Systems (ICUAS),
+by 0.5 m/s from the desired terminal speed of 14 m/s as pages806–815.IEEE,2015.
+326
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. [2] BurakYuksek,AslihanVuruskan,UgurOzdemir,MAYukselen,and Uchiyama. Optimal transition from hovering to level-ﬂight of a
+Go¨khanInalhan. Transitionﬂightmodelingofaﬁxed-wingvtoluav. quadrotortail-sitteruav. AutonomousRobots,41(5):1143–1159,2017.
+JournalofIntelligent&RoboticSystems,84(1-4):83–105,2016.
+[3] Koji Muraoka, Noriaki Okada, Daisuke Kubo, and Masayuki Sato.
+Transition ﬂight of quad tilt wing vtol uav. In 28th Congress of the
+International Council of the Aeronautical Sciences, pages 2012–11,
+2012.
+[4] Adnan Maqsood and Tiauw Hiong Go. Optimization of transition
+maneuvers through aerodynamic vectoring. Aerospace Science and
+Technology,23(1):363–371,2012.
+[5] Daisuke Kubo and Shinji Suzuki. Tail-sitter vertical takeoff and
+landingunmannedaerialvehicle:transitionalﬂightanalysis. Journal
+ofAircraft,45(1):292–297,2008.
+[6] R Hugh Stone. Control architecture for a tail-sitter unmanned air
+vehicle. In 2004 5th Asian Control Conference (IEEE Cat. No.
+04EX904),volume2,pages736–744.IEEE,2004.
+[7] Nathan Knoebel, Stephen Osborne, Deryl Snyder, Timothy Mclain,
+RandalBeard,andAndrewEldredge. Preliminarymodeling,control,
+and trajectory design for miniature autonomous tailsitters. In AIAA
+Guidance, Navigation, and Control Conference and Exhibit, page
+6713,2006.
+[8] Roberto Naldi and Lorenzo Marconi. Optimal transition maneuvers
+foraclassofv/stolaircraft. Automatica,47(5):870–879,2011.
+[9] Swati Swarnkar, Hardik Parwana, Mangal Kothari, and Abhishek
+Abhishek. Biplane-quadrotor tail-sitter uav: Flight dynamics and
+control. Journal of Guidance, Control, and Dynamics, 41(5):1049–
+1067,2018.
+[10] Vikram Hrishikeshavan, Christopher Bogdanowicz, and Inderjit
+Chopra. Design, performance and testing of a quad rotor biplane
+micro air vehicle for multi role missions. International Journal of
+MicroAirVehicles,6(3):155–173,2014.
+[11] Vikram Hrishikeshavan, Dean Bawek, Omri Rand, and Inderjit
+Chopra. Control of a quad rotor biplane micro air vehicle in
+transitionfromhovertoforwardﬂight.InAmericanHelicopterSociety
+Specialists Meeting on Unmanned Rotorcraft and Network Centric
+Operations,2013.
+[12] Yeunduk Jung and David Hyunchul Shim. Development and appli-
+cation of controller for transition ﬂight of tail-sitter uav. Journal of
+Intelligent&RoboticSystems,65(1-4):137–152,2012.
+[13] Robin Ritz and Raffaello D’Andrea. A global controller for ﬂying
+wing tailsitter vehicles. In 2017 IEEE international conference on
+roboticsandautomation(ICRA),pages2731–2738.IEEE,2017.
+[14] Wei Xu, Haowei Gu, and Fu Zhang. Acceleration based iterative
+learning control for pugachev’s cobra maneuver with quadrotor tail-
+sittervtoluavs. arXivpreprintarXiv:1906.02596,2019.
+[15] Oliver Purwin and Raffaello D’Andrea. Performing aggressive ma-
+neuvers using iterative learning control. In 2009 IEEE international
+conferenceonroboticsandautomation,pages1731–1736.IEEE,2009.
+[16] Sergei Lupashin and Raffaello D’Andrea. Adaptive fast open-loop
+maneuvers for quadrocopters. Autonomous Robots, 33(1-2):89–102,
+2012.
+[17] Fabian L Mueller, Angela P Schoellig, and Raffaello D’Andrea.
+Iterative learning of feed-forward corrections for high-performance
+tracking. In 2012 IEEE/RSJ International Conference on Intelligent
+RobotsandSystems,pages3276–3281.IEEE,2012.
+[18] AngelaScho¨lligandRaffaelloD’Andrea.Optimization-basediterative
+learning control for trajectory tracking. In 2009 European Control
+Conference(ECC),pages1505–1510.IEEE,2009.
+[19] Daniele Pucci, Tarek Hamel, Pascal Morin, and Claude Samson.
+Nonlinear control of pvtol vehicles subjected to drag and lift. In
+201150thIEEE ConferenceonDecisionandControl andEuropean
+ControlConference,pages6177–6183.IEEE,2011.
+[20] DHS Maithripala and Jordan M Berg. Geometric pid control for
+almost-global stabilization of a quadrotor with parameter error and
+constantdisturbances. InASME2014DynamicSystemsandControl
+Conference, pages V003T48A002–V003T48A002. American Society
+ofMechanicalEngineers,2014.
+[21] Farhad Goodarzi, Daewon Lee, and Taeyoung Lee. Geometric non-
+linear pid control of a quadrotor uav on se (3). In 2013 European
+controlconference(ECC),pages3845–3850.IEEE,2013.
+[22] Michiel J Van Nieuwstadt and Richard M Murray. Rapid hover-to-
+forward-ﬂight transitions for a thrust-vectored aircraft. Journal of
+Guidance,Control,andDynamics,21(1):93–100,1998.
+[23] Atsushi Oosedo, Satoko Abiko, Atsushi Konno, and Masaru
+327
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:13:17 UTC from IEEE Xplore.  Restrictions apply. 

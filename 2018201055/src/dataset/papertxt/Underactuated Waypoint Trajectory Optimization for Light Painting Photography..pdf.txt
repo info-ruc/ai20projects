@@ -1,0 +1,552 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Nonlinear Synchronization Control for Short-Range Mobile Sensors
+Drifting in Geophysical Flows
+Cong Wei, Herbert G. Tanner, and M. Ani Hsieh
+Abstract—This paper presents a synchronization controller allow current and future data exchanges. The data can then
+for mobile sensors that are minimally actuated and can only bepropagatedthroughoutthenetworkandfusedaccordingly.
+communicate with each other over a very short range. This
+We assume that the team of mobile networks operate in
+work is motivated by ocean monitoring applications where
+a region whose environmental dynamics can be reasonably
+large-scale sensor networks consisting of drifters with minimal
+actuation capabilities, i.e., active drifters, are employed. We approximated by gyre-like ﬂows whose boundaries are de-
+assume drifters are tasked to monitor regions consisting of lineated by Lagrangian coherent structures (LCS). As such,
+gyre ﬂows where their trajectories are periodic. As drifters the active drifters can utilize these currents for mobility
+in neighboring regions move into each other’s proximity, it
+and maintain the desired motions for data gathering and
+presents an opportunity for data exchange and synchroniza-
+rendezvouswithneighboringdriftersusingminimalonboard
+tion to ensure future rendezvous. We present a nonlinear
+synchronization control strategy to ensure that drifters will actuation. From our previous work [11], [12], we examined
+periodically rendezvous and maximize the time they are in conditions under which drifters in neighboring gyres can
+theirrendezvousregions.Numericalsimulationsandsmall-scale move into close proximity of one another by leveraging
+experimentsvalidatetheefﬁcacyofthecontrolstrategyandhint
+the ﬂow dynamics in their respective gyre and achieve ren-
+at extensions to large-scale mobile sensor networks.
+dezvous, even in the presence of stochastic noise perturbing
+this dynamics [13]. An early synchronization control de-
+I. INTRODUCTION sign that accompanied the derivation of periodic rendezvous
+This paper addresses the problem of synchronizing a conditions [11] treated the ﬂow-induced drifter dynamics
+network of semi-passive mobile sensors that compared to as harmonic oscillators and implemented a (linear) time-
+monolithicsolutionsinvolvinglarge,specialized,andhuman optimal control law aimed to synchronize the oscillators’
+operated surface vessels, teams of autonomous and mini- phases,inanattempttomaximizethetimetheysharedinthe
+mally actuated mobile sensors can cover large expanses of rendezvousregion.Whiletheperiodicrendezvousconditions
+physical space at reasonably low costs [1]. This can be are valid in gyre ﬂows [14], the optimal synchronization
+accomplished by utilizing inexpensive sensing, computation, protocols needed to achieve rendezvous were not. Rather
+and communication hardware and increasing each vehicle’s synchronizationwasachievedthroughthedesignofasliding
+endurancebyloweringonboardenergyconsumption[2]–[5]. mode controller [14]. This paper presents a strategy that
+Since energy expenditure due to mobility is signiﬁcantly recovers time-optimality for the synchronization in gyre
+higher compared to sensing and communication, it makes ﬂows through a nonlinear transformation that brings the
+sense to consider strategies where the drifters leverage the drifterdynamicsintoaformwhereareasonablelocalapprox-
+surrounding currents for their actuation needs [6], [7]. imation permits the application a time-optimal (bang-bang)
+synchronization controller. The efﬁcacy and performance of
+In this work, we consider scenarios where mobile sensors
+this new time-optimal controller is validated via numerical
+have limited communication range and thus must be within
+and experimental studies.
+proximity of one another for data exchanges. (Although
+Synchronization of coupled oscillators is an extensively
+speciﬁcally targeted in this work which employs primarily
+studiedﬁeldwithapplicationsinbiology,physics,chemistry,
+surface vehicles, such cases are even more often in under-
+among others [15]–[18]. Synchronization is achieved when
+water robot deployments [8], [9].) In this context, the co-
+the frequencies between neighboring harmonic oscillators
+operative control strategy suggested rests on the assumption
+agree [15]. The ability to synchronize is directly tied to the
+that mobile sensors can leverage the surrounding currents
+couplingstrengthbetweentheoscillators[19]andthuswhen
+for navigation and controls is exerted to ensure they come
+the oscillator dynamics is nonlinear, frequency synchroniza-
+into close proximity of one other, i.e., rendezvous [10], to
+tion does not necessarily guarantee phase matching.
+Existing strategies in synchronization of coupled oscilla-
+ThisworkhasbeensupportedbyONRundergrant#N000141712690.
+Cong Wei and Bert Tanner are with the Department of Mechan- tors assume continuous and persistent interaction between
+i{cal Engineering, Univer}sity of Delaware, Newark DE 19716, USA; the agents [20]. When the interaction is conditioned on
+weicong,btanner @udel.edu .
+proximity, synchronization must occur intermittently. Such
+AniHsieharewiththeDepartmentofMechanicalEngineering&Applied
+Mechanics, University of Pennsylvania, Philadelphia, PA 19104, USA; intermittentinteractionhasnotbeenwellunderstoodwiththe
+{ }
+m.hsieh @seas.upenn.edu . exceptionof[21].In[21],Zavlanoscoinedsuchintermittent
+The authors thank Dhanushka Kularatne for his contributions in their
+yet repeated rendezvous between robots as achieving syn-
+experimental studies and Adam Stager for his help in designing the ﬂow
+generator. chronous rendezvous and developed strategies for ensuring
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 907
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. synchronous rendezvous at pre-speciﬁed sites for robots
+moving back and forth along the edges of a graph. By
+designingthemobilerobotnetworktohaveabipartitegraph
+topology, the travel and wait times at rendezvous sites are
+set to ensure following synchronization.
+Similar to [21], we assume robots can only interact
+intermittently, over very short time windows, and there is
+no information sharing nor control action when robots are
+outsidetheirdesignatedrendezvousneighborhoods.Different
+from [21], the motions of the robots and the topology
+of the resulting communication network is dictated by the
+underlying geophysical ﬂuid dynamics where a bipartite
+graph structure may not be achievable. Furthermore, the
+active drifters may not have the necessary energy budget to
+achieve robust station-keeping given the ambient dynamics.
+Thus our approach leverages the surrounding environmental Fig.1. Layoutoftheinvariantorbitsinthegyrelatticeannotatedbythe
+dynamics as vehicles attempt synchronous rendezvous. valuesofparameterC.
+Thus, this work reports on a control strategy that en-
+ables mobile sensors deployed in gyre ﬂows to travel along
+We consider a lattice arrangement of gyres (see Fig. 1).
+adjacent limit cycles achieving periodic rendezvous such
+Then with an appropriate selection of the global coordinate
+that they maximize the time they spend in the rendezvous ∈
+zones(SectionIII).Throughtheproposedtime-optimalcon- frame,thegyrecenterstakevalues(Ms/2,Ns/2)forM, N
+Z
+.
+troller,theunderlyingtransformationappliedtothenonlinear
+ambient ﬂow improves on our previous strategy [14] by Deﬁnition 1 (Adjacent invariant orbits): Orbits ΦC1
+allowing for more realistic environmental dynamics. We ± (l,m)
+and ΦC2 are adjacent if C = C and
+present results from numerical studies designed to test the (r,q) 2 1
+± ∧ ∨ ∧ ±
+correctness of the control law for robots on a network of (r =l s q =m) (r =l q =s m) .
+gyre ﬂows (Section IV-A) and present experimental results
+Forsimplicity,weassumeonlyonedrifterdriftingineach
+to show the efﬁcacy of the methodology in real physical
+gyre, and we mark the symbolic coordinates of the gyre and
+environments (Section IV-B).
+that of the drifter with the same subscript i: agent i drifts
+II. PROBLEMSTATEMENT in gyre (li,mi). Drifters drifting along adjacent orbits are
+considered neighbors. Neighbors can only exchange infor-
+Denote (xi,yi) the position of drifter i with respect to mation only when they are within distance δ of each other,
+some ﬁxed Cartesian coordinate frame, and assume that the and δ is called the communication range. When neighbors i
+drifter moves under the inﬂuence of some double-gyre ﬂow. − − ≤
+and j satisfy (x x )2+(y y )2 δ2 then they are in
+i j i j
+For the double-gyre ﬂow dynamics (Fig. 2) the amplitude rendezvous.
+and scale parameters are A and s, respectively [22]. When
+theagentispassivelydriftingwithoutapplyinganyactuation, Deﬁnition 2 (Rendezvous): Neighbors i and j drifting
+−
+its dynamics is along ΦC , Φ C , respectively, are at rendezvous at
+− time τ≤(>li,m0i) if (tlhj,emirj)Euclidean distance dij(t) satisﬁes
+x˙i = πA sinπsxi cosπsyi (1a) dij(τ) δ.
+y˙ =πA sinπy cosπx . (1b)
+¶ i s i s i © Only when an agent is in rendezvous does it engage its
+Now zoom out and imagine a planar array of gyres (Fig. 2), controller. Then, the dynamics of agent i change from that
+each indexed with the Cartesian coordinates (l,m) of its of a passive drifter (1) to
+center. The area D covered by gyre (l,m) is deﬁned − π π −
+(l,m) x˙ = πAsin x cos y +u (t τ) (2a)
+as the region i s i s i xi
+π π −
+∈R | ¶ ∈ − × − © y˙ =πAsin y cos x +u (t τ) (2b)
+x,y 2 (x,y) [l s,l+ s] [m s,m+ s] . i s i s i yi
+2 2 2 2
+− with u and u the control inputs along the corresponding
+With C ranging in [ 1,1], and with ﬁxed (l,m), a gyre xi yi
+spatial dimensions.
+is characterized by a family Φ of invariant orbits each
+(l,m) Spontaneous rendezvous, and consequently agent interac-
+denoted
+tion, can be very ephemeral. Ideally, the rendezvous event
+∈ (cid:83) |
+ΦC = (x,y) D sinπx sinπy =C is as frequent as possible and its duration is maximal —
+(l,m) (l,m) s s to safely allow e.g. complete data transmittal. For this to
+in the sense that Φ = ΦC , and therefore the happen, cooperative control actuation has to be applied;
+(l,m) C (l,m)
+whole region D is positively invariant. however, the duration of this control intervention is limited
+(l,m)
+908
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. within the time boundaries of the rendezvous event: drifters A. Phase and radius dynamics for actuated drifter
+cannot interact when not in rendezvous. In other words, the
+The differential relation between the polar and Cartesian
+controller needs to make the most of its (rendezvous) time
+representations follows directly from differentiating (3)
+to bring the adjacent drifters back together soon and allow
+−
+them to stay together longer. This suggests a time-optimal θ˙ = 1(y˙ cosθ x˙ sinθ )
+i ρi i i i i
+control problem which is stated as follows:
+ρ˙ =x˙ cosθ +y˙ sinθ .
+i i i i i
+Problem 1: Designatime-optimalcooperativecontrollaw
+Ifoneuses(1)and(3)tosubstitutefortheCartesianvariables
+whichensuresthatatsteadystateneighborspassivelydrifting
+and derivatives can be reduced to a form
+according to (1) rendezvous as frequently as possible and
+stayinrendezvousforthemaximumtime(allowableby(2)).
+θ˙ =f(θ ,ρ ) (6a)
+i i i
+(cid:44)−
+πAcosθ sin(ρiπ cosθ )cos(ρiπ sinθ )
+−ρi i s i s i
+III. TECHNICALAPPROACH πAsinθ sin(ρiπ sinθ )cos(ρiπ cosθ )
+ρi i s i s i
+ρ˙ =g(θ ,ρ ) (6b)
+Express the motion of the drifters in polar coordinates: i i i
+(cid:44)
+πAcosθ cos(ρiπ cosθ )sin(ρiπ sinθ )
+− − − i s i s i
+θi =(cid:107)arcta−n2(yi −mi,x(cid:107)i li) (3a) πAsinθicos(ρisπ sinθi)sin(ρisπ cosθi) ,
+ρ = (x l ,y m ) . (3b)
+i i i i i whichcanbebroughtintoageneralformduringrendezvous
+with cooperative control action being applied
+−
+θ˙ =f(θ ,ρ )+u (t τ)
+Ä i iä i Ä θi − ä
+ρ˙ =g(θ ,ρ )+u (t τ) ,
+i i i ρi
+wherenowthecontrolinputsareunderstoodalongtheradial
+and tangential (rate of rotation) dimensions. Note, however,
+that on a ﬁxed orbit, θ and ρ are coupled:
+sin πsiρicosθi+li sin πsρisinθi+mi =C .
+The synchronization controller of the following section will
+therefore apply on the phases (6a) only.
+B. Time optimal synchronization controller design
+(cid:44) ∈ −
+Deﬁne  θ + θ . Here we wrap  ( π,π].
+ij i j ij
+Given that the communication range is negligible compared
+(cid:40)
+(cid:28)
+to the scale of gyre, i.e, δ s, when two neighbors are in
+rendezvous
+ (τ)≈ 0 if mi =mj
+ij π otherwise
+Fig.2. Flowﬁeldofwinddrivendoublegyreﬂow.Oneinvariantorbit(bold
+| |
+contours) is with C = 0.08. The streamlines in oval circles are parts and at the same time from (6) one can verify that
+ofhyperbolicmanifolds.Thesethreesoliddotsrepresentneighbordrifters
+whichsynchronizewitheachother. ≈
+f(θ ,ρ )+f(θ ,ρ ) 0 .
+i i j j
+Now deﬁne
+Deﬁnition 3 (Pairwise synchronization): Two neighbors i (cid:44)
+− u (t) u (t)+u (t) (8)
+atinvdelyj,,adcrhiifetivnegpaaliornwgiseorsbyi(cid:40)ntschΦroC(nlii,zmait)ioannidf Φ(ljC,mj), respec- in order to approxiθmijate the eθriror dynaθmj ics in the form
+θ +θ = 0 if mi =mj (4a) ˙ij =uθij . (9)
+i j π otherwise
+−
+ρi ρj =0 . (4b) Proposition 1: Consider a pair of neighbor drifters i and
+j forwhichθ +θ iseitherintheneighborhoodof0(orπ),
+The condition for phase synchronization (4a) recognizes i j
+and their phase error dynamics is given by (9). Assume that
+phase as a variable of interest (Fig. 2) and makes this | |≤ ∈R
+thecontrolinputisboundedintheform u (t) ∆ .
+approach easier to relate to existing literature. At the same θij +
+Then the time-optimal control law u (t) to steer (9) to 0
+time, tuning the radii to satisfy (4b) and synchronizing the θij
+(or π) is unique, given by
+phases according to (4a) is also in line with the deﬁnition of
+∗ −
+synchronization utilized in previous work [14]. u (t)= ∆sign( ) . (10)
+θij ij
+909
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. Proof: Optimizing for time, the Hamiltonian for (9) is 1) Synchronization for neighbor drifters: Two drifters on
+−
+orbits ΦC and Φ −C are released at initial positions
+H =1+uθij(t)p1(t) , (0.7500,(02s.,02s9)13) and( (2s−,02s).6500,0.0721), respectively. The
+where the costate variable p1(t) satÄisﬁes ä dso=ub1le,a-ngdyrCe ﬂ=ow0.2d.ynTahmeiccosmpmaruamniectaetriosnarreansgeet aist Aδ ==00.3.0.3,
+p˙1(t)=−∂∂H(t) =0 . (11) Base−dontheseparameters,theperiodontheorbitsΦC(2s,2s)
+ij and Φ −C is 40.75 seconds. At 7.54 seconds after their
+( s,s)
+The control law u which minimizes the Hamiltonian is release, t2he2drifters come into rendezvous. During this ﬁrst
+θij
+rendezvous,whichlasts10.47seconds,controllaw(10)starts
+−
+u (t)= ∆sign p (t) synchronizing the phases. Note that synchronization control
+θij 1
+action is only possible during rendezvous (marked by the
+and assuming p1(0)=π1, it follows from (11) that timeintervalsoftheredpulsesinFigs.3–4).Asmoreclearly
+seen at the top graph of Fig. 3, during the ﬁrst rendezvous
+p (t)=π =constant , −
+1 1 (beforethe20thsecond)the πoscillationaveragedrops,
+∈ 12
+at least piece-wise in time. With constant u (t) = Ω but does not yet vanish. During the subsequent period when
+{−∆,0,∆}, and initial condition  (0)=ξ θ(i9j) yields the vehicles are no longer in rendezvous it remains constant
+ij 1
+(no control is applied), and then the synchronization con-
+−
+ij(t)=ξ1+Ωt . troller zeros the error 12 π within the second ren−dezvous
+period. After synchronization is achieved, both  π and
+Naturally, Ω has oppositesign from ξ1 to reduce ij and the ρ −ρ remain at zero. Figure 4 depicts the evolu1t2ion of the
+switching point for Ω will be ij =0, resulting to sy1nchr2onization errors in Cartesian coordinates (cf. [14]).
+∆ if ij <0
+u (t)= 0 if  =0
+θij − ij Synchronization result
+∆ if  >0 .
+ij
+- 0.2
+2
++ 0.1
+C. Control allocation 1 0
+Inviewof(8),u canberealizedinaninﬁnitenumberof 0 20 40 60 80 100 120 140 160 180 200
+θij t
+combinations of drifter i and j inputs. For instance, drifters
+can splitthe requiredcontrol effortbetween themto balance Synchronization result
+the load on their onboard power resources. Another way 0.04
+could be to assign actuation loads according to individual 20.02
+energy reserves. This paper does not focus explicitly on the - 0
+1
+optimal control allocation problem; rather, it follows prior -0.02
+work [11] in which there is a leader-follower relationship -0.04
+0 20 40 60 80 100 120 140 160 180 200
+between the drifters in rendezvous. A leader-follower rela- t
+tionship can suggest a control allocation strategy, especially
+in practical cases when it may be easier for the drifter to − −
+Fig.3. Timeevolutionofθ1+θ2 πandρ1 ρ2.Theredsquarepulse
+speed up along the current ﬂow than ﬁght against it. In such trainindicateswhenthereisrendezvous.
+cases,thedirectionofactuationalongu andu alignswith
+θi θj
+thecurrent,whichimpliesthatthefollowerusesactuationto
+2) Synchronization for a network of four drifters: Now
+“catch up” and the control input of the follower satisﬁes
+four drifters are considered in a gyre conﬁguration that
+≥ ∈{ }
+u θ˙ 0 k i,j . (12) matches that of Fig. 2. The drifters are indexed 1 through
+θk k 4, and are deployed on orbits Φ0.1 ,Φ−0.1 ,Φ0.1 , and
+Thus in this allocation strategy, the follower is responsible Φ−0.1 , respectively. The gyre(2sﬂ,o2sw) p(a2sra,3m2se)ters(32sa,re32s)set at
+foroptimizingrendezvous.(However,inamulti-pairnetwork (3s,s)
+A =2 20.03, s = 1, and C = 0.1, while the communication
+setting, this control load allocation strategy has its implica-
+range now is adjusted to δ = 0.4. The initial positions
+tions —details in Section IV-A.2.)
+for the four drifters are (0.9681,0.5000), (0.9630,1.3315),
+IV. VALIDATION (1.0741,1.1427), and (1.2384,0.9573), respectively.
+Nodriftercanrendezvouswithallthreeothers—onlyone
+A. Simulation
+atatime—sotheinteractionandcommunicationtopologyis
+In all scenarios here, drifter oscillation frequencies here time-varying. If all four drifters are to be synchronized, they
+are ﬁxed, determined by the ambient geophysical dynamics. would need to converge to a state where (given the spatial
+910
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. B. Experiment
+Synchronization result
+Experiments were conducted in the multi-robot Coherent
+0.1
+x2 Structure Testbed (mCoSTe) at the University of Pennsylva-
++ × ×
+1 0 nia.Thetestbedconsistsofa4.5m 3m 1.5mmulti-robot
+x
+ﬂow tank (Fig. 6(b)) and a collection of micro autonomous
+-0.1
+0 20 40 60 80 100 120 140 160 180 200 surface vehicles (mASVs) (Fig. 6(a)). Each mASV is a
+t
+differentiallydrivenvehicle,withamaximumforwardspeed
+Synchronization result of 0.2m/s. As implied in Fig. 6(a), mASV localization is
+0.1 achieved through a motion capture system (see also [22] for
+2
+y details).
+- 0
+1
+y
+-0.1
+0 20 40 60 80 100 120 140 160 180 200
+t
+−
+Fig. 4. Time evolution of x1+x2 and y1 y2. The red square pulse
+trainindicateswhenthereisrendezvous.
+conﬁguration of their gyres)
+−
+(a) microAutonomousSurfaceVehicle (b) Watertankanditssizes
+ =θ +θ =π , ρ ρ =0
+12 1 2 1 2
+−
+ =θ +θ =0 , ρ ρ =0
+23 2 3 2 2
+−
+ =θ +θ =π , ρ ρ =0
+34 3 4 3 4
+−
+ =θ +θ =0 , ρ ρ =0 .
+41 4 1 4 1
+Inthisparticularsimulationexample,drifterneighborpair
+(2,3) rendezvous ﬁrst, followed by (1,2), then (1,4) and
+ﬁnally(3,4).Thehistoryofthepairs’synchronizationerrors
+is shown in Fig. 5, and reveals an interesting consequence
+of the control allocation strategy of Section III-C. (c) Newﬂowgenerator (d) Oldﬂowgenerator
+Fig.6. Basicsetupforwatertankexperiment.Source:ScalARLab
+1.5
+The current circulation within the ﬂow tank is gener-
++ -
+1 2
+1 + ated by motor actuators, that feature newly designed 3D
+2 3
+printedpropellers.Comparedtoearliergyreﬂowrealizations
++ -
+0.5 3 4 (Fig.6(d))[22],thenewﬂowgeneratorsystem(Fig.6(c))can
++
+1 4 create a steady desired current ﬂow faster and requires less
+0
+maintenance. Custom propeller blades had to be designed
+and manufactured in order to produce the opposite ﬂow
+-0.5
+directions necessary to emulate a double-gyre ﬂow.
+-1 Togenerateacombinationofgyreﬂows,eachpairofﬂow
+generatorsneedstoutilizepropellerswithoppositedirections
+-1.50 20 40 60 80 100 120 140 160 180 200 ofrotation.ThepairofpropellersutilizedinFig.8isplaced
+at a distance of 1m along the x axis and symmetrically with
+Fig.5. Evolutionofphasescombinationforthenetwork. respecttothey axis.Thepropellerrotationspeedis70rpm.
+The streamlines produced resemble the hyperbolic manifold
+When two drifters meet in isolation, they would activate associated with (1). To keep the robotic mASVs along their
+their synchronization controllers and attempt to drive their ΦC orbits, a PID tracking controller is employed, steering
+synchronization errors to zero (see Fig. 3); if, however, a each robot to track a reference point that evolves according
+third drifter and engages with them while this synchroniza- to (1). The outcome of this tracking controller is shown in
+tion is in process, this new control action under the control Fig. 7 for the two mASVs participating in this experiment.
+allocation scheme of Section III-C is bound to increase the Tho mASVs are initially placed at coordinates
+−
+synchronization errors related to the earlier rendezvous. For (0.6779,1.8726) and ( 0.8326,1.6792). Their orbits
+−
+thewholenetwork,synchronizationerrorisupdatedforevery areidentiﬁedasΦ 0.2 andΦ0−.2 ,andtheamplitude
+(0.5,1.5) ( 0.5,1.5)
+period and vanishes at the end of the second period for the and scale parameters of the experimentally produced ﬁeld
+case in Fig. 3. are approximated at A = 0.03, and s = 1, respectively,
+911
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. Synchronization goal in x axis
+1
+x20.5
++
+1 0
+x
+-0.5
+0 10 20 30 40 50 60 70 80 90 100
+t
+Synchronization goal in y axis
+20.5
+y
+-
+y1 0 Fig. 8. An image snapshot during the experiment. The yellow and red
+pathsmarkthedesired(theoretical)orbitsfortwomASVs.
+-0.5
+0 10 20 30 40 50 60 70 80 90 100
+t
+while the communication (rendezvous) range is δ =0.3.
+−
+Fig. 9. Evolution of x1+x2 and y1 y2. The red square pulse train This experiment runs for 100 seconds. After 28.2 seconds
+markstherendezvousperiods.
+since being released, the two mASVs have their ﬁrst ren-
+dezvous (see Fig. 9). The time optimal control law engages
+Synchronization result in phase  andforthebrief10.1secondtimewindowofthisencounter,
+1.5
+one vehicle regulates its speed relative to the other. The
+1
+second rendezvous begins at 66.3 seconds and lasts for 10.5
+0.5
+0 seconds —0.4 seconds longer than the ﬁrst one. The evolu-
+|-2-0.5 tion of the synch−ronization errors in Cartesian coordinates,
++1-1-.15 xof1 +thex2syanncdhroyn1izatyio2n, aerrerosrhsowinnpihnasFeisg,. |9θ. T+heθe|v−oluπtioins
+| 1 2
+-2 shown in Fig. 10. The effect of (random, for the most part)
+-2.5 environmentaldisturbancesisevidenceinthemeasurements,
+-3
+but the controller keeps the errors bounded at a lower level
+-3.5
+0 10 20 30 40 50 60 70 80 90 100 compared to when control action is not applied.
+t
+| |− V. CONCLUSION
+Fig.10. Evolutionof θ1+θ2 πduringtheexperiment.Theredpiecewise
+constantlineindicatestheperiodsofrendezvous.Thebluecurveshowsthe Mobilesensorsdriftingalongoceancirculationscanlever-
+historyofthephaseerror12.Thegraycurveshowstheerrorevolutionin ageambientenvironmentaldynamicstonavigate,search,and
+another baseline experiment where the synchronization controller was not
+monitor dynamic marine environment and minimize energy
+active,forcomparisonpurposes.
+expenditure. In situations where robots are limited to short-
+range communication while deployed over large swaths of
+ocean, they must take advantage of times when the ocean
+dynamics bring them within proximity of each other to
+interact. This robot-environment interaction can improve the
+efﬁciencyofthesensornetworkfordatauploads,exchanges,
+backups,andsuch.Thereforeitmakessensefortheserobots
+tomaximizetheirtimeforregularityofinteraction.Thiscan
+be possible through cooperative, intermittent time-optimal
+control policies which take into account the nonlinear dy-
+namics—atleastinidealizedform—oftheoceancirculation
+currents that drive the gross, large-scale motion of those
+robots. This idea is explored and tested in a novel small-
+scale experimental testbed where circulation is generated
+artiﬁcially through a system of submerged propeller-based
+ﬂow generators. The time-optimal cooperative control law
+Fig.7. TheeffectofthePIDtrackingcontroller:Referenceorbits(dashed
+reportedhereisanexampleofalocalrobotinteractionpolicy
+curves)andactualvehicletrajectories(coloredcurves).Initialpositionsare
+markedbysquaresandthecirclesshowthevehiclepositionsattheendof that works in concert with strong ambient environmental
+theexperiment.Thedashedovalhighlightstheportionoftheorbitswhere dynamics to yield emergent network properties. More work
+rendezvousoccurs.
+isneededtounderstandhowtheallocationofthecooperative
+control action between the robots in rendezvous can affect
+the global synchronization abilities of a network of robotic
+drifters ﬂowing along neighboring gyre ﬂows.
+912
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. REFERENCES Proceedings of the IEEE American Control Conference, pp. 1641–
+1646,2018.
+[1] E. A. D’Asaro, “Performance of autonomous Lagrangian ﬂoats,”
+[12] C. Wei, X. Yu, H. G. Tanner, and M. A. Hsieh, “Synchronous
+Journal of Atmospheric and Oceanic Technology, vol. 20, no. 6,
+rendezvousfornetworksofactivedriftersingyreﬂows,”inDistributed
+pp.896–911,2003.
+AutonomousRoboticSystems(N.Correll,M.Schwager,andM.Otte,
+[2] A. Molchanov, A. Breitenmoser, S. Subbaraya, and G. Sukhatme,
+eds.),(Cham),pp.413–425,SpringerInternationalPublishing,2019.
+“ActiveDrifters:SailingwiththeOceanCurrents,”inRSSWorkshop
+[13] X. Yu, M. A. Hsieh, C. Wei, and H. G. Tanner, “Synchronous
+on Autonomous Control, Adaptation, and Learning for Underwater
+Rendezvous for Networks of Marine Robots in Large Scale Ocean
+Vehicles,2014.
+Monitoring,”FrontiersinRoboticsandAI,vol.6,p.76,sep2019.
+[3] A.Valada,P.Velagapudi,B.Kannan,C.Tomaszewski,G.Kantor,and
+[14] C. Wei, H. G. Tanner, X. Yu, and M. A. Hsieh, “Low-Range Inter-
+P.Scerri,Developmentofalowcostmulti-robotautonomousmarine
+action Periodic Rendezvous Along Lagrangian Coherent Structures,”
+surfaceplatform,vol.92. Springer,Berlin,Heidelberg,2014.
+inProceedingsoftheIEEEAmericanControlConference,pp.4012–
+[4] Z.Song,D.Lipinski,andK.Mohseni,“Multi-vehiclecooperationand
+4017,July2019.
+nearlyfuel-optimalﬂockguidanceinstrongbackgroundﬂows,”Ocean
+[15] A. Pikovsky, M. Rosenblum, J. Kurths, and R. C. Hilborn, “Syn-
+Engineering,vol.141,pp.388–404,2017.
+chronization: A Universal Concept in Nonlinear Science,” American
+[5] J.Moulton,N.Karapetyan,M.Kalaitzakis,A.Q.Li,N.Vitzilaios,and
+JournalofPhysics,vol.70,no.6,pp.655–655,2002.
+I. Rekleitis, “Dynamic Autonomous Surface Vehicle Controls Under
+[16] E.M.Izhikevich,Dynamicalsystemsinneuroscience:thegeometry
+Changing Environmental Forces,” arXiv preprint arXiv:1908.02850,
+ofexcitabilityandbursting. MITPress,2007.
+2019.
+[17] J. Corte´s, “Oscillations and Coupling in Interconnections of Two-
+[6] J. Hansen, S. Manjanna, A. Q. Li, I. Rekleitis, and G. Dudek,
+DimensionalBrainNetworks,”inProceedingsoftheIEEEAmerican
+“Autonomous Marine Sampling Enhanced by Strategically Deployed
+ControlConference,pp.193–198,2019.
+Drifters in Marine Flow Fields,” in MTS/IEEE OCEANS, pp. 1–7,
+[18] M. Tyloo and P. Jacquod, “Global Robustness vs. Local Vul-
+2018.
+nerabilities in Complex Synchronous Networks,” arXiv preprint
+[7] J. Jouffroy and O. Zielinski, “On Active Current Selection for La-
+arXiv:1905.03582,pp.1–11,2019.
+grangianProﬁlers,”IdentiﬁcationandControl,vol.34,no.1,pp.1–10,
+[19] A. Jadbabaie, N. Motee, and M. Barahona, “On the Stability of the
+2013.
+Kuramoto Model of Coupled Nonlinear Oscillators,” in Proceedings
+[8] J. Das, F. Py, T. Maughan, T. O’Reilly, M. Messie´, J. Ryan, G. S.
+oftheIEEEAmericanControlConference,pp.4296–4301,2004.
+Sukhatme,andK.Rajan,“Coordinatedsamplingofdynamicoceano-
+[20] J. Alonso-Mora, E. Montijano, T. Na¨geli, O. Hilliges, M. Schwager,
+graphic features with underwater vehicles and drifters,” in Interna-
+and D. Rus, “Distributed multi-robot formation control in dynamic
+tional Journal of Robotics Research, vol. 31, pp. 626–646, SAGE,
+environments,” Autonomous Robots, vol. 43, no. 5, pp. 1079–1100,
+London,UK,apr2012.
+2019.
+[9] V. Yordanova and H. Grifﬁths, “Synchronous rendezvous technique
+[21] M.M.Zavlanos,“Synchronousrendezvousofvery-low-rangewireless
+for multi-vehicle mine countermeasure operations,” in MTS/IEEE
+agents,” in Proceedings of the IEEE Conference on Decision and
+OCEANS,pp.1–6,2015.
+Control,pp.4740–4745,2010.
+[10] N. Roy and G. Dudek, “Collaborative robot exploration and ren-
+[22] D.Kularatne,S.Bhattacharya,andM.AniHsieh,“TimeandEnergy
+dezvous: Algorithms, performance bounds and observations,” Au-
+Optimal Path Planning in General Flows,” in Robotics: Science and
+tonomousRobots,vol.11,pp.117–136,sep2001.
+SystemsXII,Robotics:ScienceandSystemsFoundation,2016.
+[11] C. Wei, C. Li, and H. G. Tanner, “Synchronous Rendezvous for
+PeriodicallyOrbitingVehicleswithVery-Low-RangeInteractions,”in
+913
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:45:26 UTC from IEEE Xplore.  Restrictions apply. 

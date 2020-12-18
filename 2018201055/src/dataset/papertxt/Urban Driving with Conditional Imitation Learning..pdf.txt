@@ -1,0 +1,495 @@
+2 020 IEEE International Conference on Robotics and Automation (ICRA)  
+31 May - 31 August, 2020. Paris, France
+SNIAE-SSE Deformation Mechanism Enabled Scalable Multicopter: 
+Design, Modeling and Flight Performance Validation 
+Tao Yang, Yujing Zhang, Peng Li, Yantao Shen, Yunhui Liu and Haoyao Chen 
+   Abstract—This paper focuses on designing, modeling and  propellers/arms. The foldable quadcopter introduced in [5] 
+validating  a  novel  scalable  multicopter  whose  deformation  can drive its propellers to rotate around the arms for reaching a 
+mechanism,  called  SNIAE-SSE,  relies  on  a  combination  of  vertical flight mode configuration. The quadcopter depicted in 
+simple  non-intersecting  angulated  elements  (SNIAEs)  and  [6] uses a servomotor to rotate its propellers in order to change 
+straight scissor-like elements (SSEs). The proposed SNIAE-SSE  the wingspan of the copter, and relying on the equipped 
+mechanism has the advantages of single degree-of-freedom, fast  springs to passively pull the arms when the rotors speed are 
+actuation capability and large deformation ratio. In this work,  reduced,  a  quadcopter  in  [7]  can  deform  into  a  folded 
+enabled by the SNIAE-SSE mechanism, a quadcopter prototype  configuration for the purpose of passing through a narrow gap. 
+with  symmetrical  and  synchronous  deformation  is  firstly  These mechanisms help reduce the size of multicopters in one 
+developed, which facilitates a novel and controllably scalable 
+or two dimensions, but meanwhile it will increase the size in 
+multicopter system for us to analyze its modeling, as well as to 
+another  dimension,  which  results  in  achieving  partial 
+validate  its  flight  performance  and  dynamics  during  the 
+deformation that limits their adaptation to flight environments. 
+deformation in several flight missions including hover, throwing, 
+One interesting work presented in [8] facilitates four rotor 
+and morphing flying through a narrow window. Experimental 
+arms to rotate independently around the main body frame so as 
+results demonstrate that the developed scalable multicopter can 
+to adjust flight mode configurations during the flight. Based 
+maintain its stable flight behavior even both the folding and 
+on its technical description, the deformation ratio of the whole 
+unfolding  body  deformations  are  fast  performed,  which 
+indicates an excellent capability of the scalable multicopter to  frame is limited and is hard to be applied for a scalable 
+rapidly  adapt  to  complex  and  dynamically  changed  mechanism with multiple rotor arms. Recently a deformable 
+environments.  quadcopter was proposed in [9] by the author, it was designed 
+with  an  actuated  scissor-like  morphing  structure  that  is 
+I.  INTRODUCTION  capable of enabling a symmetrical deformation of whole body 
+As reported, large multicopters can stably fly and perform  frame. It however needs a long guide rail to support the 
+aerial tasks due to their significant torque output and balance  morphing structure, which reduces the deformation ratio and 
+capability,  while  small  multicopters  with  highly  flexible  downgrades its fast actuation capability in certain degree due 
+maneuverability allow them to rapidly travel through narrow  to the induced mechanical constraints and frictions. 
+spaces [1, 2]. The both advantages of two-scale mechanisms 
+are rarely found in a conventional multicopter, so there is a 
+demand that a scalable multicopter owning the advantages 
+from varied scale mechanisms thereby has capabilities to 
+adapt to multiple ﬂight conditions and to fulfill various tasks.  
+To date, several techniques have been reported to attempt 
+achieving  the  multiple  scales  of  multicopter  through 
+deformability.  For  instance,  a  self-deploying  quadcopter 
+presented in [3] can quickly unfold its arms with the aid of the 
+torque  generated  by  propellers  during  takeoff,  and  a 
+ 
+quadcopter described in [4] is able to fold its arms using an 
+extra actuator and unfold its arms automatically utilizing its 
+origami structure’s spring effect during the flight. Both above 
+mentioned foldable multi-rotors rely on an origami based 
+deformation  mechanism.  The  deformation  mechanism 
+however has a limited stiffness, and it doesn’t allow for a 
+larger deformation ratio as well. In addition, there exists 
+another  popular  way  to  change  body  configurations  of 
+multicopters  using  the  rotationally  folding/pulling  the 
+  Figure 1.  SNIAE-SSE  deformation  mechanism  enabled  scalable 
+T. Yang and Y. Zhang are graduate students with HIT Shenzhen, China  multicopter in three typical conﬁgurations. (a) Full folded configuration. (b) 
+(yangtao@stu.hit.edu.cn).   Semi-unfolded configuration. (c) Unfolded configuration. 
+P. Li and H. Chen are with HIT Shenzhen, China（peng.li@hit.edu.cn）
+and Li's work was partially supported by JCYJ20180507183456108 and  In this work, we address to develop a deformation enabled 
+Chen's work was partially supported by the National Natural Science  scalable multicopter with fast actuation capability and large 
+Foundation of China under Reference No. U1713206. 
+deformation ratio, so as to enhance its flight adaptability to 
+Y. Shen is with University of Nevada, Reno, NV 89557, USA. 
+complex environments and to facilitate multiple task-oriented 
+Y. Liu is with the Chinese University of Hong Kong, China. 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 864
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply.    
+versatility of such multicopter. As the scissor-like morphing 
+mechanisms have the advantages of large-scale deformation, 
+good structural stability, high efﬁciency of force transmission 
+and  strong  maneuverability  [10],  and  further  inspired  by 
+mechanisms from both non-intersecting angulated element 
+ 
+[11-13] and straight scissor-like element, we propose and 
+design  a  high-performance  scissor-like  deformation 
+mechanism that well leverages the simple non-intersecting 
+angulated elements (SNIAEs) with the straight scissor-like 
+elements (SSEs), called  SNIAE-SSE.  The  SNIAE-SSE  is 
+capable of allowing one degree-of-freedom (DOF) and fast 
+Figure 2.  SNIAE consisting of a pair of different angulated rods. (a) Two 
+actuation and yet large deformation ratio. These properties  angulated rods. (b) a SNIAE. 
+suggest it is an excellent deformation candidate that enables a 
+high-performance  scalable  multicopter.  Note  that,  the 
+proposed  SNIAE-SSE  is  different  from  the  deformation 
+mechanism for the quadcopter mentioned in [9] as it doesn’t 
+need any long constrained guide rails for the support. It 
+therefore promotes large deformation ratio and fast actuation 
+capability of the scalable multicopter. In addition, due to the 
+nature of stable, symmetrical and synchronous deformation of 
+the SNIAE-SSE mechanism, it thus has less influences to 
+multicopter dynamics,  making  the  multicopter be able  to   
+stably fly even a fast folding and unfolding body deformations 
+are performed during the flight, which indicates its excellent 
+capability  to  rapidly  adapt  to  complex  and  dynamically 
+changed environments. 
+To  validate  the  performance  of  the  mechanism,  a 
+quadcopter prototype is firstly developed. Its several typical 
+folding configurations are demonstrated in Figure 1. Relying 
+on this prototype, the dynamic characteristics in different 
+flight missions: (1) hover, (2) throwing, and (3) morphing  Figure 3.  Standard closed-loop mechanisms. (a) Triangular mechanism 
+flying through a narrow window are preliminarily validated.  containing three pairs of SNIAEs (n = 3). (b) Quadrilateral mechanism 
+containing four pairs of  SNIAEs (n = 4). (c) Hexagonal mechanism 
+The remainder of this paper is organized as follows. Section II 
+containing six pairs of SNIAEs (n = 6). (d) Octagonal mechanism containing 
+presents the mechanical design of our scalable multicopter. 
+eight pairs of SNIAEs (n = 8). 
+Section III analyzes the dynamics model of the scalable copter. 
+Section  IV  validates  the  dynamic  characteristics  of  the  FEG can be rewritten as FEA + ϕ + DEG, thus (1) 
+prototype. Section V concludes the work.  can be re-described as 
+FEA+DEG=−−                    (2) 
+II.  DEFORMATION MECHANISM AND COPTER DESIGN 
+Where FEA and DEG can be redefined as AEB/2 and 
+A.  SNIAE-SSE Mechanism and Deformation Ratio 
+CED/2, respectively. Substitute them into (2) gives 
+Using common scissor-like structures, i.e. the Hoberman’s 
+AEB+CED=2(−−)                   (3) 
+angulated element [14] and/or SSE, it is difficult to synthesize 
+an overall deformation of the body frame for the goal of 
+It then has the form as 
+scalable  multicopters.  To  reach  the  goal,  here  a  new 
+scissor-like  deformation  mechanism,  called  simple  AEB++CED+=2                  (4) 
+non-intersecting  angulated  element  (SNIAE),  is  firstly 
+introduced. The mechanism consists of a pair of different  Substitute (3) into (4), the relationship between ϕ, θ and α 
+angulated rods connected by a revolute joint  E and also  can be derived as 
+enclosed an angle α in the middle, as illustrated in Figure 2. In 
+=(−)/2                                (5) 
+Figure 2(b) terminal points A, B, C, D are constrained and can 
+move along their dashed lines. To ensure the mobilization, the 
+Especially, when AE = BE = CE = DE, ϕ + θ =  is 
+triangles AEB and DEC should both be isosceles, i.e. AE = BE, 
+satisfied,  any  even  number  of  identical  SNIAEs 
+CE = DE. Here, AED and BEC are defined as ϕ and θ, 
+interconnected at terminal points can form a series of standard 
+respectively. Figure 2 shows the EF and EG perpendicular to 
+closed-loop mechanisms, which can be folded to its most 
+the dashed lines, which form a quadrilateral with OF and OG 
+compact state and has only single DOF. It can be then found 
+to help us derive the relationship between ϕ, θ and α. So it can 
+that 
+be obtained as 
+=/n (n3,n )                   (6) 
++FEG=                                (1) 
+Where n is the pair number of SNIAEs. 
+865
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply.    
+Based  on  SNIAE  mechanism,  several  standard  Then the deformation ratio r  of a copter can be derived as 
+d
+closed-loop foldable mechanisms  are  shown  in  Figure 3.  below: 
+Through incorporating one of the closed-loop mechanisms 
+R 1
+with any number of SSEs, a new SNIAE-SSE deformation  r = max =                         (11) 
+mechanism  can  be  well  formed  and  designed.  The  d R sin( /2)
+min 0
+deformation mechanism provides an excellent solution for 
+designing the deformable body frame of scalable multicopters.  Equations (10) and (11) indicate that the deformation ratio 
+Figure  4  demonstrates  the  SNIAE-SSE  deformation  of a copter is not heavily related to l0 and is mainly affected by 
+mechanism for a scalable quadcopter. As displayed, it consists  n and m, the relationship of which can be found in Figure 5. 
+of a SNIAE quadrilateral mechanism and twelve SSEs that are  The deformation ratio changes mainly with the change of the 
+evenly  connected  to  four  external  endpoints  of  the  value of m and n. when the value of m is constant, the smaller 
+quadrilateral mechanism to form the scalable arms of the  the value of n is, the larger the deformation ratio is. This 
+quadcopter. The SNIAE’s rods are designed with the same  implies that tri-copter (If n = 3) has the biggest deformation 
+length l  and the lengths of SSE’s rods are l ( i  { 1 , 2 , 3 } ).  ratio when the number of SSEs per rotor arm is equal. When 
+0 i
+the value of n is constant, the bigger the value of m is, the 
+The controlled servo angle is , and the equivalent radius of 
+larger  the  deformation  ratio.  Theoretically  speaking,  the 
+the deformable body frame is R. In order to estimate the 
+mechanism can be designed to allow the scalable copter with a 
+deformation ratio of the scalable copter conveniently, we 
+large deformation ratio. 
+assume that  
+l =l                                     (7) 
+i 0
+ 
+ 
+Figure 5.  Deformation ratio of a scalable copter varying with m and n. 
+Figure 4.  The deformation mechanism of the scalable quadcopter. (a) 
+unfolded configuration. (b) folded configuration. (c) one scalable rotor arm 
+of quadcopter. 
+For the scalable length of the rotor arm, it can be defined as 
+   
+   
+ 1  
+R=l cos  +2m+1+sin cot      (8) 
+0 2   2 n
+ sin   
+  n  
+Where m is the number of SSEs per arm of a copter. In theory,   
+if ignoring the width of the rods, the value of  should be 
+Figure 6.  Scalable quadcopter. (a) unfolded configuration. (b) active unit 
+satisfied with   [0,  ], and the minimum R of a copter 
+min  consisting of servo motors and actuated scissor elements. (c) rotor mount 
+arm occurs when  = , namely  with a very short guide shaft. (d) central body with four chutes.  
+
+R =l cot                               (9)  B. Scalable (Deformable) Copter Design 
+min 0 n
+Based  on  the  SNIAE-SSE  deformation  mechanism,  a 
+From (9), it can be seen that the minimum size of a copter  scalable quadcopter is designed as shown in Figure 6. Except 
+(arm) is mainly affected by l0 and n. When both l0 and n are  for nylon rotor mounts, the whole deformation mechanism is 
+changed, the size of a copter is also varied.  made  of  carbon  fiber.  Although  the  whole  deformable 
+quadcopter only has one DOF and can be driven by one servo 
+The maximum R of a copter (arm) occurs when  = , 
+max  0 motor to deform, in the design we still use four simultaneously 
+which can be calculated as follow: 
+driven small servomotors instead of a larger one in order to 
+ cos(/n)  make the mass distribution of the quadcopter more uniform. 
+ =2arctan            (10)  Meanwhile,  the  adjacent  servomotors  rotate  in  opposite 
+0 (2m+1)sin(/n)+1 direction,  which  makes  total  torque  on  the  body  frame 
+generated by the servomotors cancelled. In Figure 6(c), it 
+866
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply.    
+shows one of four rotor mounts with a very short guide shaft  I ()=I ()=10-5(4.13−242+18+58.3)
+that ensures the rotor mount only moving along the axis of the   x y   (13) 
+arm when the arm is folded or unfolded. Figure 6(d) displays  I ()=10-5(8.23−47.72+35.7+113.3)
+ z
+the central body with four chutes, which makes the body 
+frame only folded and unfolded along the chutes. The design  Where I(), I() and I() are the moment of inertia of the 
+x y z
+not  only  enables  that  the  deformable  quadcopter  is  copter along x , y  and z  axis, respectively. 
+b b b
+symmetrically and synchronously deployed at any time in 
+order to achieve the flight advantages traditional quadcopters 
+B.  Identification of Scalable Arm Dynamics 
+have, but also adapts the copter to the changeable environment 
+The arm length of the copter is controlled by four AF 
+through the deformation. 
+D30T-3.3 MG servomotors. To build the deformable arm 
+dynamics,  the  system  identification  method  is  employed. 
+III.  DYNAMICS OF THE DEFORMABLE MULTICOPTER  Firstly, a high-speed motion capture system consisting of ten 
+OPTITRACK cameras with 120Hz is employed to measure 
+In this section we briefly describe the dynamics of the 
+the step response data of one deformable copter's arm during 
+deformable  quadcopter.  The  process  can  be  extended  to 
+hover. Then,  with  the  system  identiﬁcation  toolbox from 
+general  scalable  multicopters  with  the  deformation 
+MATLAB, we identified the scalable arm dynamics model of 
+mechanism. 
+the  copter  during  folding  and  unfolding  respectively,  as 
+presented in eqn. (14). Figure 8 shows the comparison results 
+A.  Arm Length and Moment of Inertia 
+on arm length between measured and simulated from the 
+To model the copter, a world frame and a body frame are  identified model. As plotted, the measured results agree with 
+set up as shown in Figure 6(a). {xe, ye, ze} are the world frame,  the values generated by the identified model very well. 
+which is fixed during copter flight. The body frame {x , y , z } 
+b b b
+w{0i,l l1 t r, a2n s, l3a}te)  aarned t hroet athteru aslto anngd w mitohm tehnet  cgoepnteerra. tTedi   abnyd  iMth ri o(tio r,   L()=−42.4L()−502.7L()+505.8u4 folding (14) 
+respectively. Different from the traditional quadcopter, the  −13.2L()−76.9L()+76.2u4 unfolding
+arm length and moment of inertia of a deformable copter will 
+Where u  is the command of the controlled servo angle. 
+4
+change during the deformation. A complete dynamics model 
+can  be  achieved by deriving  the dynamics model of  the 
+scalable rotor arms, and combining with the traditional flight 
+dynamics model. The arm length of our scalable copter is 
+denoted as L(), which can be seen from Figures 4(c) and 6(c) 
+as below: 
+L()=R+a                               (12) 
+Where a is the distance from the last revolute joint to rotor 
+shaft, as shown in Figure 4(c). 
+To calculate the moment of inertia of the copter, a general 
+method  is  to  calculate  the  moment  of  inertia  of  each 
+component and add them together to get the total moment of 
+inertia. However, the scalable copter and its arms have very 
+complex geometry and it results in a high computation load. 
+To  improve  the  computing  efficiency,  we  used 
+SOLIDWORKS Mass-Property toolbox to obtain the moment 
+of inertia when the copter’s arms are folded at different 
+percentages to form the scalable copter. After conducting the 
+cubic  polynomial  fitting  on  the  computed  data,  the 
+relationship between the controlled servo angle and moment 
+of inertia can be found as described in eqn. (13). The related   
+data and ﬁtting results are plotted in Figure 7. 
+Figure 8.  Comparison  results  on  arm  length  between  measured  and 
+simulated from the identified model. (a) Arm length in the folded process. (b) 
+Arm length in the unfolded process. 
+C. Dynamics of the Scalable Copter 
+Taking  into  account  the  scalable  arm  length  and  its 
+moment of inertia, the motion dynamics of the deformable 
+quadcopter in translational and rotational movements can be 
+obtained based on the Newton-Euler equations [15, 16], as 
+listed in equation (15). Combining (14) with (15), we can have 
+ 
+the described dynamics model of the scalable quadcopter. 
+Figure 7.  Fitting curves of moment of inertia with controlled servo angle. 
+867
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply.    
+•  The bending deformation of the copter’s arm when 
+ 1
+x= (sinsin+cossincos)u  hovering at different arm length configurations. 
+ m 0
+
+•  The  step  responses  in  the  folded  and  unfolded 
+y= m1 (cossinsin−cossin)u0 processes of the copter’s arm. 
+
+1 During the experiment, we found that the shape of the arm 
+z= m(coscos)u0−g approximates straight before takeoff, and when the copter flies, 
+=Iy()−Iz()− Jr + L() u (15)  tlhifeti nsgh afpoer coe fo tfh teh ea rrmot obre, caosm ilelus stthraet epda rinab Foilgau-lriek e9 .d Wueh eton  tthhee  
+  Ix()  Ix() 2Ix() 1 arm bends, the thrust Ti results in a deflection angle   along 
+the vertical direction, which makes the thrust T decomposed 
+ I ()−I () J L() into a vertical component T  and a horizontal coimponent T . 
+= z x + r + u ic ir
+  Iy()  Iy() 2Iy() 2 Tshicr ipnrko vthidee sa rmthe l elnifgtitnhg  afnodr  pthreev ceonptst etrh, ew ahrimle  fTroirm a tteexmtepntssi otno  
+ I ()−I () 1 (unfolding). As a result, the value of the angle  plays an 
+= x Iz()y +Iz()u3 itmhep ocrotpatnetr .r oWlee i nh ethreeb lyif tminega saunrde dd etfhoer munabtieonnd pinegrf oarrmma nlecneg othf  
+Where m is the mass of the vehicle, g is the gravitational  before takeoff, which can be regarded as the actual arm length 
+constant, Jr is the moment of inertia of the rotor.  is the sum  to calculate the angle  in combination with the arm lengths 
+of the rotating speed of four rotors. u0 is the control input of  measured  during  hover.  Obviously,  each  arm  length 
+the main thrust. u1, u2, and u3 are used to control the movement  configuration corresponds to a special parabola. In order to 
+of roll, pitch and yaw, respectively. To calculate ui ( i  { 0, 1 ,  calculate each angle , we first calculate the parabolic equation 
+2 , 3 } ), the following equation can be applied:  corresponding  to  each  pair  of  actual  and  measured  arm 
+lengths.  
+u  k k k k 2
+ 0  d d d d  0 Based on the prototype, Figure 10 shows the relationship 
+u k −k −k k 2
+ 1= d d d d  1         (16)  between the arm length and the angle  . It can be seen that the 
+u2 kd kd −kd −kd22 deflection angle   decreases with the increase of the arm 
+u3 −kb kb −kb kb 32 length,  which  roughly  conforms  to  a  quadratic  curve.  If 
+aerodynamics is not taken into account, the longer the arm 
+Where kd and kb are the thrust constant and moment constant  length, the smaller the Ti and Tir of the copter during hover. 
+of the rotor respectively. i ( i  { 0, 1 , 2 , 3 } ) is the rotating  Moreover, the range of the Ti varies from 0.319N to 0.323N, 
+speed of each rotor.  while the range of the T  varies from 0.035N to 0.061N. It is 
+ir
+also found that the bending deformation of copter’s arm has a 
+IV.  FLIGHT DYNAMIC CHARACTERISTICS VALIDATION  little effect on lifting of copter, but it has obvious effect on the 
+response speed of the deformable body frame due to it holds 
+A.  Scalable Copter Prototype and Set Up  against unfolding of the arm. 
+The prototype of our scalable copter is illustrated in Figure 
+1, each arm consists of CNC-fabricated carbon fiber rods and 
+a 3D-printed nylon rotor mount. The copter has a mass of 
+127g and an arm length that varies from 66 mm to 162.5 mm. 
+The  servomotors  required  for  morphing  have  an  overall 
+weight of 20g, which corresponds to approximately 16% of 
+ 
+the total weight of the prototype.  
+Figure 9.  The bending deformation of the copter’s arm during hover. 
+At the end of each arm, two 716mm 19000KV brushed 
+motors drive a 3-blade, 120 mm propeller through a 1/4 gear 
+reduction unit. The motors are controlled by a flight controller 
+board.  The  flight  controller  board  includes  an  Inertial 
+Measurement Unit (IMU), a Barometer, and an Optical Flow 
+Module. The Barometer allows the copter to fly at constant 
+altitude, and the Optical Flow Module allows the copter to 
+hover at a fixed point. In order to validate  the dynamic 
+characteristics of the deformable copter, we conducted the 
+following flight behavior validation using the PID based flight 
+ 
+controller [17, 18]: (1) hover, (2) throwing, and (3) morphing 
+flying through a narrow window. 
+Figure 10.  The variety of deflection angle with arm length during hover. 
+B.  Hover  In addition, when the copter hovers, the step responses of 
+the scalable arm’s folded and unfolded processes were tested, 
+In  this  validation,  the  hovering  experiments  and  the 
+respectively.  In  this  test,  the  fully  folded  and  unfolded 
+relevant investigations were conducted as below:  
+configurations  are  set  as  shown  in  Figure  1(b)  and  (c) 
+868
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply.    
+respectively. The altitude reduction h caused by the folding  however decreased to 0.2s, which because the copter is in a 
+and unfolding of the arm and the response time t required to  low gravity during throwing and the horizontal component 
+fold and unfold the arm are two important measured indicators,  force Tir is smaller than that in hover, and the friction effects 
+as shown in TABLE 1, where the mean  and standard  between scalable arms and central body are less affected. 
+deviation  of h and t are shown for 10 trials. 
+Experimental results demonstrate that our scalable copter 
+has a very fast response speed in both folding and unfolding. 
+The response time t of folding is shorter than that of unfolding, 
+which is partially contributed by horizontal component force 
+T . When folding, the altitude reduction h is larger than that 
+ir
+of unfolding, which means that our copter is more stable when 
+unfolding. However, the standard deviations  of the two 
+altitude reductions is a little larger than normal, which is that 
+our current copter prototype can only supply a small lifting, so 
+that  a  small  voltage  difference  can  lead  to  a  significant   
+difference in the altitude reduction. Therefore, it is necessary 
+Figure 12.  The variety of arm length and altitude during throwing. 
+to manage the power output and noise for the copter in our 
+future work. 
+D. Morphing Flying through a Narrow Window 
+We have successfully tested morphing flying through a 
+TABLE I  
+ALTITUDE REDUCTION AND RESPONSE TIME IN THE STEP RESPONSE  narrow space of our copter, as shown in Figure 13. In this test, 
+EXPERIMENTS OF THE ARM LENGTH FOLDED AND UNFOLDED  the narrow space is a square vertical window of 325325mm. 
+The results validate our copter has a fast actuation capability 
+t (seconds)  h (m) 
+Deformation  for  large  deformation,  which  indicates  its  excellent 
+        morphological adaptability. 
+Folded  0.20  0.01  0.155  0.072 
+Unfolded  0.35  0.02  0.016  0.010 
+C. Throwing 
+The copter’s arm is usually fully folded in order to be 
+stored easily during the absence of flight as shown in Figure 
+1(a), which is the similar as the bird folding wings during the 
+rest. This inspires us to mimic flight behavior of birds using 
+the scalable prototype. As the birds take off following the 
+morphological adaptation, the morphing behavior,  i.e. the 
+wings  folded  and  unfolded,  can  be  mimicked  by  the 
+deformation of the frame of the prototype. As a result, we 
+designed a throwing experiment of our scalable copter, which 
+ 
+can validate the dynamic characteristics of the scalable copter 
+and  meanwhile  can  mimic  bird  taking-off  by  using  the 
+Figure 13.  Morphing  flying  through  a  square  vertical  window  of 
+deformation  capability  of  the  copter,  as  demonstrated  in 
+325325mm. 
+Figure 11. The three deformation states of our copter in this 
+picture  correspond  to  the  three  morphing  states  of  birds 
+respectively during takeoff.   V.  CONCLUSION 
+In this work, we presented a scalable multicopter whose 
+controllably folding/unfolding mechanism is based on the 
+novel SNIAE-SSE deformation mechanism. The advantages 
+of the SNIAE-SSE mechanism consist of its single DOF and 
+fast actuation capability as well as its large deformation ratio. 
+  Enabled by this SNIAE-SSE mechanism, a symmetrically and 
+synchronously  deformable  quadcopter  prototype  was 
+Figure 11.  Copter’s throwing inspried by bird take-off. (a) Fully folded  developed, its dynamics was then analyzed, and its dynamic 
+configuration before take-off. (b) Semi-umfolded configuration allowing the 
+characteristics during deformations in several flight missions 
+rotors to start. (c) Unfolded configuration allowing the vehicle to hover 
+stably.  were preliminarily validated. The results demonstrate that the 
+new scalable multicopter can maintain stable flight behavior 
+Figure 12 plots the measured variety of arm length and  even the fast folding and unfolding body deformations are 
+altitude during throwing. The time t , t and t  correspond to  performed, which indicates its excellent capability of rapidly 
+0 1  2
+the three states shown in Figure 11. From Figure 12, we can  adapting to complex and dynamically changed environments. 
+also see that although the fully folded arm length during  Ongoing  research  is  to  investigate  its  autonomous  flight 
+throwing is shorter than that in hover, the response speed is  control under controllable deformations. 
+869
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply.    
+REFERENCES 
+[1]  V. Kumar, and N. Michael, “Opportunities and Challenges With 
+Autonomous Micro Aerial Vehicles,” Int. J. Rob. Res., 31(11), pp. 
+1279–1291. 
+[2]  D. Falanga , E. Mueggler , M. Faessler , and D. Scaramuzza, 
+“Aggressive Quadrotor Flight through Narrow Gaps with Onboard 
+Sensing  and  Computing  using  Active  Vision,”  in  Robotics  and 
+Automation(ICRA),2017 IEEE International Conference on. IEEE, 
+2017. 
+[3]  S. Mintchev, L. Daler, G. L’Eplattenier, L. Saint-Raymond, and D. 
+Floreano, “Foldable and self-deployable pocket sized quadrotor,” in 
+Robotics and Automation(ICRA),2015 IEEE International Conference 
+on. IEEE, 2015, pp. 2190–2195. 
+[4]  D. L. Yang, S. Mishra, D M. Aukes, and W. L. Zhang, “Design, 
+Planning, and Control of an Origami-inspired Foldable Quad-rotor,” in 
+American Control Conference (ACC), 2019.pp.2251-2256. 
+[5]  C. Hintz, C. Torno, and L. R. G. Carrillo, “Design and dynamic 
+modeling of a rotary wing aircraft with morphing capabilities,” in 
+Unmanned Aircraft Systems (ICUAS), 2014 International Conference 
+on. IEEE, 2014, pp. 492–498. 
+[6]  V. Riviere, A. Manecy, and S. Viollet, “Agile robotic ﬂiers: A 
+morphing-based approach,” Soft Robotics, 2018. 
+[7]  N. Bucki and M. W. Mueller, “Design and Control of a Passively 
+Morphing Quadcopter,” in Robotics and Automation (ICRA), 2019 
+IEEE International Conference on. IEEE, 2019, pp. 9116–9122. 
+[8]  D. Falanga , K. Kleber , S. Mintchev , D. Floreano, and D Scaramuzza, 
+“The Foldable Drone: A Morphing Quadrotor that can Squeeze and 
+Fly,” IEEE Robotics and Automation Letters, vol. 4, no. 2, pp.209-216, 
+2019. 
+[9]  N. Zhao, Y. Luo, H. Deng, and Y. Shen, “The deformable quadrotor: 
+Design,  kinematics  and  dynamics  characterization,  and  ﬂight 
+performance validation,” in Intelligent Robots and Systems (IROS), 
+2017 IEEE/RSJ International Conference on. IEEE, 2017, pp. 2391– 
+2396. 
+[10] N. Zhao, Y. Luo, H. Deng, and Y. Shen, “The Deformable Quad-Rotor: 
+Mechanism Design, Kinematics, and Dynamics Effects Investigation,” 
+Journal of Mechanisms and Robotics, vol. 10, pp.1-5, 2018. 
+[11] K. Wohlhart. “Double-chain mechanism,” in Deployable Structures: 
+Theory and Application, Proceedings of the IUTAM-IASS Symposium 
+on. 2000, pp. 457-466. 
+[12] D Mao, Y Luo, and Z You, “Planar closed loop double chain linkages,” 
+Mechanism and Machine Theory, vol. 44, no. 4, pp. 850-859, 2009. 
+[13] J  Cai,  X  Deng,  Y  Xu,  and  J  Feng,  “Constraint  Analysis  and 
+Redundancy  of  Planar  Closed  Loop  Double  Chain  Linkages,” 
+Advances in Mechanical Engineering, vol. 6, pp. 635423, 2014. 
+[14] Z. You, S. Pellegrino. “Foldable bar structures,” International Journal 
+of Solids & Structures, vol. 34, no. 15, pp.1825-1847, 1997. 
+[15] N. Michael, D. Mellinger, Q. Lindsey, and V. Kumar, “The Grasp 
+Multiple Micro-UAV Testbed,” IEEE Rob. Autom. Mag., vol. 17, no. 3, 
+pp. 56–65, 2010. 
+[16] D. Mellinger, N. Michael, and V. Kumar, “Trajectory Generation and 
+Control for Precise Aggressive Maneuvers With Quadrotors,” Int. J. 
+Rob. Res., vol. 31, no. 5, pp. 664–674, 2012. 
+[17] K. H. Ang, G. Chong, Y. Li, “PID control system analysis, design, and 
+technology,” IEEE Transactions on Control Systems Technology, vol. 
+13, no. 4, pp. 559-576, 2005. 
+[18] A. Z. Azfar, D. Hazry, “A simple approach on implementing IMU 
+sensor fusion in PID controller for stabilizing quadrotor flight control,” 
+in Signal Processing & Its Applications (CSPA), 2011 IEEE 7th 
+International Colloquium on. IEEE, 2011, pp.28-32. 
+ 
+870
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 16:03:50 UTC from IEEE Xplore.  Restrictions apply. 

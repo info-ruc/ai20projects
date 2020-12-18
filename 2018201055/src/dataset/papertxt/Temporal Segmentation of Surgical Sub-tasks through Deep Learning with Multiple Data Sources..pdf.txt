@@ -1,0 +1,512 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Uncertainty Measured Markov Decision Process in Dynamic Environments
+Sourav Dutta1, Banafsheh Rekabdar2, and Chinwe Ekenna1
+Abstract
+Successful robot path planning is challenging in the
+presence of visual occlusions and moving targets. Classical
+methods to solve this problem have used visioning and
+perception algorithms in addition to partially observable
+markovdecisionprocessestoaidinpathplanningforpursuit-
+evasion and robot tracking.
+We present a predictive path planning process that mea-
+suresandutilizestheuncertaintypresentduringrobotmotion
+planning. We develop a variant of subjective logic in combi-
+nationwiththeMarkovdecisionprocess(MDP)andprovide
+a measure for belief, disbelief, and uncertainty in relation
+to feasible trajectories being generated. We then model the
+MDP to identify the best path planning method from a list
+of possible choices. Our results show a high percentage
+accuracy based on the closest acquired proximity between a
+targetandatrackingrobotandasimpliﬁedpursuertrajectory
+in comparison with related work.
+I. INTRODUCTION
+Fig. 1: Process Overview
+Planning paths for robots in narrow and uncertain spaces
+e.g, boulders falling causing blocked areas is still a difﬁcult
+task.Inalltypesofenvironmentsthatarobotmayencounter
+In this paper, we introduce a novel combination of the
+(ifthey’rescalable),theyareconfrontedwithvariouskindsof
+CSL and MDP which we call Uncertainty- MDP (U-MDP).
+decisionsinvolvingmultiplechoicesandrelativeuncertainty.
+Our method has two main modules as illustrated in Figure 1
+A clear understanding of these uncertainties becomes a
+:thelearningphase;wherethealgorithmusesacombination
+prerequisite for effective decision making.
+of PSL and Subjective Logic (SL) to learn the uncertainty
+Recently an innovative logic variant method was devel- representations of the available motion planning algorithms
+oped [5], called Collective Subjective Logic (CSL), and the and the prediction phase; where the MDP uses the evidence
+authorscreatedmodelsforminimizinguncertaintyinadeci- gathered in the learning phase to predict the planning algo-
+sionmakingprocessbyusingProbabilisticSoftLogic(PSL). rithm in use.
+Theycombinedmultipleopinionsconcurrentlyandprovided
+ComparedtootherMDPvariants,thestatesinourstochas-
+high scalability and prediction accuracy while dealing with
+tic process don’t increase exponentially instead we utilise
+uncertain opinions. This work will take insight from the
+available planning strategies to induce on the states of the
+aforementioned work, make innovative advancements and
+MDP. We make measurements of the calculated uncertainty
+apply them to path planning problems.
+in addition to belief and disbelief, to pick the best choice of
+Interestingly, some important work in robotics that looks planningstrategyinagivenenvironment.Usingourapproach
+into belief states and partially observable processes have thus limits the search space and reduces computational
+been developed in [4], [10], [17]. The models, however, complexity.
+see an exponential growth in their running time due to The contributions of this paper include:
+the increasing number of states needed as more unknown
+• an improved target tracking algorithm that takes obser-
+locations are explored. Improved variants of these models
+vational and estimation uncertainties into account and
+have been developed but, the measurement of uncertainty
+uses them in the decision making process and
+present and how it can mitigate longer planning times has
+• a faster algorithm with reduced execution time with a
+not been investigated.
+reduction of an exponentially increasing belief space to
+a ﬁxed number dependent on the number of planning
+ThisresearchissupportedinpartbyNSFawardsCRII-IIS-1850319
+strategies available.
+1Sourav Dutta and Chinwe Ekenna - Department of C{omputer Sci-
+ence, University at Albany, SUNY, NY 12206, USA sdutta2,
+}
+cekenna @albany.edu. II. RELATEDWORK
+2Banafsheh Rekabdar - Department of Computer Sci-
+In this section, we discuss work related to logic systems,
+ence Southern Illinois University, IL 62901, U.S.A.
+banafsheh.rekabdar@siu.edu. Markov decision process, and application to robotics.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 962
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. A. Collective Subjective Logic valuesobtainedfromequations(2)and(3).Thesevectorsare
+generated for each discreet timestamp, and each element of
+Subjective Logic (SL) is a variant of probabilistic logic
+the vector represents the expected value of a state (strategy
+with a primary focus on the existence of uncertainty or
+is our case) for that timestamp. This is quite similar to the
+incomplete knowledge. SL offers a variety of operators
+CSL but derives its notations from SL.
+like belief, disbelief, and uncertainty to update opinions.
+However, SL operators don’t collectively deal with multiple
+B. Markov Decision Process
+opinions concurrently, rather, they sequentially combine two
+opinions. As a result, SL operators lack scalability to derive A Markov chain is a stochastic model of events, where a
+opinions from a large-scale network data. In an SL, an sequenceofindependentidenticallydistributed(iid)random
+{ }∞
+opinion is represented as in equation 1, where b is the belief variables Xn n=1 is ordered by time. MDP is a stochastic
+factor (e.g. true), d is the disbelief factor (e.g false), a is decision making process that satisﬁes the Markov property
+a pre-known base rate inferred from domain knowledge, which states that the probability of moving to the next state
+and u is the amount of uncertainty. Decisions are made by depends only on the present state and is independent of the
+equations 2 and 3, where E is the expected value for belief previous states [2].
+b
+probability,E istheexpectedvaluefordisbeliefprobability. InthispaperweintroduceanewMDPvariantthatdoesn’t
+d
+take exponential time for self-learning using a reward-based
+w =(b,d,u,a) (1) approach. In our MDP variant, no static initial state or tran-
+sition probabilities are used, instead, we derive them from
+the knowledge gathered from our CSL variant previously
+∗
+E =b+a u (2) highlighted in this paper.
+b
+C. Motion Planning under uncertainties using Markov De-
+− ∗
+E =d+(1 a) u (3) cision Processes
+d
+Probabilistic Soft Logic (PSL) [11], on the other hand, Uncertainty in a robot’s belief space is a general prob-
+is a machine learning framework that develops probabilistic lem in both motion planning and target tracking. In recent
+modelsusingaconciselogicalsyntax,and,solvingthemvia research, the MDP model has been extended and updated
+fastconvexoptimization.PSLprovidesaformulationtoolto to account for uncertainty in dynamic environments [6],
+determine unknown probabilities and requires probabilities [19], [22]. A tool belt of sensors gathers data on external
+to be point-valued. PSL provides collective reasoning with variables such as obstacles, weather patterns and in certain
+high scalability based on relationships between opinions but environments; autonomous and independent entities [13],
+does not deal with uncertainty. PSL assigns a rule weight [15], [16], [26]. This provides the robot with a detailed
+for each rule to indicate the level of conﬁdence. PSL uses descriptionoftheworld.Sensorinaccuraciesandnoisydata,
+truth probabilities in a range of [0,1], instead of a binary however, provide the robot with a fragmented world. To
+decision. A given probability p is called an atom, where operate and navigate an environment under these conditions
+x is a random variable represexniting a certain relationship, isuncertain.Inrecentyears,severalnewvariantsoftheMDP
+i
+details of which will be discussed in Section III-A. modelhavesurfaced.SAFE-MDP[12],MixedObservability-
+MDP [6], and CC-MDP [12]. However, POMDP tends to
+∧ { − }
+p p =max 0,p +p 1 (4) be at the root of these expansionist models. For example,
+x1 x2 x1 x2 the POMDP model in [21] exhibits the ability to model and
+reduce uncertainty for a common problem in aerospace, the
+∨ { }
+p p =min p +p ,1 (5) presenceofstrongwinds.Strongwindsaccountforuncertain
+x1 x2 x1 x2
+scenarios during motion planning and localization in the
+¬ − UAV’s belief space and it’s the ability to track a target.
+p =1 p (6)
+x1 x1 In [10], the authors developed a target tracking algorithm
+By taking the merits of both SL and PSL, a hybrid that follows some basic principles of partially observable
+probabilistic logic algorithm, called Collective Subjective Markov decision process (POMDP) but reduces the compu-
+Logic (CSL) was developed in [5], which provides high tationalcomplexityofPOMDP.ThismethodcalledSARSOP
+scalability and high prediction accuracy while dealing with (Successive Approximations of the Reachable Space under
+uncertain opinions over a large-scale network dataset. The OptimalPolicies)usesacombinationoftargetfollowingand
+basic entities in CSL are subjective opinions as in SL while target searching by modeling target tracking as a POMDP.
+the structural relations between the variables are modeled In [20], the authors developed another UAV-based target
+using PSL rules. This helps in supporting the collective tracking algorithm by modeling the problem as a POMDP
+inference of unknown variables in large scale network data. and using a modular framework that runs on the Robotic
+Our new CSL variant allows the application of SL-like OperatingSystem(ROS). Itcomputesapolicy forexecuting
+simplistic rules on probabilistic data without the use of an actionsinsteadofwaypointstonavigateandavoidobstacles.
+expensive bi-conditional between SL and PSL.
+D. Motion Planning Primitives and SBMP
+We introduce a variant to CSL that uses the basic rule for
+constructing principles of PSL with uncertainty properties Inthissection,wediscussthedifferentsamplingstrategies
+included via the logic system of SL. On applying this on a thataUGVmayaccessandexploit.Samplingbasedplanning
+setofstates,wederiveE andE asvectorsinsteadofscalar is a class of motion planning algorithms that can be broken
+b d
+963
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. down into two phases. The learning phase; where the algo- Algorithm 1 U-CSL
+rithmappliesalocalplannertoconstructagraphofcollision Input. Strategies is a list of all Sampling Strategies or
+free nodes (sampling) within any given environment. In the Neighbor Connectors used in learning phase of the
+query phase; the collision free nodes are connected within Adaptive Method.
+←
+thegraph(neighborconnection)tocreateapathfromstartto 1: Initialize: threshold 0.8
+←
+goalusinganadaptivelyselectedstrategy[7].Manydifferent 2: Initialize: observedNode startNode
+←
+algorithms exist for sampling and neighbor connecting, a 3: Initialize: NS size(Strategies)
+combination of which we refer to as a ”strategy” throughout 4: while all values in E or E is less than threshold do
+b d
+this paper. 5: for i=1 to NS do
+←
+Probabilistic Roadmap Algorithm (PRM) [14] is a sam- 6: samples[i] generate nodes using Strategies[i],
+pling based motion planning technique that sample robot with start node as observedNode and goal node as
+conﬁgurations (nodes) and connect them to form a graph goalNode.
+←
+(roadmap)containingfeasibletrajectories.Ithasbeenusedto 7: r[i] number of valid samples in samples after
+solvea numberof planningstrategy problems,where choos- collision check.
+←
+inganappropriatestrategy(sampler,neighborconnector,etc) 8: s[i] number of invalid samples in samples after
+isdependentonthegivenproblemenvironment.Initsinitial collision check.
+←
+variants, the strategy was determined a priori without any 9: observedNode followUGV()
+knowledgeoftheenvironment.However,planninginhetero- 10: iftargetcannotbeobservedduetolowvisibilitythen
+←
+geneousenvironmentsnecessitatesdividingtheprobleminto 11: observedNode center of convex hull created by
+regions where these choices have to be made for each one. all samples from NS Strategies.
+Simple hand-selection of the best strategy for each region 12: for i=1 to NS do
+←
+becomes infeasible. Heterogeneous Planning Spaces (HPS) 13: w[i] average of distances between all valid
+[18] a method developed recently that takes as input a list samples generated by Strategies[i] and stored in
+of sampling methods and runs them iteratively to determine r[i], and the observedNode.
+a sampler for each of the regions in the environment. The 14: Normalizer[i],s[i]andw[i]togetb[i],d[i]andu[i]
+regions are partitioned using a visibility-based cost function, 15: Calculate E [i] and E [i] from Equations (7) and
+b d
+and the sampler which suits a particular region is also de- (8), respectively.
+termined by the visibility factor. Hybrid PRM [9] is another 16: if any value in E is greater than threshold then
+← b
+learningvariantofsamplingbasedtechniquesand,strategies 17: idx index of max(E )
+b
+areselectedfromalistofcandidates(samplersandneighbor 18: else
+←
+connectors) using an adaptive learning framework. Keeping 19: idx index of max(E )
+d
+the neighbor connector ﬁxed, In this work we used these 20: Add Strategies[idx] to StrategySequence
+←
+following sampling based strategies as candidate strategies 21: StrategyOccurrance[idx]
+in the HybridPRM: StrategyOccurrance[idx]+1
+• Obstacle-Based PRM (OBPRM) [1]: In OBPRM, the 22: return [StrategySequence,StrategyOccurrance]
+nodesaresampledonornearobstaclesurfaces,whichin
+turn,improvesthequalityofthegraphforenvironments
+that are cluttered.
+A. U-CSL
+• MedialAxisPRM(MAPRM)[24]:InMAPRM,some
+randomly generated conﬁgurations are retracted onto In our U-CSL model we consider strategies as entities, at
+the medial axis of the free space which increases the eachtimestamp,eachstrategyisassignedpositiveevidencer,
+number of nodes found in small volume corridors. negative evidence s, and an amount of uncertainty w. These
+• Gaussian PRM [3]: The Gaussian PRM is based on parameters are all vectors as they represent multiple strate-
+the concept of blurring, used in image processing. gies. They are then normalized into b, d and u respectively
+It generates sampled nodes in difﬁcult regions using from r, s and w.
+simple intersection tests in the workspace. It is suitable At each timestamp, an attempt to visually track the target
+for many different motion planning problems. robot is made and a new observation is recorded. The
+estimated location of this robot is stored in obsevedNode
+(Algorithm (1), step 9). r and s are calculated for each
+III. METHODOLOGY
+strategy by the number of valid and invalid samples,
+respectively, generated by that strategy after collision check
+Uncertainty CSL (U-CSL) and MDP (U-MDP)
+for that timestamp. In case of a missing observation,
+We present 2 algorithms U-CSL and U-MDP that intro- where the target robot can not be visually observed due to
+duces the ability to measure the uncertainty present in the obstacles in the environment, the location is calculated from
+environment and exploit it to produce feasible trajectories. thecenteroftheconvexhullcreatedbyvalidsamplesforall
+These algorithms can be generalized to work both during the strategies. w is calculated for each strategy by using the
+the sampling, connection and querying stage of sampling average of euclidean distances between the valid samples
+based planning methods. We make innovations during the for that strategy and the location. For each timestamp, the
+sampling stage and produce results and comparisons with strategy with the highest expected value in E or E is
+b d
+existing work. stored in StrategySequence, and the StrategyOccurance
+964
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. for that strategy is incremented by 1. This process is and remains constant, we can safely assume that E tends
+b
+repeated until we ﬁnd E or E for one strategy that to 1 as the uncertainty u decreases. The value of uncertainty
+b d
+gives us value over a threshold. At that point, the CSL w depends on the average of some euclidean distances and
+algorithm is stopped, and the StrategySequence and the as we explore more regions of the environment, eventually,
+StrategyOccurance are forwarded to the prediction model it will tend to zero as the samples generated get merged to
+MDP. The list of strategies used in this paper was discussed the goal location. Therefore, the ability to make a decision
+in section II-D of our related work. Equations (7) and (8) under belief or disbelief tends to 1 for a particular strategy
+are calculation for E and E in U-CSL, where a gives and the U-CSL is guaranteed to converge.
+b d
+the base rate. Initially, we assign equal base rates to all
+the strategies, assuming uniform distribution, to give a fair Algorithm 2 U-MDP
+chance to all probable strategies during the learning phase. Input. Strategies is a list of all Strategies used in learning
+← ∗ phase of the Adaptive Method.
+Eb[i] b[i]+a[i] u[i] (7) Input. observedPath is the observed path ﬁle from the
+Adaptive Method.
+←
+← − ∗
+E [i] d[i]+(1 a[i]) u[i] (8) 1: [StrategySequence,StrategyOccurrance]
+d
+GetStrategySequence()
+←
+B. U-MDP 2: [S ,P] constructProbability()
+0 ≤
+The U-MDP model, Algorithm (2), predicts the estimated 3: while cou←ntIte∗r maxObservations do
+location of the target. Generally, MDP’s are characterized 4: Snext S0 PcountIter
+by a base state S and a transition probability matrix P. 5: for k =1 to N≡S do
+These two parame0ters are derived from domain knowledge 6: if Snext(←k) threshold then
+or by previous observations. In U-MDP, we use the learn- 7: flag True ←
+ing phase to determine the base state S and a transition 8: strategyIndex k
+probability matrix P dynamically, as oppo0sed to static state 9: break←
+transitions used by [7], [25] works. After receiving the 10: countIt≡er countIter+1
+StrategySequence and the StrategyOccurance from the 11: if flag True then
+CSL, the MDP constructs the transition probability matrix 12: bre≡ak
+by using the constructProbability algorithm implemented 13: if flag True then
+in our current work [7]. Once the transition matrix has 14: for l=1←to countIter do
+been created, Algorithm (2) starts calculating the expected 15: seeds
+probabilities of the strategies, and records which strategy LocalPlanner(Strategies(strategyIndex)
+tends to 1 ﬁrst in a number of recorded timestamps. We ,observedNode)
+do this via implementing equation 9. Output. seeds
+∗ ∈{ }
+S =S Pi,i 1,2,...,n (9)
+i 0 IV. EXPERIMENTSANDRESULTS
+Once a strategy has been predicted, and the number of A. Experimental Setup
+timestamps required has been determined, U-MDP uses this
+The U-MDP algorithm was trained using HPS. During
+predictive strategy to predict the location of the target in
+the training phase of our algorithm (U-CSL), we used one
+conjunction with a local planner and builds a predicted path
+strategy at a time along with the HPS framework.
+for the target robot.
+Different experiments was performed using both HPS and
+One of the contributions of our algorithm is to reduce
+HybridPRM [8]. The HybridPRM algorithm works in a
+the computational cost of using any MDP. Generally in all
+similar way as the HPS, except that, its cost function
+MDPs,thebeliefspacegrowsexponentiallyasthealgorithm
+is evaluated for the entire environment, and once a node
+startsexploringunknownspaces.InPOMDPorregularMDP,
+generator has been determined as a suitable one for the
+the number of iterations required to reach probability 1 is environment, it is used throughout the environment. This
+uncertain[4].Giventhat,ourgoalistominimizethenumber
+creates a level of uncertainty as to which strategy is suited
+of iterations U-CSL takes to learn and U-MDP takes to
+foranygivenenvironment.Anotheruncertaintyfactorcomes
+predict.ThiscanonlybedoneifoneoftheEb orEd attains from the fact that the two paths created by a HybridPRM or
+probability 1 with least possible number of iterations. HPS strategy with different lists of local planners, samplers
+Since b, d and w are normalized factors, we can write and node connectors, will never be the same. There will
+equation (10).
+always be some difference between the euclidean distances
+between the observed coordinates connecting each path at
+b[i]+d[i]+u[i]=1 (10) each timestamp. We utilize these uncertainties to train our
+U-CSL Algorithm.
+From equations (8) and (10), we derive equation (11).
+Both the training and testing algorithms were executed on
+− ∗ a Dell Optiplex 7040 desktop machine running OpenSUSE
+E [i]=1 (d[i]+u[i])+a[i] u[i] (11)
+b operating system. We have performed tests on the following
+d[i] and u[i] range between [0,1], and since a[i] is ini- environments - Serial Walls (Fig. 2a), 3D House (Fig. 2b),
+tialized to be 1/NS, where NS is the number of strategies Cluttered (Fig. 2c), and KukaYouBot (Fig. 3a).
+965
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. (b) 3D House (6 DOF robot)
+(a) Serial Walls (6 DOF robot) (c)Cluttered environment
+(6-9 DOF robot)
+Fig. 2: Heterogeneous Environments Studied
+TABLE I: U-CSL and U-MDP Run On Different Environments
+Env PS IS OP PP DIP PA DistAvg IT PT
+Kuka-You-Bot HPS HPS (-17.07,21.68,0.67) (-18.2,20.37,0.5) 1.74 99.23 4.68 49 9
+Kuka-You-Bot HPS HybridPRM (-20.6,20.13,0.59) (-18.2,20.37,0.5) 2.41 98.94 3.75 49 9
+SerialWalls HPS HPS (0.65,3.08,2.67) (0.7,3.13,2.39) 0.29 98.54 1.86 26 7
+SerialWalls HPS H-PRM (3.12,0.64,9.54) (2.96,0.65,9.36) 0.24 98.78 1.01 28 26
+House HPS HPS (6.18,1.58,4.66) (5.73,2.03,4.39) 0.69 96.96 2.65 14 12
+House HPS H-PRM (6.35,1.62,4.66) (6.35,1.5,4.52) 0.19 99.19 1.4 8 5
+ClutteredCube HPS HPS (3.61,2.27,4.36) (4.18,2.34,4.43) 0.58 96.66 4.11 13 4
+ClutteredCube HPS H-PRM (2.1,2.54,3.75) (2.75,2.01,4.36) 1.03 94.01 4.42 17 1
+Cluttered7DOF HPS HPS (1.55,1.73,6.55) (1.33,1.47,6.02) 0.63 96.36 2.28 12 3
+Cluttered7DOF HPS H-PRM (6.35,1.62,4.66) (6.35,1.49,4.52) 0.19 98.9 1.40 8 5
+Cluttered9DOF HPS HPS (5.89,7.93,8.75) (8.13,4.49,7.83) 4.21 75.71 5.77 6 1
+Cluttered9DOF HPS H-PRM (6.05,7.91,7.63) (3.77,6.25,7.9) 2.83 83.64 5.51 7 1
+[Env]Environmentused. [PS]SamplingStrategyusedbythepursuer. [IS]SamplingStrategyusedbytheinvader.
+[OP] Observed position of the invader at the [PP] Predicted position of the invader at the [DIP] Distance between invader and pursuer at
+pointofinterception. pointofinterception. pointofinterception.
+[PA]PercentageAccuracyoftheU-MDP. [DistAvg] Average distance between the paths [IT]NumberoftimestampstakenbyInvaderto
+oftheinvaderandthepursuer. reachfromstarttogoal.
+[PT]NumberoftimestampstakenbyPursuerto [HPS]HeterogeneousPlanningSpacesstrategy. [H-PRM]HybridPRMstrategy.
+intercepttheinvader.
+TABLE II: U-CSL and U-MDP Run On KukaY-
+B. Results
+ouBot Environment with different seeds
+Table (I) shows the results of running the U-MDP al-
+gorithm on different heterogeneous environments. We com- Invader Time to Success(S)/Failure(F)
+trajectory intercept
+pared the paths of the target and the pursuer to determine
+time from (milliseconds)
+anaveragedistancebetweenthetwo(columnDist Avg).We start to goal
+alsodeterminedapointofinterception(columnsOPandPP) (milliseconds)
+1322.430 723.677 S
+whichshowstheclosestpositionofthetargetandthepursuer
+91.644 746.532 F
+intheirindividualpaths.Basedonthepositionsofthetarget 4162.000 737.314 S
+andthepursuer,wecalculateapercentageaccuracy(column 8213.810 674.919 S
+PA)thatdemonstratesthedistancebetweenthetargetandthe 34937.600 664.714 S
+1863.090 751.444 S
+pursuer with respect to the size of the environment. Column
+629.816 726.422 F
+IT gives the number of timestamps taken by the target to 9533.800 703.242 S
+reach its goal, while the column PT gives the number of 98517.799 554.380 S
+timestamps taken by the pursuer to intercept the target. 146814.000 531.326 S
+The percentage accuracy was calculated in Equation (12),
+where diagonal is the diagonal of the bounding box of the
+environment, PI is the position of the invader, and PP is the
+its complexity. The number of timestamps the pursuer
+position of the pursuer.
+takes while the invader uses the HybridPRM (26) is
+− − ∗
+%Accuracy =(1 (δ(PI PP)/diagonal)) 100 (12) signiﬁcantlyhigherthanwhenitusestheHPS(7).This
+is because of the difference in the cost functions used
+Based on the parameters explained above, we have the in both the algorithms. But in both cases, the pursuer
+following observations for each of the environments: isabletointercepttheinvaderbeforeitreachesthegoal.
+• Serial Walls: We ran 2 differennt experiments with
+HPS and HybridPRM got a percentage accuracy of • 3D House: We ran HPS and HybridPRM in two
+more than 98% in both cases. The average distance different experiments for this environment and got
+recorded between the path of the invader and the a percentage accuracy of more than 96% and 99%,
+pursuer is small(1.86 and 1.01) compared to the size respectively. The average distance between the path of
+× ×
+of the environment (of dimensions 4 4 19) and the invader and the pursuer is also pretty low (2.65
+966
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. (c)Pathcomparisonbetweenin-
+(a) Path comparison between invader
+vader andpursuer using U-CSL
+and pursuer in KukaYouBot environ- (b) Path comparison between invader and U-MDP in similar environ-
+ment using U-CSL and U-MDP [20] and pursuer using POMDP [20] ment
+Fig. 3: Path comparison between invader and pursuer
+(a) Path comparison between invader
+and pursuer using adaptive ﬁlter in (b) Path comparison between invader
+vision-based tracking system [23] andpursuerusingU-CSLandU-MDP
+in similar environment
+Fig. 4: Visual tracking vs U-CSL and U-MDP run on 3D Environments
+and 1.4) as compared to the size of the environment tercepted)andthetimetakenbythepursuertointercept
+× ×
+(of dimensions 20 4 10) and its complexity. The theinvader.Theresultsfromtheexperimentshavebeen
+number of timestamps the pursuer takes while the recordedinTableIIandthetrajectorycomparisonfrom
+invader is using the HPS (12) is higher than when it one single seed is shown in Figure 3a. The experiment
+uses the HybridPRM (5), for this environment. was considered to be a success if the pursuer intercepts
+the invader in a lesser amount of time than that taken
+• Cluttered: We ran HPS and HybridPRM in six by the invader to reach from start to goal. We record a
+different experiments for this environment with success rate of 80%.
+different degrees of freedom of the robot. From the
+C. Comparison with Related Work
+results table, we can see that with higher DOFs, the
+percentage accuracy gets low (96.36%-75.71%), but We also compared our algorithm with other competitive
+the time to intercept decreases (5-1 timestamps). The algorithmsfromexistingliterature[20].Thepathcomparison
+average distance between the path of the invader and between the invader (target/UGV) and the pursuer (UAV)
+the pursuer is also low (4.11, 4.42, 2.28, 1.40, 5.77 using U-CSL and U-MDP is shown in Figure 3c. When
+and 5.51) as compared to the size of the environment compared to the trajectory comparison of a similar algo-
+× ×
+(of dimensions 10 10 10) and its complexity. rithm using POMDP (Figure 3b), we observe that the UAV
+trajectory generated using U-CSL and U-MDP follows the
+• KukaYouBot: We ran HPS and HybridPRM in two trajectoryofthetargetmorecloselythanthePOMDPvariant.
+different experiments for this environment and got a Whenwecompareditwithavisualtracking-basedalgorithm
+percentageaccuracyof98%and99%,respectively.The [23] (Figure 4a), we observe that the UAV trajectory using
+averagedistancebetweenthepathoftheinvaderandthe our method gives a more simpler trajectory Figure 4b).
+pursuerissmall(4.68and3.75)ascomparedtothesize
+× × V. FUTUREWORK
+oftheenvironment(ofdimensions160 160 17.6)and
+its complexity. The number of timestamps the pursuer In future work, we plan on investigating replacement for
+takes while the invader is using the HybridPRM is the thestrategiesduringthelearningphaseincludingconsidering
+same as when it uses the HPS (9). In both cases, the the degree of freedom information of the robot during the
+pursuerisabletointercepttheinvaderbeforeitreaches learning phase. We also plan on performing real world
+the goal. On a different set of experiments, we ran U- applications to test our algorithm in robot retrieval and
+CSLandU-MDPontheKukaYouBotenvironmentwith monitoring scenarios. As an immediate plan, we intend to
+10 different randomized seeds and recorded the time applythisnewlearningmethodtoadaptivelyselectastrategy
+takenbytheinvaderfromstarttogoal(withoutbeingin- for an environment and build a path planning algorithm.
+967
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [21] FernandoVanegas,DuncanCampbell,NicholasRoy,KevinJGaston,
+and Felipe Gonzalez. Uav tracking and following a ground target
+undermotionandlocalisationuncertainty. InAerospaceConference,
+[1] NancyMAmato,OBurchanBayazit,andLuciaKDale. Obprm:An 2017IEEE,pages1–10.IEEE,2017.
+obstacle-basedprmfor3dworkspaces. 1998. [22] Fernando Vanegas, Jonathan Roberts, and Felipe Gonzalez. Uav
+[2] FrankBickenbachandEckhardtBode.Evaluatingthemarkovproperty tracking of mobile target in occluded, cluttered and gps-denied en-
+in studies of economic convergence. International Regional Science vironments. In 2018 IEEE Aerospace Conference, pages 1–7. IEEE,
+Review,26(3):363–392,2003. 2018.
+[3] Vale´rieBoor,MarkHOvermars,andAFrankVanDerStappen. The [23] XunWang,HuayongZhu,DaibingZhang,DianleZhou,andXiangke
+gaussian sampling strategy for probabilistic roadmap planners. In Wang. Vision-baseddetectionandtrackingofamobilegroundtarget
+Roboticsandautomation,1999.proceedings.1999ieeeinternational using a ﬁxed-wing uav. International Journal of Advanced Robotic
+conferenceon,volume2,pages1018–1023.IEEE,1999. Systems,11(9):156,2014.
+[4] Krishnendu Chatterjee, Martin Chmel´ık, and Jessica Davies. A [24] Steven A Wilmarth, Nancy M Amato, and Peter F Stiller. Maprm:
+symbolic sat-based algorithm for almost-sure reachability with small A probabilistic roadmap planner with sampling on the medial axis
+strategiesinpomdps. InAAAI,pages3225–3232,2016. of the free space. In Robotics and Automation, 1999. Proceedings.
+[5] Feng Chen, Chunpai Wang, and Jin-Hee Cho. Collective subjective 1999IEEEInternationalConferenceon,volume2,pages1024–1031.
+logic:Scalableuncertainty-basedopinioninference. InBigData(Big IEEE,1999.
+Data), 2017 IEEE International Conference on, pages 7–16. IEEE, [25] LeonoreWinterer,SebastianJunges,RalfWimmer,NilsJansen,Ufuk
+2017. Topcu,Joost-PieterKatoen,andBerndBecker.Motionplanningunder
+[6] Jean-Alexis Delamer, Yoko Watanabe, and Caroline P. Car- partialobservabilityusinggame-basedabstraction.In2017IEEE56th
+valhoChanel. Solvingpathplanningproblemsinurbanenvironments AnnualConferenceonDecisionandControl(CDC),pages2201–2208.
+basedonapriorisensorsavailabilitiesandexecutionerrorpropagation. IEEE,2017.
+InAIAAScitech2019Forum,page2202,2019. [26] Huili Yu, Kevin Meier, Matthew Argyle, and Randal W Beard.
+[7] Sourav Dutta and Chinwe Ekenna. Air-to-ground surveillance using Cooperative path planning for target tracking in urban environments
+predictivepursuit. In2019InternationalConferenceonRoboticsand using unmanned air and ground vehicles. IEEE/ASME Transactions
+Automation(ICRA),pages8234–8240.IEEE,2019. onMechatronics,20(2):541–552,2015.
+[8] ChinweEkenna,SamAdeJacobs,ShawnaLThomas,andNancyM
+Amato. Adaptive neighbor connection for prms: A natural ﬁt for
+heterogeneous environments and parallelism. In IROS, pages 1249–
+1256,2013.
+[9] ChinweEkenna,DianeUwacu,ShawnaThomas,andNancyMAmato.
+Improved roadmap connection via local learning for sampling based
+planners. In Intelligent Robots and Systems (IROS), 2015 IEEE/RSJ
+InternationalConferenceon,pages3227–3234.IEEE,2015.
+[10] David Hsu, Wee Sun Lee, and Nan Rong. A point-based pomdp
+plannerfortargettracking. InRoboticsandAutomation,2008.ICRA
+2008. IEEE International Conference on, pages 2644–2650. IEEE,
+2008.
+[11] Bert Huang, Angelika Kimmig, Lise Getoor, and Jennifer Golbeck.
+Probabilistic soft logic for trust analysis in social networks. In
+InternationalWorkshoponStatisticalRelationalArtiﬁcialIntelligence
+(StaRAI2012).Citeseer,2012.
+[12] Xin Huang, Ashkan Jasour, Matthew Deyo, Andreas Hofmann, and
+Brian C Williams. Hybrid risk-aware conditional planning with
+applications in autonomous vehicles. In 2018 IEEE Conference on
+DecisionandControl(CDC),pages3608–3614.IEEE,2018.
+[13] Cheng Hui, Chen Yousheng, Li Xiaokun, and Wong Wing Shing.
+Autonomoustakeoff,trackingandlandingofauavonamovingugv
+usingonboardmonocularvision. InControlConference(CCC),2013
+32ndChinese,pages5895–5901.IEEE,2013.
+[14] Lydia E Kavraki, Mihail N Kolountzakis, and J-C Latombe. Anal-
+ysis of probabilistic roadmaps for path planning. In Robotics and
+Automation,1996.Proceedings.,1996IEEEInternationalConference
+on,volume4,pages3020–3025.IEEE,1996.
+[15] Jo¨rgMu¨llerandGauravSSukhatme.Risk-awaretrajectorygeneration
+withapplicationtosafequadrotorlanding. InIntelligentRobotsand
+Systems (IROS 2014), 2014 IEEE/RSJ International Conference on,
+pages3642–3648.IEEE,2014.
+[16] BrianDRigling. Adaptiveﬁlteringforair-to-groundsurveillance. In
+Algorithms for Synthetic Aperture Radar Imagery XI, volume 5427,
+pages53–62.InternationalSocietyforOpticsandPhotonics,2004.
+[17] Ma´riaSvorenˇova´,MartinChmel´ık,KevinLeahy,HasanFeritEniser,
+KrishnenduChatterjee,IvanaCˇerna´,andCalinBelta. Temporallogic
+motion planning using pomdps with parity objectives: case study
+paper. InProceedingsofthe18thInternationalConferenceonHybrid
+Systems:ComputationandControl,pages233–238.ACM,2015.
+[18] Aakriti Upadhyay and Chinwe Ekenna. Investigating heterogeneous
+planning spaces. In Simulation, Modeling, and Programming for
+Autonomous Robots (SIMPAR), 2018 IEEE International Conference
+on,pages108–115.IEEE,2018.
+[19] JurVanDenBerg,SachinPatil,andRonAlterovitz. Motionplanning
+under uncertainty using iterative local optimization in belief space.
+The International Journal of Robotics Research, 31(11):1263–1278,
+2012.
+[20] FernandoVanegas,DuncanCampbell,MarkusEich,andFelipeGon-
+zalez. Uav based target ﬁnding and tracking in gps-denied and
+cluttered environments. In 2016 IEEE/RSJ International Conference
+on Intelligent Robots and Systems (IROS), pages 2307–2313. IEEE,
+2016.
+968
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 05:03:36 UTC from IEEE Xplore.  Restrictions apply. 

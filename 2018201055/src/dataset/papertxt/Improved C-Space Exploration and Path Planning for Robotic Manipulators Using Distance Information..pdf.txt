@@ -1,0 +1,487 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Hierarchical Quadtree Feature Optical Flow Tracking Based Sparse
+Pose-Graph Visual-Inertial SLAM
+HongleXie,WeidongChen*,JingchuanWangandHeshengWang
+0F Abstract—Accurate, robust and real-time localization under the accumulated error of front-end feature tracking and data
+constrained-resourcesisacritical problemtobesolved.In this association, the whole VIO/VI-SLAM system may occur
+paper, we present a new sparse pose-graph visual-inertial tracking lost or numerical optimization divergence easily
+SLAM (SPVIS). Unlike the existing methods that are costly to duringlong-termoperation.
+deal with a large number of redundant features and 3D map We propose a novel hierarchical quadtree based optical
+points,whichareinefficientforimprovingpositioningaccuracy,
+flow tracking algorithm, which is a fast, robust and accurate
+we focus on the concise visual cues for high-precision pose
+front-end tracking method for general VIO/VI-SLAM. The
+estimating. We propose a novel hierarchical quadtree based
+quadtreesearching isoneofbest thetwo-dimensional search
+optical flow tracking algorithm, it achieves high accuracy and
+methods [21], [22], we improve it by hierarchical pyramid
+robustnesswithinveryfewconcisefeatures,whichisonlyabout
+one fifth features of the state-of-the-art visual-inertial SLAM withhistogramandWienerfilteringimageenhancement[34],
+algorithms. Benefiting from the efficient optical flow tracking, which can deal with the rapid motion, weak textures and
+oursparsepose-graphoptimizationtimecostachievesbounded uncalibrated illumination changes, those severe challenging
+complexity.Byselectingandoptimizingtheinformativefeatures conditions may reduce the performance of VIO/VI-SLAM
+inslidingwindowandlocalVIO,thecomputationalcomplexity severely. The proposed method selects the most informative
+isbounded,itachieveslowtimecostinlong-termoperation.We
+robust features for optical flow tracking by hierarchical
+comparewiththestate-of-the-artVIO/VI-SLAMsystemsonthe
+quadtree strategy, and it distributes the features evenly. Our
+challenging public datasets by the embedded platform without
+algorithmachievesrobusttrackwithinonlyveryfewconcise
+GPUs, the results effectively verify that the proposed method
+features in optical flow, this is suitable for the limited
+hasbetterreal-timeperformanceandlocalizationaccuracy.
+resourcesplatformandhaslowtimecostandlatency.
+I. INTRODUCTION The most related works toours arethe attention invisual-
+inertial navigation (VIN) [4] and the good feature selection
+High-accuracy and efficient simultaneous localization and [23] method. In [4], the attention mechanism in VIN is
+mapping (SLAM) algorithms under limited resources have presented,accordingtotheproposedtwoalgorithms:minEig
+received increasing attention [1]-[6]. Since the localization and logDet in greedy and lazy modes, which can choose the
+and navigation demands of robots are not constant time, the mostinformativefeaturesasthesuitablevisualcuesforVIN.
+SLAMsystemsoftenneedtorunforalongtimecontinuously In [23], a new solution is proposed to solve the Max-logDet
+within the resource-constrained on-board computing power metrics in feature selection. All of those methods are tightly
+[1]-[4],[42], during the long-term operation, there are lots of coupled and limited within the particular least squares
+problems to be solved, such as the poor robustness of the optimization, and it has high computational complexity and
+front-endvisual tracking[4],[43],unboundedcomputational time-consuming.Ouralgorithmislightweightanddecoupled,
+complexityoftheback-endoptimization[2],[3],[37]andthe whichcanbeimplementtoageneralSLAMframework.
+increasingresourcescosts[7],[20],[26]. In long-term operation, although loop closing reduces the
+Assisted by IMU, visual-inertial odometry (VIO) and drift, the computational complexity of the optimization still
+visual-inertial (VI)-SLAM achieves higher accuracy and tendstogrowrapidlywithoutboundary[2],[6],whichisone
+better robustness compared with pure vision algorithm [8]- of the biggest downsides of SLAM [20], the accumulated
+[13], which can adapt to various unstructured environments features and 3D map points can cause extremely high
+and run stably in different challenging conditions. However, computational complexity [7], [20], and it has little benefits
+theyhavehighercomputationalcost.Toensuretheefficiency, for positioning. Instead, the proposed visual-inertial SLAM
+lotsofthe state-of-the-art VIO/VI-SLAM [8]-[13]utilize the focusonmaintainingthesparsepose-graphinslidingwindow
+lightweightfront-endmethods,suchasFASTCornerdetector and local VIO, and achieve loop closing with full SLAM
+[14], ORB feature [15], [40], Harris or Shi-Tomasi Corner keyframe database, the whole trajectories are refined though
+with KLT optical flow tracker [16], [17]. The accuracy and theglobaloptimization.Themaincontributionsare:
+robustnessofthosemethodsarerelativelyweak,whichcause 1) To the best of our knowledge, this is the first work
+low-qualityoutliersandreducethetrackingaccuracy.Dueto proposed the hierarchical quadtree based optical flow
+trackingalgorithm,whichisafast,robustandaccuratefront-
+ThisworkwassupportedbytheNationalNaturalScienceFoundationof endmethodforgeneralVIO/VI-SLAMsystem.
+ChinaunderGrantU1813206and61573243. 2) We design an efficient, robust and lightweight visual-
+TheauthorsarewiththeInstituteofMedicalRoboticsandDepartmentof
+inertial SLAM (SPVIS), based on a state-of-the-art baseline,
+Automation,ShanghaiJiaoTongUniversity,Shanghai200240,Chinaand
+KeyLaboratoryofSystemControlandInformationProcessing,Ministryof and have improved its pose-graphoptimization sparsity with
+Education of China (e-mail: {xiehongle, *corresponding author: wdchen, fewerfeaturesandmappointsinlong-termoperation.
+jchwang,wanghesheng}@sjtu.edu.cn).
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 58
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. 3) We present the new finding and applicability of robust
+tracking within only very few concise features in visual-
+inertialestimatorunderthelimitedresourcesconditions.
+4)Wevalidateourmethodbycomparingwithothersonthe
+challenging datasets, results show that our methodhas better
+accuracyandlowertimecostonanembeddedplatform.
+II. SYSTEMOVERVIEW
+The framework of the proposed visual-inertial SLAM is
+showninFig.1.Wehaveimplementedoursystembasedona
+state-of-the-art baseline VINS-Mono [9] and inspired by
+OKVIS [8]. First of all, during the sensor’s measurements
+pre-processingmodule,wesynchronizethemonocularimages Fig.1.Systemframeworkoftheproposedvisual-inertialSLAM(SPVIS).
+and IMU measurements the by optimizing or calibrating the Let [xi yi ]T be the coordinates of F in image N, and
+i N N i
+timeintervalifthehardwaresynchronizationisinefficient. di [xi yi]T be the relative motion vector of optical flow,
+In the tracking module, the relative motion between sotherelationshipbetweenandvectorscanbewrittenas:
+i i
+consecutive frames is estimated with images and IMU’s =di [xi xi yi yi]T (1)
+measurements. After image enhancement, we estimate the i i M M
+AssumingthattheimagesMandNareconsecutiveframesof
+initial motion between consecutive frames efficiently by our
+optical flow tracking, whose corresponding time are t and
+proposedhierarchicalquadtreeopticalflowtrackingalgorithm,
+tt respectively. According to the brightness constancy
+and the IMU’s state is pre-integrated at the synchronization
+invariantprinciple[17],theysatisfythefollowingformula:
+frequencyofimages. Inthevisual-inertial alignment module,
+ 
+we combine the measures of the sensors to get an accurate I(xi xi,yi yi,tt)I xi ,yi ,t (2)
+M M M M
+pose estimation, in the meantime, the coarse map points are wereservethefirst-orderapproximationofTaylorexpansion:
+generated.Andthenewkeyframeisselectedaccordingtothe  
+I(xi xi,yi yi,tt)I xi ,yi ,t +
+meanhierarchicalquadtreeopticalflowmovement. M M M M
+The back-end optimization module of our algorithm is I I I (3)
+xi  yi  t
+improvedbasedonafixed-lagVIOslidingwindow[6],[9].A xi yi t
+highlysparseback-endoptimizationisachievedwithconcise M M
+whereistheinfinitesimalofhigherorder.Accordingtothe
+map points. the proposed system can run stably within only
+brightnessinvariance,thefollowingformulacanbeobtained:
+about the one fifth of feature number of the general VIO
+I xi I yi Ii
+systems.Tolimitthesizeofoptimization,theoldestkeyframe M  M  (4)
+is marginalized, and the pose graph is further sparsified by xi t yi t t
+M M
+maintaining the high-information measurements. We add where xi I xi and yi I yi are respectively the
+these measurements to a local VIO optimization. For the gradients Min the x Mand y dMirectionsM. The velocities of the
+demand of long-time operation, we maintain a full SLAM relative motion inMthe imMage plane are denoted as follows:
+pose-graphdatabase,therelevantframescanberefinedbythe ui xi t ,vi yi t.Furthermore,opticalflow tracking
+loop closing. Once the correct loop is detected, the whole canbeMwritteninmaMtrixformasfollowing:
+relevanttrajectorieswillberefinedinglobaloptimization,and
+ui Ii
+thesparsepose-graphismaintainedforlong-termoperation. [xi yi ]   (5)
+M M vi t
+For each feature point, the(2w+1)(2w+1)block of pixels are
+III. HIERARCHICALQUADTREEOPTICALFLOWTRACKING
+tracked around the feature point [25]. We find the correct
+In this section, we present a novel hierarchical quadtree relation of pixels by minimizing the average optical flow
+basedopticalflow trackingalgorithm, which isafast, robust tracking error. The relative translation and relation between
+andaccuratefront-endmethodforgeneralVIO/VI-SLAM. adjacentframes canbecalculatedbysolving the opticalflow
+equations(6)ofallfeaturesintheoriginalimage.
+A.OpticalFlowTracking
+x1 y1  I1 t
+The goal of optical flow is to estimate the relative motion  M Mu  
+ M M   M  (6)
+between two image frames by tracking sparse or dense v
+xk yk  Ik t
+features[16], [17]. The dense optical flow tracksmost of the  M M  
+pixelsintheimage,whichistime-consuming.Tospeed-upthe where[u,v]T are the maximum likelihood solution of relative
+tracking, the sparse feature based optical flow is used. motionvectorsinimageM,andkisthenumberoffeatures.
+AssumingthereisapairofgrayscaledimagesMandN,whose However,forthestrongassumptionofbrightnessconstancy,
+grayvaluefunctionsareM(x,y)andN(x,y)separately.Given sparseopticalflowtrackingisoftenmismatched,andoutliers
+thefeaturepointssetFofimageM,thecoordinatesof F inM maycauseseriousdataassociationerrors.Furthermore,during
+are[xi yi ]T . The aim is to find correctFin N thiat the fastmotion,lotsoffeaturepointsarelosteasily,andtheycan’t
+i M M i
+grayvalueM(xi ,yi )andN(xi ,yi )aresimilar[17]. betracked by the next frames. Those weaknessesdestroy the
+M M N N
+59
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. tracking stability and decrease the accuracy of the estimator requirements.Theestimatedopticalflowisfurtherrefinedby
+rapidly. To solve those problems, we propose a novel robust fundamental matrix RANSAC [35] recursively. The detailed
+hierarchicalquadtreebasedopticalflowtrackingmethod. algorithm of our hierarchical quadtree based optical flow
+trackingmethodisdescribedinAlg.1.
+B.HierarchicalQuadtreeSegmentation
+Quadtreeisoneofthebestsuitablealgorithmsforlocating
+pixelsintwo-dimensionalimages[22],[24].Thecoreideaof
+quadtree index is to segment image space into quadtree
+structures of different levels recursively, and according to
+quadtree based two-dimensional search method, this is done
+recursivelyuntilthetreelevelreachesacertaindepthormeets
+certain requirements. We recursively segment the space of
+known image range into four equal subspace parts, and
+extract image features from each quadtree image domain at
+hierarchical layers. The hierarchical layers are generated by
+image pyramid at various levels. For each small quadtree
+image domain, we only retainone best feature point bynon-
+maximum suppression strategy, the features are selected by
+itsstrengthresponse,suchasHarrisresponse,wesummarize
+allthefeaturesofeachquadleafnodeintrackingthread.The
+above steps will be repeated recursively until we find the
+desiredcorrectfeaturepointsinhierarchicalimagelayers.
+C.HierarchicalQuadtreeOpticalFlowTracking
+Robust and accurate front-end feature tracking method
+with efficient data association is very important in VIO/VI-
+SLAM [8]-[13]. However, towards the long-term operation,
+thereareafewmethodsthatcanbedealwithmostvarietiesof
+challenging scenarios, such as illumination change, motion
+blurring,darkandtexturelessscenes,andfittherequirements
+ofreal-timeperformancesimultaneously.
+So,beforesegmentingtheimageintohierarchicallayersby
+calculating the image pyramid,we conduct a seriesofimage
+enhancement processing. For the abruptly illumination and
+automatic photometric calibration of camera, the brightness
+of image frames can be changed suddenly [43], which is an
+intractable problem of optical flow tracking method. we
+utilize an adaptive histogram equalization, where we try to
+limitedthecontrastoftheimageframetoenhanceimagewith
+the photometric change smoothly, which is also efficient for
+featureextractionindarkimages.TheWienerfiltermethodis
+usedtosolvethemotionblurringalternatively[34].
+Aftertheimagepre-processing,weestimatethemotionby
+hierarchicalpyramidalopticalflowfeaturetracking.Basedon
+ageneral KLT-TrackerinOpenCV[25].Weextract the Shi-
+Tomasi and FAST corners efficiently, through the quadtree-
+based two-dimensional search method, the best features for
+eachquadleafnodeareselectedindifferentpyramidallevels.
+Aggregating all of the good feature points, which forms the
+initial feature points set  {F,Pts,Desp},i[1,N ] to be IV. SPARSEPOSE-GRAPHVISUAL-INERTIALSLAM
+0 i i i i 0
+tracked by optical flow. According to the proposed optical
+A.SparsePose-GraphOptimization
+flowtrackingmethod,theinitialfeaturessetisupdatedto
+cyclically.In ,wehaveremovedthetracklostoutliers. 0 Graph-basedvisual-inertialSLAMrepresentstheback-end
+According to0 the proposed hierarchical quadtree optical asaseriesofthefactoroptimizations[2],[26]-[29].Thenode
+flow tracking method, we execute the quadtree-based image factors represent variables, such as the state of camera pose
+spatial segmentation, feature extraction and hierarchical and map points, the edge factors represent the geometric
+optical flow tracking iteratively, until the number of feature measurements between node factors. For eachedge factor, it
+points tracked by quadtree optical flow meets the expected denotes a measurement zmn between the node xm and xn, let
+60
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. h(x)bethe measurement modelofsensor.The relative error min RP 2 min r J X 2 (15)
+residualbetweenmeasurementandexpectationisdefinedas: 0 0 0 P0
+f  f(x ,x ,z )=h(x ,x )z v (7) whereRU andRC arethe measurementresidualsofIMUand
+mn m n mn m n mn k mn
+where the sensor’s noise is v:N(0, ) . For each sensor camera,J andParetheJacobianandcovariancematrixofthe
+measurement, such as the camera posem,nIMU state and map measurement residual [9]. When each keyframe enters the
+point,wedefineanerrorfunctionby(7).Summarizingallof sliding window, we marginalize the earliest keyframe in the
+the factors , the whole objective optimization function X slidingwindowtoensuretheboundedsizeoftheoptimization,
+canbewrittenas: according to the Schur complement [36],RPmeans the prior
+XMAP min(m,n) h(xm,xn)zmn 2m1n (8) icnlofosrinmgatrieosnidrueaslisd,ualsisotfhemkaergrnineallfizuantciotino,n.anTdheRvoLpistimthiezaltoioonp
+problemissolved byminimizingMahalanobisdistance [29],
+where iscovariancematrix,andtheinformationmatrixis
+ mn1 . We solve this problem and find its maximum a [31],[32]andfindingtheoptimalX interactively:
+mn mn
+posteriori (MAP) solution by minimizing the Mahalanobis J TP1J Juk TPuk 1Juk JcnTPcn1Jcn H X
+distance.Theoptimizationequationcanbeconvertedinto: 0 0 0 uk1 uk1 uk1 m m m L (16)
+x* argmxin(m,n) h(xm,xn)zmnJmnx 2mn (9) HbP*X=JuuHkk1TPuHukk11rUHJHmcnTPmcXn1rCbbLb b b =b* (17)
+P U C L P U C L
+whereJmnrefers to the Jacobian matrix, andx*is the target whereH*referstotheinformationmatrix.ThesizeofH*and
+optimal step for updating the optimization. Several methods
+its sparsity directly affects the computational efficiency [2],
+can be applied to solve the problems, such as QR [27],
+[3],[39],especially the marginalization ofcamera posesand
+Cholesky [29] and incremental methods [32]. However, the
+3Dmappointsintheslidingwindowandloopclosing,thisis
+computationalcomplexityoftheaccumulatedfullpose-graph
+one of the largest shortcomings of VIO/VI-SLAM [20],
+and3Dmappointsoptimizationistoolargetomeetthereal-
+whose computational complexity increases rapidly with the
+timerequirementsinthelong-termrunning,wespeed-upitby
+numberoffeaturesandmappoints.Insteadofthe fullglobal
+thefixed-lagslidingwindowandlocalVIOoptimization.
+optimization, we solve the incremental equation H*X=b*
+withsubspacemethodbypartiallyupdatevariables[39],and
+B.SparseGraph-basedVisual-inertialSLAM convertitintosubgraph,whichisfasterandmoreefficient.
+Theproposedvisual-inertialSLAMback-endoptimization Particularly, we simplify the complexity of map points
+isimplementedbasedonastate-of-the-artVI-SLAMbaseline optimization in fixed-lag sliding window by significantly
+[9]. Similar to [10], [11], we have implemented an efficient reducing the number of feature points through the proposed
+loopclosingalgorithmbasedontheDBoW2[30]withBRIEF hierarchical quadtree optical flow tracking method. And we
+descriptor[33].Inspiredby[6],allthestatesofcamera,IMU decouple the features from global optimization, we focus on
+and map points are added into a joint coupled optimization. optimizingthesparsepose-graphwithoutmapspoints,where
+the concise features are used for fast initial estimating and
+We improve its efficiency by reducing the redundancy of
+local mapping. Reducing the computation for optimizing the
+featuresand map points. Tolimit computational complexity,
+map points improves the real-time performance. We achieve
+theslidingwindowoptimizationinVIOisadopted.Thestate
+competitive accuracy by only using an extraordinarily small
+variablesincludedintheslidingwindowstatesarensensor’s
+numberoffeaturepoints,aboutafifthoftheoriginalnumber
+states, including its translation pw, rotationRw,velocityvw,
+k k k duringtheoptical-flowtrackingthread,whichachieveslower
+thebiasofaccelerometerb andgyroscopeb ,andtheHuber
+a g timecostthanthestate-of-the-artVIO/VI-SLAMsystems.
+loss function refined inverse depth of m 3D map points*
+k
+[31]. The motion of camera and IMU are associated through
+V. EXPERIMENTALRESULTS
+the external parameters from camera to IMU. The core state
+variablesareasfollows: We have integrated the proposed SPVIS system in a
+resource-constrained embedded platform, which is the Intel
+X T ,T,L,T ,,,L, (10)
+ 0 1 n 0 1 m UPSquareddevelopmentkits,itcarriesApolloLakelow-cost
+T [Cw,U ][pw,Rw,vw,b ,b ] (11) on-board N4200 processors. All the experiments are carried
+k k k k k k a g out on this embedded platform. The real-time tests on this
+whereT representsthestateofthek-thframe,itincludesthe
+k lightweight boardverifythat our system issuitable for mini-
+states of camera Cw [pw,Rw] and IMU’s measurements typedronesandgeneralrobotplatforms.Eachprocessthread
+k k k
+U ,wmeansinworldcoordinate. Full optimizationfunction inoursystemisprocessedinreal-timewithoutanyGPUs.
+k
+ofthevisual-inertialSLAMisdefinedasfollows:
+  A.LocalizationAccuracyComparison
+min RU 2   RC 2 + RP 2 +RL 2  (12)
+X kU k k (m,n)C mn mn 0 vL v v We evaluate the performance of the proposed SPVIS on
+EuRoC benchmark [38], which contains various challenging
+min RU 2 min r (zuk ,X )+Juk X 2 (13) sequences. We only use the left camera’s images and the
+kU k k kU U uk1 0 uk1 Puukk1 ADIS16448IMU’smeasures.Our resultsarecomparedwith
+min  RC 2 min  r (zcn,X )+JcnX 2 (14) thestate-of-the-artVIO/VI-SLAM,suchasthesparsefeature
+(m,n)C mn mn (m,n)C C m 0 m Pmcn basedOKVIS[8],VINS-Mono[9],VINS-Fusion[10],ICE-
+61
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. TABLEI
+LOCALIZATIONACCURACYRESULTSCOMPARISONONTHEEUROCDATASETSINMETERS
+Length Proposed VINS- VINS-Fusion[10] ICE-BA[11] VI-DSO R-VIO
+Sequences OKVIS[8]
+/m SPVIS Mono[9] Stereo Mono+IMU Stero+IMU w/loop w/oloop [12] [13]
+MH_01_easy 79.84 0.0609 0.33 0.12 0.54 0.18 0.24 0.11 0.09 0.06 0.19
+MH_02_easy 72.75 0.0435 0.37 0.12 0.46 0.09 0.18 0.08 0.07 0.04 0.31
+MH_03_medium 130.58 0.0696 0.25 0.13 0.33 0.17 0.23 0.05 0.11 0.12 0.29
+MH_04_difficult 91.55 0.1037 0.27 0.18 0.78 0.21 0.39 0.13 0.16 0.13 0.76
+MH_05_difficult 97.32 0.1199 0.39 0.21 0.50 0.25 0.19 0.11 0.27 0.12 0.45
+V1_01_easy 58.51 0.0490 0.09 0.07 0.55 0.06 0.10 0.07 0.05 0.06 0.08
+V1_02_medium 75.72 0.0446 0.14 0.08 0.23 0.09 0.10 0.08 0.05 0.07 0.11
+V1_03_difficult 78.77 0.0866 0.21 0.19 X 0.18 0.11 0.06 0.11 0.10 0.12
+V2_01_easy 36.34 0.0657 0.09 0.081 0.23 0.06 0.12 0.06 0.12 0.04 0.16
+V2_02_medium 83.01 0.0667 0.17 0.16 0.20 0.11 0.10 0.04 0.09 0.06 0.16
+V2_03_difficult 85.23 0.0852 0.23 0.22 X 0.26 0.27 0.11 0.17 0.17 0.27
+Avg. 80.978 0.0734 0.23 0.14 X 0.15 0.19 0.08 0.12 0.09 0.26
+Fig.2.TranslationandyawerrorsontheEuRoCV2_03_difficultdatasets.Fromthelefttorightisthepercentageerroroftranslation,absolutetranslationand
+yawerrorrespectively.WealsocomparewiththeOKVIS[8],whichisoneofthebestVIOsystem,wetestitsperformancewithoutloopdetection.
+BA[11],R-VIO[13]andoneofbestdirectmethodbasedVI-
+DSO[12].OuralgorithmistestedontheUPSquaredN4200
+processors only with CPUs. We evaluate the localization
+accuracybycomparingtherootmeansquareerror(RMSE)of
+ATE[18],[19],inwhichweutilizehigh-precisionmode.The
+experimental results are shown in Table I, where the total
+travelingdistanceofthedatasetsisabout900m, theerrorof
+oursystemisonly0.0734m,theresultsshowthatweachieve
+superioraccuracythanthestate-of-the-artmethods.
+For analyzing the translation and yaw angle estimating
+accuracy, we further conduct the following experiments.
+Since the proposed system can achieve accurate and robust
+Fig.3.TrajectoryestimationresultsontheEuRoCV2_03_difficultdataset.
+trackingonlywithveryfewfeatures.Forfaircomparison,we
+proposed two different modes of the visual-inertial SLAM numberoffeaturesto150forimprovingtheaccuracy.Asthe
+systemoperation,oneisthefast-tracking(-F)operationmode SPVIS system uses the hierarchical quadtree optical flow
+andtheotherishigh-precision(-H)operationmode. tracking method, which ensures the robust tracking, so it is
+Inthefast-trackingmode,wereducetheoptimizationtime redundant to extract more features for higher accuracy in
+andthenumberofiterations.UsingtheCeressolver[31],we SPVIS, we set the maximum feature number of SPVIS-H to
+setthemaximumnumberofiterationstoalowlevel,suchas8 100and5layersparticularly.
+timesforallmethodsinthefast-trackingmode,themaximum Wecompareallmethodsonthe V2_03_difficult datasets,
+numberoffeaturepointsextractedbyVINS-Mono-Fissetto one ofthe most difficult sequence ofEuRoCdatasets. All of
+100 to ensure that it can run stably. If the number of feature the experiments are conducted on the UP Squared platform.
+pointsisfurtherreduced,theaccuracyoftheVINS-Monowill Experimental results are shown in Fig. 2. Our SPVIS-H and
+decreaserapidlyduetothereductionofthenumberoffeature SPVIS-F achieve the best accuracy, the average localization
+points effectively tracked, in MH_04_difficult and V2_03_ errorsarelessthan8.5cmand10cmseparately,andthethird
+difficultscenarios,therewillbelargetrackingerrors,oreven bestisVINS-Mono-H,whoseerrorisabout15cmasshownin
+trackingloss.Particularly,theproposedSPVISachieveshigh Fig.2.InVINS-Mono,thetranslationerrorsbecome smaller
+precision and stable tracking even within 25 features, so the whenmorefeaturepointsareused,butduetothepoorquality
+maximumfeaturepointnumberofSPVIS-Fissetto25and2 andunstable featuresareaddedtothe trackingthread,which
+hierarchicalquadtreelayersinfast-trackingmode. may cause the low-quality data association and inaccurate
+Forthehigh-precisionmode,weincreasetheoptimization estimation of map points, the yaw angle errors are still not
+timeandnumberofiterationsforeachoperationofthesystem reduced significantly, as shown in Fig. 2. Furthermore, the
+processingthreads,andthemaximumnumberofiterationsis wholeestimatedtrajectoriesareshowninFig.3,theproposed
+setto30inthehighprecisionmode,VINS-Mono-Hsetsthe SPVISachievesthebestlocalizationresults.
+62
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. (a)MH_01_easy (b)V1_02_medium (c)V2_03_difficult
+(d)MH_01_easy (e)V1_02_medium (f)V2_03_difficult
+Fig.4.Comparisonofprocessingtimecost.Inthehigh-precisionoperationmode,VINS-Mono-HandSPVIS-Haredepictedingreenandskyblueseparately.
+Inthefast-trackingoperationmode,VINS-Mono-FandSPVIS-Faredepictedinredandblueseparately.Thefigures(a),(b)and(c)aretheaveragetracking
+timeconsumptionofeachframe.Thefigures(d),(e)and(f)aretheaverageback-endoptimizationtimeconsumptionofeachkeyframe.
+These results are benefited from the high-quality tracking TABLEII
+oftheproposedhierarchicalquadtreeopticalflow,whichcan AVERAGETIMECOSTOFTRACKING
+avoid the additional errors caused by low-quality feature
+Time(ms) MH_01_easy V1_02_medium V2_03_difficult
+optical flow tracking. Tracking with a smaller number of
+featurescanimprovethesparsityofsystem,whichisefficient VINS-Mono-H 27.0996 27.5480 30.7026
+foroptimizationandsignificantinlong-termoperation. VINS-Mono-F 24.6112 28.1416 29.2631
+SPVIS-H 25.8372 25.4017 24.9281
+B.Real-TimePerformanceAnalysis SPVIS-F 8.4017 14.5611 20.0088
+For evaluating the real-time performance of the proposed
+algorithm, we randomly select several datasets in different TABLEIII
+scenarios,suchasMH_01_easy,V1_02_mediumandV2_03 AVERAGETIMECOSTOFEACHKEYFRAMEOPTIMIZATION
+_difficultscenes.Foreachdataset,wecomparetheCPUtime
+Time(ms) MH_01_easy V1_02_medium V2_03_difficult
+cost of tracking and optimization under different operation
+VINS-Mono-H 101.9261 73.9116 46.7598
+modes. As shown in the Fig. 4, the proposed SPVIS-F
+VINS-Mono-F 65.2593 61.3139 44.8913
+algorithm achieves the fastest optical flow tracking whose
+SPVIS-H 54.8646 61.9649 37.2081
+optimization time cost achieves bounded complexity, and it
+can track feature points stably, especially in the low speed SPVIS-F 27.5037 26.3928 21.7114
+motion in MH01 sequence, our algorithm does not need to
+search and generate new feature points frequently, which is VI. CONCLUSIONANDFUTUREWORK
+benefiting from the proposed hierarchical quadtree optical
+Inthispaper,wehavedevelopedafast,accurateandrobust
+flowtracking.Particularly, asshown inTableII,theaverage
+visual-inertialSLAM.Inparticular,wehaveproposedanovel
+CPU time cost of hierarchical quadtree optical flow tracking
+hierarchical quadtree optical flow tracking method. Through
+isonlyabout 8.4ms/frame, this meansourproposedmethod
+effective hierarchical quadtree search mechanism, the front-
+achieves over 115 Hz within the limited resource embedded
+end optical flow can achieve robustly track the informative
+platform, which achieves the state-of-the-art real- time
+features stably. Furthermore, we simplify the sparsity of the
+performance.TheoptimizationcostisshowninTableIII,the
+system by tracking with very few features. By reducing the
+proposedSPVIShasbetterreal-timeperformance.
+cost of processing redundant map points, we improve the
+The proposed algorithm is robust and also suitable for
+sparsity of pose-graph optimization in sliding window and
+high-speed motion conditions. As shown in Fig. 4c, in the
+localVIO,anddriftisreducedbyloopclosing.Theproposed
+V2_03_ difficult datasets, the drone moves very fast with
+systemachievesthecompetitiveaccuracyandbetterreal-time
+rapid translation and pure rotation, the optical flow tracking
+performance under limited resources than the state-of-the-art
+algorithm must constantly increase the optical flow features,
+VIO/VI-SLAM.Forfutureworks:First,wewillfocusonthe
+resultinginalargeincreaseinthetimecostofthealgorithm.
+moreefficientvisualcueselectionapproachforamorerobust
+However, in this challenging situation, the proposed SPVIS
+opticalflowtrackerindynamicscenes.Second,wewillrefine
+can still maintain stable tracking and accurate localization,
+the visual-inertial estimator optimization and resource reuse
+furthermore, as shown in Table II and Table III. Even in the
+efficiency for continuous running and mapping, and further
+most difficult conditions, the real-time performance of the
+evaluateouralgorithmsonresourceslimiteddrones.
+proposedSPVISisstillbetterthanotheralgorithms.
+63
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [24] Z. F. Muhsin, A. Rehman, A. Altameem, T. Saba and M. Uddin,
+“Improved quadtree image segmentation approach to region
+[1] C.Cadena,L.Carlone,H.Carrillo,Y.Latif,D.Scaramuzza,J.Neira,I. information,”TheImagingScienceJournal,vol.62,no.1,pp.56-62.
+Reid, and J. J. Leonard, “Past, present, and future of simultaneous 2014.
+localization and mapping: Toward the robust-perception age,” IEEE [25] OpenCVDevelopersTeam,“Opensourcecomputervision(OpenCV)
+Trans.Robot.,vol.32,no.6,pp.1309-1332,Dec.2016. library,”[Online].Available:http://opencv.org.3.
+[2] J. Vallvé, J. Solà and J. Andrade-Cetto, “Pose-graph SLAM [26] K.Lenac,J.Ćesić,I.MarkovićandI.Petrovi,“Exactlysparsedelayed
+sparsificationusingfactordescent,”Robot.Auton.Syst,vol.119,pp. state filter on Lie groups for long-term pose graph SLAM”. Int. J.
+108-118.2019. RobotRes.,vol.37,no.6,pp.585-610,May.2018.
+[3] D. N. Ta, N. Banerjee, S. Eick, S. Lenser and M. E. Munich, “Fast [27] M. Kaess, H. Johannsson, R. Roberts, V. Ila, J. J. Leonard, and F.
+nonlinearapproximationofposegraphnodemarginalization,”inProc. Delbert,“iSAM2:Incrementalsmoothingandmappingusingthebayes
+IEEEInt.Conf.Robot.Autom.Brisbane,QLD,2018,pp.2494-2501. tree,”Int.J.RoboticsRes.,vol.31,no.2,pp.216–235,2011
+[4] L. Carlone and S. Karaman, “Attention and anticipation in fast [28] K.Khosoussi,M.Giamou,G.S.Sukhatme,S.Huang,S.Dissanayake
+visual-inertialnavigation,”IEEETrans.Robot.,vol.35,no.1,pp.1-20, andJ.PHow,“ReliablegraphsforSLAM,”Int.J.RobotRes.,vol.38
+Feb.2019. no.3,pp.260-298.2019.
+[5] Y. Yang, P. Geneva, X. Zuo, K. Eckenhoff, Y. Liu and G. Huang, [29] R.Kuemmerle,G.Grisetti,H.Strasdat,K.Konolige,andW.Burgard,
+“Tightly-coupled aided inertial navigation with point and plane “g2o:Ageneralframeworkforgraphoptimization,”inProc.IEEEInt.
+features,” in Proc. IEEE Int. Conf. Robot. Autom, Montreal, QC, Conf.Robot.Autom.,Shanghai,China,May2011,pp.3607–3613.
+Canada,2019,pp.6094-6100. [30] D.Galvez-LopezandJ.D.Tardós,“Bagsofbinarywordsforfastplace
+[6] J. Hsiung, M. Hsiao, E. Westman, R. Valencia, and M. Kaess, recognitioninimagesequences,”IEEETrans.Robot.,vol.28,no.5,pp.
+“Information sparsification in visual-inertial odometry,” in Proc. 1188–1197,Oct.2012
+IEEE/RSJInt.Conf.Intell.RobotsSyst.,Madrid,2018,pp.1146-1153. [31] S.Agarwaletal.,“Ceressolver.”[Online].Available:http://ceressolver.
+[7] P.Muhlfellner,M.B¨urki,M.Bosse,W.Derendarz,R.Philippsen, org.,2019.
+and P. Furgale, “Summary maps for lifelong visual localization,” J. [32] V. Ila, L. Polok, M. Solony, and P. Svoboda, “SLAM++–A highly
+Field Robot., vol. 33, pp. 561–590, 2015. [Online]. Available: efficientandtemporallyscalableincrementalSLAMframework,”Int.J.
+http://dx.doi.org/10.1002/rob.21595. Robot.Res.,vol.36,no.2,pp.210–230,Feb.2017.
+[8] S. Leutenegger, S. Lynen, M. Bosse, R. Siegwart, and P. Furgale, [33] M.Calonder,V.Lepetit,M.Ozuysal,T.Trzcinski,C.StrechaandP.
+“Keyframe-based visual inertial odometry using nonlinear Fua, “BRIEF: computing alocal binary descriptor Very Fast,” IEEE
+optimization,” Int. J. Robot Res., vol. 34, no. 3, pp. 314–334, Mar. Trans.PatternAnal.Mach.Intell,vol.34,no.7,pp.1281-1298,July
+2015. 2012.
+[9] T. Qin, P. Li, and S. Shen, “VINS-Mono: A robust and versatile [34] Y.TaiandS.Lin,“Motion-awarenoisefilteringfordeblurringofnoisy
+monocularvisual-inertialstateestimator,”IEEETrans.Robot.,vol.34, and blurry images,” in Proc. IEEE Int. Conf. Pattern Recog.,
+no.4,pp.1004–1020,Aug.2018. Providence,RI,2012,pp.17-24.
+[10] T. Qin, J. Pan, S. Cao, and S. Shen. “A general optimization-based [35] Y. Zheng, S. Sugimoto and M. Okutomi, “A branch and contract
+frameworkforlocalodometryestimationwithmultiplesensors,”arXiv algorithmforgloballyoptimalfundamentalmatrixestimation,”inProc.
+preprintarXiv:1901.03638,2019. IEEEInt.Conf.PatternRecog.,ColoradoSprings,CO,USA,2011,pp.
+[11] H.Liu,M.Chen,G.Zhang,H.Bao,andY.Bao,“ICE-BA:incremental, 2953-2960.
+consistentandefficientbundleadjustmentforvisual-inertialslam,”in [36] G.Sibley,L.Matthies,andG.Sukhatme,“Slidingwindowfilterwith
+Proc.oftheIEEEInt.Conf.onPatternRecog,2018,pp.1974–1982. applicationtoplanetarylanding,”J.FieldRobot., vol. 27,no.5,pp.
+[12] L. V. Stumberg, V. Usenko, and D. Cremers, “Direct sparse visual- 587–608,Sep.2010.
+inertialodometryusingdynamicmarginalization,”inProc.IEEEInt. [37] N. Carlevaris-Bianco, M. Kaess and R. M. Eustice, “Generic node
+Conf.Robot.Autom.,Brisbane,QLD,Australia,2018,pp.2510–2517. removalforfactor-graphSLAM,”IEEETrans.Robot.,vol.30,no.6,
+[13] Z.HuaiandG.Huang,“Robocentricvisual-inertialodometry,”Int.J. pp.1371-1385,Dec.2014.
+Robot Res., 2019. [Online]. Available: https://journals.sagepub.com/ [38] M.Burrietal.,“TheEuRoCmicroaerialvehicledatasets,”Int.J.Robot.
+doi/abs/10.1177/0278364919853361. Res.,vol.35,no.10,2016,pp.1157–1163.
+[14] E.Rosten,R.Porter,andT.Drummond,“Fasterandbetter:amachine [39] M.Yokozuka,S.Oishi,S.Thompson,andB.Atsuhiko,“VITAMIN-E:
+learning approach to corner detection,” IEEE Trans. Pattern Anal. visualtrackingandmappingwithextremelydensefeaturepoints,”in.
+Mach.Intell,vol.32,pp.105-119,2010. Proc.oftheIEEEInt.Conf.onPatternRecog.,2019,pp.9641-9650.
+[15] E.Rublee,V.Rabaud,K.Konolige,andG.Bradski,“ORB:anefficient [40] R. Mur-Artal and J. D. Tardós, “ORB-SLAM2: An Open-Source
+alternativetoSIFTorSURF,”inProc.IEEEInt.Conf.Comput.Vis., SLAM System for Monocular, Stereo, and RGB-D Cameras,” IEEE
+2011,pp.2564–2571. Trans.Robot.,vol.33,no.5,pp.1255-1262,Oct.2017.
+[16] B.D.LucasandT.Kanade,“Aniterativeimageregistrationtechnique [41] J. Delmerico, T. Cieslewski, H. Rebecq, M. Faessler and D.
+with an application to stereo vision,” in Proc. Int. Joint Conf. Artif. Scaramuzza, “Are we ready for autonomous drone racing? the
+Intell.Vancouver,Canada,Aug.1981,pp.24–28. UZH-FPV drone racing dataset,” in Proc. IEEE Int. Conf. Robot.
+[17] J.ShiandC.Tomasi,“Goodfeaturestotrack,”inProc.IEEEInt.Conf. Autom.,Montreal,QC,Canada,2019,pp.6713-6719.
+PatternRecog.,1994,pp.593–600. [42] Z.Z.Nejad,A.H.Ahmadabadian,“ARM-VO:anefficientmonocular
+[18] J.Sturm,N.Engelhard,F.Endres,W. Burgard,andD.Cremers, “A visualodometryforgroundvehiclesonARMCPUs,”MachineVision
+benchmark for the evaluation of RGB-D SLAM systems,” in Proc. andApplications,vol.30,no.6,pp.1-10,Sep.2019.
+IEEE/RSJInt.Conf.Intell.RobotsSyst.,2012,pp.573–580. [43] X.WuandC.Pradalier,“Illuminationrobustmonoculardirectvisual
+[19] Z. Zhang and D. Scaramuzza. “A tutorial on quantitative trajectory odometryforoutdoorenvironmentmapping,”inProc.IEEEInt.Conf.
+evaluationforvisual(-inertial)odometry,”inProc.IEEE/RSJInt.Conf. Robot.Autom.,Montreal,QC,Canada,2019,pp.2392-2398.
+Intell.RobotsSyst.,2018,pp.7244-7251. [44] K. Eckenhoff, P. Geneva, J. Bloecker and G. Huang, “Multi-camera
+[20] P.Geneva,J.MaleyandG.Huang.“AnefficientSchmidt-EKFfor3D visual-inertial navigation with online intrinsic and extrinsic
+visual-inertial SLAM,” in Proc. IEEE Conf. Comput. Vis. Pattern calibration,” in Proc. IEEE Int.Conf. Robot.Autom., Montreal, QC,
+Recognit.,2019,pp.12105-12115. Canada,2019,pp.3158-3164.
+[21] D. Sharma and S. Vatta, “Optimizing the search in hierarchical [45] R.Mur-ArtalandJ.D.Tardós,“Visual-inertialmonocularSLAMwith
+databaseusingquadtree,”Int.J.Sci.Res.Sci.Eng.Tech,vol.1,no.4, mapreuse,”IEEERobot.Autom.Lett.,vol.2,no.2,pp.796-803,April
+pp.221-226,2015. 2017.
+[22] C.Zhang,Y.Zhang,W.ZhangandX.Lin,“Invertedlinearquadtree: [46] J.Jackson,K.Brink,B.Forsgren,D.WheelerandT.McLain,“Direct
+efficient top k-spatial keyword search,” IEEE Trans.Knowledge and relative edge optimization, a robust alternative for pose graph
+DataEngineering,vol.28,no.7,pp.1706-1721,1July2016. optimization,”IEEERobot.Autom.Lett.,vol.4,no.2,pp.1932-1939,
+[23] Y.ZhaoandP.A.Vela,“Goodfeatureselectionforleastsquarespose April.2019.
+optimization in VO/VSLAM,” in Proc. IEEE/RSJ Int. Conf. Intell.
+RobotsSyst,Madrid,2018,pp.1183-1189.
+64
+Authorized licensed use limited to: Carleton University. Downloaded on September 19,2020 at 08:21:28 UTC from IEEE Xplore.  Restrictions apply. 

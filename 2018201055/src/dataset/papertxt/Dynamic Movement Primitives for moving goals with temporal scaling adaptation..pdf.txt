@@ -1,0 +1,543 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+∇
+SLAM: Dense SLAM meets Automatic Differentiation
+Krishna Murthy Jatavallabhula1, Ganesh Iyer3, and Liam Paull 1,2
+1Université de Montréal, Mila, Robotics and Embodied AI Lab (REAL), 2Candian CIFAR AI Chair, 3Carnegie Mellon University
+∇ ∇
+Fig.1. SLAM(gradSLAM)isafullydifferentiabledensesimultaneouslocalizationandmapping(SLAM)system.Thecentralideaof SLAMisto
+constructacomputationalgraphrepresentingeveryoperationinadenseSLAMsystem.Weproposedifferentiablealternativestoseveralnon-differentiable
+components of traditional dense SLAM systems, such as optimization, odometry estimation, raycasting, and map fusion. This creates a pathway for
+gradient-ﬂowfrom3Dmapelementstosensorobservations(e.g.,pixels).WeimplementdifferentiablevariantsofthreedenseSLAMsystemsthatoperate
+∇
+onvoxels,surfels,andpointcloudsrespectively. SLAMthusisanovelparadigmtointegraterepresentationlearningapproacheswithclassicalSLAM.
+Abstract—The question of “representation" is central in example,feature-basedSLAMsystemsbuildamapofunique
+the context of dense simultaneous localization and mapping features (landmarks), including interest points [3], lines [4],
+(SLAM).Learning-basedapproacheshavethepotentialtolever-
+planes [5], objects [6], etc. In dense SLAM systems [7], [8],
+age data or task performance to directly inform the represen-
+each pixel in each image contributes to the dense 3D map.
+tation. However, blending representation learning approaches
+with“classical"SLAMsystemshasremainedanopenquestion, Hybrid approaches try to exploit the best elements of both
+becauseoftheirhighlymodularandcomplexnature.ASLAM approaches [9]. This fundamental choice of representation
+system transforms raw sensor inputs into a distribution over dramatically impacts the design of processing blocks in the
+the state(s) of the robot and the environment. If this transfor-
+SLAM pipeline, as well as all other downstream tasks that
+mation (SLAM) were expressible as a differentiable function,
+dependontheoutputoftheSLAMsystem.Inparticular,for
+we could leverage task-based error signals over the outputs
+of this function to learn representations that optimize task dense 3D maps generated from RGB-D cameras, there has
+performance. However, this is infeasible as several components been a lack of consensus on the right map representation.
+of a typical dense SLAM system are non-differentiable. In this
+work, we propose ∇SLAM (gradSLAM), a methodology for Learning representations, as has been done in several
+posing SLAM systems as differentiable computational graphs, other domains [1], [10], [11] is thus appealing for SLAM.
+which uniﬁes gradient-based learning and SLAM. We propose However, it is not straightforward because SLAM systems
+differentiabletrust-regionoptimizers,surfacemeasurementand
+are composed of several subsystems (tracking, mapping,
+fusion schemes, and raycasting, without sacriﬁcing accuracy.
+global optimization, etc.) many of which are not inherently
+ThisamalgamationofdenseSLAMwithcomputationalgraphs
+enablesustobackpropallthewayfrom3Dmapsto2Dpixels, differentiable. It is unclear whether neural SLAM systems
+opening up new possibilities in gradient-based learning for of the future must subsume all these subsystems into a
+SLAM1. monolithic architecture [12], or retain the inductive biases
+from traditional SLAM systems and employ learning only
+I. INTRODUCTION where necessary. In this paper, we argue for the latter and
+∇
+Gradient-based learning architectures (deep neural net- propose SLAM (gradSLAM): a fully differentiable dense
+works) have tremendously improved robot perception [1] SLAM system that harnesses the power of computational
+and action [2]. For decades, simulataneous localization and graphs and automatic differentiation to enable learning of
+mapping(SLAM)hasbeenacentralelementofrobotpercep- dense geometric representations. To achieve this differentia-
+tion and state estimation. SLAM allows robots to operate in bility we reformulate each operation involved in SLAM as
+previouslyunseenenvironments,acorecapabilitythatrobots a computational graph.
+must possess for real-world deployment. A large portion
+This also allows us to solve the inverse mapping problem
+of the visual SLAM literature has focused either directly
+(i.e., answer the question: “How much does a speciﬁc pixel-
+or indirectly on the question of map representation. For
+measurement contribute to the resulting 3D map"?) some-
+thing that is not possible with other popular dense visual
+Correspondencetokrrish94 [at] gmail [dot] com.
+SLAM systems [7], [13], [14]. Through the composition
+1A short video explaining the paper and showcasing the results can be S
+foundathttps://youtu.be/2ygtSJTmo08 of the computational graphs, we obtain a function ( ) that
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 2130
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. relates a pixel in an RGB-D image (or in general, any differentiable manner. Another strong demonstration of the
+M
+sensor measurement s) to a 3D geometric map of the beneﬁts of differentiable SLAM subsystems is the Lucas-
+M S ∇ S
+environment: = (s). As a result, the gradient Kanade iterative matching algorithm [28]. Kerl et al. [29]
+s
+tells us that perturbing the sensor measurement s by an applythistechniquetoreal-timedensevisualodometry.This
+M ∇ S
+inﬁnitesimal δs causes the map to change by (s)δs. differentiable subsystem has been extensively used for self-
+s
+Central to our goal of realizing a fully differentiable supervised depth and motion estimation [30]–[32]. These
+SLAM system are computational graphs, which underlie two-view techniques have been extensively used as layers
+most gradient-based learning techniques. If an entire SLAM in neural networks [33], [34]. However, extending differen-
+system can be composed from elementary operations, all of tiability beyond the two-view case (frame-frame alignment)
+which are differentiable, the system allows end-to-end gra- isnotstraightforward.Globalconsistencynecessitatesfusing
+dient propagation by construction. However, modern dense measurements from live frames into a global model (model-
+SLAM systems are quite sophisticated, with several non- frame alignment), which is non-differentiable.
+differentiable subsystems (optimizers, raycasting, surface
+C. Differentiable Optimization
+mapping), that make such a construction challenging. We
+show how all non-differentiable functions in SLAM can be Recent work has proposed to learn the optimization of
+realised as smooth mappings. In particular, we present dif- nonlinear objective functions, motivated by the idea that
+ferentiable versions of nonlinear least squares optimization, learning methods can aid in faster convergence and improve
+raycasting, and rasterization, while maintaining commensu- solution quality.
+rate accuracy with the non-differentiable counterparts. DeBrandandereetal.[35]performlanedetectionbyback-
+∇
+We demonstrate SLAM through 3 instantiations, where propagating least-squares residuals into a frontend module.
+our differentiable SLAM building blocks are used to re- In BA-Net [36], the authors learn to predict the damping
+alize the following dense SLAM systems: implicit-surface coefﬁcient of the Levenberg-Marquardt optimizer, while in
+mapping (Kinectfusion [7]), surfel-based mapping (PointFu- LS-Net [37], the authors entirely replace the Levenberg-
+sion [14]), and iterative closest point (ICP) mapping (ICP- Marquard optimizer by an LSTM netowrk [38] that predicts
+SLAM). We also demonstrate examples of backpropagating update steps. In GN-Net [39], a differentiable version of
+error signals through the entire SLAM system that enable the Gauss-Newton loss is used to show better robustness
+exciting avenues in representation learning for SLAM2. to weather conditions. RegNet [40] employs a learned op-
+timization of the photometric error for image-to-image pose
+II. RELATEDWORK
+registration. However, all the aforementioned approaches
+Several recent approaches have applied representation require the training of additional neural networks and this
+learning to SLAM or have reformulated a subset of com- requirement imposes severe limitations on the generaliz-
+ponentsofthefullSLAMsysteminadifferentiablemanner. ability. OptNet [41] introduces differentiable optimization
+layerswithoutlearnableparameters,speciﬁcallyforquadratic
+A. Learning-based SLAM Approaches
+programs.
+There is a large body of work in deep learning-
+Concurrently, Grefenstette et al. [42] unroll optimizers
+based SLAM systems. For example, CodeSLAM [15],
+as computational graphs, allowing the computation of ar-
+SceneCode [16], and DeepFactors [17] represent scenes
+bitrarily higher order gradients. Our proposed differentiable
+using compact codes that that can be decoded into 2.5D
+Levenberg-Marquardt optimizer is similar in spirit, with the
+depth maps. DeepTAM [18] trains a tracking network and
+additionofgatingfunctionstoresultinbettergradientﬂows.
+a mapping network, which learn to reconstruct a voxel rep-
+To the best of our knowledge, there is no single approach
+resentationfromapairofimages.CNN-SLAM[19]extends
+that models the entire SLAM pipeline as a differentiable
+LSD-SLAM [20], a popular monocular SLAM system, to ∇
+model, and this is the motivation that underlies SLAM.
+use single-image depth predictions from a convnet.
+∇
+Another recent trend has been to formulate the SLAM III. SLAM
+problem over higher level features such as objects, which
+In this section we will overview our proposed method for
+may be detected with learned detectors [6], [21], [22]. ∇
+SLAM and also detail the individual differentiable sub-
+B. Differentiable SLAM Subsystems components.
+While a large fraction of the above approaches replace
+A. Preliminaries: Computational Graphs
+SLAM subsystems with representation learning machinery
+In gradient-based learning architectures, all functions and
+(neural nets), there is another signiﬁcant line of work
+approximators are conventionally represented as computa-
+that leverages differentiability to complement and accelerate
+tional graphs. Formally, a computational graph is a directed
+learning mechanisms. G V E ∈ V
+Recent work has formulated passive [23] and active acyclic graph = ( , ), where each node v ho∈ldEs
+localization [24], [25], active SLAM [12], camera resec- an operand or an operator, and each (directed) edge e
+tioning [26], and cross-sensor calibration [27] in a fully indicates the control ﬂow in the graph. Each node v also
+speciﬁes a backward computation rule that computes the
+2Projectpage:http://montrealrobotics.ca/gradSLAM/ gradientoftheoutputsofthenodewithrespecttoitsinputs.
+2131
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. Fig.2. Acomputationalgraph.Nodesinredrepresentvariables.Nodes
+in blue represent operations on variables. Edges represent data ﬂow. This
+graphcomputesthefunction3(xy+z).Dashedlinesindicate(local,i.e.,
+per-node)gradientsinthebackwardpass.
+∇
+Fig. 3. An example curve ﬁtting problem, showing that LM performs
+Computational graphs can be nested and composed in about nearlyidenticallytoLM,withtheaddedadvantageofbeingfullydifferen-
+any manner, whilst preserving differentiability. Eg. Fig. 2 tiable.
+shows a computational graph for the function 3(xy+z).
+∇ previousvalue.This discreteswitching behaviorofLM does
+B. Overview of SLAM
+not allow for gradient ﬂow in the backward pass.
+∇
+The objective of SLAM is to make every computation Weproposeacomputationallyefﬁcientsoftreparametriza-
+in SLAM exactly realised as a composition of differen- tion of the damping mechanism to enable differentiability in
+tiable functions. Wherever exact differentiable realizations LM solvers. Our key insight is that, if r =r(x )Tr(x )
+0 0 0
+arenotpossible,wedesireas-exact-as-possibledifferentiable is the (squared) norm of the error at the current iterate, and
+realizations. Broadly, the sequence of operations in dense r =r(x )Tr(x ) is the norm of the error at the lookahead
+1 1 1 −
+SLAM systems can be termed as visual odomety (V0), iterate, the value of r r determines whether to damp or
+1 0
+(frame-to-frame alignment), map building (model-to-frame toundamp.And,onlywhenwechoosetoundamp,werevert
+alignment/local optimization), and global optimization. An tothecurrentiterate.Wedeﬁnetwosmoothgatingfunctions
+overviewoftheapproachisshowninFig.1.Intheremainder Q andQ basedonthegeneralizedlogisticfunction[44]to
+x λ
+ofthissection,weprovideadescriptionofthepreciseissues updatetheiterateanddeterminethenextdampingcoefﬁcient.
+that render the non-linear optimization (Sec. III-C) dense −
+λ λ
+mmaopdpuilnegs n(Soenc-d.iIfIfIe-rDen),tiaanbdle,maenadsuprreompeonstefduisfifoenrn(tiSaebcl.eIcIIo-uEn)-, λ1 =Qλ(r0,r1)=λmin+ 1+mDaxe−σ(rm1−inr0) (1)
+δx
+twerepsahrtoswfotrhaetacthhempordouploes.eIdndthifefefroelnlotiwabinlegvsaercitainotns(aSlelocw. IVth)e, Qx(r0,r1)=x0+ 1+e−(0r1−r0)
+realization of differentiable versions of several classic dense where D and σ are tunable hyperparameters that control the
+mapping algorithms (KinectFusion [7], PointFusion [14], slopeofthefallofffunction[44].[λmin,λmax]istherangeof
+ICP-SLAM) in the ∇SLAM framework. values the damping function can assume (usually, λmin =
+1, λ = 2, when using multiplicative damping with a
+C. ∇LM: A Differentiable Nonlinear Least Squares Solver d2ampminagx coefﬁcient of 2). This smooth parameterization of
+the LM update allows the optimizer to be expressed as a
+Moststate-of-the-artSLAMsolutionsoptimize(minimize)
+fully differentiable computational graph (Fig. 1(b)). Further,
+nonlinear least squares obj(cid:80)ectives to obtain local/globally ∇
+the performance of LM is similar to that of LM, as can be
+consistent estimates of the robot state and the map. Such
+seen in Fig. 3.
+objectivesareoftheform 1 r(x)2,wherer(x)isanonlin- ∇LM allows differentiable realizations of several SLAM
+2
+ear function of residuals. Example application scenarios that
+components, such as dense visual odometry estimation [45]
+inducethisnonlinearleastsquaresformincludevisualodom-
+(Fig. 1(a)), and Iterative Closest Point (ICP) alignment [46].
+etry, depth measurement registration (e.g., ICP), and pose-
+graph optimization among others. These objective functions D. Differentiable Mapping
+are minimized using a succession of linear approximations Another non-smooth operation in dense SLAM is map
+|
+(r(x+δx) =r(x )+J(x )δx) inside Gauss-Newton construction(surfacemeasurement).Forexample,considera
+x=x0 0 0 M
+(GN) or Levenberg-Marquardt (LM) solvers. GN solvers are global map being built in the reference frame of the ﬁrst
+extremely sensitive to intialization, numerical precision, and image-sensormeasurementI .WhenanewframeI arrives
+0 k
+moreover, provide no guarantees on non-divergent behavior. at time k, the surface measurement from this frame needs
+Hence most SLAM systems use LM solvers. to be aligned with the global map. This surface alignment
+Trust-region methods (such as LM) are not differentiable process comprises the following steps.
+M
+as at each optimization step, they involve recalibration of 1) The map is intersection-tested with the live frame,
+M
+optimizer parameters, based on a lookahead operation over todetermineactivemapelements ,andactivepixels
+P a
+subsequent iterates [43]. Speciﬁcally, after a new iterate is . Inactive map elements are clipped.
+a P
+computed, LM solvers need to make a discrete decision 2) The active pixels are checked for measurement
+a
+between damping or undamping the linear system. Further- validity (missing depths, blur, etc.). This results in a
+P
+more, when undamping, the iterate must be restored to its valid active set of image pixels .
+valid
+2132
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. P
+3) Pixels in are backprojected to 3D and compared F. Differentiable Ray Backprojection
+valid
+with the map, to discern whether these pixels measure
+M
+existing elements in , or if they measure new parts
+a
+of the scene that must be added to the global map.
+4) These surface measurements are then fused into the
+global map using a representation-speciﬁc mechanism
+(points, surfels, TSDFs, etc.).
+The above process involves a number of differentiable
+yet non-smooth operations (clipping, indexing, thresholding,
+new/old decision, active/inactive decision, etc.). Although
+the above sequence of operations can be represented as a
+computation graph, only local derivatives can be deﬁned
+for such operations. The overall function represented by the
+computation graph will have undeﬁned gradients “almost Fig. 4. Ray differentials: Inset shows the computation graph of the
+ray value computation. The dashed rectangle is not differentiable, and its
+everywhere". We mitigate this issue by making the func-
+derivativesareapproximatedasshowninEq.(2).
+tions locally smooth. Concretely, we propose the following
+corrective measures.
+Some dense SLAM systems [7], [13] perform global
+1) The surface measurement made at each valid pixel p pose estimation by raycasting a map to a live frame. This
+∈ P
+in the live frame (p valid) is a function of p process involves multiple non-differentiable steps. A ray is
+and also active neighbours of p, nbd(p) via a kernel backprojected from the camera to every pixel in the image.
+K(p,nbd(p)). Its intersection with the ﬁrst map element is found by
+2) When a surface measurement is transformed to the marching along the ray until a map element is intersected,
+global frame, we use soft (one-many) rather than hard or bounds of reconstruction are exitted. To make these
+(one-one) associations. operations differentiable, current approaches either involve
+3) Every surface measurement is, by default, assumed to a) parameterizing the marching process using learnable dif-
+represent a new map element, which is passed to a ferentiablefunctions(suchasLSTMs)[49],orb)bypooling
+differentiable fusion step (cf. Sec III-E). over all map elements that intersect the ray [50], [51]. In
+The kernel K(p,nbd(p)) can be a discrete approximation this work, we make one enhancement to the latter class
+(e.g., constant within a pixel) or can vary at the subpixel of ray pooling operations, by performing weighted pooling
+level. For faster computation and coarse gradients, we use a (averaging)overallvoxelsalongaray.Theweightsforeach
+N
+bilinearinterpolationkernel.Whilebilinearinterpolationisa rayaredeﬁnedbyaGaussiandistribution (d,σ2)(disthe
+sensible approximation for image pixels, this is often a poor depthmeasuredatthepixellocationinthedepthmdapandσ2
+choice for use in 3D soft associations. For forming 3D as- is a hyperparameter that controls the spread of the Gaussiand
+sociations, we leverage characteristics of RGB-D(cid:16)sensors(cid:17)in kernel). Further, we use ﬁnite differences to compute the
+deﬁning the soft falloff functions. Speciﬁcally, we compute, derivative of the ray potential with respect to the pixel
+∈ M
+faosreetaocfhcploosiensttPcandidatea pinointhtseilnivaerseugrifoanceexmpeas−urre(Pm)e2nt,, npeixigelhbaonudrhVood=[5{2v],}ililsustthreatesdetinofFailgl.v4o.xIeflspcaisratyhepiiemrcaegse,
+2σ2 c c ∀ ∈ V
+where r(P) is the radial depth of the point from the camera the aggregated value of the ray vc is Φ(ψ(vc)) vc c.
+ray, and σ affects the falloff region [14], [47], [48]. The The aggregation function we consider is a weighted convex
+computational graph for this differentiable mapping process combination. If v , v , v , and v are the aggregated values
+l r u b
+is illustrated in Fig. 1(c). of rays emanating from the pixels to the left, right, above,
+E. Differentiable Measurement Fusion aanpdprobxeliomwatepdc aresspectively,(cid:18)the partial de(cid:19)rivative ∂∂pvcc can be
+−
+The aforementioned differentiable mapping strategy re-
+∂v (v v )/2
+sults in a smooth observation model, but causes an unde- c = r− l (2)
+sirable effect: the number of map elements increases with ∂pc (vu vd)/2
+exploration time. Rather, map elements should increase in The computational graph for the same is shown in
+proportion to the explored volume of occupied space. Con- Fig. 1(d).
+ventional dense mapping techniques [7], [14] hence perform
+fusion of redundant measurements of each map element. IV. CASESTUDIES:KINECTFUSION,POINTFUSION,AND
+ICP-SLAM
+Consequently, the recovered map has a more manageable
+∇
+size and better reconstruction quality. While most fusion As concrete demonstrations of SLAM, we leverage the
+strategiesaredifferentiable(eg.[7],[14]),theyimposefalloff aforementioned differentiable SLAM subsystems and com-
+thresholdsthatcauseanabruptchangeingradientﬂowatthe pose them to realise three practical SLAM solutions. We
+truncationpoint.Weusealogisticfallofffunction,similarto implement differentiable versions of the KinectFusion [7]
+Eq. 1,to easegradient ﬂow throughthese truncationpoints. algorithm that constructs TSDF-based volumetric maps, the
+2133
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. ∇
+Fig. 6. Left: Reconstruction obtained upon running ICP-Odometry on
+Fig.5. Qualitative resultsonsequencesfromtheScanNet[53]dataset. asubsequencergbd_dataset_freiburg1_xyz[55].Right:In-house
+OwingtoGPUmemoryconstraints,weuseeachofthedifferentiableSLAM sequence collected from an Intel RealSense D435 camera. Reconstruction
+∇ ∇ ∇ ∇
+systems( KinectFusion, PointFusion,and ICP-SLAM)toreconstruct isobtainedfrom PointFusion.
+partsofthescene.WealsoshowoutputsfromBundleFusion[54].
+∇
+Metric LM LM
+± ±
+C(cid:107)onver−genceit(cid:107)ers 7.6±3.4 7.4±3.8
+PointFusion[14]algorithmthatconstructssurfelmaps,anda (cid:107)aopt−ainit(cid:107)1 0.011±0.011 0.399±0.162
+(cid:107)bopt−binit(cid:107)1 0.331±0.174 0.574±0.137
+pointcloud-basedSLAMframeworkthatwecallICP-SLAM. copt cinit 1 0.114 0.021 0.084 0.032
+Totalerror 0.184 0.207
+A. KinectFusion TABLEI
+∇
+KinectFusion[7]alternatesbetweentrackingandmapping LMPERFORMSQUITESIMILARLYTOITSNON-DIFFERENTIABLE
+−
+phases. In the tracking phase, the entire up-to-date TSDF COUNTERPART.(CONVERGENCETOLERANCE10 6)
+volume is raycast onto the live frame, and odometry is
+estimated via point-to-plane ICP alignment. In the mapping
+phase, surface measurements from the live frame are fused quantities:iterationstoconverge,qualityofthesolution(i.e.,
+into the volume, using weighted averaging of TSDF vol- discrepancy between estimated and true parameters). Notice
+∇
+umes [7], [48]. The other components of KinectFusion such fromTableIandFig.3how LMperformssimilarlytoLM
+asraycastingandICParerendereddifferentiableasexplained (a slight performance drop is noticeable, due to smoothing).
+in Sec III.
+B. Comparitive Analysis of Case Studies
+B. PointFusion
+We present an analysis of how each of the differentiable
+As a second example, we implement PointFusion [14], SLAM systems compare to their non-differentiable counter-
+which incrementally fuses surface measurements to obtain parts. Table II shows the trajectory tracking performance of
+∇
+a global surfel map. Surfel maps compare favourably to thenon-differentiableanddifferentiable( )versionsofICP-
+volumetric maps due to their reduced memory usage3. We Odometry, ICP-SLAM, PointFusion, and KinectFusion. We
+closely follow our differentiable mapping formulation (cf. observeon-parperformancewhenutilizingthedifferentiable
+∇
+Sec III-D) and use surfels as map elements. We adopt the mapping modules and LM. This is computed over split
+fusion rules from [14] to perform map fusion. subsets of the living_room_traj0 sequence.
+∇
+We also evaluate the reconstruction quality of -
+C. ICP-SLAM
+KinectFusion with that of Kintinuous [13]. On a subsection
+Asabaselineexample,weimplementasimplepointcloud of the living_room_traj0 sequence of the ICL-NUIM
+based SLAM technique, which uses ICP to incrementally [56]benchmark,thesurfacereconstructionqualityofKintin-
+register pointclouds to a global map. We implement two uous is 18.625, while that of differentiable KinectFusion
+variants:ICP-Odometry,whichalignseverypairofconsecu- is 21.301 (better). However, this quantity is misleading, as
+tive incoming frames (frame-to-frame alignment), and ICP- Kintinuous only retains a subset of high conﬁdence points
+SLAM, which aligns each incoming pointcloud to the global in the extracted mesh, while our differentiable KinectFusion
+map (frame-to-model alignment).
+V. EXPERIMENTSANDRESULTS Method ATE RPE
+A. Differentiable Optimization ICP-Odom∇etry(non-differentiable) 0.029 0.0318
+ICP-Odometry 0.01664 0.0237
+We design a test suite of nonlinear curve ﬁtting problems ICP-SLAM(non-differentiable) 0.0282 0.0294
+∇ ∇
+(similar to [37]), to measure the performance of LM ICP-SLAM 0.01660 0.0204
+PointFusion(non-differentiable) 0.0071 0.0099
+(Sec III-C) to its non-differentiable counterpart. We uni- ∇
+PointFusion 0.0072 0.0101
+formly sample the parameters p = a,b,c, with initial KinectFusion(non-differentiable) 0.013 0.019
+guess a ,b ,c from the exponential family: p ∼ y = ∇KinectFusion 0.016 0.021
+−0 −0 0
+aexp( (x b)2). For 1000 sampled problem sets, we opti- TABLEII
+2c2 ∇ ∇
+mize using both LM and LM, and measure the following PERFORMANCEOF SLAMCOMPAREDTONON-DIFFERENTIABLE
+COUNTERPARTS(ATE:ABSOLUTETRAJECTORYERROR,RPE:
+3On the ﬂipside, surfel-based algorithms are harder to parallelize com- RELATIVEPOSEERROR).
+paredtovolumetricfusion.
+2134
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. Compare Backprop
+Backprop Diﬀerenceingradients
+Compare
+∇
+Fig.7. Analysisofgradients: SLAMenablesgradientstoﬂowthrough Fig.8. End-to-endgradientpropagation:(Top):Achunkofadepthmap
+totheinp∇utimages.Top:AnRGB-Dimagepair(depthnotshown)ispassed is chopped. The resultant sequence is reconstructed using ∇PointFusion
+through KinectFusion. The resulting map is compared with a precise and the pointcloud is compared to a clean one reconstructed using the
+(ground-truth) map. The comparision error is backpropagated through the unmodiﬁeddepthmap.TheChamferdistancebetweenthesetwopointclouds
+SLAMsystem,tothedepthmap(bluecolormap).Bottom:Anoccluderis is used to deﬁne a reconstruction error between the two clouds, which is
+added to the center of the RGB-D pair. This occluder results in a gaping backpropagated through to the input depth map and updated by gradient
+hole. But, using the backpropagated gradients, one can identify the set of descent.(Bottom):SimilartotheFig.7,weshowthat∇SLAMcanﬁll-in
+image/depthmappixelsthatresultinthereconstructionerror. holesinthedepthmapbyleveragingmulti-viewgradientinformation.
+outputs (see Fig. 7) contain a few noisy artifacts, due to our
+smooth truncation functions.
+C. Qualitative Results
+∇
+SLAM works out-of-the-box on multiple RGB-D
+∇
+datasets. Fig. 5 shows the result of running SLAM on
+sequencesfromtheScannet[53]dataset.Fig.6showsresults
+onasequencefromtheTUMRGB-Dbenchmark[55]andan Fig. 9. RGB-D completion using end-to-end gradient propagation:
+∇
+ThreeRGB-Dimagesandanoiseimagearepassedthrough PointFusion,
+in-house sequence collected using an Intel Realsense D435
+andcomparedtoacleanreconstructionobtainedfromfourRGB-Dimages.
+Camera. All the differentiable SLAM systems demonstrated The reconstruction loss is used to optimize the noise image by gradient
+execute fully on the GPU, and are capable of computing descent. We can recover most of the artifacts from the raw RGB and
+depth images. Note that ﬁner features are hard to recover from a random
+gradientswithrespecttoanyintermediatevariable(Eg.cam-
+initialization,astheoverallSLAMfunctionisonlylocallydifferentiable.
+era poses, pixel intensities/depths, optimization parameters,
+camera intrinsics, etc.).
+VI. CONCLUSION
+D. Analysis of Gradients
+∇
+∇ We introduce SLAM, a differentiable computational
+The computational graph approach of SLAM allows us
+graph framework that enables gradient-based learning for
+to recover meaningful gradients of 2D (or 2.5D) measure-
+a large set of localization and mapping based tasks by
+ments with respect to a 3D surface reconstruction. We pro-
+providing explicit gradients with respect to the input image
+videananalysisofwhatthesemulti-viewgradientscorrelate
+and depth maps. We demonstrate a diverse set of case
+to in the input image and depth space. In Fig. 7, the top row
+studies and showcase how the gradients propogate through
+shows an RGB-D image differentiably transformed—using
+∇ the tracking, mapping, and fusion stages. Future efforts will
+SLAM—into a (noisy) TSDF surface measurement, and ∇
+enable SLAMtobedirectlyoptimizedinconjunctionwith
+thencomparedtoamorepreciseglobalTSDFmap.Thebot- ∇
+downstream tasks. SLAM can also enable a variety of
+tom row is similarly transformed, with the difference being
+× self-supervised learning applications, as any gradient-based
+the presence of a small (40 40 px) occluder. Elementwise
+learning architecture can now be equipped with a sense of
+comparision of aligned volumes gives us a reconstruction
+spatial understanding.
+error, whose gradients are backpropagated through to the
+inputdepthmapusingthecomputationalgraphmaintainedby
+∇ ACKNOWLEDGEMENTS
+SLAM. Inspecting the gradients with respect to the input
+indicates the per pixel contribution of the occluding surface Krishna Murthy Jatavallabhula and Liam Paull were
+to the volumetric error. In Fig. 8, we similarly introduce partly supported by the NSERC discovery grant program,
+suchoccluders(toprow)andpixelnoise(bottomrow)inone FRQNT Établissement de nouveaux chercheurs et de nou-
+of the depth maps of a sequence and reconstruct the scene velles chercheuses universitaires, CIFAR Canada AI Chair
+∇
+using PointFusion. We then calculate the chamfer distance Program, and Samsung Advanced Institute of Technology.
+between the noisy and true surfel maps and backpropogate The authors also thank Soroush Saryazdi for help with the
+the error with respect to each pixel. The minimized loss end-to-endexperiments,andGunshiGupta,AadityaSaraiya,
+leads to the targeted recovery of the noisy and occluded Parv Parkhiya, Akshit Gandhi, and Shubham Garg, for their
+regions. We additionally show an RGB-D image completion timely assistance.
+task (from uniform noise)in Fig. 9.
+Thus, ∇SLAM provides a rich interpretation of the com- REFERENCES
+puted gradients: they denote the contribution of each pixel
+[1] A.Krizhevsky,I.Sutskever,andG.E.Hinton,“Imagenetclassiﬁcation
+towards the eventual 3D reconstruction. withdeepconvolutionalneuralnetworks,”inNEURIPS,2012. 1
+2135
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. [2] A.Kendall,J.Hawke,D.Janz,P.Mazur,D.Reda,J.-M.Allen,V.-D. [30] R.Garg,V.K.BG,G.Carneiro,andI.Reid,“Unsupervisedcnnfor
+Lam,A.Bewley,andA.Shah,“Learningtodriveinaday,”inIEEE singleviewdepthestimation:Geometrytotherescue,”inECCV,2016.
+ICRA,2019. 1 2
+[3] R.Mur-ArtalandJ.D.Tardós,“ORB-SLAM2:anopen-sourceSLAM [31] T. Zhou, M. Brown, N. Snavely, and D. G. Lowe, “Unsupervised
+system for monocular, stereo and RGB-D cameras,” IEEE TRO, learningofdepthandego-motionfromvideo,”inCVPR,2017. 2
+vol.33,no.5,pp.1255–1262,2017. 1 [32] R. Li, S. Wang, Z. Long, and D. Gu, “Undeepvo: Monocular visual
+[4] P. Smith, I. D. Reid, and A. J. Davison, “Real-time monocular slam odometrythroughunsuperviseddeeplearning,”inIEEEICRA,2018.
+withstraightlines,”2006. 1 2
+[5] M. Kaess, “Simultaneous localization and mapping with inﬁnite [33] A. Handa, M. Bloesch, V. Pa˘tra˘ucean, S. Stent, J. McCormac, and
+planes,”inIEEEICRA,2015. 1 A. Davison, “gvnn: Neural network library for geometric computer
+[6] B.Mu,S.Liu,L.Paull,J.Leonard,andJ.P.How,“Slamwithobjects vision,”inECCVWorkshoponGeometryMeetsDeepLearning,2016.
+usinganonparametricposegraph,”inIEEEIROS,2016. 1,2 2
+[7] R.A.Newcombe,S.Izadi,O.Hilliges,D.Molyneaux,D.Kim,A.J. [34] E.Riba,D.Mishkin,D.Ponsa,E.Rublee,andG.Bradski,“Kornia:
+Davison, P. Kohli, J. Shotton, S. Hodges, and A. W. Fitzgibbon, anopensourcedifferentiablecomputervisionlibraryforpytorch,”in
+“Kinectfusion: Real-time dense surface mapping and tracking.” in WinterConferenceonApplicationsofComputerVision,2019. 2
+ISMAR,2011. 1,2,3,4,5
+[35] B.D.Brabandere,W.V.Gansbeke,D.Neven,M.Proesmans,andL.V.
+[8] R.A.Newcombe,S.J.Lovegrove,andA.J.Davison,“Dtam:Dense
+Gool, “End-to-end lane detection through differentiable least-squares
+trackingandmappinginreal-time,”inICCV,2011. 1
+ﬁtting,”arXiv,vol.1902.00293,2019. 2
+[9] C. Forster, M. Pizzoli, and D. Scaramuzza, “Svo: Fast semi-direct
+[36] C.TangandP.Tan,“Ba-net:Densebundleadjustmentnetwork,”ICLR,
+monocularvisualodometry,”inIEEEICRA,2014. 1
+2019. 2
+[10] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N.
+[37] R.Clark,M.Bloesch,J.Czarnowski,S.Leutenegger,andA.J.Davi-
+Gomez, Ł. Kaiser, and I. Polosukhin, “Attention is all you need,” in
+son,“Ls-net:Learningtosolvenonlinearleastsquaresformonocular
+NEURIPS,2017. 1
+stereo,”ECCV,2018. 2,5
+[11] G. Hinton, L. Deng, D. Yu, G. Dahl, A.-r. Mohamed, N. Jaitly,
+[38] S.HochreiterandJ.Schmidhuber,“Longshort-termmemory,”Neural
+A.Senior,V.Vanhoucke,P.Nguyen,B.Kingsbury,etal.,“Deepneural
+computation,vol.9,pp.1735–80,121997. 2
+networks for acoustic modeling in speech recognition,” IEEE Signal
+processingmagazine,2012. 1 [39] L.vonStumberg,P.Wenzel,Q.Khan,andD.Cremers,“Gn-net:The
+[12] J. Zhang, L. Tai, J. Boedecker, W. Burgard, and M. Liu, “Neural gauss-newtonlossfordeepdirectSLAM,”CoRR,2020. 2
+SLAM,”arXiv,vol.1706.09520,2017. 1,2 [40] L. Han, M. Ji, L. Fang, and M. Nießner, “Regnet: Learning the
+[13] T. Whelan, M. Kaess, H. Johannsson, M. Fallon, J. J. Leonard, and optimization of direct image-to-image pose registration,” arXiv, vol.
+J.McDonald,“Real-timelarge-scaledensergb-dslamwithvolumetric 1812.10212,2018. 2
+fusion,”IJRR,vol.34,no.4-5,pp.598–626,2015. 1,4,5 [41] B. Amos and J. Z. Kolter, “OptNet: Differentiable optimization as a
+[14] M.Keller,D.Leﬂoch,M.Lambers,S.Izadi,T.Weyrich,andA.Kolb, layerinneuralnetworks,”inICML,2017. 2
+“Real-time 3d reconstruction in dynamic scenes using point-based [42] E. Grefenstette, B. Amos, D. Yarats, P. M. Htut, A. Molchanov,
+fusion,” in International Conference on 3D Vision, 2013. 1, 2, 3, F.Meier,D.Kiela,K.Cho,andS.Chintala,“Generalizedinnerloop
+4,5 meta-learning,”arXiv:1910.01727,2019. 2
+[15] M. Bloesch, J. Czarnowski, R. Clark, S. Leutenegger, and A. J. [43] M. Lampton, “Damping–undamping strategies for the levenberg–
+Davison,“Codeslam—learningacompact,optimisablerepresentation marquardt nonlinear least-squares method,” Computers in Physics,
+fordensevisualslam,”inCVPR,2018. 2 1997. 3
+[16] S.Zhi,M.Bloesch,S.Leutenegger,andA.J.Davison,“Scenecode: [44] F. Richards, “A ﬂexible growth function for empirical use,” Journal
+Monoculardensesemanticreconstructionusinglearnedencodedscene ofexperimentalBotany,1959. 3
+representations,”inCVPR,2019. 2 [45] F.Steinbrücker,J.Sturm,andD.Cremers,“Real-timevisualodometry
+[17] J. Czarnowski, T. Laidlow, R. Clark, and A. Davison, “Deepfactors: fromdensergb-dimages,”inICCVWorkshops,2011. 3
+Real-time probabilistic dense monocular slam,” in IEEE RAL, 2020. [46] P. J. Bes, N. D. McKay, et al., “A method for registration of 3-
+2 d shapes,” IEEE Transactions on Pattern Analysis and Machine
+[18] H.Zhou,B.Ummenhofer,andT.Brox,“Deeptam:Deeptrackingand Intelligence,vol.14,no.2,pp.239–256,1992. 3
+mapping,”inECCV,2018. 2
+[47] C.V.Nguyen,S.Izadi,andD.Lovell,“Modelingkinectsensornoise
+[19] K.Tateno,F.Tombari,I.Laina,andN.Navab,“Cnn-slam:Real-time
+forimproved3dreconstructionandtracking,”in2012secondinterna-
+densemonocularslamwithlearneddepthprediction,”inCVPR,2017.
+tionalconferenceon3Dimaging,modeling,processing,visualization
+2
+&transmission. IEEE,2012. 4
+[20] J. Engel, T. Schöps, and D. Cremers, “Lsd-slam: Large-scale direct
+[48] B.CurlessandM.Levoy,“Avolumetricmethodforbuildingcomplex
+monocularslam,”inECCV,2014. 2
+modelsfromrangeimages,”1996. 4,5
+[21] P. Parkhiya, R. Khawad, J. K. Murthy, B. Bhowmick, and K. M.
+[49] V. Sitzmann, M. Zollhöfer, and G. Wetzstein, “Scene representation
+Krishna,“Constructingcategory-speciﬁcmodelsformonocularobject-
+networks: Continuous 3d-structure-aware neural scene representa-
+slam,”inIEEEICRA,2018. 2
+tions,”inNEURIPS,2019. 4
+[22] S.YangandS.Scherer,“Cubeslam:Monocular3-dobjectslam,”IEEE
+[50] S.Tulsiani,T.Zhou,A.A.Efros,andJ.Malik,“Multi-viewsupervi-
+TRO,vol.35,no.4,pp.925–938,2019. 2
+sionforsingle-viewreconstructionviadifferentiablerayconsistency,”
+[23] E. Brachmann, A. Krull, S. Nowozin, J. Shotton, F. Michel,
+inCVPR,2017. 4
+S. Gumhold, and C. Rother, “Dsac-differentiable ransac for camera
+localization,”inCVPR,2017. 2 [51] J. Gwak, C. B. Choy, M. Chandraker, A. Garg, and S. Savarese,
+[24] D. S. Chaplot, E. Parisotto, and R. Salakhutdinov, “Active neural “Weaklysupervised3dreconstructionwithadversarialconstraint,”in
+localization,”inICLR,2018. 2 InternationalConferenceon3DVision,2017. 4
+[25] S. K. Gottipati, K. Seo, D. Bhatt, V. Mai, K. Murthy, and L. Paull, [52] H.Igehy,“Tracingraydifferentials,”inProceedingsofthe26thannual
+“Deep active localization,” IEEE RAL, vol. 4, no. 4, pp. 4394–4401, conferenceonComputergraphicsandinteractivetechniques. ACM
+Oct2019. 2 Press/Addison-WesleyPublishingCo.,1999,pp.179–186. 4
+[26] B. Chen, T.-J. Chin, and N. Li, “Bpnp: Further empowering end- [53] A. Dai, A. X. Chang, M. Savva, M. Halber, T. Funkhouser, and
+to-end learning with back-propagatable geometric optimization,” M.Nießner,“Scannet:Richly-annotated3dreconstructionsofindoor
+arXiv:1909.06043,2019. 2 scenes,”inCVPR,2017. 5,6
+[27] G.Iyer,K.Ram,J.KrishnaMurthy,andK.MadhavaKrishna,“Calib- [54] A.Dai,M.Nießner,M.Zollöfer,S.Izadi,andC.Theobalt,“Bundlefu-
+net:Self-supervisedextrinsiccalibrationusing3dspatialtransformer sion:Real-timegloballyconsistent3dreconstructionusingon-the-ﬂy
+networks,”2018. 2 surface re-integration,” ACM Transactions on Graphics 2017 (TOG),
+[28] B. D. Lucas, T. Kanade, et al., “An iterative image registration 2017. 5
+techniquewithanapplicationtostereovision,”1981. 2 [55] J. Sturm, N. Engelhard, F. Endres, W. Burgard, and D. Cremers, “A
+[29] C.Kerl,J.Sturm,andD.Cremers,“Robustodometryestimationfor benchmarkfortheevaluationofrgb-dslamsystems,”inIEEEIROS,
+rgb-dcameras,”inIEEEICRA,2013. 2 2012. 5,6
+2136
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. [56] A. Handa, T. Whelan, J. McDonald, and A. Davison, “A benchmark
+forRGB-Dvisualodometry,3DreconstructionandSLAM,”inIEEE
+ICRA,2014. 5
+2137
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:11:47 UTC from IEEE Xplore.  Restrictions apply. 

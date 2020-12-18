@@ -1,0 +1,495 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Neural Network based Inverse Dynamics Identiﬁcation and External Force
+Estimation on the da Vinci Research Kit
+Nural Yilmaz, Jie Ying Wu, Peter Kazanzides, Ugur Tumerdem
+Abstract—Most current surgical robotic systems lack the
+ability to sense tool/tissue interaction forces, which motivates
+research in methods to estimate these forces from other avail-
+able measurements, primarily joint torques. These methods
+require the internal joint torques, due to the robot inverse
+dynamics, to be subtracted from the measured joint torques.
+This paper presents the use of neural networks to estimate the
+inverse dynamics of the da Vinci surgical robot, which enables
+estimationoftheexternalenvironmentforces.Experimentswith
+motionsinfreespacedemonstratethattheneuralnetworkscan
+estimatetheinternaljointtorqueswithin10%normalizedroot-
+mean-square error (NRMSE), which outperforms model-based
+approachesintheliterature.Comparisonwithanexternalforce
+sensor shows that the method is able to estimate environment
+(a) (b)
+forces within about 10% NRMSE.
+Fig. 1: The da Vinci Research Kit: (a) Master Tool Manip-
+I. INTRODUCTION
+ulator (MTM) (b) Patient Side Manipulator (PSM)
+Laparoscopic surgery brought the beneﬁts of minimally
+sterilization. Installing a force sensor in the non-sterile part
+invasive surgery to patients. At the same time, it created
+of the robot (i.e., above the instrument) is also challenging
+challenges for surgeons who had to operate with long,
+because it would require good force estimation algorithms
+straight instruments through small incisions while viewing
+that account for the highly nonlinear cable-driven design of
+images of the internal anatomy captured by a laparoscope
+theinstruments.Therearealsopracticaldifﬁcultiesinimple-
+inserted through another small incision. Robotic assistance
+menting and testing solutions because commercial systems
+was introduced to solve both the loss of dexterity and poor
+such as the da Vinci do not allow researchers to directly
+hand/eye coordination encountered in laparoscopic surgery.
+(cid:13) control the robot arms. Fortunately, the widespread adoption
+For example, the da VinciR Surgical System (Intuitive
+of open research platforms such as the da Vinci Research
+Surgical Inc., CA) provides wristed instruments on the Pa-
+Kit (dVRK) [2], Fig.1, and the Raven II robot [3] enables
+tient Side Manipulators (PSMs) that are teleoperated by the
+researchers to implement and test different controllers, and
+surgeon via the Master Tool Manipulators (MTMs), while
+ultimately to share working solutions with the community.
+viewing stereo images from a stereo laparoscopic camera.
+These advantages came at a cost, however, which was that This paper presents a neural network (NN) approach to
+the surgeon completely lost the sense of touch [1]. This had estimate the inverse dynamics of the da Vinci PSM. The
+already been compromised by the shift from open surgery, neural network canbe used to control thePSM, for example
+where the surgeon’s hands could directly palpate tissue, to to implement a computed torque controller, but the focus of
+laparoscopic surgery, where forces were transmitted to the thispaperistoestimatetheexternaltorques/forcesactingon
+surgeon’s hands via the instruments. Experienced robotic the joints by subtracting the internal torques/forces (neural
+surgeons learned to estimate forces through other cues, such network outputs) from the measured torques. The method is
+as the tautness of suture or the discoloration of tissue being implemented and tested on the dVRK.
+stretched, but it is widely believed that surgical performance
+would be improved by the addition of haptic feedback. II. RELATEDWORK
+There are several challenges to achieving haptic feedback
+Thelackofhapticfeedbackintelesurgicalsystemshasled
+inatelesurgicalsystem.First,itisdifﬁculttointegrateforce
+to a signiﬁcant amount of research. Some of this research
+sensors on the instrument tips, especially considering that
+has focused on developing miniaturized sensors that can
+the instrument must survive several cycles of cleaning and
+be mounted on instrument tips. Researchers at DLR have
+developed a small 6-axis force sensor placed at the tip of
+N. Yilmaz and U. Tumerdem are with the Department of Mechanical
+Engineering,MarmaraUniversity,Istanbul,34722,Turkey the MIRO surgical robot [4]. Capacitive sensors that can
+(e-mail:nural.yilmaz@marun.edu.tr;ugur.tumerdem@marmara.edu.tr) be placed inside the forceps jaws of the Raven II surgical
+J.Y.WuandP.KazanzidesarewiththeDepartmentofComputerScience,
+systems have been proposed in [5]. Strain gauges can also
+JohnsHopkinsUniversity,Baltimore,MD21218,USA
+(e-mail:jieying@jhu.edu;pkaz@jhu.edu) beprintedontopofthedaVincitooltipasdescribedin[6].
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1387
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. However, these approaches that require modiﬁcations to the neural network has been trained for the robot, and training
+instrumentstructurealsoposelimitationsonthefunctionality has been performed with a random persistent excitation
+and may not be applicable under all operational settings. trajectory.
+In order to obtain force measurements without addi- In the proposed method, identiﬁcation is performed with
+tional sensors, force estimation methods can be used. Such the operator in the loop: as the operator controls the slave
+approaches have been investigated starting with the ﬁrst in the workspace of the robot, dynamic identiﬁcation is per-
+surgical robot prototypes like the Black Falcon [7]. One formedwithoutaneedforanautomatedexcitationtrajectory.
+of the issues observed in the early attempts has been the This also helps reduce the discrepancy between the surgical
+transmission of robot coupling/internal dynamic forces to workspace and the excitation trajectory. Furthermore, the
+the operators in free motion. To solve this issue, in [8], a method is ﬂexible as it can also provide a basis for deep
+Coulomb friction compensator was proposed to improve the neural networks that can be trained with data from different
+forceestimationresultsonacustomizeddaVincipatientside operations/instruments/surgeons.
+manipulator. In [9], a cable tension estimator was developed
+Yet another approach is the use of deep learning to
+to eliminate the effects of cable elasticity in the Raven
+estimate external forces by training a deep neural network
+II system. In [10], a sliding mode perturbation observer
+using system state measurements from the robot such as
+was developed for the estimation of grasping force on a
+currentandpositionasthenetworkinputsandexternalsensor
+customized da Vinci gripper.
+measurements as the training data. Such a setup has been
+To overcome problems with cable-tendon driven surgical used in [21] using an external force sensor, to estimate the
+manipulators, different actuator/transmission systems and grasping forces on a custom da Vinci gripper. However, the
+force estimation schemes have also been developed, such proposed approach is fundamentally different from this ap-
+as a pneumatic forceps mechanism and pressure based force proachbecauseitdoesnotrequireaforcesensorfortraining.
+estimation method [11], a rigid rod driven mechanism with In [22], interaction forces are estimated using deep neural
+strain gauges on the shafts for force estimation [12], and networks and external camera images as the inputs with a
+a rigid transmission system with load cell based estimation force sensor used to provide the ground truth. Our approach
+[13]. In [14][15], a disturbance observer and neural network makes use of the fact that the fundamental relationship
+based inverse dynamics was utilized to estimate external between external forces and joint currents/torques is well
+forces on a rigid link driven robotic forceps prototype. known and this can be exploited to obtain accurate external
+forceestimatesfromjointtorqueandpositionmeasurements
+With the development of the da Vinci Research Kit
+without the use of external sensors for ground truth.
+(dVRK), many research groups have started developing dy-
+namic identiﬁcation and external force estimation methods
+III. INVERSEDYNAMICSIDENTIFICATIONAND
+for the da Vinci systems. In [16], an explicit physics-based
+EXTERNALFORCEESTIMATION
+dynamic model of the dVRK PSM was developed and
+parameters of this model were identiﬁed together with the The force estimation method proposed in this paper is
+free motion torques to estimate external forces under quasi- composed of two parts. First, identiﬁcation of the inverse
+static external loading. In [17], an LMI method was utilized dynamic model of a dVRK PSM is performed by training
+fordynamicparameterandjointtorqueidentiﬁcationofboth a set of neural networks, as the robot is telemanipulated in
+the MTMs and PSMs without external force estimation. In free motion by an operator in the loop. Once the inverse
+[18], a linearized model of the PSMs was obtained and the dynamics is obtained, the identiﬁed dynamic torques are
+parameters were identiﬁed with least squares optimization. ﬁlteredoutfromthejointtorquemeasurementsandusingthe
+External forces/torques were also estimated by ﬁltering out robotJacobian,externalforcesexertedontheendeffectorof
+the free motion torques. In [19], an open source convex the robot can be estimated. First, the neural network based
+optimizationbasedtoolboxwasproposedfordynamicmodel dynamic identiﬁcation method is explained.
+identiﬁcation of the dVRK. All of these approaches assume
+an explicit dynamic model for the system and attempt to A. Neural Network-based Dynamic Identiﬁcation of the
+identify the parameters of the respective models with the dVRK PSM
+robot following an automated optimal excitation trajectory.
+The dynamic model of a dVRK PSM can be described by
+In this work, we are following a similar approach with a
+the joint space equation:
+key difference: the inverse joint space dynamics is identiﬁed
+by black box models in the form of neural networks for M(q)q¨+C(q,q˙)+G(q)+F(q˙)+τ =τ (1)
+int
+each joint, whose complexity can be increased and updated
+where q, q˙ and q¨ represent the joint position, velocity and
+to adapt to various operating conditions. This approach can
+accelerationvectors,M,C andGdenotemass/inertiamatrix,
+alsohelpreducetheﬁttingerrorsintheexplicitmodel-based
+Coriolis and centrifugal force/torque and gravity vectors, F
+approaches. A similar neural network based approach has
+representsthefrictionforce/torquevector,τ istheinternal
+been proposed in [20] for a 3-DOF Planar Twin-Pantograph int
+force/torque vector representing the uncertain internal forces
+haptic interface. However, unlike our approach, a single
+in the robot and τ denotes the actuator force/torque vector,
+1388
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. Fig. 4: Ofﬂine training of each neural network
+Here, each neural network has input measurements from
+Fig. 2: Neural network for inverse dynamics identiﬁcation alltherobotjoints,buttheoutputisthetorque/forceestimate
+for the respective joint. Thus each joint’s identiﬁcation error
+respectively. Since the dVRK utilizes tendon-driven mecha- is used to train the respective neural network, and this
+nismsforbothmotionandforcetransmission,itisdifﬁcultto provides better performance than a single neural network
+identify the dynamic model accurately due to the uncertain with multiple outputs where different scales of the mea-
+system parameters, friction, elongation and elasticity. As a surements becomes an issue. The NN learning process is
+result, the dynamic terms in (1) are not exactly known, achieved by back-propagation and Bayesian Regularization.
+however a lumped model can be deﬁned to provide the sum Thisapproachhasbeenselectedfortrainingasitcanprovide
+of these effects: good generalization for difﬁcult and noisy datasets [23]. In
+the multilayer network structure, the tan-sigmoid transfer
+τˆ =H(q,q˙) (2)
+dyn
+function (tansig) and linear transfer function (purelin) have
+where q and q˙ are the model inputs, H is the lumped been used for the hidden and output layers, respectively.
+internal dynamics model of the robot and τˆ is the inverse Initial weight and bias values were selected randomly and
+dyn
+dynamics torque estimate. then updated according to adaptive weight minimization
+(regularization) with the chosen algorithm.
+The crux of the proposal in this paper is to obtain H,
+and to identify the lumped robot dynamics, with a set of Fortraining,theposition,velocityandtorquedata,q,q˙and
+neural networks. A neural network can be used as a black τ, are recorded as the dVRK is unilaterally teleoperated by
+boxmodeltoapproximatethenonlinearrelationshipbetween an operator providing different poses and velocities via the
+robot joint states (position, velocity) and the joint torques MTM. The training dataset contains about 415,000 samples.
+withouttheneedforanexplicitrobotmodel.Inthispaper,we In Fig. 3, the x and y axes present velocity and position
+are trying to approximate this function without acceleration measurements, respectively, and the color scale shows the
+measurements, as these measurements can be quite noisy, measured force/torque acting on the actuators. As the robot
+however they can also be used if good measurements are moves in free motion, the external force exerted on the
+available. Also, in this paper, a separate neural network is robot is known to be zero, which means that the measured
+utilized for each joint, with a total of 6 neural networks for joint torques are purely due to inverse dynamics. The error
+the combined manipulator (excluding the gripper axis), and variable to be minimized by the networks is the difference
+each neural network (see Fig. 2) includes: between the neural network estimate and the measured
+torques in free motion so that the neural network can be
+• One input layer with 12 neurons for the position and
+trained to estimate the joint torque due to inverse dynamics
+velocity measurements of each joint
+in free motion. The optimal weights to minimize the error
+• One hidden layer with 100 neurons
+are found through back propagation, as shown in Fig. 4. In
+• One output layer with 1 neuron representing the indi-
+this paper, training was performed ofﬂine, but it could be
+vidual predicted actuator torque
+performed online with adaptive neural networks [24].
+B. External Force Estimation
+When there is an external force/torque applied to the end
+effectorofasurgicalrobot,thegeneralizeddynamicequation
+in joint space is:
+M(q)q¨+C(q,q˙)+G(q)+F(q˙)+τ +τ =τ (3)
+int ext
+where τ is the external force/torque vector acting on each
+ext
+joint. The external force/torque can be calculated by sub-
+tractingtheinversedynamicstorqueestimatedbythetrained
+neural network, τˆ deﬁned in (2), from the measured
+dyn
+Fig. 3: The relation between joint states (x and y axes) and actuator force/torque τ:
+actuator force/torque (color scale) during training operation −
+τˆ =τ τˆ (4)
+ext dyn
+1389
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. ∗
+TABLE I: Error values (NRMSE or RelE+) of joint force
+(f) or torque (τ) in free-motion for proposed method (PM)
+compared to other reported methods
+Method τ1 τ2 f3 τ4 τ5 τ6
+∗
+PM 4.37 3.51 4.99 4.70 6.28 6.80
+∗
+[18] 5.92 5.78 18.84 10.41 16.84 22.96
+∗
+SNN 13.88 10.87 14.64 13.57 19.92 20.50
+PM+ 18.40 11.19 13.95 12.10 21.23 22.39
+[17]+ 22.07 31.55 29.55 11.93 35.10 45.30
+Fig. 5: External force estimation with the trained network [19]+ 9.30 17.80 19.10 13.40 23.90 21.30
+Utilizing the Jacobian matrix of the robot (J) and the Here,N isthenumberofsamplesinthetimeseriesdatafrom
+external joint torques/forces, the external force acting on the the experiments, y is the vector of reference force/torque, yˆ
+tool-tip in Cartesian space (see Fig. 5), can be estimated as: is the vector of estimated force/torque of y, and y(n) and
+yˆ(n) are the nth samples of y and yˆ, respectively.
+−
+Fˆ =J Tτˆ (5)
+ext ext However,in[17]and[19],theidentiﬁcationperformances
+This estimate can then be compared with an external force wereevaluatedbycalculating(cid:118)relativepredictionerrorbythe
+(cid:117)(cid:80)
+sensor for validation, as described in the next section. following formula: (cid:117)
+(cid:116)
+(cid:80)
+(cid:107) − (cid:107) −
+IV. EXPERIMENTSANDRESULTS y yˆ N [yˆ(n) y(n)]2
+RelE+ = i(cid:107) (cid:107)i 2 = n=1 i (7)
+This section describes the experiments conducted to val- i yi 2 N [y(n)]2
+n=1 i
+idate the inverse dynamics identiﬁcation and external force
+Inthispaper,bothformulashavebeenusedtomakecompar-
+estimation. Also, a set of palpation experiments, performed
+isons with the results in the mentioned papers. In this paper,
+on different phantom surfaces, for stiffness differentiation
+errors with superscript + are computed using the relative
+are provided as a case study. In the experiments, the da ∗
+prediction error (7), and those with the superscript are
+Vinci PSM was unilaterally teleoperated by a human op-
+calculated using the NRMSE (6).
+erator with an MTM and all the identiﬁcation/estimation
+results were performed ofﬂine with post-processing. In the
+A. Validation of Dynamic Identiﬁcation
+experiments, the dVRK communicates with the computer
+through FireWire and the data is captured at 1 kHz. Figure
+Intheﬁrstexperiment,theneuralnetworkoutputsandthe
+6 shows a block diagram of the dVRK controller hardware;
+measuredinversedynamicsforces/torquesfromtheactuators
+a more detailed description of the system can be found in
+infreemotionarecompared.Forthisexperiment,atestdata
+[2]. The updated velocity estimation algorithm from [25]
+set was collected separately from the training set with the
+was used. The torque measurement τ is obtained by the operator unilaterally controlling the robot in free motion for
+multiplication of the measured current values with motor
+both datasets. It can be seen in Fig. 7 that the measured
+torque/force constants. The data is published as ROS topics
+force/torque and estimated force/torque by the neural net-
+and is recorded as rosbags for ofﬂine processing on Matlab
+work are very close and dynamic identiﬁcation is realized
+Simulink. To evaluate the performance of the estimation
+accurately on each joint with NRMSE of less than 10%, as
+method, the normalized root mean square errors (NRMSE)
+shown in Table I. Table I also shows the comparison of the
+betweentheactualandes(cid:113)timatedforces/torquescanbefound
+(cid:80) errors with the proposed method (PM) to results in various
+using the formula given in [18]:
+papersusingthepreviouslymentionedmetrics.Also,toserve
+− asareference,asingleneuralnetwork(SNN),similarto[20],
+NRMSE∗ = N1 Nn=1[−yˆ(n) y(n)]2i (6) has been trained using the Levenberg-Marquardt method,
+i (y y ) with 12 inputs (joint variables) and 6 outputs (torques) and
+max min i
+100 hidden neurons. It can be seen that the results obtained
+Control PC One channel of Quad Linear Amplifier (QLA) with the proposed method are generally better than the prior
+IEEE 1394  (FireWire)
+results in the literature, and the use of neural networks for
+commanded  +
+IEEE 1394 current POopw Aemr p each joint provides an improvement over the SNN.
+PHY -
+Motor
+SPI
+buffer DAC B. Validation of External Force Estimation
+Power  Sense 
+buffer SPI ADC mcueraresnutred  - Op Amp Resistor
+Thesecondexperimentwasconductedtovalidatetheforce
+FPGA Bessel Filter  Diff. 
+(60 Hz) Amplifier estimation in the Cartesian X, Y and Z axes using a force
+position quadrature Differential  Enc sensor. A Gamma F/T Sensor (ATI Industrial Automation,
+velocity Receiver Apex, NC, USA) was ﬁxed to a platform so as to have the
+sameframeorientationasthedVRKbase.Also,a3Dprinted
+Fig. 6: dVRK controller hardware for one channel
+apparatus with square holes was mounted to the top of the
+1390
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. Fig. 7: Joint torque identiﬁcation results
+C. Stiffness Identiﬁcation
+To demonstrate the feasibility of the proposed method for
+clinicalpurposes,apalpationcasestudywasalsoperformed.
+The goal was to differentiate the relative stiffness values of
+three different phantoms by touching 7 random points on
+each phantom, as shown in Fig. 10. The phantom in Fig.
+10(a) has the lowest stiffness and the phantom in Fig. 10(c)
+has the highest stiffness. During the experiments, force and
+position data were recorded, external forces were estimated
+with the proposed algorithm and these were plotted with
+Fig. 8: Test setup used in validation experiments. Contact in
+respect to changes in tool position, as shown in Fig. 11.
+(a) X-axis, (b) Y-axis, (c) Z-axis
+Stiffnesscanbedeterminedfromtheslopeoftheseplots.As
+theexactstiffnessvaluesofthephantomswerenotavailable,
+sensor for the purpose of touching in each axis separately, the same calculation was performed with the measurements
+as illustrated in Fig. 8. Figure 9 shows the comparison of from the force sensor placed under the phantoms. Table III
+measured forces and estimated forces when the end effector shows consistent estimates of the average stiffness for each
+is in contact with the sensor, with results summarized in phantom by the proposed method (PM) and force sensor
+Table II. When there is contact with the sensor, it can be (FT). This result shows that the proposed method can be
+observedthatestimationresultsofeachaxisareinagreement useful in applications such as tissue differentiation which
+with the force sensor outputs with less than 10% error in could be of practical use to surgeons.
+each axis. However, the fact that the robot was not always
+D. Discussion
+indirectcontactwiththesensor,butratherwithanapparatus
+that was mounted on top of the sensor, and had contact at
+Whencomparedwithexistingidentiﬁcationandestimation
+locations other than the tip, may account for some of the
+results in the literature on the dVRK, the method in its
+errors observed. Table II also compares the force estimation
+current form has comparable or better error rates. However,
+errors obtained in this experiment with the results provided
+the main advantage of the proposal is the learning nature
+in [18], which is the only cited paper that uses a similar
+of the identiﬁcation method and it can be improved with
+dVRKsetupandhasperformeddynamiccontactwithaforce
+moredatasetsandtraining.Itisalsoversatilewhencompared
+sensor for validation of force estimates. While the exact
+with other identiﬁcation/estimation methods. In the current
+experiment setup cannot be replicated, it can be seen that
+implementation, training, identiﬁcation and estimation have
+the performance of the proposed approach is comparable.
+beenperformedoff-line,butthisispurelyanimplementation
+issue. Even if the neural network is trained ofﬂine, it can be
+TABLE II: Normalized RMS error values (NRMSE) of
+used in a real-time application. Also, it should be possible
+Cartesian force (F) in contact and free-motion to implement an adaptive neural network to enable real-time
+Method Fx Fy Fz training.Thiswouldmeanthattrainingcanbeperformedby
+PM∗ 6.80 9.86 4.45 the surgeon/operator as the method does not require an op-
+∗
+[18] 8.26 5.96 6.10 timal excitation trajectory, given that sufﬁcient excitation is
+1391
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. (a) Cartesian X-axis Force (b) Y-axis Force (c) Z-axis Force
+Fig. 9: Validation of external force estimation
+TABLE III: Estimated stiffness values for each phantom
+using proposed method (PM) and force/torque sensor (FT)
+Phantom#1 Phantom#2 Phantom#3
+PM FT PM FT PM FT
+Method
+(N/m) (N/m) (N/m) (N/m) (N/m) (N/m)
+(a) (b) (c) P1 237.74 238.84 499.23 388.64 738.11 799.08
+P2 255.22 225.13 556.89 530.37 690.36 818.21
+Fig.10:Experimentsetupsutilizedinstiffnessdetermination:
+P3 281.45 249.96 525.62 517.47 857.74 806.83
+(a) Phantom #1, (b) Phantom #2, (c) Phantom #3 P4 216.06 260.33 456.74 489.32 714.23 856.99
+P5 243.78 252.18 479.41 533.21 759.9 806.04
+P6 268.47 219.14 499.17 501.38 697.89 856.78
+P7 224.03 245.26 465.45 522.67 761.48 807.65
+Avg(K) 246.68 241.55 497.50 497.58 745.67 821.65
+the surgical operation for identiﬁcation and elimination of
+trocar interaction forces. Another limitation of the current
+implementation is that the training workspace did not cover
+the whole robot workspace, but this can be corrected by
+combiningdatafrommultipletrainingsets.Furthermore,the
+method can be augmented by the use of deep learning as
+extensive amounts of data are being gathered from different
+dVRK and da Vinci setups around the world. Finally, we
+have provided force estimates from the tip on three axes,
+but this was due to limitations in the experiment setup. A
+mounting apparatus for the force/torque sensor and a grip
+force sensor is required, but the proposed method is capable
+of handling estimation in these axes as well.
+V. CONCLUSIONS
+We proposed a neural network based inverse dynamics
+identiﬁcation method for the da Vinci patient side manip-
+Fig. 11: Stiffness differentiation results of: (a) Phantom #1, ulators and, using this identiﬁcation method, we obtain a
+(b) Phantom #2, (c) Phantom #3 simple and robust way to ﬁlter out the dynamic components
+from the joint torque measurements for the estimation of
+provided by the human operator. The presented experiments the external forces. The method does not require a ground
+wereperformedonasinglePSMwithasingleinstrument,so truth sensor and is easy to implement. With experiments,
+it is possible that real-time training updates may be required we have demonstrated that both the identiﬁcation and ex-
+when applying the neural network to different PSMs and ternal force estimation methods have results comparable to,
+instruments. Also, during a surgical operation, robot dynam- or better than, similar methods used on the dVRK. The
+ics is subject to changes as the robot is coupled with the method can be improved with more training and real-time
+environment at various contact points, including the trocar. implementation. Different neural network architectures can
+Therefore, a lumped black box approach that can achieve also be implemented for better performance.
+real-timeidentiﬁcationwouldbemorerobustcomparedwith
+explicit model based approaches which could suffer from ACKNOWLEDGMENT
+model uncertainties due to interaction with the environment.
+One possible application of the proposed method would be Anton Deguet assisted with the experimental setup. The
+to enable surgeons to perform identiﬁcation before/during da Vinci Research Kit is supported by NSF NRI 1637789.
+1392
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. REFERENCES theestimationofinteractionwrench,”inInternationalSymposiumon
+MedicalRobotics(ISMR). IEEE,Apr,pp.1–7.
+[19] Y.Wang,R.Gondokaryono,A.Munawar,andG.S.Fischer,“Aconvex
+[1] A.M.Okamura,“Methodsforhapticfeedbackinteleoperatedrobot-
+optimization-based dynamic model identiﬁcation package for the da
+assisted surgery.” The Industrial Robot, vol. 31, no. 6, pp. 499–508,
+VinciResearchKit,”RoboticsandAutomationLetters,pp.3657–3664,
+Dec2004.
+2019.
+[2] P.Kazanzides,Z.Chen,A.Deguet,G.S.Fischer,R.H.Taylor,and
+[20] A. C. Smith, F. Mobasser, and K. Hashtrudi-Zaad, “Neural-network-
+S.P.DiMaio,“Anopen-sourceresearchkitforthedaVincisurgical
+basedcontactforceobserversforhapticapplications,”IEEETransac-
+system,” in Intl. Conf. on Robotics and Auto. Hong Kong, China:
+tionsonRobotics,vol.22,no.6,pp.1163–1175,2006.
+IEEE,2014,pp.6434–6439.
+[21] J.J.O’Neill,T.K.Stephens,andT.M.Kowalewski,“Evaluationof
+[3] B. Hannaford, J. Rosen, D. Friedman, H. King, P. Roan, L. Cheng,
+torquemeasurementsurrogatesasappliedtogriptorqueandjawangle
+D.Glozman,J.Ma,S.N.Kosari,andL.White,“Raven-II:Anopen
+estimationofroboticsurgicaltools,”RoboticsandAutomationLetters,
+platform for surgical robotics research,” IEEE Trans. on Biomedical
+vol.3,no.4,p.3027,2018.
+Engin.,vol.60,no.4,pp.954–959,Apr2013.
+[22] A. Marban, V. Srinivasan, W. Samek, J. Fernandez, and A. Casals,
+[4] U.Hagn,R.Konietschke,A.Tobergte,M.Nickl,S.Jo¨rg,B.Ku¨bler, “Estimation of interaction forces in robotic surgery using a semi-
+G. Passig, M. Gro¨ger, F. Fro¨hlich, U. Seibold, L. Le-Tien, A. Albu- supervised deep neural network model,” in Intl. Conf. on Intelligent
+Scha¨ffer,A.Nothhelfer,F.Hacker,M.Grebenstein,andG.Hirzinger, RobotsandSystems(IROS). IEEE,Oct2018,pp.761–768.
+“DLR MiroSurge: a versatile system for research in endoscopic [23] D.J.C.MacKay,“BayesianInterpolation,”NeuralComputation,1992.
+telesurgery,” International Journal of Computer Assisted Radiology [24] B. Widrow and M. A. Lehr, “Adaptive neural networks and their
+andSurgery,vol.5,no.2,pp.183–193,Mar2010. applications,” International Journal of Intelligent Systems, vol. 8,
+[5] U.Kim,D.-H.Lee,W.J.Yoon,B.Hannaford,andH.R.Choi,“Force no.4,pp.453–507,1993.
+sensor integrated surgical forceps for minimally invasive robotic [25] J. Y. Wu, Z. Chen, A. Deguet, and P. Kazanzides, “FPGA-based
+surgery,” Transactions on Robotics, vol. 31, no. 5, pp. 1214–1224, velocityestimationforcontrolofrobotswithlow-resolutionencoders,”
+Oct2015. inIntl.Conf.onIntelligentRobotsandSystems(IROS). IEEE,Oct
+[6] R. Pena, M. J. Smith, N. P. Ontiveros, F. L. Hammond, and R. J. 2018,pp.6384–6389.
+Wood,“PrintingstraingaugesonIntuitiveSurgicaldaVincirobotend
+effectors,” in Intl. Conf. on Intelligent Robots and Systems. IEEE,
+Oct2018,pp.806–812.
+[7] A. Madhani, G. Niemeyer, and J. Salisbury, “The Black Falcon: a
+teleoperated surgical instrument for minimally invasive surgery,” in
+Intl. Conf. on Intelligent Robots and Systems, vol. 2. IEEE, 1998,
+pp.936–944.
+[8] M. Mahvash, J. Gwilliam, R. Agarwal, B. Vagvolgyi, L.-M. Su,
+D.D.Yuh,andA.M.Okamura,“Force-feedbacksurgicalteleoperator:
+Controllerdesignandpalpationexperiments,”inSymposiumonHaptic
+InterfacesforVirtualEnvironmentandTeleoperatorSystems. IEEE,
+Mar2008,pp.465–471.
+[9] M.Haghighipanah,M.Miyasaka,andB.Hannaford,“Utilizingelastic-
+ityofcable-drivensurgicalrobottoestimatecabletensionandexternal
+force,”RoboticsandAutomationLetters,vol.2,no.3,pp.1593–1600,
+Jul2017.
+[10] M.C.Lee,C.Y.Kim,B.Yao,W.J.Peine,andY.E.Song,“Reaction
+force estimation of surgical robot instrument using perturbation ob-
+serverwithSMCSPOalgorithm,”inIntl.Conf.onAdvancedIntelligent
+Mechatronics. IEEE,Jul2010,pp.181–186.
+[11] K.TadanoandK.Kawashima,“Developmentof4-DOFsforcepswith
+forcesensingusingpneumaticservosystem,”inIntl.Conf.onRobotics
+andAuto. IEEE,2014,pp.2250–2255.
+[12] H.Takahashi,S.Warisawa,M.Mitsuishi,J.Arata,andM.Hashizume,
+“DevelopmentofHighDexterityMinimallyInvasiveSurgicalSystem
+withAugmentedForceFeedbackCapability,”inIntl.Conf.onBiomed-
+icalRoboticsandBiomechatronics. IEEE,2006,pp.284–289.
+[13] C. A. Seneci, K. Leibrandt, P. Wisanuvej, J. Shang, A. Darzi, and
+G.-Z. Yang, “Design of a smart 3D-printed wristed robotic surgical
+instrumentwithembeddedforcesensingandmodularity,”inIntl.Conf.
+onIntelligentRobotsandSystems. IEEE,Oct2016,pp.3677–3683.
+[14] N. Yilmaz, M. Bazman, and U. Tumerdem, “External force/torque
+estimation on a dexterous parallel robotic surgical instrument wrist,”
+in Intl. Conf. Intelligent Robots and Systems. IEEE, Oct 2018, pp.
+4396–4403.
+[15] N. Yilmaz, M. Bazman, A. Alassi, B. Gur, and U. Tumerdem, “6-
+axis hybrid sensing and estimation of tip forces/torques on a hyper-
+redundant robotic surgical instrument,” in IEEE/RSJ International
+ConferenceonIntelligentRobotsandSystems(IROS). IEEE,2019,
+pp.2990–2997.
+[16] H.Sang,J.Yun,R.Monfaredi,E.Wilson,H.Fooladi,andK.Cleary,
+“Externalforceestimationandimplementationinroboticallyassisted
+minimally invasive surgery,” The International Journal of Medical
+Robotics and Computer Assisted Surgery, vol. 13, no. 2, p. e1824,
+Jun2017.
+[17] G.A.Fontanelli,F.Ficuciello,L.Villani,andB.Siciliano,“Modelling
+and identiﬁcation of the da Vinci Research Kit robotic arms,” Intl.
+Conf.onIntelligentRobotsandSystems(IROS),pp.1464–1469,2017.
+[18] F.Pique,M.N.Boushaki,M.Brancadoro,E.DeMomi,andA.Men-
+ciassi, “Dynamic modeling of the da Vinci Research Kit arm for
+1393
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 13:01:42 UTC from IEEE Xplore.  Restrictions apply. 

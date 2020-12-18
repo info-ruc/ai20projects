@@ -1,0 +1,471 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Hierarchical Planning in Time-Dependent Flow Fields
+for Marine Robots
+James Ju Heon Lee1, Chanyeol Yoo1, Stuart Anstee2 and Robert Fitch1
+Abstract—We present an efﬁcient approach for ﬁnding shortest path problems on graphs [3]. A number of problem
+shortest paths in ﬂow ﬁelds that vary as a sequence of variantshavebeendeﬁned[4],butthemostrelevantcasefor
+ﬂow predictions over time. This approach is applicable to
+marine robots is that in which delaying departure (waiting)
+motion planning for slow marine robots that are subject to
+can be beneﬁcial. This is known as the non-FIFO (ﬁrst-in-
+dynamic ocean currents. Although the problem is NP-hard in
+general form, we incorporate recent results from the theory of ﬁrst-out) property. Efﬁcient algorithms for non-FIFO TDSP
+ﬁnding shortest paths in time-dependent graphs to construct haveonlyrecentlybeendiscovered[10,17],andthispresents
+a polynomial-time algorithm that ﬁnds continuous trajectories an important opportunity for improving motion planning in
+intime-dependentﬂowﬁelds.Thealgorithmhasahierarchical
+time-dependent ﬂow ﬁelds, such as ocean currents.
+structure where a graph is constructed with time-varying edge
+There are two main challenges in applying a TDSP solu-
+coststhatarederivedfromsetsofcontinuoustrajectoriesinthe
+underlying ﬂow ﬁeld. We show that the continuous algorithm tion to motion planning for marine robots. One challenge is
+retains the time complexity and path quality properties of how to represent the dynamic ﬂow ﬁeld as a time-dependent
+the discrete graph solution, and demonstrate its application to graph, where edge costs are represented as edge time func-
+surfaceandunderwatervehiclesincludingatraversalalongthe
+tions. The other challenge is how to generate a continuous
+East Australian Current with an autonomous marine vehicle.
+trajectory based on the optimal path in this graph while
+Resultsshowthatthealgorithmperformsefﬁcientlyinpractice
+andcanﬁndpathsthatadapttochangingoceancurrents.These retaining the analytical guarantees of the discrete solution.
+results are signiﬁcant to marine robotics because they allow In this paper, we present a hierarchical algorithm that
+for efﬁcient use of time-varying ocean predictions for motion addresses these challenges. We assume that ﬂow ﬁeld pre-
+planning.
+dictionsareprovidedasaseriesofsnapshotsovertime.This
+aligns with the necessary piecewise-constant assumption
+I. INTRODUCTION
+required by our TDSP solution and with available ocean
+Autonomous operation is an important capability for a current prediction data. The top layer of the hierarchy is a
+variety of marine robots, including autonomous surface graph representation of the ﬂow ﬁeld in the form of a TDSP
+vessels (ASVs) [12], underwater gliders [1,19,29], au- problem, illustrated in Fig. 1. Nodes are chosen according
+tonomous underwater vehicles (AUVs) [26], and hydrids of to a uniform sampling of the workspace. Edge connections
+the these [2]. Motion planning problems for marine robots and edge time functions are constructed by the bottom layer
+can represent the prevailing ocean currents as a ﬂow ﬁeld of the hierarchy, which uses forward integration of a set
+which inﬂuences the robot’s motion [28]. Commonly avail- of control values from each node to connect samples. This
+able sources of ocean current predictions provide data at a process is repeated at each ﬂow ﬁeld snapshot to construct
+sequenceofdiscretetimepoints[14],butunfortunatelythese edge time functions. The shortest path in this graph is then
+dynamic predictions are difﬁcult to use in motion planning. used to construct a corresponding continuous path.
+Problems that involve time-varying costs are notoriously Our main analytical result is that the algorithm retains
+difﬁcult to solve; the simplest general form is the time- the resolution completeness and optimality properties of
+dependent shortest path (TDSP) problem, which is deﬁned the discrete layer overall, and also retains the polynomial
+overgraphsandisknowntobeNP-hard[10].Inrecentwork time complexity of the TDSP solution. This is an important
+we have introduced a new polynomial-time special case of theoretical contribution because it avoids the need to con-
+TDSP where edge costs are a piecewise-constant function struct a time-expanded graphs, where nodes are replicated
+of time. [17]. We are interested in exploiting this result to at discrete steps. Although it may appear that our graph
+ﬁndapproximationstotheshortestcontinuouspathsintime- construction resembles the equivalent time-expanded graph
+dependent ﬂows. representation, the important difference is that paths through
+Interest in planning that considers time-varying phenom- this graph can arrive at nodes at any time; they are not
+enaextendsbackover50yearstotheearliestintroductionof restricted by the choice of time discretisation, which would
+be necessary when searching a time-expanded graph.
+This research is supported by an Australian Government Research This algorithm also makes a meaningful contribution to
+Training Program (RTP) Scholarship, Australia’s Defence Science and
+motion planning for marine robots. We demonstrate the
+TechnologyGroupandtheUniversityofTechnologySydney.
+1Authors are with the University of Technology Sydney, Ul- behaviour of our method in application examples with an
+timo,NSW2006,AustraliaJuHeon.Lee@student.uts.edu.auand ASV and an underwater glider in simulated dynamic ﬂow
+{ }
+Chanyeol.Yoo,Robert.Fitch @uts.edu.au
+ﬁelds and with 14 days of actual ocean current prediction
+2AuthoriswiththeDefenceScienceandTechnologyGroup,Department
+ofDefence,AustraliaStuart.Anstee@dst.defence.gov.au data. These examples assume 2D ﬂows, but there are no
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 885
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. restrictions in the algorithm that would prevent its use with
+3D ﬂows. Results show how dynamic ﬂows can have a
+negative effect on the performance of marine robot navi-
+gation. Paths found using static snapshots of the dynamic
+ﬂowfailtoreachthegoalwhenexecutedinthetimevarying
+dataset,butourmethodﬁndsapaththatisabletoexploitthe
+prevailing currents as they change over time. In a traversal
+from Brisbane to Sydney along the East Australian Current,
+our method found a path of length 13.8 days, whereas the
+same vehicle would take over 27 days to traverse the great
+circle path in still water.
+II. RELATEDWORK
+Common approaches to the problem we consider use
+level set methods [23,24]. A more recent approach is to
+formulate the problem as a time-varying Markov decision
+process [22]. Both methods assume a general edge function,
+making the worst-case computation time for these methods
+non-polynomial in the non-FIFO case.
+There has been other work in ﬁnding discrete time solu-
+Fig.1. Exampletime-dependentdirectedgraph.Theenvironmentisevenly
+tions using a time-expanded graph. Dijkstra [7] and A* [8,
+distributedintorectangulargrids(showninblack).Theredcirclesarethe
+9,13] approaches to this problem have appeared. A recent graphstates,deﬁnedasthemidpointofeachlineontherectangle.Thered
+improvementtotheA*methodhasalsobeenpresentedusing lineisthegraphedgedeﬁnedbytheneighbouringstates.
+adaptive sampling [16]. A common issue with searching
+in time-expanded graphs is that the solution is resolution
+controls, the motion of a vehicle travelling in a 3D ﬂow
+completeintime;pathsarrivaltimesatnodesmustalignwith
+ﬁeld at time t is represented as:
+the given time discretisation. This property encourages ﬁne
+discretisation, which consequently increases the size of the x˙(t)=f(x(t),u(t))+v (x(t),t), (1)
+c
+problemrepresentationandimpliesacorrespondingincrease
+wheref(x(t),u(t))isthevehiclevelocityinstillwater.The
+in required computation time.
+continuous trajectory the vehicle follows by executing the
+The problem can also be approached as a TDSP prob-
+sequence of control inputs in the ﬂow ﬁeld is denoted as σ.
+lem, where a solution is found by searching in graphs
+The vehicle is controlled using a sparse velocity control
+with time-dependent edge costs, known as time-dependent
+scheme [18,21]; controls are only varied at speciﬁc times,
+graphs [4,10]. A*-based approaches for searching time-
+rather than attempting to continuously adjust for the spatial
+dependent graphs include those with precomputed heuris-
+variation of the ﬂow ﬁeld. Intuitively, this is a “let it go”
+tics [15] and bidirectional searches [6]. Time aggregate
+approach where we apply a control input and then make no
+graphs [11], which represent the edge costs as time series,
+further adjustment for a set period of time.
+are another approach to the TDSP problem. A challenge to
+theseapproachesisthattheenvironmentmustbesufﬁciently B. Time-dependent directed graph
+discretised for a high-quality path to be found. A time-dependent directed graph G = (S,E) consists of
+Recently, we have proposed an efﬁcient approach to op- ﬁnite sets of states S and edges (s,s(cid:48))∈E where s,s(cid:48) ∈S.
+timal planning in time-dependent ﬂow ﬁelds expressed as For each edge (s,s(cid:48)), we associate an edge time C (cid:48)(t) that
+time-dependent graphs, which reaches a solution in polyno- represents the time to traverse from state s to ss(cid:48)s. For all
+∞
+mialtime[17].Thealgorithmcancorrectlyﬁndcyclictime- pairs of edges, C (cid:48)(t) is for all t<0. We denote the set
+ss ⊆
+optimalpathsinpathologicalﬂowregimes.Wealsobuildon of states that are immediately reachable from s as S S
+our previous work that synthesises a continuous path given where s(cid:48) ∈S , and the set of goal states as S s⊂ S
+| | ≥s g
+a sequence of discrete path states for time-invariant wind where S 1. We assume waiting is not allowed in
+g
+ﬁelds [33]. the graph (i.e. an edge must be traversed as soon as it is
+encountered) as it is difﬁcult for an underwater glider to
+III. BACKGROUND stay in the same position.
+···
+We deﬁne an (n+1)-state discrete path ψ = s s s
+A. General dynamical model in a ﬂow ﬁeld ∈ \ 0 1∈ n
+withinS asasequenceofstates,wheres S S ,s S ,
+∈ ··· k − g n g
+Given an n-dimensional vehicle state x, time- and (s ,s ) E for k = 0,1, ,n 1. We denote
+k k+1
+dependent 3D ﬂow ﬁeld at the vehicle position ψ as the preﬁx of ψ up to the k-th state in the path (i.e.,
+k ···
+v (x,t)=[u (t),v (t),w (t)]T, and an m-dimensional ψ = s s s ), noting that it can start no earlier than
+c c c∈ c k 0 1 k
+control input u(t) U where U is the set of all possible t=0.
+886
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. C. Arrival and travel times
+Arrival time, a (cid:48)(t), is deﬁned as the time that a vehicle
+ss(cid:48)
+would arrive at s when departing from s at time t, i.e.
+a (cid:48)(t)=C (cid:48)(t)+t [4]. As waiting is not allowed, the ar-
+ss ss
+rivaltimeattheendofthe(n+1)-lengthdiscretepath,a (t),
+ψ
+can be expressed as the arrival time at s departing from
+n
+sn−1 at time asn−2sn−1(t). The arrival time at the end of ψ
+canberecursivelyexpressedas:aψ(t)=asn−1sn(aψn−1(t)).
+The total travel time, T , is simply
+ψ
+−
+T (t )=a (t ) t , (2) (a)branchingatstep1 (b)branchingatstep2
+ψ 0 ψ 0 0
+which is the time taken to traverse the discrete path ψ.
+IV. PROBLEMSTATEMENT
+The problem is to ﬁnd a continuous path that minimises
+thetimetotravelfrominitialtogoalposition.Leta denote
+− σ
+the arrival time and T = a (t) t denote the travel time
+σ σ
+for the continuous path σ. The problem can be viewed from
+two perspectives:
+Problem 1 (Minimising travel time). Given vehicle dynam-
+ics, time-dependent ﬂow ﬁeld vc, starting sta∗te xinit, and (c)branchingatstep3 (d)branchingatstep4
+a goal region X , ﬁnd the continuous path σ and starting
+∗ g Fig. 2. Step-by-step visualisation of an example of a continuous path
+time t that minimises the travel time: branching that follows a discrete path. N closest solutions to the discrete
+0
+∗ ∗ traveltimearekeptforeachstep.Thetrajectorywithminimaltraveltime
+(σ ,t0)=argminTσ(t) ishighlightedinblack.
+σ,t (3)
+∗ ∗ ∈
+s.t. x(t )=x and x(a ∗(t )) X .
+0 init σ 0 g
+∈
+Problem 2 (Minimising travel time for given start time). The set of neighbouring states S for all s S are deﬁned
+s
+Given vehicle dynamics, time-dependent ﬂow ﬁeld vc, start- as the states that lie on the region edges that adjoin (cid:96)(cid:48)s.∈
+ing state x , starting time t and a goal region X , ﬁnd TheassociatededgetimeC (cid:48)(t)foreachedge(s,s) E
+init ∗ 0 g ss
+the continuous path σ that minimises the travel time: is evaluated through forward integration using the average
+∗ vehicle speed v over the set of controls U; derived from
+σ =argminT (t ) v
+σ 0 the glider dynamics and over the time-dependent ﬂow ﬁeld
+σ ∈ (4)
+s.t. x(t0)=xinit and x(aσ∗(t0)) Xg. vc.WeexpressCss(cid:48)(t)asapiecewisefunctionwithuniform
+timepartitioningoftheﬂowﬁelddatauptothetimehorizon
+The two problems are similar to the TDSP problem on −
+t . The time partitioning is deﬁned as t = (t t )/Q
+a time-dependent directed graph, as shown in our previous H ∈ Z (cid:48) ∈ ∆ H 0 −
+where Q . For each state s S at time t = q(t
+work [17]. We extend the problem by solving for a continu- ··· s k H
+t )/Q+t , q = 0, ,Q, we enumerate a set of possible
+ous path, where the time dependency arises from a dynamic 0 0 { ···}
+heading controls Φ = φ , and set the time for the
+ﬂow ﬁeld that is one way to represent an ocean current. 0
+fastest control to cross (cid:96) (cid:48) as the edge time for that input
+s
+time. We show later that this approach has minimal impact
+V. TIME-DEPENDENTSHORTESTPATHINFLOWFIELDS
+on the time complexity.
+In this section, we present our hierarchical path planning
+framework. We ﬁrst build a time-dependent directed graph
+B. Solving for TDSP across time-dependent graph
+over a continuous time-dependent ﬂow ﬁeld. We then ﬁnd
+the time-optimal path in this graph in the form of a policy. We solve the TDSP problem for a time-dependent graph
+Finally, we generate a continuous path that follows the time as demonstrated in our previous work [17]. In this section,
+schedule set by our discrete solution. we summarise the implementation for completeness.
+Thetraveltimefunction(2)canbere-expressedasTk(t),
+A. Building a time-dependent graph in a dynamic ﬂow ﬁeld s
+the travel time after k edge transitions from s. The travel
+In this section, we present how to express the continuous
+time function can then be written recursively as:
+ﬂow ﬁeld as a time-dependent directed graph. Given a
+⊂
+continuous environment space X R2, we discretise it Tk+1(t)=C (cid:48)(t)+Tk(cid:48)(t+C (cid:48)(t)). (5)
+s ss s ss
+into uniform regions. We deﬁne each line segment of the
+∗
+discretisation as a state line, (cid:96) , and situate the set of graph Denoting T (t) as the converged travel time,
+∈ s s ∈R ∈Z
+states s S at the mid-points of those (cid:96) that are not part whereTk+1(t)=Tk(t)forallt andsomeﬁnitek ,
+s s s
+of the external boundary, as illustrated by example in Fig. 1. we can choose the next neighbouring state s that minimises
+i
+887
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. total travel time of the discrete path: The time complexity for ﬁnding an optimal discrete path
+O | || | | || | | |
+∗ is (S C k+ Φ S ), where C is the worst case number
+si =arg(cid:48)∈minCss(cid:48)(t)+Ts(cid:48)(t+Css(cid:48)(t)). (6) of variations in ﬂow, k is number of edge transitions, |Φ|
+Now we can dseriSvsethe optimal time-dependent policy for is the number of discrete controls and |S| is the number of
+each s∈S:  discrete sequences. Given a discrete| s|equence ψ, we ﬁnd a
+continuouspathforeachregionfor ψ times.Therefore,the
+... ... time complexity for ﬁndinOg a| c|o|nt|inuo|us||pa|th|is||O(||ψ||U|).
+πs∗(t)= sii∈∈Ss else if t>t1 . (7) Tedhgeeocvoesrtasllacreomfopulnedxibtyyiesnum(eSratCingk+allΦcoSntr+olsψUUan)d.SΨinfcoer
+s S if t>t forward integration, the part can be parallelised. The overall
+i s 0 O | || | | |
+Based on the policy, we can ﬁnd the time-optimal discrete c|om| plexOity| w||ith| par|all|el processing is (S C k + S +
+path ψ∗ =s s ···s . ψ )= (S C k+ ψ ). In either case, the time complexity
+0 1 n is linear in the number of discrete regions and polynomial
+C. Hierarchical planning for continuous TDSP in the number of variations in ﬂow.
+Inthissection,wepresenthowtorealiseacontinuouspath
+that follows the time schedule of the time-optimal discrete VII. CASESTUDIES
+∗ { ···}
+pathψ .WedenoteU= θ0, astheﬁnitesetofdemand In this section, we present 3 case studies: an ASV travel-
+heading values the vehicle controller can select.
+ling in a 2D time-dependent ﬂow ﬁeld, an underwater glider
+Starting from the initial ∈state s0 at time t0, we forward travelling in a 3D time-dependent ﬂow ﬁeld, and a real-
+integrate for all controls u U to ﬁnd a set of trajectories world example where an ASV traverses the East Australian
+that reaches the state line, (cid:96)s1. To limit the number of Current (EAC) to ﬁnd the shortest path from Brisbane to
+branching trajectories we keep only the N best, i.e., the Sydney.Thecasestudiesdemonstrateouralgorithm’sability
+N trajectories with closest total travel time to Tψ∗. We to handle various dimensions, dynamics, and problem sizes.
+brancheachoftheN trajectoriestothenextstatebyfo1rward Alldistanceunitsareinmetersandtimeunitsareinseconds
+integratingtothenextstateline,pruningagainfortheN best unless otherwise stated.
+trajectories. Once we reach the end of the discrete path, we
+pick the trajectory with the fastest total travel time.
+A. Autonomous surface vehicle (ASV) case
+AvisualisationofanexamplecaseisshowninFig.2.Sup-
+In this case study, we generate a continuous path that
+pose we were to generate a continuous path from a discrete
+pcoatnhtrψol=inpsu3st4fsro2ms1ss33.,WpieckﬁrNst ptrraojpeacgtoarteiesthtehaptatihntaecrsroecsst (cid:96)thse4 fWoopletliomawlisssoattheiovenatliutmeacteeh-ontpihqteiumeo,apltaindmdisaclgresetntaeerrtpaattietmhaestctao∗0rntiutnisngiunfogruoasmspttaa0tnh=dafor0dr.
+and have the closest total travel time T , and prune away
+ψ1 that start time.
+therest.Weextendeachtrajectorybypropagatingnewpaths
+from the trajectory’s end point and continue the process for We consider an ASV with a constant forward velocity
+(cid:96) . After each extension, more trajectories are pruned away of 0.5 m/s travelling from [0.5,1]T to [8.5,2]T through a
+tos2keep only the N best solutions. 2D time-dependent ﬂow ﬁeld. The planning environment is
+dominated by a westward current of up to 1.2 m/s around
+VI. ANALYSIS the goal state that makes it impossible for the ASV to
+It is important to note that solving for general non-FIFO travel directly east towards the goal. Vortices with radius
+∈
+TDSPoverdiscretespace(i.e.,graph)isNP-hard[5,25].The 1.5 m appear at [1.5,1.5]T for t [0,15], at [4.5,1.5]T for
+∈ ∈
+problem becomes even harder with continuous state space. t [10,30], and at [7.5,1.5]T for t [25,inf). To solve
+Our hierarchical approach divided the problem into two the for the time-optimal discrete path, the environment was
+parts, discrete path and continuous path. In our previous discretised into a 9x3 grid, yielding a graph with 42 states.
+work [17], we have shown that the discrete path ψ gives Figures 3a to 3c show time instants along the continuous
+the time optimal solution in polynomial computation time. path starting at t = 0. The travel time for discrete and
+0
+Since our continuous path is generated by ﬁnding a uniform continuous path were T = 31.95 and T = 32.53. The
+ψ σ
+control within each region in the discrete sequence, the ﬁnal ASV loops around the ﬁrst vortex 3 times to wait for the
+continuous path is optimal with respect to discrete regions. time when the transition from the ﬁrst to the second vortex
+The result implies that as we reduce the size of each region, ispossible.Aftertransitioningtothesecondvortex,thepaths
+our continuous path would also approach the optimal in cycles another 3 times until it is feasible to transition into
+continuous state space. the third vortex and reaches the goal line. This shows how
+In continuous path generation, our aim is to ﬁnd a control cyclicpathsareusedtoloiterinanticipationofadvantageous
+that triggersa transition tothe designated nextregion within transitions in the ﬂow ﬁeld.
+a time window. Under the assumption that the ﬂow within a Figure 3d shows the trajectory for the optimal starting
+∗
+region is uniform, there always exists a continuous control time t = 9 with travel times for discrete and continuous
+0
+from one edge to another. Therefore our framework is path T =19.75 and T =20.1. The path shows its best to
+ψ σ
+complete in both discrete and continuous state space. start near the end of the ﬁrst vortex period.
+888
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. (a)ASVpathat13.5secondafterdepartingatt0=0departure (b)ASVpathat23.5secondafterdepartingatt0=0
+(c)ASVpathat32.53secondafterdepartingatt0=0 (d)ASVpathat19.75secondafterdepartingatt0=9
+Fig.3. 2DcontinuouspathofanASVfrom[0.5,1]T to[8.5,2]T withaconstantvelocityof0.5m/s.Astrongcurrentﬂowingwestopposestheglider’s
+pathtothegoal.Figures(a)-(c)showpathsforstartingtimesinstepsstartingatt=0.Figure(d)istheﬁnalpathwhenstartingattheoptimalstarttime
+∗
+t =9
+0
+trim-state control. A trim-state is the state of dynamic equi-
+librium that is maintained under no disturbance or control
+variation. A description of 3D glider trim control can be
+found in our previous work [18].
+Both the ﬂow ﬁeld environment and the time-dependent
+graph are similar to those described in Sec. VII-A, extended
+in depth to allow for manoeuvre in 3D. Consequently, the
+P
+stateline(cid:96) isextendedintoastateplane, .Forsimplicity,
+s s
+we set the ﬂow velocity to be the same for all depths. For
+the edge time evaluation C (cid:48)(t), a set of trajectories is
+ss
+propagated in 3D from s using forward integration, and we
+P
+pick the time that the fastest trajectory intersects with (cid:48).
+s
+The start and goal positions are the same as in the previous.
+Figure 4 shows the continuous 3D path with t =
+0
+0, and travel times for discrete and continuous path
+T =T =15.4. The continuous trajectory illustrates prop-
+ψ σ
+erties of the glider dynamics, as the manoeuvres exhibit
+a sawtooth motion. Otherwise, we see the same decision
+making we saw with the ASV example: the glider loops
+around the ﬁrst vortex twice before entering the second
+Fig.4. TDSPacrossatime-varying3Dﬂowﬁeldwithunderwaterglider
+dynamics.Thetraveltimesforthediscreteandcontinuouspathswereboth vortex, where it loops twice again until the ﬁnal transition
+15.4sec.Thesamplepointsareomittedforclarity.Thetrajectoryandthe to the goal is feasible. Furthermore, as the glider velocity
+ﬂowﬁeldattheﬁnaltimestepareshown.
+can be controlled by the sawtooth motion, we have greater
+control on T
+B. Underwater glider in 3D ocean current case σ
+C. Real world ocean current case
+In this case, we used underwater glider dynamics to
+generate the continuous path that follows the time-optimal In this case study, we generated a continuous path along
+discrete path commencing at t = 0. We consider a hy- the East Australian Current (EAC) that follows the time-
+0
+pothetical underwater glider with a top horizontal speed of optimal discrete path at t =0. We consider an ASV with a
+0
+0.868 m/s. The edge time was evaluated using an average constantforwardvelocityof0.3m/stravellingfromBrisbane
+− ◦ ◦ − ◦ ◦
+glider horizontal speed of 0.7435 m/s. ( 27.5 ,154 ) to Sydney ( 34 ,151.5 ).
+The glider typically operates in a sawtooth motion, con- Theﬂowﬁelddataistakenfromanumericalhindcast[14].
+trolling its glide angle to control its net velocity. The sparse The data set was obtained from the School of Mathematics
+controlschemefortheglidermodelcanbeimplementedasa andStatisticsattheUNSW.Tosolvetheforthetime-optimal
+889
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. (a)0days (b)7days
+Fig.5. 2DcontinuouspathfromBrisbanetoSydneyinatime-dependentEastAustralianCurrentrepresentationgeneratedbytheAustralianBureauof
+Meteorology. The vehicle velocity is set to a constant value of 0.3 m/s. The travel time for discrete and continuous path were T = 13.375 days and
+ψ
+Tσ =14.7 days. The red circle is the vehicle’s starting point and the red cross is its end point. The green and magenta dashed lines are the paths the
+vehicle would have followed if the ﬂow ﬁeld were ﬁxed at its states at t=0 days and t=7 days, respectively. The environment was discretised on a
+20x10grid,showninblack.
+discrete path, the environment was discretised into a 20x10 reducing the N value and the time step when propagating
+grid, yielding a graph with 370 states. the continuous path.
+Figure 5 shows the initial and ﬁnal time steps of
+VIII. CONCLUSIONANDFUTUREWORK
+the resulting continuous ASV path. The travel time was
+T =13.375 days and T =14.7 days. The ASV path In this paper we have presented an efﬁcient algorithm for
+ψ σ
+follows the movement of the strongest part of the EAC to ﬁnding shortest continuous paths in ﬂow ﬁelds that is based
+minimise the time to the goal. We also compared our result on a polynomial-time solution to the TDSP. It has analytical
+withpathsgeneratedintime-varyingﬂowﬁeldusingcontrol guarantees on path quality and time complexity. We have
+sequence appropriate for time-invariant ﬂow ﬁelds snapshot showed that the algorithm exhibits favourable computation
+at t = 0 days and t = 7 days. Applying the control for time performance in practice, is effective in ﬁnding paths
+snapshot at t = 0 results in the vehicle colliding with the that exploit advantageous ocean currents, and is applicable
+Australian coast after 11.35 days, and applying the controls to several types of marine robots.
+using snapshot at t=7 results in the vehicle completing its Important avenues for future work include improving the
+trajectory 130.2464 km away from the goal. In comparison, algorithm through smarter ﬂow ﬁeld heuristics for edge cost
+our result delivers the ASV to a point 11.2504 km away computation[27]andadaptivediscretisationandminimising
+from the goal. This relatively minor position error is due to energy use as opposed to the time length of the path [31].
+approximations made when generating the continuous path. We would also like to extend our work on planning with
+The computation time was also favourable; we were able forecast data. Such planning would need to consider uncer-
+tosolveforthediscretepathin440.77secandthecontinuous tainty[20,30,32]intheﬂowﬁeldpredictions.Wealsointend
+path in 642.26 sec. The computation time can be tuned by to conduct ﬁeld trials to evaluate our methods in practice.
+890
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [16] D. Kularatne, S. Bhattacharya, and M. A. Hsieh, “Optimal Path
+Planning in Time-Varying Flows with Forecasting Uncertainties,” in
+[1] R. Bachmayer, N. E. Leonard, J. Graver, E. Fiorelli, P. Bhatta,
+Proc.ofIEEEICRA,2018,pp.1–8.
+and D. Paley, “Underwater gliders: Recent developments and future
+[17] J. J. H. Lee, C. Yoo, S. Anstee, and R. Fitch, “Efﬁcient Optimal
+applications,”inProc.ofUnderwaterTechnology,2004,pp.195–200.
+Planning in non-FIFO Time-Dependent Flow Fields,” arXiv e-prints,
+[2] B. Claus, R. Bachmayer, and C. D. Williams, “Development of an
+p.arXiv:1909.02198,Sep2019.
+auxiliary propulsion module for an autonomous underwater glider,”
+[18] J.J.H.Lee,C.Yoo,R.Hall,S.Anstee,andR.Fitch,“Energy-optimal
+Proceedings of the Institution of Mechanical Engineers, Part M:
+kinodynamicplanningforunderwaterglidersinﬂowﬁelds,”inProc.
+JournalofEngineeringfortheMaritimeEnvironment,vol.224,no.4,
+ofARAAACRA,2017.
+pp.255–266,2010.
+[19] K.M.B.Lee,J.J.H.Lee,C.Yoo,B.Hollings,andR.Fitch,“Active
+[3] K. L. Cooke and E. Halsey, “The shortest route through a network
+perceptionforplumesourcelocalisationwithunderwatergliders,”in
+with time-dependent internodal transit times,” J. Math. Anal. Appl.,
+Proc.ofARAAACRA,2018.
+vol.14,no.3,pp.493–498,1966.
+[20] K. M. B. Lee, C. Yoo, B. Hollings, S. Anstee, S. Huang, and
+[4] B.C.Dean,“ShortestpathsinFIFOtime-dependentnetworks:Theory
+R. Fitch, “Online estimation of ocean current from sparse GPS data
+andalgorithms,”MIT,Tech.Rep.,2004.
+forunderwatervehicles,”Proc.ofIEEEICRA,2019.
+[5] D. Delling and D. Wagner, “Time-dependent route planning,” in
+[21] N. Leonard and J. Graver, “Model-based feedback control of au-
+Robust and Online Large-Scale Optimization, R. K. Ahuja, R. H.
+tonomousunderwatergliders,”IEEEJ.OceanicEng.,vol.24,no.4,
+Mo¨hring, and C. D. Zaroliagis, Eds., vol. 5868 of Lecture Notes in
+pp.633–645,2001.
+ComputerScience. Springer,2009,pp.207–230.
+[22] L. Liu and G. S. Sukhatme, “A Solution to Time-Varying Markov
+[6] U.Demiryurek,F.Banaei-Kashani,C.Shahabi,andA.Ranganathan,
+DecisionProcesses,”inProc.ofIEEEICRA,2018.
+“Online computation of fastest path in time-dependent spatial net- [23] T. Lolla, P. F. J. Lermusiaux, M. P. Ueckermann, and P. J. Haley,
+works,”inProc.ofSSTD,2011,pp.92–111. “Time-optimal path planning in dynamic ﬂows using level set equa-
+[7] S. E. Dreyfus, “An Appraisal of Some Shortest-Path Algorithms,” tions: theory and schemes,” Ocean Dyn., vol. 64, no. 10, pp. 1373–
+Oper.Res.,vol.17,no.3,pp.395–412,1969. 1397,2014.
+[8] E.Fernndez-Perdomo,J.Cabrera-Gmez,D.Hernndez-Sosa,J.Isern- [24] T. Lolla, M. P. Ueckermann, K. Yigit, P. J. Haley, and P. F. J.
+Gonzlez,A.C.Domnguez-Brito,A.Redondo,J.Coca,A.G.Ramos, Lermusiaux,“Pathplanningintimedependentﬂowﬁeldsusinglevel
+E..Fanjul,andM.Garca,“PathplanningforglidersusingRegional setmethods,”inProc.ofIEEEICRA,2012,pp.166–173.
+OceanModels:ApplicationofPinznpathplannerwiththeESEOAT [25] A.OrdaandR.Rom, “Shortest-pathandminimum-delayalgorithms
+model and the RU27 trans-Atlantic ﬂight data,” in Proc. of IEEE innetworkswithtime-dependentedge-length,”J.ACM,vol.37,no.3,
+OCEANS,2010,pp.1–10. pp.607–625,1990.
+[9] E.Fernndez-Perdomo,D.Hernndez-Sosa,J.Isern-Gonzlez,J.Cabrera- [26] R.P.Stokey,A.Roup,C.vonAlt,B.Allen,N.Forrester,T.Austin,
+Gmez, A. C. Domnguez-Brito, and V. Prieto-Maran, “Single and R.Goldsborough,M.Purcell,F.Jaffre,G.Packard,andA.Kukulya,
+multiplegliderpathplanningusinganoptimization-basedapproach,” “Development of the REMUS 600 autonomous underwater vehicle,”
+inProc.ofIEEEOCEANS,2011,pp.1–10. inProc.ofIEEEOCEANS,2005,pp.1301–1304.
+[10] L.Foschini,J.Hershberger,andS.Suri,“Onthecomplexityoftime- [27] K.Y.C.To,C.Yoo,S.Anstee,andR.Fitch,“Distanceandsteering
+dependentshortestpaths,”Algorithmica,vol.68,no.4,pp.1075–1097, heuristicsforstreamline-basedﬂowﬁeldplanning,”inProc.ofIEEE
+2014. ICRA,2020,pp.1–7.
+[11] B. George and S. Shekhar, “Time-aggregated graphs for modeling [28] K. Y. C. To, K. M. B. L. Lee, C. Yoo, S. Anstee, and R. Fitch,
+spatio-temporal networks,” J. Semantics Data, vol. 9, pp. 191–212, “Streamlines for motion planning in underwater currents,” Proc. of
+2008. IEEEICRA,2019.
+[12] R.Hine,S.Willcox,G.Hine,andT.Richardson,“Thewaveglider:A [29] D. C. Webb, P. J. Simonetti, and C. P. Jones, “SLOCUM: An
+wave-poweredautonomousmarinevehicle,”inOCEANS2009. IEEE, underwatergliderpropelledbyenvironmentalenergy,”IEEEJournal
+2009,pp.1–6. ofOceanicEngineering,vol.26,no.4,pp.447–452,2001.
+[13] J. Isern-Gonzalez, D. Hernandez-Sosa, E. Fernandez-Perdomo, [30] C. Yoo, S. Anstee, and R. Fitch, “Stochastic path planning for
+J. Cabrera-Gamez, A. C. Domnguez-Brito, and V. Prieto-Maranon, autonomous underwater gliders with safety constraints,” in Proc. of
+“Pathplanningforunderwaterglidersusingiterativeoptimization,”in IEEE/RSJIROS,2019.
+Proc.ofIEEEICRA,2011,pp.1538–1543. [31] C.Yoo,R.Fitch,andS.Sukkarieh,“Probabilistictemporallogicfor
+[14] C.Kerry,B.Powell,M.Roughan,andP.Oke,“Developmentandeval- motionplanningwithresourcethresholdconstraints,”inProc.ofRSS,
+uation of a high-resolution reanalysis of the East Australian Current 2012.
+regionusingtheRegionalOceanModellingSystem(ROMS3.4)and [32] ——, “Provably-correct stochastic motion planning with safety con-
+Incremental Strong-Constraint 4-Dimensional Variational (IS4D-Var) straints,”inProc.ofIEEEICRA,2013,pp.981–986.
+data assimilation,” Geoscientiﬁc Model Development, vol. 9, no. 10, [33] ——, “Online task planning and control for fuel-constrained aerial
+pp.3779–3801,2016. robotsinwindﬁelds,”Int.J.Robot.Res.,vol.35,no.5,pp.438–453,
+[15] S. Kontogiannis and C. Zaroliagis, “Distance Oracles for Time- 2016.
+Dependent Networks,” Algorithmica, vol. 74, no. 4, pp. 1404–1434,
+2016.
+891
+Authorized licensed use limited to: La Trobe University. Downloaded on September 21,2020 at 05:23:55 UTC from IEEE Xplore.  Restrictions apply. 

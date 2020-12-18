@@ -1,0 +1,467 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Stable Control in Climbing and Descending Flight under Upper Walls
+using Ceiling Effect Model based on Aerodynamics
+Takuzumi Nishio1 , Moju Zhao1, Fan Shi1, Tomoki Anzai1, Kento Kawaharazuka1,
+Kei Okada1 and Masayuki Inaba1
+Abstract—Stable ﬂight control under ceilings is difﬁcult
+for multirotor Unmanned Aerial Vehicles (UAVs). The wake
+interaction between rotors and upper walls, called the ”ceiling
+effect”, causes an increase of rotor thrust. As a result of
+the thrust increase, multi-rotors are drawn upward abruptly
+and collide with ceilings. In previous work, several thrust
+models of the ceiling effect have been proposed for stable
+ﬂight under ceilings, assuming that the airﬂow around rotors
+is in steady states. However, the airﬂow around rotors in
+vertical ﬂight is not in steady states and each thrust model in
+previous work is skillfully determined based on large amounts
+of precise experimental data. In this paper, we introduce an
+aerodynamics-based thrust model and a stable control method
+underceilings.Thismodelisderivedfromthemomentumthe-
+ory and the relationship between vertical climbing/descending
+ratesofrotorsandaninducedvelocity.Toconﬁrmourproposed
+model, we collect thrust data at various vertical rates in ﬂight.
+In addition, we use only onboard sensors to estimate self-
+Fig. 1. Stable ﬂight of a quadrotor under ceilings. This robot have an
+state for structural inspections. Consequently, we reveal that upwardsensortomeasurethedistancefromrotorstoceilingsandself-statess
+theproposedmodelisconsistentwiththeexperimentalresults. isestimatedbysensorssuchasacamerawithvisualinertiaodometory(VIO)
+Based on an aerodynamic model, we need not collect large
+amounts of precise experimental data to realize stable ﬂight.
+Furthermore,theverticalﬂighttestsunderceilingsdemonstrate
+results, experimental measurements in steady states are con-
+that our in-unsteady-state-model-based controller outperforms
+the conventional steady-state ones. ducted.In[5],aceilingeffectmodelofthrustinsteadystates
+based on aerodynamics is proposed. This model is derived
+I. INTRODUCTION from the classical momentum and blade element theory
+and determined by distances from rotors to ceilings[6]. In
+Multirotor unmanned aerial vehicles (UAVs) have been addition,theairﬂowinterferencebetweenrotorsintheceiling
+rapidlyimprovedforvariousapplicationsinrecentyears.For effect is measured in [7].
+someinspectionapplications,suchasbridges,multirotorsare For ﬂight stabilization near structures, one conventional
+requiredtostabilizeﬂightinnarrowareasnearthestructures approachistoavoidtheceilingeffectusingprotectiveequip-
+[1],especiallyunderceilings.Thisisachallengingproblem, ment such as passive rotating spherical shells [8]. However,
+since the control of multirotors fails near ceilings due to the increase of the multirotors’ size due to the equipment
+the interaction of the airﬂow between rotors and ceilings, could prevent multirotors from entering narrow areas in
+called the ”ceiling effect”. In the ceiling effect, thrust of complex structures. Another effective way is to perch on
+rotors increases as multirotors approach upper walls [2],[3]. ceilings and reduce the energy consumption (e.g. [5], [9],
+Contrary to the ground effect, multirotors are drawn upward [10]). Here, a control method for stable ﬂight and perching
+andcollidewithceilingsathighverticalrates.Toaddressthis on ceilings is required, especially in narrow areas.
+problem, more precise models and controllers are required.
+In the ground effect, various models and controllers have
+Recently, there have been several analyses on the ceiling been proposed for stable landing (e.g. [11], [12], [13],
+effect. Using computational ﬂuid dynamics (CFD), it is [14], [15], [16]). The conventional models are based on
+revealed that the ceiling effect is caused by the additional experimental data, and thrust is determined only by distance
+pressure difference between above and below rotors by the from the ground. Using the in-steady-state thrust models,
+presence of upper walls [4]. In addition to the increase of theperformanceofmultirotors’landingisimprovedtosome
+thrust, a decrease of torque occurs, and this leads to an extent. In recent work [17], the Neural Lander realizes a
+increase of energy efﬁciency. To conﬁrm these analytical more precise control in the ground effect, using a deep
+neural network (DNN) model of thrust in unsteady ﬂow
+1T. Nishio, M. Zhao, F. Shi, T. Anzai, K. Kawaharazuka, K. Okada states. The result of this research demonstrates that a model
+and M. Inaba are with Department of Mechano-Infomatics, The Uni-
+taking in consideration of the inﬂuence of unsteady states
+versity of Tokyo, 7-3-1 Hongo, Bunkyo-ku, Tokyo 113-8656, Japan
+nishio@jsk.imi.i.u-tokyo.ac.jp is a very effective to realize stable ﬂight. However, models
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 172
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. using a deep neural network needs to collect large amounts
+of data to construct an in-unsteady-state model. Compared
+with the ground effect, it is very difﬁcult to collect various
+types of data in the ceiling effect, since multirotors are
+drawn upward with high vertical rates and cannot maintain
+ﬂight near ceilings. In the ceiling effect, a few models and
+controllers have been proposed [18], [19]. In [18], the thrust
+modelisaskillfullydeterminedfunctionbasedonanalytical
+data calculated by CFD, and this model assumes that the
+thrust varies with only the distance from the rotors to the
+ceiling. However, there is no guarantee that the function
+can be adapted to any type of rotor and the model does
+not consider the inﬂuence of unsteady states. For structural
+inspection, stable ﬂight control with only onboard sensors is
+required [19].
+Inthispaper,weproposeamethodtostabilizeﬂightunder Fig.2. Theairﬂowmodelaroundtherotorintheceilingeffect.Therotor
+issetfromtheceilingatdistanced andmovingintheverticaldirectionat
+ceilings with a precise thrust model based on aerodynamics.
+ratez˙.ThepressureaboveandbelowtherotorisP− andP ,andtheﬂow
++
+We propose a model of thrust in unsteady states which velocityontheactuatordiskisz˙+vi.
+takes into consideration vertical climbing and descending
+rates in the ceiling effect. Our main contributions are as ofincompressibleﬂow,therelationshipbetweenpressureand
+follows: (1) Based on aerodynamics, we derive a model of ﬂow velocity can be written as:
+thrust in unsteady states which can be adapted to any rotors.
+1 1
+Therefore,weneednotcollectlargeamountsofexperimental P0+2ρz˙2 = P(r)+2ρv2(r) (1)
+data and need not carefully choose a model of thrust in the
+1 1
+ceilingeffect.(2)Consideringthemodelofthrustinunsteady P(r)+2ρv2(r) = P−+2ρ(vi+z˙)2 (2)
+states, we realize more precise control in the ceiling effect,
+1 1
+especiallyinverticalﬂight.(3)Forstructuralinspections,we P++2ρ(vi+z˙)2 = P0+2ρ(v∞+z˙)2 (3)
+realize stable ﬂight using only onboard sensors.
+where induced velocity v is the airﬂow velocity uniformly
+In the following sections, we derive an in-unsteady-state i
+distributed on the actuator disk and ρ is air density.
+modelofthrustintheceilingeffect.Next,weshowacontrol −
+Eqs. 1, 2, 3 and T =(P P−)A lead to
+method and system architecture for stable ﬂight in Sec. III +
+and IV. In experiments, we compare our proposed model 1
+T = ρAv∞(v∞+2z˙) (4)
+with the experimental data and conﬁrm that this model is in 2
+agreementwithexperimentaldata.Finally,weconductﬂight where v is the terminal ﬂow velocity in the downstream.
+∞
+tests under ceilings. As a result, we demonstrate that the Therateoftheﬂowis2πrdv(r)abovetherotorandπr2(vi+
+ﬂight performance of our proposed model is better than that z˙) on the actuator disk. From the law of mass conservation,
+of a conventional model. the ﬂow velocity above the rotor at a radial position r is
+given by
+II. AERODYNAMICCEILINGEFFECTMODEL
+r
+In this section, we introduce a in-unsteady-state thrust v(r) = 2d(vi+z˙). (5)
+model of rotors in the ceiling effect. We employ the simple
+The thrust of the rotor is typically equal to the rate of
+momentum theory to derive this model. In previous work
+momentum increase in the axial direction. However, the
+[5], an aerodynamic model of thrust in steady states was
+difference of pressure between above and below ceilings
+derived from the momentum theory and the blade element
+generates an increase of thrust ∆T . Therefore, the thrust
+theory. For ﬂight stabilization under ceilings, we introduce ICE
+in the ceiling effect T is represented by
+a model of thrust in unsteady states considering the vertical ICE
+climbing/descending rates z˙ based on the previous work. TICE = m˙(v∞+z˙)+∆TICE. (6)
+WeconsidertherotorwithradiusR,whichisatadistance
+d from a ceiling and moves at z˙ as shown in Fig 2. Thus, Here, the ﬂow mass rate on the actuator disk m˙ =ρA(vi+
+the rotor thrust T is represented by the pressure difference z˙) and the increase of thrust in(cid:90) the ceiling effect ∆TICE is
+− expressed as:
+between the upper-stream P− and down-stream P+ as (P+ √
+P−)A. The efﬁcient actuator disk area A=απR2. Here, α − αR
+is an efﬁcient ratio (0<α (cid:53)1), since the efﬁcient area of ∆TICE = P0A P(r)2πrdr (7)
+the disk is smaller than the real actuater disk area πR2 due r=0
+From Eqs. 1, 4 to 7, the relationship between v and v
+to the inﬂuence of the tip-vortex. Bernoulli’s equation, the i ∞
+(when z˙=0) is given by
+law of energy conservation, can be applied to the upper-
+stream and down-stream of the rotor. Using the assumption v∞=2γvi. (8)
+173
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. (cid:114)
+1 α
+γ = (1+ 1+ ) (9) multirotordynamicsoftranslationalandrotationalmotionin
+2 32d¯2 the ceiling effect can be written as follows:
+wtmohoetmhreeencγtuemiilsintgehxepdo¯rre=ys,sdew/deDud.seiIrnnigvethdtheethsarnumosnet-duwinmadyeernasscieocinloiannlgvdse,nistutiaosninncagel mJω˙p¨ == −−mωg×+JRωF+ICτEIC(dE¯,(zd˙¯),z˙) ((1134))
+therelationshipbetweenv andv inhoverﬂight.FromEqs. where m and J is the mass and inertia matrix.
+i ∞
+6 and 8, the thrust under ceilings can be founded as The gravity vector g = [0,0,g]T, thrust and torque
+generated by rotors in the ceiling effect is expressed
+TICE =2ργvi(γvi+z˙)A. (10) as FICE = [0,0,TICE(d¯,z˙)]T, and τICE(d¯,z˙) =
+From the conventional simple momentum theory, we as- [τx(d¯,z˙),τy(d¯,z˙),τz(d¯,z˙)]T. The desired forces vector
+sume that the thrust out of the ceiling effect (OCE) in ﬂight is deﬁned as U = [TICE(d¯,z˙),τx(d¯,z˙),τy(d¯,z˙),τz(d¯,z˙)]T.
+can be represented by TOCE =2ρv2iA [6]. Thus, the ratio Using our proposed motor-mapping matrix AM(d¯,z˙), the
+kT =TICE/TOCE is given by relationship betw··e·en U and the thrust vector of N rotors
+TICE(d¯,z˙) =γ2(1+γ−1 z˙). (11) TH(eµre),=th[eTm(µo1t)o,rma,pTp(iµnNg)m]TaitsrixgivisenbyU=AM(d¯,z˙)T(µ).
+Hveerrteic,al(1ra+tesγ.−T1zh˙T/eOvrCi)eElaitsiotnhse(cid:112)hipcebileitnwgeeenvffievcitantdermz˙, iscasuhsoewdnbiyn AM(d¯,z˙)= xyk11kkTTT(d((¯dd1¯¯,11z˙,,)zz˙˙)) ············ xyNNkTkkTT(d((¯Ndd¯¯NN,z˙,,)zz˙˙))  (15)
+Fig3.Nondimensionalizedbytheinducedvelocityinsteady hτ(d¯1,z˙) hτ(d¯N,z˙)
+states v , this relationship can be adapted to various types
+h where µ is the control-inputs vector to the rotors, and
+of rotors. Therefore, vh = TOCE/2ρA. In unsteady states, x, y are the position of a i-th rotor in the x and y
+i i
+the induced velocity decreas(cid:114)es as climbing rates increase as axis direction from the center of gravity (CoG), kT(d¯i,z˙)=
+below: TICE(d¯i,z˙)/TOCE, and hτ(d¯i,z˙) = τ(d¯i,z˙)/TOCE. Therefore,
+vvhi =−2zv˙h + (2zv˙h)2+1. (12) Cth(ed¯,mz˙)oAtMor0, musaipnpgincgonvmeanttriioxnailsmeoxtoprremssaepdpiansg mAMat(rdi¯x,z˙A)M=0
+and the ceiling effect matrix C(d¯,z˙), where C(d¯,z˙) =
+On the other hand, the induced velocity increases as the ···
+descendingratesincreaseintherangeofsmallverticalrates. diag(kT(d¯1,z˙), ,kT(d¯N,z˙)). In vertical ﬂight, we assume
+The states around the rotor are called vortex ring states or thatthefourthlinecomponentsofAM0,hτ(d¯i,z˙)/kT(d¯i,z˙)are
+consideredtobeconstantregardlessofthedistancefromthe
+turbulent wake states. The relationship between the induced
+rotors to the ceiling or vertical velocity. To stabilize climb-
+velocityofrotorsanddescendingratesisexperimentallywell
+ing/descendingﬂightunderceilingsbasedonanaerodynamic
+known.Inpreviousresearch[20],thisrelationshipisusedfor
+thrust model, we apply Eq. 12 to the ceiling effect matrix
+the analysis of an accelerating rotor in descending ﬂight. In
+k .NotethatourcontrolframeworkisacombinationofLQI
+this section, we introduce the in-ceiling-effect thrust model T
+and PID [21]. In this section, we introduce a stable control
+in Eq. 12. Adapting this model to a controller, we stabilize
+method under ceilings by decreasing the modeling error of
+ﬂight under ceilings.
+thrust.
+III. CONTROLINTHECEILINGEFFECT IV. SYSTEMARCHITECTURE
+In this section, we introduce the multirotor dynamics and Forcontrolstabilizationunderceilings,weusethesystem
+acontrolmethodunderceilings.Usingposition p∈R3 inthe as shown in Fig 4. Because of desired forces determined
+globalframe,angularvelocityω∈R3 inthebodyframe,the
+Fig.3. Therelationshipbetweeninducedvelocityandclimbing/descending Fig.4. Theplatformforstablecontrolunderceilings.Theself-statesand
+rateoftherotor.Theinducedvelocityv isdeterminedbytheverticalrate theceilingpositionareestimatedonlywiththefollowingonboardsensors
+z˙.Thefunctionisderivedfromtheconvientionalsimplemomentumtheory :acamerawithvisualinertiaodometry(VIO),aninertiameasurementunit
+andexperimentaldata. (IMU),andlaserrangeﬁnders
+174
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. Fig. 6. The quadrotor used in experiments, called ”Hydrus” [21]. The
+quadrotorestimatesself-statebyacamera(ZedMini,Stereolabs,Resolution
+Fig. 5. (Left) The experimental setup to measure thrust in steady : 2560 ×720) with visual inertia odometory (VIO), inertia momentum
+states. (Right) The relationship between thrust ratio TICE/TOCE and non- unit(MPU-9250,Invensence)andalaserrangeﬁnder(VL53L0x,Switch
+dimensionaldistancefromarotortoaceilingd¯.WecompareTICE/TOCE in Sience).Totalmassis3.72kg
+steady statesbetween measurementdata andthrust models.Therefore, we
+usemodelswhichminimizetherootmeaningsquarederror(RMS)between
+experimentaldataandtheseumodels. For a conventional model, we use the model using a
+sigmoid neural network (NN) with 3 fully-connected layers
+by a controller, multirotor UAVs follow target states. From
+[17]. To train this model, we use Adam, and measurement
+the desired forces, inputs to motors are calculated by a
+data is shown in Figs. 5 and 7. In the proposed model, we
+motor-mapping, which is generally constant in ﬂight. Thus, decide α from the measurement data in Figs. 5.
+multirotor motions are determined by thrust and torque
+In the experiment, we use a propeller with a diame-
+generated by the rotors. In the ceiling effect, an increase of
+ter D = 356 mm (CF-Prop) and a motor (MN-3510-25
+thrust and a decrease of torque occur. Therefore, multirotors
+KV 350, T-MOTOR). To measure thrust, we use a force
+cannot follow the target states due to the difference between ±
+sensor (CFS034, Leptrino, Rate capacity : 100 N) at the
+the desired forces and real forces generated by the rotors.
+rate of 100 Hz. We conduct measurements in the case
+Toaddressthisproblem,weproposedanewmotor-mapping
+that a propeller is set from a ceiling at distances, d =
+taking into consideration the ceiling effect model, in which
+5.0,7.5,10.0,15.0,20.0,25.0,30.0,35.0,40.0mm,andinthe
+thrust coefﬁcients vary with the distance to the upper wall
+case without ceilings.
+and vertical climbing/descending rates. When the rotors
+approach ceilings, or vertical climbing rates increase, the B. Thrust in Unsteady states
+motor-mappingreducestheinputstotherotors.Ontheother
+Tovalidatetheproposedmodel,weestimateTICE/TOCE in
+hand, control inputs are increased when the rotors are away
+vertical climbing/descending ﬂight from Eq. 14. In previous
+from the ceilings or vertical descending rates increases. For
+work[17],themodelofthrustinunsteadystatesisestimated
+structural inspection, multirotors need to estimate self-states
+based on the multirotor dynamics in Eq. 14.
+and the positions of ceilings. Thus, we do not use GPS
+sensors or motion capture systems. In the proposed system, FICE(d¯,z˙) =R−1m(p¨+g). (16)
+multirotorsestimateself-statesandpositionsofceilingsonly T T
+OCE OCE
+with onboard sensors.
+Intheexperiments,weuseaquadrotorcalled”Hydrus”[21].
+V. EXPERIMENTS To estimate acceleration of multirotor p¨, we use IMU at the
+rate of 100Hz. In addition, we assume that the interference
+In this section, we conduct the following three experi-
+of airﬂow between rotors can be ignored. The comparison
+ments. (A) We measure thrust in steady states and construct
+a model of thrust in the ceiling effect. In addition to of TICE/TOCE in unsteady states between experimentally
+the proposed model in Eq. 12, when z˙ = 0.0, we use a
+conventional model. (B) To verify our proposed model in
+climbing/descending ﬂight, we estimate thrust in the ceiling
+effect from the multirotor dynamics. (C) To evaluate the
+controller based on the proposed model, we compare the
+performance of target tracking.
+A. Thrust in Steady states
+Toconstructmodelsinsteadystates,wemeasurethethrust
+of a rotor when z˙=0.0. As shown in Fig. 5, we depict the
+measurement data and the two thrust models TICE/TOCE in
+steady states, namely the conventional model and proposed
+modelinEq.12.Here,weadoptmodelswhichminimizethe Fig. 7. The relationship between thrust ratio TICE/TOCE and non-
+rootmeaningsquarederror(RMS)betweenthemeasurement dimensionaldistancefromarotortotheceilingd¯.WecompareTICE/TOCE
+inunsteadystatesbetweentheestimatedresultsandproposedthrustmodel.
+results and models. Here,theproposedmodel(whenz˙=0.0)isasshowninFig.5.
+175
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. estimated results and the proposed model is shown in Fig 7.
+Here, we use the proposed model, when z˙=0.0, as shown
+in Fig. 5.
+C. Flight under Ceilings
+For evaluating the performance of target tracking using
+our proposed model, we compare controllers based on the
+following four models.
+(i) No ceiling effect model
+(ii) Ceiling effect model based on only experimental data
+(Conventional Model in Fig. 5) Fig. 9. The comparison of ﬂight under ceilings between a conventional
+(iii) Ceilingeffectmodelofthrustinsteadystatesbasedon controller(i)andtheproposedcontroller(iv)atthetime(I),(II)and(III),as
+showninFig.8.Incase(II),themultirotorusingcontroller(i)collideswith
+aerodynamics (Proposed Model when z˙=0.0 in Fig.
+ceilings.Ontheotherhand,themultirotorusingcontroller(iv)canrealize
+7) stableﬂight.
+(iv) Ceiling effect model of thrust in unsteady states based
+onaerodynamics(ProposedModelconsideringvertical
+on aerodynamics. Controller (iv) assumes that the thrust is
+rates in Fig. 7)
+determinedbynotonlythedistancefromarotortotheupper
+Controller (i) does not take the ceiling effect model into
+wall but also the climbing/descending rates of a rotor, since
+consideration. Controller (ii) assumes that the thrust of the
+the airﬂow around the rotor is in an unsteady state. In the
+ceiling effect model is determined by the distance from a
+experiments, the control input cycle is at the rate of 30Hz.
+rotor to the upper wall, since the airﬂow around the rotor
+In ﬂight tests under ceilings, the multi-rotor UAV tracks
+is in a steady state. Therefore, this thrust model is based
+the target as shown in Fig. 8. The target position varies in
+on only experimental data. Controller (iii) assumes that the
+a sine curve whose vertical shift and amplitude are 0.65 m
+thrustoftheceilingeffectisdeterminedbyonlythedistance
+and 0.15 m and the altitude of the ceiling is 1.0 m from
+from a rotor to the upper wall, since the airﬂow around the the ground (Sine Curve Case). In case (i), the quadrotor
+rotorisinasteadystate.Therefore,thisthrustmodelisbased
+cannot follow the target within 0.4 m from the ceiling
+and collides with the upper wall at Time (II) in Fig. 9.
+In cases (ii), (iii) and (iv), the quadrotor can follow the
+target regardless of the distance from the ceiling. However,
+the quadrotor vibrates in case (ii). Figure 9 shows ﬂight
+at Time (I), (II) and (III) in Fig. 8 in cases (i) and (iv).
+Theseresultsdemonstratethattheﬂightperformanceusinga
+ceilingeffectmodelbasedonaerodynamicsoutperformsthat
+ofaconventionalmodelbasedononlyexperimentaldata.To
+evaluate the tracking error in the vertical direction, we use
+RMS. As shown in Table I, the RMS tracking errors of (i),
+× − × − × −
+(ii), (iii), and (iv) are 1.13 10 1, 4.83 10 2, 2.63 10 2,
+× −
+and 2.03 10 2, respectively. The results show that the
+performanceofcontroller(iv)isbetterthanthatofcontroller
+(iii).
+TABLEI
+RMSTRACKINGERROR
+SineCurveCase StepCase
+× −
+Controller(i) 1.13 10 1 -
+× −
+Controller(ii) 4.83 10 2 -
+× − × −
+Controller(iii) 2.63 10 2 6.13 10 2
+× − × −
+Controller(iv) 2.03 10 2 5.73 10 2
+For more detailed comparison between controller (iii) and
+(iv), we evaluate ﬂight of the multi-rotor at higher climbing
+rates. As shown in Fig. 10, we change the target track from
+0.5mto0.75mabruptly(Step Case).Theresultsshowthat
+±
+Fig. 8. The evaluation of each controller. Controller (i) does not take thequadrotorusingcontroller(iv)followswithin 0.03mof
+into account a model of thrust in ceiling effect. Controller (ii) uses the
+thetargetabout4secondsfasterthanthatusingcontroller(ii
+conventionalmodelofthrustinsteadystatesundertheceilingeffect,based
+ononlyexperimentaldata.Controller(iii)usesthemodelofthrustinsteady i).Here,wedeﬁnetherangefromthestarttimetothetimeof
+statesundertheceilingeffect,basedonaerodynamics.Controller(iv)uses maximum altitude point as Phase X, and the range from the
+theproposedmodelofthrustinunsteadystatesintheceilingeffectbased
+time of maximum altitude point to the time until following
+onaerodynamics.Theﬂightatthetime(I),(II)and(III)isshowninFig.9.
+176
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. Fig. 10. The comparison of the ﬂight at high vertical rates between the controller (iii) and the proposed controller (iv). It takes a longer time for the
+multirotorusingcontroller(iii)tofollowthetargetthanthatusingcontroller(iv)duetothelargerovershootandundershoot.
+thetargetasPhaseY.InPhaseX,theovershootsincases(iii) errors. It is very difﬁcult to construct a model of thrust
+and (iv) are 0.11 m and 0.07 m, and the maximum climbing in the ceiling effect using small amounts of experimental
+rates are 0.28 m/s and 0.22 m/s. In Phase Y, the undershoot data. In the comparison between controller (iii) and (iv), (i
+in case (iii) is larger than that in case (iv). Furthermore, the v) outperforms (iii). As shown in Fig 10, overshoot using
+× −
+RMS tracking errors in case (iii) and (iv) are 6.13 10 2, controller (iii) is larger than that of controller (iv) in Phase
+× −
+5.73 10 2. X, since the thrust generated by the rotor becomes larger
+than thedesired thrustcalculated bythe PIDcontroller. This
+VI. DISCUSSION
+is caused by modeling errors due to vertical rates, since the
+First, we compare the proposed model with the measure- controller (iii) does not take into account increases of thrust
+ment results. In Fig 5, we show measurement data and two in unsteady states. On the other hand, controller (iv), which
+models of thrust in steady states. Thus, the conventional is based on a more accurate model, can generate the desired
+model using a neural network is in good agreement with thrust. Similarly, the undershoot in case (iii) is caused by
+the experimental data. On the other hand, when z˙=0.0, the decreasesofthrustduetomodelingerrors.Therefore,ittakes
+proposed model is not very consistent with the data, where three seconds longer for the quadrotor in case (iii) to follow
+0.2 < d¯< 1.0. For minimizing the RMS, it is important the target than that in case (iv). As a result, the total RMS
+to reduce the difference between experimental data and the tracking error in case (iv) becomes less than in case (iii).
+proposed model in the case d¯(cid:53)0.2 and d¯(cid:61)1.0. In Fig.
+7, when z˙ = 0.0, the proposed model is in comparative VII. CONCLUSIONSANDFUTUREWORK
+− (cid:53)
+agreement with the experimental data in the range 0.1 Inthispaper,weintroducedacontrollerforstableﬂightin
+z˙<0.1. Here, we cannot construct a neural network model theceilingeffect.Basedonaerodynamicstheoriessuchasthe
+considering z˙, since we have small amounts of thrust data. momentum theory, we proposed an in-unsteady-state model
+However, when z˙=0.0, the model is not consistent with of thrust under ceilings. In experiments, we estimate thrust
+(cid:61) −
+the experimental data in the case z˙ 0.1 or z˙ < 0.1. inverticalclimbinganddescendingﬂight,andtheresultsare
+These results show that thrust in unsteady states is different very consistent with the proposed thrust model. Compared
+from thrust in steady states. In the ceiling effect, thrust in to controllers based on conventional models, our proposed
+vertical climbing ﬂight increases compared with thrust in controller can signiﬁcantly improve performance of target
+steady states. On the contrary, thrust in vertical descending tracking in the ceiling effect. The main contributions are
+ﬂight decreases compared with thrust in steady states. The (1) We stabilize the multirotors’ ﬂight in the ceiling effect,
+proposed thrust model, in which thrust varies not only with especiallyinﬂightathighverticalrates,(2)Basedonaerody-
+distance but also with vertical rate, is in better agreement namics,theproposedmodeldoesn’trequirelargeamountsof
+with experimental data than conventional thrust models in precisethrustdata,andthereisnoneedforengineers’skillful
+steady states. selectionofafunctionwhichapproximatesthethrustmodel,
+In ﬂight tests under ceilings, the multirotor using con- (3)Withtheproposedmodel,multirotorUAVsrealizestable
+trollers(ii),(iii)and(iv)basedontheceilingeffectmodelscan ﬂight using only onboard sensors. Overall, we believe that
+follow the target better than controller (i), since the motor- the controller based on our proposed model would extend
+mapping varies to stabilize ﬂight. In case (i), overshoot is applicationofmulti-rotorsforstructuralinspectiontoinclude
+caused by increase of thrust, and undershoot is caused by narrow areas between under-girders and pipes of bridges. In
+boththrustdecreaseduetotheceilingeffectanddecreaseof future work, we will stabilize ﬂight of multi-rotor UAVs in
+integral terms of our controller. In case (ii), the quadrotor various cases, such as concave and convex ceilings or tilted
+vibrates more than in case (iii) and (iv) due to modeling rotors.
+177
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [21] Moju Zhao, Koji Kawasaki, Xiangyu Chen, Shintaro Noda, Kei
+Okada, and Masayuki Inaba. Whole-body aerial manipulation by
+[1] NajibMetniandTarekHamel.Auavforbridgeinspection:Visualser- transformable multirotor with two-dimensional multilinks. In 2017
+voingcontrollawwithorientationlimits. Automationinconstruction, IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+17(1):3–10,2007.
+pages5175–5182.IEEE,2017.
+[2] VernonJRossow. Effectofgroundand/orceilingplanesonthrustof
+rotorsinhover. 1985.
+[3] Xinkuang Wang, Shanshan Du, and Yong Liu. Research on ceiling
+effectofquadrotor.In2017IEEE7thAnnualInternationalConference
+onCYBERTechnologyinAutomation,Control,andIntelligentSystems
+(CYBER),pages846–851.IEEE,2017.
+[4] YasutadaTanabe,MasahikoSugiura,TakashiAoyama,HideakiSug-
+awara, Shigeru Sunada, Koichi Yonezawa, and Hiroshi Tokutake.
+Multiple rotors hovering near an upper or a side wall. Journal of
+RoboticsandMechatronics,30(3):344–353,2018.
+[5] Yi Hsuan Hsiao and Pakpong Chirarattananon. Ceiling effects for
+surface locomotion of small rotorcraft. In 2018 IEEE/RSJ Interna-
+tional Conference on Intelligent Robots and Systems (IROS), pages
+6214–6219.IEEE,2018.
+[6] GordonJLeishman. PrinciplesofhelicopteraerodynamicswithCD
+extra. Cambridgeuniversitypress,2006.
+[7] Stephen A Conyers, Matthew J Rutherford, and Kimon P Valavanis.
+An empirical evaluation of ceiling effect for small-scale rotorcraft.
+In 2018 International Conference on Unmanned Aircraft Systems
+(ICUAS),pages243–249.IEEE,2018.
+[8] Carl John Salaan, Kenjiro Tadakuma, Yoshito Okada, Yusuke Sakai,
+KazunoriOhno,andSatoshiTadokoro.Developmentandexperimental
+validation of aerial vehicle with passive rotating shell on each rotor.
+IEEERoboticsandAutomationLetters,4(3):2568–2575,2019.
+[9] PJSanchez-Cuevas,GHeredia,andAOllero.Multirotoruasforbridge
+inspection by contact using the ceiling effect. In 2017 International
+ConferenceonUnmannedAircraftSystems(ICUAS),pages767–774.
+IEEE,2017.
+[10] Basaran Bahadir Kocer, Mehmet Efe Tiryaki, Mahardhika Pratama,
+TegoehTjahjowidodo,andGeraldGimLeeSeet. Aerialrobotcontrol
+incloseproximitytoceiling:Aforceestimation-basednonlinearmpc.
+arXivpreprintarXiv:1907.13594,2019.
+[11] ICCheesemanandWEBennett. Theeffectofgroundonahelicopter
+rotorinforwardﬂight. 1955.
+[12] PedroSanchez-Cuevas,GuillermoHeredia,andAnibalOllero. Char-
+acterization of the aerodynamic ground effect and its inﬂuence in
+multirotor control. International Journal of Aerospace Engineering,
+2017,2017.
+[13] Li Danjun, Zhou Yan, Shi Zongying, and Lu Geng. Autonomous
+landingofquadrotorbasedongroundeffectmodelling. In201534th
+ChineseControlConference(CCC),pages5647–5652.IEEE,2015.
+[14] CaitlinPowers,DanielMellinger,AleksandrKushleyev,BruceKoth-
+mann, and Vijay Kumar. Inﬂuence of aerodynamics and proximity
+effectsinquadrotorﬂight. InExperimentalrobotics,pages289–302.
+Springer,2013.
+[15] EdwinDavisandPaulEIPounds.Passivepositioncontrolofaquadro-
+tor with ground effect interaction. IEEE Robotics and Automation
+Letters,1(1):539–545,2016.
+[16] Kenichiro Nonaka and Hirokazu Sugizaki. Integral sliding mode
+altitudecontrolforasmallmodelhelicopterwithgroundeffectcom-
+pensation. In Proceedings of the 2011 american control conference,
+pages202–207.IEEE,2011.
+[17] Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar
+Azizzadenesheli, Animashree Anandkumar, Yisong Yue, and Soon-
+JoChung. Neurallander:Stabledronelandingcontrolusinglearned
+dynamics.In2019InternationalConferenceonRoboticsandAutoma-
+tion(ICRA),pages9784–9790.IEEE,2019.
+[18] AntonioEJimenez-Cano,PedroJSanchez-Cuevas,PedroGrau,Ani-
+bal Ollero, and Guillermo Heredia. Contact-based bridge inspection
+multirotors: Design, modeling, and control considering the ceiling
+effect.IEEERoboticsandAutomationLetters,4(4):3561–3568,2019.
+[19] Basaran Bahadir Kocer, Mehmet Efe Tiryaki, Mahardhika Pratama,
+TegoehTjahjowidodo,andGeraldGimLeeSeet. Aerialrobotcontrol
+incloseproximitytoceiling:Aforceestimation-basednonlinearmpc.
+arXivpreprintarXiv:1907.13594,2019.
+[20] Takuzumi NISHIO, Shigeru SUNADA, Kohei YAMAGUCHI, Yasu-
+tadaTANABE,KoichiYONEZAWA,andHiroshiTOKUTAKE.Note
+on a method for simulating rotor motion when accelerating during
+descent. TRANSACTIONS OF THE JAPAN SOCIETY FOR AERO-
+NAUTICAL AND SPACE SCIENCES, AEROSPACE TECHNOLOGY
+JAPAN,17(5):577–581,2019.
+178
+Authorized licensed use limited to: Carleton University. Downloaded on September 20,2020 at 14:40:05 UTC from IEEE Xplore.  Restrictions apply. 

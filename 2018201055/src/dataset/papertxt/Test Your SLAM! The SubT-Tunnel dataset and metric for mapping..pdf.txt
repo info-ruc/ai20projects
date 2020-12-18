@@ -1,0 +1,493 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+FlowNorm: A Learning-based Method for Increasing Convergence
+Range of Direct Alignment
+Ke Wang, Kaixuan Wang, and Shaojie Shen
+Abstract—Many approaches have been proposed to esti- 𝑦 𝑓(𝑥)
+mate camera poses by directly minimizing photometric error.
+𝑔(𝑥)
+However, due to the non-convex property of direct alignment,
+proper initialization is still required for these methods. Many
+robust norms (e.g. Huber norm) have been proposed to deal
+withtheoutliertermscausedbyincorrectinitializations.These 𝑥
+robust norms are solely deﬁned on the magnitude of each
+error term. In this paper, we propose a novel robust norm,
+(a)
+named FlowNorm, that exploits the information from both the 𝑦
+localerrortermandtheglobalimageregistrationinformation.
+Whilethelocalinformationisdeﬁnedonpatchalignments,the
+globalinformationisestimatedusingalearning-basednetwork.
+Usingboththelocalandglobalinformation,weachievealarge
+convergence range in which images can be aligned given large 𝑥
+view angle changes or small overlaps. We further demonstrate
+theusabilityoftheproposedrobustnormbyintegratingitinto
+thedirectmethodsDSOandBA-Net,andgeneratemorerobust (b)
+and accurate results in real-time. (cid:80)
+Fig.1. Asimpleexampletoshowthedifferentcontributionsofpointsin
+I. INTRODUCTION (cid:107) − (cid:107)
+ali−gningtwo(cid:48)functions:argmint x g(x+t) f(x) 2.Pointxwith(g(x+
+Direct methods are widely used to solve visual odometry t) f(x))g(x+t)<0contributestotheoptimizationoftandismarked
+− (cid:48)
+andmonocularstereoproblems[1]–[4].Bydirectlyminimiz- in green, while x with (g(x+t) f(x))g(x+t) > 0 counteracts the
+optimizationandismarkedinred.Asshownin(a),withgoodinitialization,
+ingthephotometricerrorbetweenpixelsinthesourceframe most of the points are positive to the optimization. However, with worse
+and the target frame, camera poses and scene geometry can initialization,negativepointsmaketheoptimizationfallintolocalminima.
+be estimated in the joint optimization process. Compared
+with indirect methods [5]–[8], which solve the problem by
+computation resources of general robotic platforms and the
+minimizing the reprojection error between matched sparse
+diversity of robotic application scenes.
+features, direct methods avoid the pre-processed feature
+matchingstepandcanutilizemorepixelsintheimage.How- One of the contributions of the paper is a study of the
+ever, intensity-based optimization is prone to local minima directoptimizationprocessfollowedbythedesignofarobust
+due to the non-convex property of complex images. norm for the optimization. Due to the problem of non-
+Recent years, many approaches have been proposed to convexity, during the photometric minimization (or feature
+expand the convergence range of direct methods. SVO [9] consistency minimization in learning-based methods), not
+combinesmatchedfeaturepointswithphotometricoptimiza- all pixels contribute to the convergence. The difference in
+tion. However, although matched features can provide pose pixels depends on both the local texture and the global pose
+initialization for further optimization, they rely on textures initialization which establishes pixels correspondences. We
+of the environment and are prone to outliers. With the help illustrate the convergence problem in Fig. 1. As shown, for
+of learning-based methods, many researchers have proposed good initializations, most of the correspondences contribute
+networks [10], [11] to generate smooth feature maps for to the ﬁnal estimation. However, given a bad initialization,
+direct optimization. Compared with the image intensity do- most of the correspondences will suppress the convergence.
+main, optimization on feature maps shows advantages in Poor correspondences make the optimization fall into local
+convergence ranges. For example, BA-Net [10] can estimate minima. Based on this observation, we propose the ﬂow
+cameraposesgivenimageswithsmalloverlaps.LS-Net[12] norm that combines a low-accuracy optical ﬂow prediction
+usesanend-to-endtrainednetworkasasolverfortwo-frame network to distinguish which correspondences will suppress
+monocularstereoproblems.Learning-basedmethodsachieve the convergence of direct alignment.
+superior performance on evaluation datasets, such as RGB- Insummary,thecontributionsofourpaperarethefollow-
+D datasets or the KITTI dataset, but have not been widely ing:
+used on robotic platforms. The reason may be the limited • We propose a new norm to expand the convergence
+range of the traditional nonlinear solver for the direct
+The authers are with Department of Electronic and Computer
+alignment problem.
+Engineering , Hong Kong University of Science and Technology,
+kwangbd@connect.ust.hk • To the best of our knowledge, the proposed method
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 2109
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. is the ﬁrst that can distinguish which correspondence III. DIRECTALIGNMENTREVISITED
+willsuppresssolverconvergenceinthedirectalignment
+Before introducing our enhanced direct alignment algo-
+situation.
+rithm, we revisit the classic direct alignment to give a better
+• We build FlowNorm versions of DSO and BA-Net, and
+understanding of where difﬁculties lie, and why our method
+the FlowNorm DSO retains the real-time property.
+is desirable. We only introduce the most relevant content,
+To demonstrate theeffectiveness ofour method,we evaluate and refer the readers to [16] for a more comprehensive
+it on the SceneNN dataset [13], TUM-MonoVO dataset [14] introduction.
+and ICL-NUIM dataset [15], showing that FlowNorm ver- Given a target/source image pair I and I , the direct
+s t
+sions consistently outperform the original versions. alignment problem is formulated as estimating the relative
+∈
+transformation T between the image pair, and d D =
+{ | ··· } i ∈
+II. RELATEDWORK d i = 1 N , which are the depths of the pixels p
+i { | ··· } X { si }
+P = p i = 1 N at the image I . Let = T,D
+Semi-dense visual odometry [4] is a pioneering work that si X s
+and we can estimate by minimizing the norm of the
+tracks a monocular camera in real-time using direct align-
+photometric error (cid:88)
+ment algorithm. SVO [9] uses matched features to calculate
+an initialization pose for joint optimization. Following the X N | X |
+idea of the direct method, Engel proposed LSD-SLAM [3] ˆ =argmin e ( ) , (1)
+X i
+,which solves the camera pose using keyframes with depth i=1
+|·|
+values. DSO [16] is the baseline direct alignment work, where donatestheL1normorHubernormofavector,N
+which jointly optimizes all model parameters, including is the number of selected pixels, and the photometric error
+geometry represented as inverse depth and camera motion.
+X (cid:48) −
+DSO further integrates a full photometric calibration, ac- e ( )=I (p ) I (p ) (2)
+i t ti s si
+counting for exposure time, lens vignetting, and non-linear
+measures the intensity difference between the ith pixel p
+response functions. Although all these methods feature real- (cid:48) (cid:48) si
+at I and its corresponding pixel p at I . p is computed
+timeefﬁciencyandhighaccuracy,theyrelyonincrementally s ti t ti
+by the projection function
+trackingthecameraposestoensurelargeoverlapsandproper
+(cid:48) −
+initialization. p =π(p ,T,d )=sKTd K 1p , (3)
+ti si i i si
+To increase the convergence range of the direct methods,
+manylearning-basedmethodshavebeenproposedtoreplace which projects 2D point psi from Is to It, where di is the
+theintensitymapwithfeaturemaps.BA-Net[10]formulates depth value of psi at Is, K and s are the camera’s intrinsic
+matrix and a scale factor respectively.
+BundleAdjustment(BA)asadifferentiablelayerandutilizes
+The general strategy to minimize Eq. (1) is the Gaussian-
+a standard encoder-decoder network to generate the feature
+Newton (GN) or Levenberg-Marquardt (LM) algorithms
+map and depth map. Camera poses and depth maps are
+[17]. The GN and LM methods are both iterative methods.
+optimized by minimizing the feature consistency between
+projectedpixels.Beneﬁtingfromthegeneratedfeaturemaps, At the jth iteration, the GN algorithm solves for an optimal
+update
+BA-Net expands the convergence range of direct alignment. X − −
+GN-Net [11] uses a novel Gauss-Newton loss for training ∆ j = (JjTJj) 1JjTEj. (4)
+deep feature maps. The direct alignment in GN-Net, based X X ··· X X
+Here E = [e ( ),e ( ), ,e ( )], where
+on minimizing the feature metric error, achieves robust per- j 1 j 2 j N j j
+is the initial parameters at the jth iteration. Let δ denotes
+formanceunderdynamiclightingorweatherchanges.These X
+a small se(3) perturbation around , J is the Jacobian
+two approaches nicely combine traditional direct alignment j j(cid:48)
+matrix of E with respect to δ. Let p represent the
+and deep learning techniques. j ti X
+projectionpositiono(cid:34)fp atI basedonthep(cid:35)arameters .
+LS-Net[12]usesanend-to-endtrainednetworktoreplace si t j
+The ith row of J is
+the traditional nonlinear solver. Given a photometric error j
+X (cid:48) (cid:48)
+map and a Jacobian matrix, LS-Net estimates the updated ∂e ( )∂I (p )∂p
+depth map and camera motion. Although it achieves impres- Jj(i)= ∂Ii(p(cid:48)j) ∂tp(cid:48)ti ∂δti , (5)
+sive results on datasets, the generalization ability of LS-Net t ti ti
+has not been demonstrated. X (cid:48)
+where ∂ei( (cid:48)j) and ∂pti are smooth compared with the
+In this paper, we propose a different solution that im- ∂It(ptXi) ∂δ (cid:48)
+proves the robustness of direct optimization. The core of the increment ∆ j. In contrast, ∂It(p(cid:48)ti) is much less smooth.
+contribution is a robust norm that distinguishes error terms (cid:48) ∂pti
+usingbothlocalandglobalinformation.Differentfrommost AsfoundinDSO, ∂It(p(cid:48)ti) isonlyvalidina1-2pixelradius.
+∂p
+of the learning-based methods that use a heavy network to Hence the effective opttiimization requires that all parameters
+(cid:48)
+generate high-dimensional feature maps, we utilize a light- involved in computing p should be initialized sufﬁciently
+ti
+weightnetworktoimproveboththerobustnessandaccuracy accurately to be off by no more than 1-2 pixels. However,
+of the state-of-the-art methods, with an overhead of only givingaccurateinitializationisdifﬁcultywhenthereisalarge
+14 ms. view change between I and I .
+s t
+2110
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. Fig. 2. Illustration of θ and θ0, which are used in the deﬁniti(cid:48)on of the
+ﬂow norm. x is the derivative of the residual with respect to p , which
+ti
+totally depend(cid:48)s on the local information. Conversely, θ0 relies on global
+informationp ,po andσ.
+ti ti
+IV. APPROACH
+Todealwiththelocalminimaproblemofdirectalignment,
+Fig.3. Illustrationofthechangeoftheﬂowfactorswiththeincreasing
+we design a ﬂow norm to guide the non-linear solver to ofθ.
+jumpoutfromthelocalminimum.Assumewehaveacoarse
+optical ﬂow map between the image pair. The key idea of
+With the proposed ﬂow norm, the cost function of direct
+the FlowNorm is to balance the local information (residual
+alignment is formulated a(cid:88)s
+decreasing direction) and global optical ﬂow information.
+Because the optical ﬂow is coarse and unreliable, we just
+X N (cid:48)
+down-weightthosecorrespondenceswhoseresidualdecreas- ˆ =argmin L(p ,po,p ,e ). (9)
+X si ti ti i
+ingdirectionsarehighlyinconsistentwiththecorresponding
+i
+ﬂow positions.
+The new optimal update step of the GN method for the jth
+(cid:102)
+iteration is
+A. Flow Norm
+X − −
+Following the deﬁnition in Sect. III, F denotes the com- ∆ = (JTSJ ) 1JTSE , (10)
+j j j j j
+putedcoarseﬂowmapbetweenI andI ,Po representsthe
+s t t (cid:48) whereSisadiagonalmatrix,andtheithrowandithcolumn
+ﬂproowjecptoiosintiopnossitcioomnpouftPe(cid:48)dsbayt IPttoba=sedPosn+thFe,caunrrdenPttreilsattihvee esunmtrymaisriztheed ﬂasownorm factor(cid:12)(cid:12)(cid:12)of the ith(cid:12)(cid:12)(cid:12) residual, which is
+pose T. p , po and pdenote the it(cid:12)h item of(cid:12)P ,Po and
+Pt(cid:48) respectsiivelyt.iThe ﬂotwi neo,rm of res(cid:12)(cid:12)ipdoua−l epi(cid:48)is(cid:12)(cid:12)ds≤eﬁn2teσd as si = 11,, pcootisθ−≤p(cid:48)tcio2sθ≤02σ (11)
+L(psi,poti,p(cid:48)ti,ei)= eii, cotisθ ≤tcio2sθ0 (ccoossθθ0++11), cosθ0 <cosθ.
+( cosθ+1 )e , cosθ <cosθ, Fig. 3 illustrates the change of the ﬂow factor s with the
+cosθ0+1 i 0 (6) increasing of θ. The θ of these four lines is 0◦, 30◦, 60◦
+◦ 0 (cid:48)
+where σ is the variance of the computed ﬂow (the method and90 respectively.FromEq.(8),forthesamep andpo,
+|·| ti ti
+for computing σ is described in (cid:48)Se−ct. IV-B) and 2 denotes abiggerθ0 correspondstoabiggerﬂowuncertaintyσ.Fora
+theL2normofthevector.v =p po isthedirectionfrom bigﬂowuncertainty,theﬂownormwilltakemoreaccountof
+(cid:48) ti ti
+projection position p to the ﬂow position po, x = ∂e(cid:48)i local information and assign larger weights to it. In case of
+ti (cid:48) ti ∂pti the overshoot of the convergence process and the optimized
+representsthederivativedirectionatp ,θ denotestheangle
+ti results from being biased by the noise ﬂow, we only involve
+between v and x, and cos(θ) can be computed by
+the ﬂow norm in a tracker when it runs at coarse levels of
+vTx imagepyramid.Forexample,theimagepyramidofDSOhas
+cos(θ)= | | | | . (7) four levels, and we only involve our ﬂow norm in the top
+v x
+2 2 two levels.
+(cid:48)
+As shown in Fig. 2, when the projection position p lies Although the form of the ﬂow norm is similar to that of
+ti
+outside the circle with po as its center and 2σ as its radius, the Huber norm, their cores are very different. The Huber
+ti
+θ represents the angle between the tangent line l and the norm utilizes the local information of correspondences and
+0
+direction v. Thus √ the ﬂow norm depends on the coarse ﬂow. In fact, they are
+− complementary to each other.
+vTv σ2
+cos(θ )= | | . (8)
+0 v B. Shrunken PWC-Net
+2
+In summary, we tend to activate these correspondences To obtain the optical ﬂow map, we employ a shrunken
+whentheirprojectionpositionsareclosetotheﬂowpositions PWC-Net to predict the optical ﬂow between two images.
+or local gradient agrees with global information. Approaches that learn to predict optical ﬂow from an image
+2111
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. Fig.4. OverviewoftheFlowNormDSO.Thepredictedﬂowmapisusedtosuppressthosecorrespondenceswhoselocalgradientsarehighlyinconsistent
+withpredictedﬂowinthetoptwolevelsoftheimagepyramid.
+pairhavebeenstudiedinpreviousworks[18]–[22].However, DSO is still a real-time system, which can be directly
+due to the high computation cost, these previous nets cannot compared with DSO on any dataset.
+be migrated directly to our work. To efﬁciently obtain the AsshowninFig.4,theplug-iniscomposedofthreeparts:
+optical ﬂow, we choose the baseline network PWC-Net [21] the latest image is ﬁrstly fed into the encoder network to
+as a reference network, and then shrink its convolutional construct multi-scale feature maps. Then, the decoder will
+layersandreduceitsinputimagesize.Theshrinkingprocess get the concatenation of the latest feature maps and the
+is a trade-off between prediction accuracy and computing keyframe’s feature maps and output a predicted ﬂow map.
+efﬁciency. As our method works on the coarse levels of the Finally,thepredictedﬂowmapwillbeinvolvedintheBAof
+image pyramid, it can robustly utilize the inaccurate optical the DSO tracker in the top two levels of the image pyramid.
+ﬂow. Althoughthepipelineneedstoencodetwoimages,allframes
+Firstly, we change the input size of this network from areonlyrequiredtobeencodedoncebybufferingthefeature
+× × × ×
+[3 436 1024] to [1 240 320]. RGB images should be maps of the active keyframes.
+transformed into grey images before feeding them into the
+shrunken network. Secondly, we remove one coding block D. Comparison with FlowInit DSO
+andtwopoolingoperationsfromtheencoder,andtheoutput Tocompletelyprovetheeffectivenessandefﬁciencyofthe
+×
+sizeofthelastencodinglayeris[15 30].Finally,weremove ﬂow norm, we also construct a competitive strategy. Given
+one decoding block and reduce the correlation radius from p ∈ P = {p |i = 1···N}, d ∈ D = {d |i = 1···N}
+4 to 3, as the correlation operation of decoding block is atsiI ansd the psriedicted positionsi po ∈ Poi = {po|i =
+comp×utationally expensive. The size of the predicted ﬂow is 1···sN} at It, we compute the intiitial tratnsform Tti0 by
+[112 160]. Our encoding and decoding blocks are identical minimizing the geometri(cid:88)c error
+to the encoding and decoding blocks of PWC-Net. The
+shrunkennetworkarchitectureisshowninthesupplementary N | − |
+video. T0 =argmin π(pi,T,di) poti 2, (13)
+T
+Let Θ be the set of all the learn-able parameters in our i
+·
+shrunken network. Wl and Wl denote the predicted ﬂow where π() is the projection function, and it is deﬁned in
+Θ GT
+ﬁeld and the corresponding ground truth of the lth pyramid Sect. III. Then, we take T as an initialization for the
+0
+level respectively. We use the same multi-scale training loss tracker of the DSO. We call the DSO with the initialization
+proposed in FlowNet [19]: computed from the predicted ﬂow map as FlowInit DSO.
+(cid:88) (cid:88)(cid:12) (cid:12)
+(cid:12) (cid:12) We ﬁnd that the performance of this initialization strategy is
+on par with the FlowNorm DSO strategy for those well pre-
+L L − | |
+(Θ)= α Wl(x) Wl (x) +γ Θ , (12) dictedﬂowpositions.However,forverypoorﬂowprediction,
+l Θ GT 2 2 tracking with the initialization strategy is highly unstable.
+l=l0 x
+Because we shrink the size of the prediction network, our
+where the second term regularizes the parameters of the
+predictedﬂowusuallyhasanoveralloffset.Theoveralloffset
+model in case of over ﬁtting, the α and γ are the balance
+l causes that the initialization from the geometric BA also
+weights for different pyramid levels.
+contains the offset. More comparison details are shown in
+The variance σ of the predicted ﬂow is computed by
+the next Section.
+averaging the squared L2 error of the prediction results in
+the testing dataset.
+V. EXPERIMENTS
+C. Overview of the FlowNorm DSO
+To verify the effectiveness of our method, we build
+To demonstrate the effectiveness and efﬁciency of our FlowNorm versions of DSO and BA-Net. We evaluate our
+method, we take our ﬂow norm as a plug-in component system on a Linux system with an Intel Core i7-7700 CPU
+for the baseline methods, DSO and BA-Net. The FlowNorm of 3.50GHz and an Nvidia Titan Xp GPU.
+2112
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. A. Training with an acceptable accuracy for every sequence. We take
+the alignment error of sequences without downsampling as
+We train the shrunken PWC-Net on the SceneNN [13]
+a reference for whether tracking has acceptable accuracy
+dataset,whichconsistsof94Kinect-capturedRGB-Dimage
+sequences with ground truth poses. We select 44 / 25 image or not and label it as error0. If the alignment error of
+one downsampling sequence is smaller than three times its
+sequences from the SceneNN dataset and take them as
+training/testingsetsrespectively.Then,wesamplepairsfrom correspondingerror0,wemarkthetrackingresultoftherun
+as an acceptable tracking accuracy.
+the training and testing sets and generate the ground truth
+optical ﬂow by projecting one pixel from one image to
+another image. During the projection process, we remove
+the occlusion area by verifying whether the depth of one
+pixel is consistent with the depth of its projection position.
+Our shrunken PWC-Net is trained with ADAM [23] with
+the initial learning rate 0.0001. The weights in the training
+loss deﬁned in Eq. (12) are set to be α5=0.08, α4=0.02,
+α3=0.01, and α2=0.005. The trade-off weight γ is set to
+be0.0004.Althoughournetworklackssomeofthelayersof
+PWC-Net, we still load the parameters of PWC-Net into the
+corresponding layers of the shrunken version as the initial
+parameters. The total training process takes one day on a
+computer with one Titan XP.
+B. FlowNorm in DSO
+(a) The maximum skip number with an acceptable tracking
+accuracy
+We compare the FlowNorm DSO with the original DSO
+on two monocular datasets: TUM-MonoVO dataset [14] and
+ICL-NUIM dataset [15]. The TUM-MonoVO dataset pro-
+vides 50 photometrically calibrated sequences, comprising
+differentindoorsandoutdoorsenvironments.TheICL-NUIM
+dataset contains 8 ray-traced sequences from two indoor en-
+vironments. Since the TUM-MonoVO dataset only provides
+loop-closure ground-truth, we evaluate all sequences using
+the alignment error, which is deﬁned in the TUM-MonoVO
+dataset.
+(b) Themaximumskipnumberwithoutalosingtracking
+Fig.6. Comparisonoftheconvergenceabilityinall50sequencesofthe
+TUM-MonoVOdataset.
+Fig. 5 illustrates the statistical performance of FlowNorm
+DSO and DSO. The accuracy of FlowNorm DSO is better
+than that of the original DSO. The performance of the
+original DSO is on par with its FlowNorm version when
+the downsampling rate is low. However, FlowNorm DSO
+presents more robust performance with the increase of the
+Fig.5. Theaccumulatednumberofrunswhosealignmenterrorsaresmaller downsamplingrate.Fig.6showsthemaximumskipnumber
+than e ; larger is better. Testing dataset contains all downsampled with acceptable tracking accuracy and the maximum skip
+align
+sequencesfromTUM-MonoVoandICL-NUIMdatasets.
+numberwithoutlosingtrackingforallsequencesintheTUM
+To increase the difﬁculty of evaluation, we add a new Monodataset.FlowNormDSO(blue)hasconsistentlybetter
+evaluation metric. We downsample the image sequences performance than the original version. Note that we only
+with a skip of 1,2,3,4...13 frames. We track 2 times for downsample sequences with 1 to 13 steps, the maximum
+every sequence. Which means the total number of runs is step with 13 means we do not ﬁnd losing tracking or the
+1508. Apart from the alignment errors, we also measure tracking results of all runs are acceptable in this sequence.
+two numbers: the maximum skip number without a losing Fig. 7 shows the tracking trajectories of FlowNorm DSO
+tracking and the maximum skip number that can be tracked (green) and the original DSO (red) on the ﬁrst sequence of
+2113
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. Fig. 7. An example of a losing tracking in the ﬁrst sequence of the TumMonoVo dataset with a skip of 10 frames. The red and green trajectories are
+computedfromDSOandFlowNormDSOrespectively.
+the TUM Mono dataset with a downsampling rate of 10. to space limitation, we just show the comparison results for
+DSO loses tracking in the black box area as the camera has the ﬁrst three sequences of the TUM-MonoVO dataset.
+large view change there.
+TABLEI
+FLOWNORMVSFLOWINIT
+C. FlowNorm in BA-Net
+Conﬁg Seq. Ave.alignerr. accept.acc. w/olosing.
+As BA-Net does not public codes, we construct a motion DSO 01 0.5760 9 11
+FlowInit 01 0.5380 9 13
+tracking version of it. The constructed BA-Net is trained on
+FlowNorm 01 0.5299 11 13
+our training/validating dataset. Similar to FlowNorm DSO,
+DSO 02 1.0094 3 13
+we also use the predicted ﬂow guide for the convergence of FlowInit 02 0.3058 8 13
+BA-Net. We use the remaining part of the SceneNN dataset FlowNorm 02 0.3765 9 13
+DSO 03 0.7237 6 7
+to build a challenging image pair dataset. Then, we generate
+FlowInit 03 1.1205 7 8
+initial poses by adding rotation noise and translation noise FlowNorm 03 0.6578 9 13
+to the ground truth poses of these image pairs. The ﬁnal
+E. Runtime analysis
+number of image pairs is 60126. We compare how many
+Intheimplementation,weimplementthetrainedmodelin
+pairs are successfully aligned by BA-Net and its FlowNorm
+DSO by PyTorch-C++1, and we create a new thread for the
+version. The results are 48261 and 37218 for FlowNorm
+ﬂow prediction. The forward of the network is in the GPU
+version and the original version respectively, which proves
+and the other models of DSO are implemented in the CPU,
+our method can further expand the convergence range of the
+which means the prediction of the ﬂow does not have an
+tracker based on minimizing the feature metric residual.
+effectonothermodelsinDSO.Inourcomputer,theforward
+process of the shrunken network takes 14 ms per frame.
+D. FlowNorm Vs FlowInit
+To prove the effectiveness of the ﬂow norm, we construct VI. CONCLUSIONANDFUTUREWORK
+a competitive strategy, which is described in Sect. IV-D. We In this paper, we have presented a ﬂow norm to enhance
+compute an initial pose from the predicted ﬂow directly. We the convergence range of direct alignment by utilizing a
+ﬁnd that if we just take the computed initial pose as the coarse ﬂow map to constrain those correspondences that
+initialization of the DSO tracker, the tracker becomes very are highly inconsistent with the ﬂow map. We employed
+unstable (usually loses tracking when it gets an inaccurate a shrunken PWC-Net to generate the coarse ﬂow map and
+opticalﬂow).Weconsiderthereasonforsuchlosingtracking built variants of DSO and BA-Net to prove the effectiveness
+is that the indirect method seriously depends on the correct of the ﬂow norm. Meanwhile, we also compared the ﬂow
+matching. However, the depths and correspondences used to norm with a competitive strategy that gets the initial pose
+compute the initial pose both contain a lot of noise. Next, fromthepredictedﬂowdirectly.Ourexperimentsprovedthe
+we insert the computed initial pose to the queue of trying effectivenessandefﬁciencyoftheﬂownorm.Infuturework,
+poses in the DSO tracker, and the queue in DSO is used we plan to investigate new network architectures to increase
+to prevent loss of tracking. We compare the FlowInit DSO the accuracy of the prediction network and explore more
+and FlowNorm DSO, and the results are shown in Table I. formation of the ﬂow norm.
+In the table, “accept. acc.” and “w/o losing.” mean the
+VII. ACKNOWLEDGEMENT
+maximumskipnumberwithanacceptabletrackingaccuracy
+ThisworkwassupportedbyHKUST-DJIJointInnovation
+and the maximum skip number without a losing tracking
+Laboratory and Hong Kong PhD Fellowship Scheme.
+respectively. “Ave. align err.” denotes the average of the ﬁrst
+ﬁve alignment errors (downsampling rate from 1 to 5). Due 1https://pytorch.org/cppdocs/
+2114
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [22] JeromeRevaud,PhilippeWeinzaepfel,ZaidHarchaoui,andCordelia
+Schmid. Epicﬂow:Edge-preservinginterpolationofcorrespondences
+[1] Hatem Alismail, Brett Browning, and Simon Lucey. Photometric
+foropticalﬂow. InProceedingsoftheIEEEConferenceonComputer
+bundle adjustment for vision-based SLAM. In Asian Conference on
+VisionandPatternRecognition,pages1164–1172,2015.
+ComputerVision,pages324–341.Springer,2016.
+[23] DiederikP.KingmaandJimmyBa. Adam:Amethodforstochastic
+[2] Amal Delaunoy and Marc Pollefeys. Photometric bundle adjustment
+optimization. arXivpreprintarXiv:1412.6980,2014.
+for dense multi-view 3D modeling. In Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition(CVPR),
+pages1486–1493,2014.
+[3] JakobEngel,ThomasSchps,andDanielCremers.LSD-SLAM:Large-
+scaledirectmonocularSLAM. InEuropeanConferenceonComputer
+Vision(ECCV),pages834–849.Springer,2014.
+[4] Jakob Engel, Jurgen Sturm, and Daniel Cremers. Semi-dense visual
+odometry for a monocular camera. In Proceedings of the IEEE
+International Conference on Computer Vision(ICCV), pages 1449–
+1456,2013.
+[5] Sameer Agarwal, Noah Snavely, Ian Simon, Steven M. Seitz, and
+Richard Szeliski. Building Rome in a Day. In 2009 IEEE 12th
+International Conference on Computer Vision(ICCV), pages 72–79.
+IEEE,2009.
+[6] DavidNistr. Anefﬁcientsolutiontotheﬁve-pointrelativeposeprob-
+lem.IEEETransactionsonPatternAnalysisandMachineIntelligence,
+26(6):756,2004.
+[7] Johannes L. Schonberger and Jan-Michael Frahm. Structure-from-
+motionrevisited.InProceedingsoftheIEEEConferenceonComputer
+VisionandPatternRecognition(CVPR),pages4104–4113,2016.
+[8] ChangchangWu,SameerAgarwal,BrianCurless,andStevenM.Seitz.
+Multicorebundleadjustment. InProceedingsoftheIEEEConference
+on Computer Vision and Pattern Recognition(CVPR), pages 3057–
+3064.IEEE,2011.
+[9] ChristianForster,MatiaPizzoli,andDavideScaramuzza. SVO:Fast
+semi-direct monocular visual odometry. In 2014 IEEE International
+ConferenceonRoboticsandAutomation(ICRA),pages15–22.IEEE,
+2014.
+[10] Chengzhou Tang and Ping Tan. BA-Net: Dense bundle adjustment
+network. In International Conference on Learning Representa-
+tions(ICLR),2019.
+[11] LukasvonStumberg,PatrickWenzel,QadeerKhan,andDanielCre-
+mers.GN-Net:Thegauss-newtonlossformulti-weatherrelocalization.
+2019.
+[12] RonaldClark,MichaelBloesch,JanCzarnowski,StefanLeutenegger,
+and Andrew J. Davison. Learning to solve nonlinear least squares
+formonocularstereo. InProceedingsoftheEuropeanConferenceon
+ComputerVision(ECCV),pages284–299,2018.
+[13] Binh-Son Hua, Quang-Hieu Pham, Duc Thanh Nguyen, Minh-Khoi
+Tran, Lap-Fai Yu, and Sai-Kit Yeung. Scenenn: A scene meshes
+dataset with annotations. In 2016 Fourth International Conference
+on3DVision(3DV),pages92–101.IEEE,2016.
+[14] Jakob Engel, Vladyslav Usenko, and Daniel Cremers. A photomet-
+rically calibrated benchmark for monocular visual odometry. arXiv
+preprintarXiv:1607.02555,2016.
+[15] Ankur Handa, Thomas Whelan, John McDonald, and Andrew J.
+Davison.AbenchmarkforRGB-Dvisualodometry,3Dreconstruction
+andSLAM. In2014IEEEInternationalConferenceonRoboticsand
+Automation(ICRA),pages1524–1531.IEEE,2014.
+[16] Jakob Engel, Vladlen Koltun, and Daniel Cremers. Direct sparse
+odometry. IEEE Transactions on Pattern Analysis and Machine
+Intelligence,40(3):611–625,2017.
+[17] JorgeNocedalandStephenWright.NumericalOptimization.Springer
+Science&BusinessMedia,2006.
+[18] Jia Xu, Ren Ranftl, and Vladlen Koltun. Accurate optical ﬂow via
+directcostvolumeprocessing.InProceedingsoftheIEEEConference
+onComputerVisionandPatternRecognition,pages1289–1297,2017.
+[19] AlexeyDosovitskiy,PhilippFischer,EddyIlg,PhilipHausser,Caner
+Hazirbas,VladimirGolkov,PatrickVanDerSmagt,DanielCremers,
+andThomasBrox. Flownet:Learningopticalﬂowwithconvolutional
+networks. In Proceedings of the IEEE International Conference on
+ComputerVision,pages2758–2766,2015.
+[20] Eddy Ilg, Nikolaus Mayer, Tonmoy Saikia, Margret Keuper, Alexey
+Dosovitskiy,andThomasBrox.Flownet2.0:Evolutionofopticalﬂow
+estimationwithdeepnetworks.InProceedingsoftheIEEEConference
+onComputerVisionandPatternRecognition,pages2462–2470,2017.
+[21] DeqingSun,XiaodongYang,Ming-YuLiu,andJanKautz.PWC-Net:
+CNNsforopticalﬂowusingpyramid,warping,andcostvolume. In
+ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+Recognition,pages8934–8943,2018.
+2115
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 22,2020 at 01:09:19 UTC from IEEE Xplore.  Restrictions apply. 

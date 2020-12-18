@@ -1,0 +1,516 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Efﬁcient Iterative Linear-Quadratic Approximations
+for Nonlinear Multi-Player General-Sum Differential Games
+David Fridovich-Keil, Ellis Ratner, Lasse Peters, Anca D. Dragan, and Claire J. Tomlin
+Abstract—Many problems in robotics involve multiple de-
+cision making agents. To operate efﬁciently in such settings,
+a robot must reason about the impact of its decisions on
+the behavior of other agents. Differential games offer an
+expressive theoretical framework for formulating these types
+of multi-agent problems. Unfortunately, most numerical so-
+lution techniques scale poorly with state dimension and are
+rarely used in real-time applications. For this reason, it is
+common to predict the future decisions of other agents and
+solve the resulting decoupled, i.e., single-agent, optimal control
+problem. This decoupling neglects the underlying interactive
+nature of the problem; however, efﬁcient solution techniques
+do exist for broad classes of optimal control problems. We
+take inspiration from one such technique, the iterative linear-
+quadraticregulator(ILQR),whichsolvesrepeatedapproxima-
+tions with linear dynamics and quadratic costs. Similarly, our
+proposedalgorithmsolvesrepeatedlinear-quadraticgames.We Fig.1:Demonstrationoftheproposedalgorithmforathree-playergeneral-
+experimentally benchmark our algorithm in several examples sum game modeling an intersection. Two cars (red and green triangles)
+navigate the intersection while a pedestrian (blue triangle) traverses a
+with a variety of initial conditions and show that the resulting
+crosswalk. Observe how both cars swerve slightly to avoid one another
+strategies exhibit complex interactive behavior. Our results
+andprovideextraclearancetothepedestrian.
+indicatethatouralgorithmconvergesreliablyandrunsinreal-
+time.Inathree-player,14-statesimulatedintersectionproblem, the so-called “curse of dimensionality” [1]. Numerical dy-
+our algorithm initially converges in <0.25s. Receding hori- namic programming solutions for general nonlinear systems
+zon invocations converge in <50ms in a hardware collision-
+have been studied extensively, though primarily in cases
+avoidance test.
+with a priori known objectives and constraints which permit
+ofﬂine computation, such as automated aerial refueling [2].
+I. INTRODUCTION
+Approachessuchas[3,4]whichseparateofﬂinegameanaly-
+Many problems in robotics require an understanding of sisfromonlineoperationarepromising.Still,scenarioswith
+how multiple intelligent agents interact. For example, in the morethantwoplayersremainextremelychallenging,andthe
+intersectiondepictedinFig.1,twocarsandapedestrianwish practical restriction of solving games ofﬂine prevents them
+to reach their respective goals without colliding or leaving frombeingwidelyusedinmanyapplicationsofinterest,such
+their lanes. Successfully navigating the intersection requires as autonomous driving.
+eitherexplicit,orperhapsimplicit,coordinationamongstthe To simplify matters, decision making problems for multi-
+agents. Often, these interactions are decoupled, with each pleagentsareoftendecoupled(see,e.g.,[5–7]).Forexample,
+autonomousagentpredictingthebehaviorofothersandthen the red car in Fig. 1 may wish to simplify its decision prob-
+planning an appropriate response. This decoupling necessi- lem by predicting the future motion of the other agents and
+tatesstrongpredictiveassumptionsonhowagents’decisions plan reactively. This simpliﬁcation reduces the differential
+impact one another. Differential game theory provides a game to an optimal control problem, for which there often
+principled formalism for expressing these types of multi- existefﬁcient solution techniques.However,the decisionsof
+agent decision making problems without requiring a priori theotheragentswilldependuponwhattheredcarchoosesto
+predictive assumptions. do. By ignoring this dependence, the red car is incapable of
+Unfortunately, most classes of differential games have no discovering strategies which exploit the reactions of others,
+analyticsolution,andmanynumericaltechniquessufferfrom andmoreover,trustinginanominalprediction—e.g.,thatthe
+pedestrianwillgetoftheway—mayleadtounsafebehavior.
+{ Adifferentialgameformulationofthisproblem,bycontrast,
+Department of EECS, UC Berkeley, dfk, eratner,
+}
+lasse.peters, anca, tomlin @eecs.berkeley.edu. explicitly accounts for the mutual dependence of all agents’
+This research is supported by an NSF CAREER award, the Air Force decisions.
+OfﬁceofScientiﬁcResearch(AFOSR),NSF’sCPSFORCESandVeHICaL
+projects, the UC-Philippine-California Advanced Research Institute, the We propose a novel local algorithm for recovering inter-
+ONRMURIEmbeddedHumans,aDARPAAssuredAutonomygrant,and activestrategiesinabroadclassofdifferentialgames.These
+theSRCCONIXCenter.D.Fridovich-KeilissupportedbyanNSFGraduate
+strategiesqualitativelyresemblelocalNashequilibria,though
+ResearchFellowship.E.RatnerissupportedbyaNASASpaceTechnology
+ResearchFellowship. there are subtle differences. By solving the underlying game
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1475
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. we account for the fundamental interactive nature of the strategies to later players. Zhou et al. [25] and Liu et al.
+problem, and by seeking a local solution we avoid the curse [26] operate in a similar setting, but solve for open-loop
+of dimensionality which arises when searching for global conservative strategies.
+Nash equilibria. Our algorithm builds upon the iterative
+C. Iterative linear-quadratic (LQ) methods
+linear-quadratic regulator (ILQR) [8], a local method used
+in smooth optimal control problems [9–11]. ILQR repeat- IterativeLQapproximationmethodsareincreasinglycom-
+edly reﬁnes an initial control strategy by efﬁciently solving mon in the robotics and control communities [9–11, 27].
+approximations with linear dynamics and quadratic costs. Our work builds directly upon the iterative linear-quadratic
+Like linear-quadratic (LQ) optimal control problems, LQ regulator (ILQR) algorithm [8, 28].
+gamesalsoaffordanefﬁcientclosedformsolution[12].Our Ateachiteration,ILQRsimulatesthefullnonlinearsystem
+algorithm exploits this analytic solution to solve successive trajectory, computes a discrete-time linear dynamics approx-
+LQ approximations, and thereby ﬁnds a local solution to the imationandquadraticcostapproximation,andsolvesaLQR
+original game in real-time. For example, our algorithm ini- subproblem to generate the next control strategy iterate.
+tiallysolvesthethree-player14-stateintersectionscenarioof While structurally similar to ILQR, our approach solves a
+Fig. 1 in <0.25s, and receding horizon problems converge LQ game at each iteration instead of a LQR problem. This
+in <50ms in a hardware collision-avoidance test. core idea is related to the sequential linear-quadratic method
+of [29, 30], which is restricted to the two-player zero-sum
+II. BACKGROUND&RELATEDWORK
+context. In this paper, we show that LQ approximations can
+A. General-sum games be applied in N-player, general-sum games. In addition, we
+Initially formulated in [13, 14], general-sum differen- experimentallycharacterizethequalityofsolutionsinseveral
+tial games generalize zero-sum games to model situa- case studies and demonstrate real-time operation.
+tions in which players have competing—but not necessar-
+III. PROBLEMFORMULATION
+ily opposite—objectives. Like zero-sum games, general-sum
+games are characterized by Hamilton-Jacobi equations [13] We consider a N-player ﬁnite horizon general-sum differ-
+in which all players’ Hamiltonians are coupled with one ential game characterized by nonlinear system dynamics
+other.Bothzero-sumandgeneral-sumgames,andespecially x˙ =f(t,x,u ), (1)
+1:N
+games with many players, are generally difﬁcult to solve
+R R
+numerically. However, efﬁcient methods do exist for solving where x∈ n is the state of the system, and ui ∈ mi,i∈
+[N] ≡ {1,...,N} is the control input of player i, and
+gameswithlineardynamicsandquadraticcosts,e.g.[12,15].
+u ≡(u ,u ,...,u ).Eachplayer hasacostfunction J
+Dockner et al. [16] also characterize classes of games which 1:N 1 2 N i
+deﬁnedasanintegralofrunningcostsg .J isunderstoodto
+admit tractable open loop, rather than feedback, solutions. i i
+depen(cid:0)d implic(cid:1)itly(cid:90)upon t(cid:0)he state trajecto(cid:1)ry x(·), which itself
+B. Approximation techniques depends upon initial state x(0) and control signals u (·):
+1:N
+While general-sum games may be analyzed by solving (cid:44) T
+J u (·) g t,x(t),u (t) dt,∀i∈[N]. (2)
+coupled Hamilton-Jacobi equations [13], doing so requires i 1:N i 1:N
+0
+bothexponentialtimeandcomputationalmemory.Anumber
+We shall presume that f is continuous in t and continu-
+ofmoretractableapproximatesolutiontechniqueshavebeen
+ously differentiable in {x,u } uniformly in t. We shall also
+i
+proposed for zero-sum games, many of which require linear
+require g to be twice differentiable in {x,u },∀t.
+i i
+system dynamics, e.g. [17–20], or decomposable dynamics
+Ideally, we would like to ﬁnd time-varying state feedback
+[21].Approximatedynamicprogrammingtechniquessuchas ∗
+control strategies γ ∈Γ for each player i which constitute
+[22] are not restricted to linear dynamics or zero-sum set- i i
+a global Nash equilibrium for the game deﬁned by (1) and
+tings. Still, scalability to online, real-time operation remains
+(2). Here, the strategy space Γ for player i is the set of
+a challenge. i R R
+measurable functions γi : [0,T] × n → mi mapping
+Iterativebestresponsealgorithmsformanotherclassofap-
+time and state to player i’s control input. Note that, in
+proximate methods for solving general-sum games. Here, in
+this formulation, player i only observes the state of the
+each iteration every player solves (or approximately solves) (cid:0) (cid:1)
+system at each time and is unaware of other players’ control
+the optimal control problem that results from holding other
+strategies. With a slight abuse of notation J (γ ;...;γ )≡
+i 1 N
+players’ strategies ﬁxed. This reduction to a sequence of
+J γ (·,x(·)),...,γ (·,x(·)) , the global Nash equilibrium
+i 1 N
+optimal control problems is attractive; however, it can also
+isdeﬁnedasthesetofstrategies{γ }forwhichthefollowing
+i
+becomputationallyinefﬁcient.Stillrecentworkdemonstrates
+inequalities hold (see, e.g., [12, Chapter 6]):
+the effectiveness of iterative best response in lane changes ∗ (cid:44) ∗ ∗ ∗ ∗ ∗
+J J (γ ;...;γ− ;γ ;γ ;...γ )
+[4] and multi-vehicle racing [23]. i i 1∗ i∗ 1 i ∗i+1 ∗N (3)
+Another similarly-motivated class of approximations in- ≤J (γ ;...;γ− ;γ ;γ ;...γ ),∀i∈[N].
+i 1 i 1 i i+1 N
+volves changing the information structure of the game. For In (3), the inequalities must hold for all γ ∈ Γ ,∀i ∈
+i ∗ i ∗
+example, Chen et al. [24] solve a multi-player reach-avoid [N]. Informally, a set of feedback strategies (γ ,...,γ )
+1 N
+game by pre-specifying an ordering amongst the players is a global Nash equilibrium if no player has a unilateral
+and allowing earlier players to communicate their intended incentive to deviate from their current strategy.
+1476
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. SinceﬁndingaglobalNashequilibriumisgenerallycom- Algorithm 1: Iterative LQ Games
+putationally intractable, recent work in adversarial learning Input: initial state x(0), control strategies {γ0}∈ ,
+[31] and motion planning [23, 32] consider local Nash i i [N]
+time horizon T, running costs {g }∈
+equilibria instead. Further, [23, 32] simplify the information Output: converged control strategies {γ∗i}i∈[N]
+structure of the game and consider open loop, rather than 1 for iteration k =1,2(cid:0),... do (cid:1) i i [N]
+feedback, strategies. Local Nash equilibria are character- (cid:0) (cid:1)
+2 ξk ≡{xˆ(t),uˆ (t)} ∈ ←
+ized similarly to (3), except that the inequalities may only 1:N t [0,t] −
+3 getTrajectory x(0),{γk 1} ;
+hold in a local neighborhood within the strategy space (cid:0) (cid:1) i
+4 {A(t),B (t)}← linearizeDynamics ξk ;
+[33, Deﬁnition 1]. In this paper, we shall seek a related i (cid:0)
+5 {l (t),Q (t),r (t),R (t)}←
+type of equilibrium, which we describe more precisely in i i ij ij (cid:1)
+quadraticizeCost ξk ;
+Section IV-B. Intuitively, we seek strategies which satisfy (cid:0) (cid:1)
+6 {γ˜k}←solveLQGame
+the global Nash conditions (3) for the limit of a sequence of i
+7 {A(t),B (t),l (t),Q (t),r (t),R (t)} ;
+local approximations to the game. Our experimental results i i i− ij ij
+8 {γk}←stepToward {γk 1,γ˜k} ;
+indicate that it does yield highly interactive strategies in a i i i
+9 if converged then
+variety of differential games.
+10 return {γk}
+i
+IV. ITERATIVELINEAR-QUADRATICGAMES
+WeapproachtheN-playergeneral-sumgamewithdynam-
+ics (1) and costs (2) from the perspective of classical LQ
+games. It is well known that Nash equilibrium strategies for where vector li(t) is the gradient Dxˆgi, rij is Duˆjgi, and
+ﬁnite-horizon LQ games satisfy coupled Riccati differential matrices Qi and Rij are Hessians Dx2ˆxˆgi and Du2ˆjuˆjgi,
+equations. These coupled Riccati equations may be derived raessptheecytivrealrye.lyWaepnpeegarleicntmcoisxtedstrpuacrttuiarlessDofu2ˆjpuˆrkagcitiacnaldiDntxe2ˆurˆejsgti,
+by substituting linear dynamics and quadratic running costs
+although they could be incorporated if needed.
+into the generalized HJ equations [14] and analyzing the
+ﬁrstordernecessary conditionsofoptimalityfor eachplayer Thus, we have constructed a ﬁnite-horizon continuous-
+[12, Chapter 6]. These coupled differential equations may time LQ game, which may be solved via coupled Riccati
+be solved approximately in discrete-time using dynamic differential equations [12, 34]. This results in a new set
+programming [12]. We will leverage the existence and com- of candidate feedback strategies {γ˜k} which constitute a
+i
+putational efﬁciency of this discrete-time LQ solution to feedback (g(cid:0)lobal) N(cid:1)ash equilibrium of the LQ game [12]. In
+solve successive approximations to the original nonlinear fact, these feedback strategies are afﬁne maps of the form:
+nonquadratic game. γ˜k t,x(t) =uˆ (t)−Pk(t)δx(t)−αk(t), (6)
+i i i i
+R × R
+A. Iterative LQ game algorithm with gains Pk(t)∈ mi n and afﬁne terms αk(t)∈ mi.
+i i
+However, we ﬁnd that choosing γk = γ˜k often causes
+Our iterative LQ game approach proceeds in stages, as i i
+Algorithm 1 to diverge because the trajectory resulting from
+summarized in Algorithm 1. We begin with an initial state
+{γ˜ } is far enough from the current trajectory iterate ξk that
+x(0) and initial feedback control strategies {γ0} for each i
+i the dynamics linearizations (Algorithm 1, line 4) and cost
+player i, and integrate the system forward (line 3 of Al-
+quadraticizations (line 5) no longer hold. As in ILQR [35],
+gorithm 1) to obtain the current trajectory iterate ξk ≡
+to improve convergence, we take only a small step in the
+{xˆ(t),uˆ1:N(t)}t∈[0,T]. Next (line 4) we obtain a Jacobian “direction”(cid:0)of γ˜k.(cid:1)1 More precisely, for some choice of step
+linearization of the dynamics f about trajectory ξk. At each i
+size η ∈(0,1], we set
+timet∈[0,T]andforarbitrarystatesx(t)andcontrolsu (t)
+wedeﬁnedeviationsfromthistrajectoryδx(t)=x(t)−xˆi(t) γik t,x(t) =uˆi((cid:0)t)−Pik(cid:1)(t)δx(t)−ηαik(t), (7)
+and δu (t) = u (t)−uˆ (t). Thu(cid:88)s equipped, we compute a which corresponds to line 8(cid:0)in Alg(cid:1)orithm 1. Note that at
+i i i
+continuous-time linear system approximation about ξk: t=0, δx(0)=0 and γk 0,x(0) =uˆ (0)−ηαk(0). Thus,
+i i i
+δ˙x(t)≈A(t)δx(t)+ (cid:0) Bi(t)δui(t)(cid:1), (4) taking η = 0, we have γik t,x(t) = uˆi(t) (which may
+(cid:0) ∈(cid:1) be veriﬁed recursively). That is, when η = 0 we recover
+i [N]
+the open-loop controls from the previous iterate, and hence
+where A(t) is the Jacobian D f t,xˆ(t),uˆ (t) and B (t)
+xˆ 1:N i x(t) = xˆ(t). Taking η = 1, we recover the LQ solution in
+is likewise D f t,xˆ(t),uˆ (t) .
+W(cid:0)e also obuˆtaiin a(cid:1)quadra1t:iNc approximation to the running (6). Similar logic implies the following∗lemma.
+Lemma 1: Suppose that trajectory ξ is a ﬁxed point of
+cost g for each player i (see line 5 of Algorithm 1)
+i(cid:0) (cid:1) Algorithm 1, with η (cid:54)= 0. Then, the converged afﬁne terms
+∗
+gi t,x(t),u1:N(t) ≈ {αi(t)} must all be identically zero for all time.
+(cid:88) 1 In ILQR, it is important to perform a line-search over
+g t,xˆ(t),uˆ (t) + δx(t)T (Q (t)δx(t)+2l (t))+
+i 1:N 2 i i step size η to ensure a sufﬁcient decrease in cost at every
+1
+δu (t)T (R (t)δu (t)+2r (t)), (5)
+2 ∈ j ij j ij 1We also note that, in practice, it is often helpful to “regularize” the
+j [N] problembyaddingscaledidentitymatricesI toQi and/orRij.
+1477
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. iteration,andtherebyimproveconvergence(e.g.,[35]).Inthe (SectionV-C).Allcomputationtimesarereportedforsingle-
+context of a noncooperative game, however, line-searching threaded operation on a 2017 MacBook Pro with a 2.8
+to decrease “cost” does not make sense, as costs {J } may GHz Intel Core i7 CPU. For reference, the iterative best
+i
+conﬂict. For this reason, like other local methods in games response scheme of [32] reports solving a receding horizon
+(e.g.,[23]),ourapproachisnotguaranteedtoconvergefrom two-player zero-sum racing game at 2Hz, and the method
+arbitrary initializations. In practice, however, we ﬁnd that of [30] reportedly takes several minutes to converge for a
+ouralgorithmtypicallyconvergesforaﬁxed,smallstepsize different two-player zero-sum example. The dynamics and
+(e.g. η = 0.01). Heuristically decaying step size with each costsinbothcasesdifferfromthoseinSectionV(orarenot
+−
+iteration k or line-searching until (cid:107)ξk − ξk 1(cid:107) is smaller clearly reported); nonetheless, the runtime of our approach
+than a threshold are also promising alternatives. Further compares favorably.
+investigation of line-search methods in games is a rich topic
+of future research. V. EXAMPLES
+Note: Although we have presented our algorithm in
+In this section, we demonstrate our algorithm experimen-
+continuous-time, in practice, we solve the coupled Riccati
+tallyinthree-playernoncooperativesettings,bothinsoftware
+equationsanalyticallyindiscrete-timeviadynamicprogram-
+simulation and hardware.2
+ming.Pleasereferto[12,Corollary6.1]forafullderivation.
+To discretize time at resolution ∆t, we employ Runge-Kutta A. Monte Carlo study
+integration of nonlinear dynamics (1) with a zero-order hold
+We begin by presenting a Monte Carlo study of the
+for control input over each time interval ∆t.
+convergence properties of Algorithm 1. As we shall see,
+B. Characterizing ﬁxed points the solution to which Algorithm 1 converges depends upon
+Suppose Algorithm 1 converges to a ﬁxed point the initial strategy of each player, γ0. For clarity, we study
+i
+∗ ∗ this sensitivity in a game with simpliﬁed cost structure so
+(γ ,...,γ ). These strategies are the global Nash equi-
+1 N that differences in solution are more easily attributable to
+librium of a local LQ approximation of the original game
+∗ coupling between players.
+aboutthelimitingoperatingpointξ .Whileitistemptingto
+presume that such ﬁxed points are also local Nash equilibria Concretely, we consider a three-player “hallway naviga-
+of the original game, this is not always true because con- tion” game with time horizon 10s and discretization 0.1s.
+verged strategies are only optimal for a LQ approximation Here, three people wish to interchange positions in a narrow
+of the game at every time rather than the original game. hallway while maintaining at least 1m clearance between
+This approximation neglects higher order coupling effects one another. We model each player i’s motion as:
+between each player’s running cost g and other players’ p˙ =v cos(θ ), θ˙ =ω ,
+i x,i i i i i (8)
+inputs u ,j (cid:54)= i. These coupling effects arise in the game
+j p˙ =v sin(θ ), v˙ =a ,
+setting but not in the optimal control setting, where ILQR y,i i i i i
+where p := (p ,p ) denotes player i’s position, θ
+converges to local minima. i x,i y,i i
+heading angle, v speed, and input u := (ω ,a ) yaw
+i i i i
+C. Computational complexity and runtime rateandlongitudinalacceleration.Concatenatingallplayers’
+statesintoaglobalstatevectorx:=(p ,p ,θ ,v )3 ,the
+The per-iteration computational complexity of our ap- x,i y,i i i i=1
+game has 12 state dimensions and six input dimensions.
+proach is comparable to that of ILQR, and scales modestly
+withthenumberofplayers,N.Speciﬁcally,ateachiteration, We encode this problem with running costs gi (2) ex-
+pressed as weighted sums of the following:
+we ﬁrst linearize system dynamics about ξk. Presuming that
+thestatedimensionnislargerthanthecontroldimensionmi wall: 1{|py,i|>dhall}(|py,i|−dhall)2 (9)
+for each player, linearization requires computing O(n2) par- proximity: 1{(cid:107)pi−pj(cid:107)<dprox}(dprox−(cid:107)pi−pj(cid:107))2 (10)
+tialderivativesateachtimestep(whichalsoholdsforILQR).
+We also quadraticize costs, which requires O(Nn2) partial goal: 1{t>T −tgoal}(cid:107)pi−pgoal,i(cid:107)2 (11)
+derivativesateachtimestep(comparedtoO(n2)forILQR). input: uTi Riiui (12)
+Finally,solvingthecoupledRiccatiequationsoftheresulting Here, 1{·} is the indicator function, i.e., it takes the value 1
+LQgameateachtimestephascomplexityO(N3n3),which if the given condition holds, and 0 otherwise. dhall and dprox
+maybeveriﬁedbyinspecting[12,Corollary6.1](forILQR, denote threshold distances from hallway center and between
+this complexity is O(n3)). players,whichwesetto0.75and1m,respectively.Thegoal
+Total algorithmic complexity depends upon the number cost is active only for the last tgoal seconds, and the goal
+of iterations, which we currently have no theory to bound. position is given by pgoal,i for each player i. Control inputs
+However, empirical results are extremely promising. For are penalized quadratically, with R a diagonal matrix. The
+ii
+the three-player 14-state game described in Section V-B, hallway is too narrow for all players to cross simultaneously
+each iteration takes <8ms and the entire game can be withoutincurringalargeproximitycost;hence,thisproxim-
+solved from a zero initialization (P0(·) = 0,α0(·) = 0) ity cost induces strong coupling between players’ strategies.
+i i
+in <0.25s. Moreover, receding horizon invocations in a
+hardware collision-avoidance test can be solved in <50ms 2Videosummaryavailableathttps://youtu.be/KPEPk-QrkQ8.
+1478
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. Car
+Crosswalk Goals
+Pedestrian
+Car Lanes
+0.0≤t≤0.8 0.8≤t≤1.5 1.5≤t≤5.0
+Fig. 3: Three-player intersection game. (Left) Green car seeks the lane
+0.0∑t∑00..80∑t∑00..80∑t∑0.8 0.8∑t∑10..58∑t∑10..58∑t∑1.5 1.5∑t∑51..05∑t∑51..05∑t∑5.0
+center and then swerves slightly to avoid the pedestrian. (Center) Red car
+acceleratesinfrontofthegreencarandslowsslightlytoallowthepedestrian
+topass.(Right)Redcarswerveslefttogivepedestrianawideberth.
+We model the pedestrian’s dynamics as in (8) and each
+cars i’s dynamics as follows:
+p˙ =v cos(θ ), θ˙ =v tan(φ )/L , φ˙ =ψ
+x,i i i i i i i i i (13)
+p˙ =v sin(θ ), v˙ =a ,
+y,i i i i i
+where the state variables are as before (8) except for front
+wheel angle φ . L is the inter-axle distance, and input
+i i
+u :=(ψ ,a )isthefrontwheelangularrateandlongitudinal
+i i i
+acceleration, respectively. Together, the state of this game is
+14-dimensional.
+The running cost for each player i are speciﬁed as
+weighted sums of (10)–(12), and the following:
+lane center: d (p )2 (14)
+Fig. 2: Monte Carlo results for a three-player hallway navigation game. (cid:96) i
+(A1,B1,C1)ConvergedtrajectoriesclusteredbytotalEuclideandistance; lane boundary: 1{d(cid:96)(pi)>dlane}(dlane−d(cid:96)(pi))2 (15)
+eachclustercorrespondstoaqualitativelydistinctmodeofinteraction.(A2,
+B2, C2) Costs for each player at each solver iteration. The shaded region nominal speed: (vi−vref,i)2 (16)
+correspondstoonestandarddeviation.(D)Severalconvergedtrajectoriesdid
+speed bounds: 1{v >v }(v −v )2
+notmatchacluster(A-C).(E)Trajectoriesresultingfrom500randominitial i i i i
+strategies.(F)Histogramofiterationsuntilstatetrajectoryhasconverged. +1{v <v }(v −v )2 (17)
+i i i i
+Fig. 2 displays the results of our Monte Carlo study. Here, dlane denotes the lane half-width, and d(cid:96)(pi) :=
+We seed Algorithm 1 with 500 random sinusoidal open- min ∈ (cid:107)p − p (cid:107) measures player i’s distance to lane
+loop initial strategies, which correspond to the trajectories centep(cid:96)rli(cid:96)ne (cid:96)(cid:96). Speeid v is penalized quadratically away from
+i
+sruhnowAnlgionriFthigm. 21(Efo)r. 1F0ro0miteeraactihonosfatnhdesecluinstietiraltihzeatiroensus,ltiwnge a ﬁFxiged. 3resfheorewnsceavtirmef,ei-alalsposeoouftstihdee cliomnivtesrgveidansodluvtii.on iden-
+trajectories by Euclidean distance. As shown in Fig. 2(A1, tiﬁedbyAlgorithm1.Thesestrategiesexhibitnon-trivialco-
+B1, C1), these clusters correspond to plausible modes of ordination among the players as they compete to reach their
+interaction; in each case, one or more players incur slightly goals efﬁciently while sharing responsibility for collision-
+highercosttomakeroomfortheotherstopass.Besideeach avoidance. Such competitive behavior would be difﬁcult for
+of these clusters in Fig. 2(A2, B2, C2), we also report the anysingleagenttorecoverfromadecoupled,optimalcontrol
+mean and standard deviation of each player’s cost at each formulation. Observe how, between 0≤t≤0.8s (left), the
+solver iteration. As shown in Fig. 2(F), state trajectories green car initially seeks the lane center to minimize its cost,
+converge within an (cid:96)∞ tolerance of 0.01 in well under 100 butthenturnsslightlytoavoidthepedestrian(blue).Between
+iterations. 0.8 ≤ t ≤ 1.5s (center), the red car turns right to pass in
+Inthese500randomsamples,only6didnotconvergeand front of the green car, and then slows and begins to turn left
+had to be resampled, and 5 converged to trajectories which to give the pedestrian time to cross. Finally (right), the red
+wereoutliersfromtheclustersdepictedinFig.2(A-C).These car turns left to give the pedestrian a wide berth.
+outliers are shown in Fig. 2(D). We observe that, in these 5
+cases, the players come within 0.5m of one another. C. Receding horizon motion planning
+Differential games are appropriate in a variety of ap-
+B. Three-player intersection
+plications including multi-agent modeling and coordinated
+Next, we consider a more complicated game intended to planning. Here we present a proof-of-concept for their use
+model trafﬁc at an intersection. As shown in Fig. 3, we in single-agent planning in a dynamic environment. In this
+consider an intersection with two cars and one pedestrian, setting,asinglerobotoperatesamongstmultipleotheragents
+allofwhichmustcrosspathstoreachdesiredgoallocations. whose true objectives are unknown. The robot models these
+Weuseatimehorizonof5swithdiscretizationof0.1s,and objectives and formulates the interaction as a differential
+Algorithm 1 terminates in under 0.25s. game. Then, crucially, the robot re-solves the differential
+1479
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. (cid:53)(cid:82)(cid:69)(cid:82)(cid:87)(cid:3)(cid:74)(cid:82)(cid:68)(cid:79) (cid:43)(cid:88)(cid:80)(cid:68)(cid:81)(cid:3)(cid:74)(cid:82)(cid:68)(cid:79)(cid:86)
+(cid:11)(cid:68)(cid:12) (cid:11)(cid:69)(cid:12) (cid:11)(cid:70)(cid:12) (cid:11)(cid:71)(cid:12) (cid:11)(cid:72)(cid:12)
+Fig.4:Time-lapseofahardwaredemonstrationofAlgorithm1.Wemodeltheinteractionofagroundrobot(bluetriangle)andtwohumans(purpleand
+redtriangles)usingadifferentialgameinwhicheachagentwishestoreachagoallocationwhilemaintainingsufﬁcientdistancefromotheragents.Our
+algorithm solves receding horizon instantiations of this game in real-time, and successfully plans and executes interactive collision-avoiding maneuvers.
+Planned(andpredicted)trajectoriesareshowninblue(robot),purple,andred(humans).
+game along a receding time horizon to account for possible VI. DISCUSSION
+deviations between the other agents’ decisions and those
+We have presented a novel algorithm for ﬁnding local
+which result from the game solution.
+solutionsinmulti-playergeneral-sumdifferentialgames.Our
+We implement Algorithm 1 in C++3 within the Robot approach is closely related to the iterative linear-quadratic
+Operating System (ROS) framework, and evaluate it in a regulator (ILQR) [8], and offers a straightforward way for
+real-time hardware test onboard a TurtleBot 2 ground robot, optimal control practitioners to directly account for multi-
+in a motion capture room with two human participants. agent interactions via differential games. We performed a
+The TurtleBot wishes to cross the room while maintaining Monte Carlo study which demonstrated the reliability of
+>1m clearance to the humans, and it models the humans our algorithm and its ability to identify complex interactive
+likewise. We model the TurtleBot dynamics as (8) and strategies for multiple agents. These solutions display the
+humans likewise but with constant speed v , i.e.: competitive behavior associated with local Nash equilibria,
+i
+althoughtherearesubtledifferences.Wealsoshowcasedour
+p˙ =v cos(θ ), p˙ =v sin(θ ), θ˙ =ω . (18)
+x,i i i y,i i i i i methodinathree-player14-dimensionaltrafﬁcexample,and
+We use a similar cost structure as in Section V-B, and testeditinreal-timeoperationinahardwarerobotnavigation
+initialize Algorithm 1 with all agents’ strategies identically scenario, following a receding time horizon.
+zero (i.e., P0(·),α0(·)≡0). We re-solve the game in a 10s There are several other approaches to identifying local
+i i
+recedinghorizonwithtimediscretizationof0.1s,andwarm- solutionsindifferentialgames,suchasiterativebestresponse
+start each successive receding horizon invocation with the [23]. We have shown the computational efﬁciency of our
+previous solution. Replanning every 0.25s, Algorithm 1 re- approach. However, quantitatively comparing the solutions
+liablyconvergesinunder50ms.Wegatherstateinformation identiﬁedbydifferentalgorithmsischallengingduetodiffer-
+for all agents using a motion capture system. Fig. 4 shows encesinequilibriumconcept,informationstructure(feedback
+a time-lapse of a typical interaction. vs. open loop), and implementation details. Furthermore, in
+Initially, in frame (a) Algorithm 1 identiﬁes a set of arbitrary general-sum games, different players may prefer
+strategies which steer each agent to their respective goals different equilibria. Studying the qualitative differences in
+while maintaining a large separation. Of course, the human these equilibria is an important direction of future research.
+participants do not actually follow these precise trajectories; Although our experiments show that our algorithm con-
+hencelaterrecedinghorizoninvocationsconvergetoslightly verges reliably, we have no a priori theoretical guarantee of
+different strategies. In fact, between frames (c) and (d) the convergence from arbitrary initializations. Future work will
+redparticipantmakesanunanticipatedsharpright-handturn, seek a theoretical explanation of this empirical property.
+which forces the (blue) robot to stay to the right of its
+ACKNOWLEDGMENTS
+previousplanandthenturnleftinordertomaintainsufﬁcient
+The authors would like to thank Andrew Packard for his
+separation between itself and both humans. We note that
+helpfulinsightsonLQgames,aswellasForrestLaine,Chih-
+our assumed cost structure models all agents as wishing to
+Yuan Chiu, Somil Bansal, Jaime Fisac, Tyler Westenbroek,
+avoid collision. Thus, the resulting strategies may be less
+and Eric Mazumdar for helpful discussions.
+conservative than those that would arise from a non-game-
+theoretic motion planning approach. REFERENCES
+[1] R. Bellman. Dynamic programming. Tech. rep. RAND
+CORP SANTA MONICA CA, 1956.
+3Codeavailableat:github.com/HJReachability/ilqgames
+1480
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. [2] J.Ding,J.Sprinkle,S.S.Sastry,andC.J.Tomlin.“Reach- viability kernel in high-dimensional systems”. Automatica
+ability calculations for automated aerial refueling”. 47th 49.7 (2013).
+Conference on Decision and Control (CDC). IEEE. 2008. [21] M. Chen, S. L. Herbert, M. S. Vashishtha, S. Bansal, and
+[3] S. L. Herbert*, M. Chen*, S. Han, S. Bansal, J. F. Fisac, C. J. Tomlin. “Decomposition of reachable sets and tubes
+andC.J.Tomlin.“FaSTrack:aModularFrameworkforFast foraclassofnonlinearsystems”.TransactionsonAutomatic
+andGuaranteedSafeMotionPlanning”.56thConferenceon Control 63.11 (2018).
+Decision and Control (CDC) (2017). [22] D.P.BertsekasandJ.N.Tsitsiklis.Neuro-dynamicprogram-
+[4] J. F. Fisac, E. Bronstein, E. Stefansson, D. Sadigh, S. S. ming. Athena Scientiﬁc Belmont, MA, 1996.
+Sastry,andA.D.Dragan.“Hierarchicalgame-theoreticplan- [23] Z. Wang, R. Spica, and M. Schwager. “Game Theoretic
+ningforautonomousvehicles”.InternationalConferenceon Motion Planning for Multi-robot Racing”. Distributed Au-
+Robotics and Automation (ICRA). IEEE. 2019. tonomous Robotic Systems. Springer, 2019.
+[5] B.D.Ziebart,N.Ratliff,G.Gallagher,C.Mertz,K.Peterson, [24] M. Chen, J. F. Fisac, S. Sastry, and C. J. Tomlin.
+J. A. Bagnell, M. Hebert, A. K. Dey, and S. Srinivasa. “Safe sequential path planning of multi-vehicle systems via
+“Planning-based prediction for pedestrians”. International double-obstacle Hamilton-Jacobi-Isaacs variational inequal-
+ConferenceonIntelligentRobotsandSystems(IROS).IEEE. ity”.2015EuropeanControlConference(ECC).IEEE.2015.
+2009. [25] Z.Zhou,R.Takei,H.Huang,andC.J.Tomlin.“Ageneral,
+[6] H. Bai, S. Cai, N. Ye, D. Hsu, and W. S. Lee. “Intention- open-loopformulationforreach-avoidgames”.51stConfer-
+awareonlinePOMDPplanningforautonomousdrivingina ence on Decision and Control (CDC). IEEE. 2012.
+crowd”. International Conference on Robotics and Automa- [26] S.-Y. Liu, Z. Zhou, C. Tomlin, and J. K. Hedrick. “Evasion
+tion (ICRA). IEEE. 2015. of a team of dubins vehicles from a hidden pursuer”. Inter-
+[7] E. Schmerling, K. Leung, W. Vollprecht, and M. Pavone. national Conference on Robotics and Automation (ICRA).
+“Multimodalprobabilisticmodel-basedplanningforhuman- IEEE. 2014.
+robot interaction”. 2018 IEEE International Conference on [27] J.vandenBerg.“IteratedLQRsmoothingforlocally-optimal
+Robotics and Automation (ICRA). IEEE. 2018. feedback control of systems with non-linear dynamics and
+[8] W. Li and E. Todorov. “Iterative linear quadratic regu- non-quadratic cost”. American Control Conference (ACC).
+lator design for nonlinear biological movement systems.” IEEE. 2014.
+ICINCO. 2004. [28] E.TodorovandW.Li.“AgeneralizediterativeLQGmethod
+[9] J. Koenemann, A. Del Prete, Y. Tassa, E. Todorov, O. forlocally-optimalfeedbackcontrolofconstrainednonlinear
+Stasse,M.Bennewitz,andN.Mansard.“Whole-bodymodel- stochastic systems”. American Control Conference (ACC).
+predictivecontrolappliedtotheHRP-2humanoid”.Interna- IEEE. 2005.
+tionalConferenceonIntelligentRobotsandSystems(IROS). [29] H. Mukai, A. Tanikawa, I. Tunay, I. Katz, H. Scha¨ttler,
+IEEE. 2015. P. Rinaldi, I. Ozcan, G. Wang, L. Yang, and Y. Sawada.
+[10] N. Kitaev, I. Mordatch, S. Patil, and P. Abbeel. “Physics- “Sequential linear quadratic method for differential games”.
+based trajectory optimization for grasping in cluttered en- Proc. 2nd DARPA-JFACC Symposium on Advances in En-
+vironments”. International Conference on Robotics and Au- terprise Control. Citeseer. 2000.
+tomation (ICRA). IEEE. 2015. [30] A.Tanikawa,H.Mukai,andM.Xu.“LocalConvergenceof
+[11] J. Chen, W. Zhan, and M. Tomizuka. “Constrained iterative the Sequential Quadratic Method for Differential Games”.
+LQRforon-roadautonomousdrivingmotionplanning”.In- Transactions of the Institute of Systems, Control and Infor-
+ternationalConferenceonIntelligentTransportationSystems mation Engineers 25.12 (2012).
+(ITSC). IEEE. 2017. [31] E.V.Mazumdar,M.I.Jordan,andS.S.Sastry.“Onﬁnding
+[12] T. Bas¸ar and G. J. Olsder. Dynamic noncooperative game localnashequilibria(andonlylocalnashequilibria)inzero-
+theory. SIAM, 1999. sum games”. arXiv preprint arXiv:1901.00838 (2019).
+[13] A.W.StarrandY.-C.Ho.“Nonzero-sumdifferentialgames”. [32] M.Wang,Z.Wang,J.Talbot,J.C.Gerdes,andM.Schwager.
+JournalofOptimizationTheoryandApplications3.3(1969). “GameTheoreticPlanningforSelf-DrivingCarsinCompet-
+[14] A. Starr and Y.-C. Ho. “Further properties of nonzero-sum itive Scenarios”. Robotics: Science & Systems. 2019.
+differential games”. Journal of Optimization Theory and [33] L. J. Ratliff, S. A. Burden, and S. S. Sastry. “On the char-
+Applications 3.4 (1969). acterization of local Nash equilibria in continuous games”.
+[15] T.LiandZ.Gajic.“Lyapunoviterationsforsolvingcoupled Transactions on Automatic Control 61.8 (2016).
+algebraic Riccati equations of Nash differential games and [34] M.GreenandD.J.Limebeer.Linearrobustcontrol.Courier
+algebraicRiccatiequationsofzero-sumgames”.Newtrends Corporation, 2012.
+in dynamic games and applications. Springer, 1995. [35] Y.Tassa,N.Mansard,andE.Todorov.“Control-limiteddif-
+[16] E. Dockner, G. Feichtinger, and S. Jørgensen. “Tractable ferential dynamic programming”. International Conference
+classes of nonzero-sum open-loop Nash differential games: on Robotics and Automation (ICRA). IEEE. 2014.
+theory and examples”. Journal of Optimization Theory and
+Applications 45.2 (1985).
+[17] A. B. Kurzhanski and P. Varaiya. “Ellipsoidal techniques
+for reachability analysis: internal approximation”. Systems
+& Control Letters 41.3 (2000).
+[18] A.B.KurzhanskiandP.Varaiya.“Onellipsoidaltechniques
+forreachabilityanalysis.partii:Internalapproximationsbox-
+valuedconstraints”.OptimizationMethodsandSoftware17.2
+(2002).
+[19] M. R. Greenstreet and I. Mitchell. “Reachability analysis
+using polygonal projections”. International Workshop on
+Hybrid Systems: Computation and Control. Springer. 1999.
+[20] J.N.Maidens,S.Kaynama,I.M.Mitchell,M.M.Oishi,and
+G. A. Dumont. “Lagrangian methods for approximating the
+1481
+Authorized licensed use limited to: Heriot-Watt University. Downloaded on September 21,2020 at 17:09:08 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,489 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Reliable Data Association for Feature-Based Vehicle Localization
+using Geometric Hashing Methods
+Isabell Hofstetter, Michael Sprunk, Florian Ries, Martin Haueis
+Abstract—Reliable data association represents a main chal-
+lenge of feature-based vehicle localization and is the key to
+integrity of localization. Independent of the type of features
+used, incorrect associations between detected and mapped
+features will provide erroneous position estimates. Only if the
+uniquenessofalocalenvironmentisrepresentedbythefeatures
+that are stored in the map, the reliability of localization is
+enhanced.
+In this work, a new approach based on Geometric Hashing
+is introduced to the ﬁeld of data association for feature-based
+vehicle localization. Without any information on a prior posi-
+tion,theproposedmethodallowstoefﬁcientlysearchlargemap
+regions for plausible feature associations. Therefore, odometry
+and GNSS-based inputs can be neglected, which reduces the
+risk of error propagation and enables safe localization.
+The approach is demonstrated on approximately 10min
+of data recorded in an urban scenario. Cylindrical objects
+Fig. 1: The concept of Geometric Hashing for localization: Intro-
+without distinctive descriptors, which were extracted from
+duction of additional coordinate frames, here depicted as the hash
+LiDARdata,serveaslocalizationfeatures.Experimentalresults
+frameinred,toefﬁcientlyassociatethefeaturesusingahashtable
+both demonstrate the feasibility as well as limitations of the
+that was previously computed for a feature-based map.
+approach.
+I. INTRODUCTION
+feasible. This introduces a certain risk for error propagation
+Feature-based vehicle localization approaches have been
+and, therefore, also safe localization.
+studied thoroughly in the past years and their practical
+application is known to have great value. These methods This contribution introduces the concept of Geometric
+depend on a previously generated map that contains various Hashing to the ﬁeld of data association for feature-based
+features, also called landmarks. In order to localize the vehicle localization. Geometric Hashing was initially intro-
+vehicle in map coordinates, extracted features from the ducedforobjectrecognitionpurposesandisafastmethodto
+vehicle’ssurroundingareassociatedwiththemapdata.These search large data sets for a given sample of features [6], [7].
+association constraints pose an optimization problem, which Thisworkfocusesontheadaptionofthemethodforvehicle
+is solved to ﬁnd an accurate pose estimation. localizationpurposesandexploresanddemonstratesitsfeasi-
+Available localization methods differ mostly in the kind bilityaswellaslimitations.Thepresentedapproachprovides
+of features that are used. There are methods that make the means for data association without any assumptions or
+use of very dense information such as visual point features knowledge on prior positions. It allows for feature associa-
+whichareextractedfromcameraimages[1],orpointclouds tionbasedonlyonthegeometricinformationprovidedbythe
+that are obtained from LiDAR or RADAR measurements extracted features while evaluating all possible hypotheses.
+[2]. Other approaches that focus on a reduced map size Thiseliminatestheriskoferrorpropagationandenablessafe
+and reusability of features, suggest the usage of features localization.Themethodcanbeusedasasafetylocalization
+with a semantic meaning such as road markings [3], [4], which complements a state-of-the-art solution and provides
+or geometric primitives [5]. the means for the online validation of feature associations.
+Thekeychallengewhichallthesemethodsface,iscorrect Inthefollowing,anoverviewofrelatedworkisgivenand
+and reliable feature association. In order to provide safe lo- the Geometric Hashing concept as it was proposed by Lam-
+calization,aproofoftheprobabilityofincorrectassociations dan et al. in [6] is brieﬂy recapitulated. Then, an association
+beingsufﬁcientlylowisdesirable.Mostmethodsdonothave algorithm that utilizes Geometric Hashing is introduced for
+amechanismtodosoandrelyonatemporalcomponent,e.g. the online data association for vehicle localization. Finally,
+apreviousposeestimate,toarguethatnootherassociationis experimental results verify the potential of the proposed
+approach and explore its limitations. We derive and test the
+All authors are with the Daimler AG Group Re- methodonadatasetrepresentinganurbanloopof3.8kmin
+search & MBC Development, Sindelﬁngen, Germany.
+{ Sindelﬁngen, Germany, where cylindrical structures, such as
+isabell.hofstetter, michael.sprunk,
+}
+florian.ries, martin.haueis @daimler.com poles,signs,andtrees,areusedforlocalization.Themethod,
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1322
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. ∈ (cid:54)
+however,isnotlimitedtothisspeciﬁckindoflandmarksand features(p,q)withp,q S andp=q representsabasisor
+i
+can easily be adapted to arbitrary localization features. basispair.LetK bethesetofbasispairsofmodelm .The
+i | | − i
+cardinalityofthisbasissetis K =N (N 1).Eachbasis
+II. RELATEDWORK ∈ i i i
+k = (p,q) K deﬁnes a local coordinate frame O ,
+i (p,q)
+Geometric Hashing has been applied in many different called the basis frame or geometric basis. The origin of this
+ﬁelds of research to various use cases as for example in frame is deﬁned by the midpoint between the two feature
+computer vision for object recognition [8], [9] or structural points p and q. The x-axis is represented by the axis passing
+∈
+alignment of proteins [10]. throughpandq.Foreachbasisk K ,theremainingfeature
+\ i
+In the broad ﬁeld of feature-based vehicle localization, points S k are transformed into the corresponding basis
+i
+however, Geometric Hashing was barely touched. In [11], frame and quantized appropriately. Finally, a hash function
+the authors utilize Geometric Hashing for visual localization is applied to each feature point and the hashes are stored in
+in large city environments from aerial images. They propose a hash table H.
+to use buildings as features that are extracted from satellite
+image data. A different hashing based approach was sug- B. Recognition phase
+gested in [12], where the authors propose to use scan points
+In an online step, a given input sample S can be searched
+itself in order to avoid the feature extraction step and apply
+for the objects of interest with the help of the hash table.
+Geometric Hashing to entire scans of the environment.
+Thisphaseiscalledtherecognitionphase.Here,anarbitrary
+These works either focus on ﬁnding a very rough global ∈
+orderedbasispairk oftworandomfeaturepointsp ,p S
+estimate of the vehicle’s position or the use of dense feature 1 2
+is generated. This deﬁnes a geometric basis as described
+data. The latter is also the case in visual place recognition, \
+before.AllremainingpointsofinterestS k aretransformed
+which is the solution to the problem of determining if an
+into this frame, quantized and hashed in the same fashion
+image can be associated to a place that has been seen
+as during the training phase. Finally, the hash table is
+before [13], [14]. These methods depend on entire images
+searched for matching hash values and a vote is cast for
+that are searched for correspondences. However, for vehicle
+each correspondence between the newly generated basis and
+localization this is usually only used for initialization.
+each hash table layer. If sufﬁcient feature correspondences
+Incontrast,thisworkfocusesontheuseofsparsefeatures
+are found, the matching model is returned.
+whilestilltryingtoﬁndareasonablyaccuratepositioninthe
+map frame. We show the potential of the approach, not as
+C. Noise model
+a stand-alone method for data association, but as a second
+mainstay to validate and conﬁrm data association online. If the given input sample S is affected by noise, the
+To the author’s knowledge, this is something that has not positional error of the computed hash locations in the basis
+been studied before. Most localization algorithms that try framehastobedescribedbyavalidnoisemodel.Thistopic
+to provide safe localization depend on prior positions to wasstudiedin[16].Rigoutsosshowsthatthepositionalnoise
+ﬁnd reliable feature associations [5], [15]. However, time on the feature points in the basis frame depends heavily on
+dependent information always introduces a certain risk of thechosenbasispair,thepositionofthepointrelativetothe
+error propagation, which this contribution tries to eliminate. basis origin as well as the kind of transformation used. In
+his work, he derives a noise model for similarity as well as
+III. GEOMETRICHASHING afﬁne transformations.
+Geometric Hashing was originally introduced by Lamdan In the following, the main results for similarity
+et al. in the ﬁeld of computer vision for object recognition transformations will be brieﬂy recapitulated and a noise
+purposes [6]. It is a well known technique for matching model for rigid transformations is proposed. For the sensor
+geometric features that have undergone a transformation. noise on each single feature point, we will assume a
+In an ofﬂine step, features of interest are represented in a Gaussian distribution with standard deviation σ, which is
+varietyofcoordinatesystemsthataredeﬁnedbythefeatures centered at the ”true” location of the feature.
+themselvesandstoredinaquicklysearchable,tabularformat.
+Online, this data base is searched for the best match. 1) Similarity Transformation: If the models of interest
+Inthefollowingsections,theconceptofGeometricHash- are allowed to undergo rotation, translation, and scaling, a
+ing is brieﬂy revised and the two phases, training phase & similarity transformation can be used for hashing. In this
+recognition phase, are discussed separately. For more detail, case, given p and p as a basis pair, every other feature p
+1 2
+the authors refer to [6], [7] or [16]. can be represented in the basis frame deﬁned by p and p
+1 2
+by
+A. Training phase − · − ⊥·
+p=p +(p p ) u +(p p ) v ,
+0 2 1 s 2 1 s
+Duringanofﬂinephase,calledthepreprocessingortrain-
+ingphase,ahashtableisgeneratedfortheobjectsofinterest where p represents the origin and (u ,v ) the coordinates
+0 s s
+or models. Let M be a list of models for recognition. For of p in the basis frame. For this kind of transformation,
+∈
+each model m M, i = 1,...,N, all feature points S the resulting noise on the features in the basis frame can
+| | i i
+with S = N are extracted. Each ordered pair of point be approximated very well by a Gaussian distribution with
+i i
+1323
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. 6 6
+4
+4 4
+2
+2 2
+0
+0 0
+− p2
+2
+p1 −2 −2
+−
+4
+− −
+4 4
+− − − − − −
+4 2 0 2 4 4 2 0 2 4 6 8 4 2 0 2 4 6 8
+(a)Randomsamplefeatures,wherefeaturesp1 (b)Simulatednoisymeasurementstransformed (c)Simulatednoisymeasurementstransformed
+and p2, depicted in green, were chosen as a by a rigid transformation into the basis frame by a similarity transformation into the basis
+basispair. deﬁnedbyp1 andp2. framedeﬁnedbyp1 andp2.
+Fig. 2: Noise simulation for rigid and similarity transformations.
+standard deviation subsections.Thissuggestedmethodfocusesonhashingusing
+|| ||
+(4 (u ,v ) 2+3)σ2 rigid transformations since scale relations provide useful in-
+Σs = 2|s|p s−p ||2 (1) formationforlocalizationandshouldthereforebepreserved.
+2 1
+A similar hashing approach for the ofﬂine processing of
+as was shown in [16].
+feature-based maps was also derived in [17].
+2) Rigid Transformation: If the models of interest are
+allowed to undergo rotation and translation but no scaling, A. Generation of the Hash Table
+rigid transformations are considered for hashing. Again, { }
+For a given feature-based map M = f ,f ,...,f ,
+givenabasispairconsistingofp andp ,everyotherfeature 1 2 n
+1 2 where n is the number of map features, a hash table is
+p can be represented in the basis frame by
+generated during an ofﬂine process. This hash table is not
+− − ⊥
+p−p = |(|p2−p1)|| ·u + (|p|2 −p1)|| ·v , created to contain information about certain models, but
+0 p p r p p r instead should hold sufﬁcient information about each local
+2 1 2 1
+where p0 represents the origin and (ur,vr) the coordinates environmentinthemap.Therefore,thebasissetK∈ischosen
+of p in the basis frame. as f∈oll{ows: Bas}is p(cid:54)airs k = (fi,fj) with fi,fj M for
+In this case, the noise on the feature positions in the basis i,j 1,...,n ,i=j are generated if and only if
+frame cannot be described accurately by a Gaussian distri-
+|| − ||
+bution, which is reﬂected by the simulation results in Fig. d= f f <d
+i j basis
+2. Here, a random sample of feature points was generated,
+which is visualized in Fig. 2a. Noisy measurements were for a given maximum basis pair limit d . This way only
+basis
+simulated and transformed into the basis frame deﬁned by bases that are representative for a local environment in the
+p and p using a rigid transformation (see Fig. 2b) and a map, are generated, which reduces the size of the resulting
+1 2
+similaritytransform(seeFig.2c),respectively.Dependingon hashtablewhilestillensuringamorethansufﬁcientcoverage
+the chosen basis pair and the feature locations with respect of the whole map.
+to the basis frame, the noise in the angular component is Once all desired basis pairs are found, for each basis
+∈
+enhanced compared to the noise in radial direction. k K the origin z(k) of the corresponding basis frame
+In the following, an over-bounding of the noise in radial is computed and the features of interest I are determined.
+k
+direction is suggested in order to obtain a Gaussian distribu- Features of interest are all features in a local surrounding of
+tion. This results in a standard deviation of thebasisoriginz(k),whichislimitedbytheinclusionradius
+|| ||
+Σr = (4 (u2s||,pvs)−2p+||3)σ2, (2) rbianscils.fTrahmene,atrheeccaolcourdlainteadteussoinfgthaerisgeitdotfrafnesaftourrmesatIikoni.nFtihge.
+2 1 3 illustrates the main parameters used in this process.
+which equals the standard deviation Σ in equation (1)
+scaled by the basis pair distance ||p −ps||. Finally,thefeaturesofinterestIk arequantizedandhashed
+2 1 according to a given bin size s . In addition to the hash
+bin
+values, information about the noise distribution for features
+IV. LOCALIZATIONUSINGGEOMETRIC in the basis frame is stored in the hash table according to
+HASHING equation (2). Each hash table layer now holds information
+Forthepurposeofdataassociationforlocalization,amod- aboutalocalmapenvironmentinacoordinateframedeﬁned
+iﬁed Geometric Hashing method is derived in the following by two arbitrary map features.
+1324
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. Algorithm 1 FEATUREASSOCIATION
+Input: Hash Table H, Sample of detected features D.
+Output: List of feature associations.
+∈
+1) Randomlychooseabasispair(p ,p )withp ,p D.
+1 2 ∈ 1 2
+2) Compute the coordinates for each p D in the basis
+frame O , quantize, and hash each coordinate.
+(p1,p2)
+3) Access the appropriate hash table bins in H for each
+hash and cast a vote for each geometric basis found
+there.
+4) Histogram all bases that got one or more votes during
+step3anddeterminethosebasesB thatreceivedmore
+votes than a predeﬁned threshold: Each of these bases
+could contain valid associations.
+∈
+5) For each basis O B found in step 4, compute
+k
+the Mahalanobis distance d between features in
+Fig. 3: Illustration of the main symbols and variables involved in mal
+the hash table generation for a given map section: Basis pair k O(p1,p2) and features in Ok.
+(green),basisframe(orange),inclusionradiusr (blue),features 6) Store a weight w based on the Mahalanobis distance
+incl
+of interest I (gray). d for each candidate association.
+k mal
+7) Repeat steps 1 - 6 for all possible keys k = (p ,p )
+∈ (cid:54) i j
+with p ,p D,i=j.
+i j
+8) Sum all weights per candidate association and choose
+B. Feature Association
+associations based on summed weights.
+Given a sample of detected features D and the previously
+generated hash table H, feature associations can now be
+determined by searching the hash table. This searching and V. EXPERIMENTALRESULTS
+validation process is compactly summarized in Algorithm 1.
+∈ A. Dataset
+First, two arbitrary detections p ,p D are chosen,
+1 2
+which deﬁne a geometric basis O just as before. The dataset used for the demonstration and evaluation of
+All feature detections D are then t(rpa1n,spf2o)rmed by a rigid theapproachwascollectedwiththevehicleBerthaONE[18].
+transformation into this basis frame, quantized, and hashed It was recorded in Sindelﬁngen, Germany, and represents a
+accordingly.Foreachcomputedhashvalue,appropriatebins loop of 3.8km in an urban area which results in approx-
+in the hash table H are accessed and a vote is given to imately 10min of driving time. The features that serve to
+each basis found there. In this step, not only the exact bin demonstrate our approach are cylindrical objects, such as
+is accessed but also its direct neighborhood to ensure that signs,trafﬁclights,poles,andtrees,thatwereextractedfrom
+also noisy measurements that fell into neighboring bins can LiDAR data as described in [5].
+be associated. The map that was used to demonstrate this approach,
+contains 738 cylindrical features. All cylinders are repre-
+Then, the set of bases B is determined that reached a
+sentedbythecoordinatesoftheircenterpointontheground
+predeﬁned threshold for the number of votes. These are all
+candidate bases that could contain valid associations. As a plane in map coordinates (x,y). As a reference solution for
+∈ validationpurposes,weusetheapproachdescribedin[1].A
+secondary check, for each basis O B, the Mahalanobis
+distance (cid:113) k visualization of the map and the reference trajectory can be
+seen in Fig. 4.
+− − −
+d = (p µ)TΣ 1(p µ) (3) B. Hash Table
+mal
+A hash table was generated for the previously mentioned
+∈
+is computed for each sample measurement p O map. The parameters for the hash table generation were
+∈ ∼ N (p1,p2)
+and f O with f (µ,Σ). The information on chosen as stated in Table I. Those values were chosen in
+k
+the distribution was previously added to the hash table order to ensure a good coverage of the map and at the same
+during the generation process. A weight w based on the time, to limit the number of basis frames. To capture the
+Mahalanobis distance is then stored for each candidate true distances between features, a rigid transformation was
+association. Finally, the previously described steps can used to transform the features into the basis frames. The
+be repeated for each available basis pair k = (p ,p ) resulting hash table contains 37236 geometric basis frames
+∈ (cid:54) i j
+with p ,p D, i = j for validation purposes. In or hash layers and the serialized data results in a ﬁle size of
+i j
+a ﬁnal step, the weights are summed for each candidate 305.8MB. This can easily be reduced by carefully selecting
+associationandtheﬁnalassociationsarechosenaccordingly. bases to be generated, which was not in the scope of this
+work.
+1325
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. Detections
+30 Valid Solution
+Invalid Solution
+20
+10
+Fig. 4: Feature map containing 738 cylinderical features (black),
+thereferencetrajectoryusedforevaluation(gray),andlocalization 0
+poseswhereassociationswerefoundusingtheapproachdescribed 0 100 200 300 400 500 600
+in Algorithm 1 (green). Time [s]
+Fig.6:Numberoffeaturedetectionsandfoundassociationsversus
+TABLE I: Hash Table Properties
+time. Color code: Pose estimate classiﬁed as valid (green), other-
+wise(red).Forzeroassociations,thepriorposeispropagatedusing
+Property Variable Value
+odometry measurements.
+Binsize s 0.1m
+bin
+BasisLimit d 60m
+basis
+InclusionRadius rincl 100m for an optimization problem, which is solved for the ﬁnal
+Transformations Rigid localization solution.
+Layers 37236 A GNSS receiver and an odometry unit are added to
+HashEntries 1603063 the framework in dashed lines as optional components.
+Filesize 305.8MB The biggest advantage of the proposed method lies in the
+fact that no propagation of prior poses is needed to ﬁnd
+valid associations and therefore, we mostly neglect such
+C. Localization Framework
+information. However, the odometry output can be used to
+The localization framework used to demonstrate the ap- provide a continuous solution in cases where the suggested
+proach represents a single shot localization system. It is not method is unavailable. A GNSS-based solution helps to
+designedtobeutilizedindependentlybutinsteadcanbeused validate associations by determining an extremely rough
+asacomplementarysafetylocalizationthatprovidesinputon approximation of the current area of interest, but is also not
+how reliable data association is. The framework is depicted necessary in theory.
+inFig.5.Thecontributionofthiswork,whichwasdescribed
+D. Localization results
+in the previous sections, is highlighted in gray.
+Thepotentialoftheproposedapproachismainlyassessed
+by the availability of the system, the number of associations
+Sensors GNSS Odometry given a certain number of detections per time as well as
+the processing time. Nevertheless, results on the accuracy
+of the resulting position estimates will also be discussed.
+FeatureExtractor
+Availability plots can be seen in Fig. 4 and 6. Fig. 4 shows
+the map, the reference trajectory, and poses are highlighted
+Map HashFunction in green where associations were found. Fig. 6 visualizes
+the number of detections and associations versus time. We
+classify the result in each time step based on the accuracy
+HashTable FeatureAssociation oftheresultingpositionestimate.Ifanaccuracyoflessthan
+5m in longitudinal and lateral direction and a yaw error of
+◦
+less than 30 was achieved, we call it a valid solution. All
+Optimization
+timestepsinFig.6whenavalidsolutionwascomputed,are
+Fig. 5: Overview of the suggested localization framework using represented in green, otherwise in red.
+Geometric Hashing for data association.
+Overall, associations are found in 34.4% of the total time.
+This is partially due to the number of detections given at
+Asaninputtothefeatureassociation,itisassumedtohave each time step. Only in 62% of the time, ﬁve or more
+amapcontainingpointfeaturesaswellasthecorresponding detections were found. In these cases, an overall availability
+feature extractor that provides the detected features online. of approximately 51% is achieved.
+Theoutputconsistsofalistofassociationsbetweenmapped In total, 92.8% of all localization solutions are valid. This
+and detected features. These associations pose constraints includessolutionsthatwerepropagatedduetothefactthatno
+1326
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. 4
+m]
+[
+on 2
+l∆
+0
+0 100 200 300 400 500
+4
+m]
+[
+at 2
+l∆
+0
+0 100 200 300 400 500
+d] 0.4
+a
+[r
+Fig.7:Ambiguitiesleadtowrongassociations.Thissnapshotshows w 0.2
+a
+y
+an ambiguous feature pattern that was wrongly associated. It is ∆
+highlighted by the use of black lines connecting the cylinders. 0
+0 100 200 300 400 500
+Time[s]
+associationcouldbefound.Inthosecaseswhereassociations Fig. 9: Localization accuracy in longitudinal and lateral direction
+werefound,94.2%oftheposeestimateswerevalidand5.8% as well as orientation. Color code: valid solution (blue), invalid
+solution (red).
+were invalid, respectively. This is due to ambiguous feature
+patterns in the map. Fig. 7 shows a scenario where a wrong
+associationwaschosenduetoasimilarfeaturepatterninthe
+AGeometricHashingbasedmethodisderivedthatenables
+map. The chosen associations are connected by white lines,
+data association for vehicle localization without any prior
+the feature pattern is redrawn by the use of black lines for
+position estimate and relies solely on the detected features
+better visualization.
+per time step.
+The suggested approach is demonstrated on a data set
+s] 600
+m recordedinanurbanareawherecylindricalstructures,which
+[
+me 400 are represented by their 2D position in the map frame, serve
+Ti as localization features. A hash table is generated during an
+d 200
+se ofﬂine process for a map containing 738 features and used
+p
+Ela 00 100 200 300 400 500 600 online for data association.
+Time[s] Experimental results demonstrate the advantages as well
+Fig. 8: Elapsed processing time during feature association. The as the limitations of the approach: A map covering 3.8km
+feature association was run on a machine with an Intel Core i7- of roads can be searched for feature associations in 32ms
+3770K CPU @ 3.50GHz. on average in order to determine the vehicle’s pose. This
+is accomplished without any knowledge on the vehicle’s
+Processingtimedependsheavilyonthenumberoffeatures priorpositionwhicheliminatestheriskoferrorpropagation.
+N that were extracted in each time step (see Fig. 8). This Additionally,themethodcanbeutilizedtodetectambiguities
+f −
+is due to the fact that N (N 1) geometric bases are in the map data. However, in the presence of ambiguities,
+f f
+generatedpertimestep.However,thiscaneasilybereduced the method might choose the wrong association during the
+by limiting the number of online generated basis frames. association step.
+Also, the method can be very well parallelized which leaves Futureworkwillfocusonanaccuratenoisemodelinpolar
+additional room for improvement. coordinates, a thorough validation of associations, and the
+Finally, the localization accuracy was evaluated based on useofinformationaboutambiguitiesinmaps.Weplantouse
+the position error in longitudinal direction ∆lon and lateral this approach as a safety localization which complements a
+direction ∆lat as well as the yaw angle error ∆yaw. The state-of-the-art solution and, therefore, offers the means for
+error plots for the evaluation drive are shown in Fig. 9. The the online validation of feature associations.
+overall RMS error amounts to 1.3m in longitudinal, 1.03m
+◦
+in lateral direction and 0.14 in the yaw angle. ACKNOWLEDGMENT
+VI. CONCLUSIONSANDFUTUREWORK The map and data set was recorded and kindly provided
+This work introduces the concept of Geometric Hashing by the Institute of Measurement and Control System of the
+to the ﬁeld of data association for feature-based vehicle Karlsruhe Institute of Technology (KIT). The authors would
+localization and explores both the feasibility as well as like to thank their colleagues in Karlsruhe for their support.
+limitations of the approach.
+1327
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [10] N.Leibowitz,Z.Y.Fligelman,R.Nussinov,andH.J.Wolfson,“Mul-
+tiple structural alignment and core detection by geometric hashing.,”
+inISMB,pp.169–177,Citeseer,1999.
+[1] M.Sons,M.Lauer,C.G.Keller,andC.Stiller,“Mappingandlocal- [11] T. Senlet, T. El-Gaaly, and A. Elgammal, “Hierarchical semantic
+izationusingsurroundview,”inIEEEIntelligentVehiclesSymposium hashing: Visual localization from buildings on maps,” in 2014 22nd
+(IV),pp.1158–1163,2017. International Conference on Pattern Recognition, pp. 2990–2995,
+[2] F.Schuster,C.G.Keller,M.Rapp,M.Haueis,andC.Curio,“Land- IEEE,2014.
+mark based radar SLAM using graph optimization,” in 2016 IEEE [12] M.Tomono,“Ascanmatchingmethodusingeuclideaninvariantsig-
+19th International Conference on Intelligent Transportation Systems natureforgloballocalizationandmapbuilding,”inIEEEInternational
+(ITSC),pp.2559–2564,2016. ConferenceonRoboticsandAutomation,2004.Proceedings.ICRA’04.
+[3] M. Schreiber, C. Kno¨ppel, and U. Franke, “Laneloc: Lane marking 2004,vol.1,pp.866–871,IEEE,2004.
+based localization using highly accurate maps,” in IEEE Intelligent [13] S.Lowry,N.Su¨nderhauf,P.Newman,J.J.Leonard,D.Cox,P.Corke,
+VehiclesSymposium(IV),pp.449–454,2013. andM.J.Milford,“Visualplacerecognition:Asurvey,”IEEETrans-
+[4] F.Poggenhans,N.O.Salscheider,andC.Stiller,“PreciseLocalization actionsonRobotics,vol.32,no.1,pp.1–19,2015.
+inHigh-DeﬁnitionRoadMapsforUrbanRegions,”in2018IEEE/RSJ [14] I.UlrichandI.Nourbakhsh,“Appearance-basedplacerecognitionfor
+International Conference on Intelligent Robots and Systems (IROS), topologicallocalization,”inProceedings2000ICRA.MillenniumCon-
+pp.2167–2174,2018. ference.IEEEInternationalConferenceonRoboticsandAutomation.
+[5] J.Ku¨mmerle,M.Sons,F.Poggenhans,M.Lauer,andC.Stiller,“Ac- SymposiaProceedings(Cat.No.00CH37065),vol.2,pp.1023–1029,
+curateandEfﬁcientSelf-LocalizationonRoadsusingBasicGeometric Ieee,2000.
+Primitives,”in2019IEEEInternationalConferenceonRoboticsand [15] M.JoergerandB.Pervan,“QuantifyingSafetyofLaser-BasedNav-
+Automation(ICRA),2019. igation,” IEEE Transactions on Aerospace and Electronic Systems,
+[6] Y. Lamdan and H. J. Wolfson, “Geometric hashing: A general and 2018.
+efﬁcientmodel-basedrecognitionscheme,”1988. [16] I. Rigoutsos, “Massively parallel bayesian object recognition,” tech.
+rep., New York University, NY, Department of Computer Sciences,
+[7] H. J. Wolfson and I. Rigoutsos, “Geometric hashing: An overview,”
+1992.
+IEEEComputationalScienceandEngineering,vol.4,no.4,pp.10–
+[17] I. Hofstetter, M. Sprunk, F. Schuster, F. Ries, and M. Haueis, “On
+21,1997.
+AmbiguitiesinFeature-basedVehicleLocalizationandtheirAPriori
+[8] Y.Lamdan,J.T.Schwartz,andH.J.Wolfson,“Objectrecognitionby
+DetectioninMaps,”in2019IEEEIntelligentVehiclesSymposium(IV),
+afﬁne invariant matching,” in Proceedings CVPR’88: The Computer
+pp.1192–1198,IEEE,2019.
+Society Conference on Computer Vision and Pattern Recognition, [18] O¨.S¸.Tas¸,N.O.Salscheider,F.Poggenhans,S.Wirges,C.Bandera,
+pp.335–344,IEEE,1988.
+M.R.Zofka,T.Strauss,J.M.Zo¨llner,andC.Stiller,“Makingbertha
+[9] A.C.Roy,K.Hossin,M.P.Uddin,M.A.AlMamun,M.I.Afjal,and
+cooperate–teamanniewaysentrytothe2016grandcooperativedriving
+A.M.Nitu,“Detectionandclassiﬁcationofgeometricshapeobjects
+challenge,”IEEETransactionsonIntelligentTransportationSystems,
+for industrial applications,” Advancement in Image Processing and
+vol.19,no.4,pp.1262–1276,2017.
+PatternRecognition,vol.1,no.2,pp.11–19,2018.
+1328
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:57:55 UTC from IEEE Xplore.  Restrictions apply. 

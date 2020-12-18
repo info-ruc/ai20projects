@@ -1,0 +1,516 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+A 3D-Deep-Learning-based Augmented Reality Calibration Method for
+Robotic Environments using Depth Sensor Data
+Linh Kästner1, Vlad Catalin Frasineanu 1 and Jens Lambrecht1
+Abstract—AugmentedRealityandmobilerobotsaregaining to control the robot with gestures and visualize its nav-
+increasedattentionwithinindustriesduetothehighpotentialto igation data, like robot sensors, path planing information
+make processes cost andtime efﬁcient. To facilitateaugmented
+and environment maps. Other work used AR for enhanced
+reality,acalibrationbetweentheAugmentedRealitydeviceand
+visualization of robot data or for multi modal teleoperation
+the environment is necessary. This is a challenge when dealing
+with mobile robots due to the mobility of all entities making [10] [11]. The key aspect to facilitate AR is the initial
+theenvironmentdynamic.Onthisaccount,weproposeanovel calibration between AR device and the environment. State
+approach to calibrate Augmented Reality devices using 3D oftheArtapproachesarerelyingonmarkerdetectionwhich
+depthsensordata.WeusethedepthcameraofaHeadMounted
+proves to be accurate but unhandy. Additionally, markers
+Augmented Reality Device, the Microsoft Hololens, for deep
+cannot be deployed everywhere especially not in complex
+learning-based calibration. Therefore, we modiﬁed a neural
+network based on the recently published VoteNet architecture dynamicenvironmentsforusecaseslikeautonomousdriving.
+whichworksdirectlyonrawpointcloudinputobservedbythe For such use cases, neural networks are increasingly being
+Hololens. We achieve satisfying results and eliminate external considered. Deep Learning algorithms have already had a
+tools like markers, thus enabling a more intuitive and ﬂexible
+great impact in 2D computer vision. While the majority of
+work ﬂow for Augmented Reality integration. The results are
+projects are working on 2D image processing and object
+adaptable to work with all depth cameras and are promising
+forfurtherresearch.Furthermore,weintroduceanopensource recognition, with the recent advances in the depth sensor
+3Dpointcloudlabelingtool,whichistoourknowledgetheﬁrst infrastructure,the3Dresearchhasbeenintensiﬁed.Whereas
+open source tool for labeling raw point cloud data. most research is focused on Lidar and their use cases for
+autonomous driving, within this paper, we will try to adopt
+I. INTRODUCTION these ideas and integrate them within an AR device. More
+speciﬁcally, we rely on depth sensors of the AR device
+The need of a 3D understanding of the environment is an
+itself to train a neural network working solely on raw point
+essential for tasks such as autonomous driving, Augmented
+cloud data, thus making the operation more intuitive and
+Reality (AR) and mobile robotics. As the progress with 3D
+ﬂexible without any help from external tools like markers.
+sensors intensiﬁed, sensors like light detection and ranging
+Our results can also be adapted for every other depth sensor
+sensors(Lidar)canprovidehighaccuracyforsuchusecases.
+system which opens many possibilities for further research.
+Mobilerobotsareoneofthemainsystemstoproﬁtfromthe
+The main contributions of this work are following:
+recent progress in 3D computer vision research. In addition,
+• Proposal of a modiﬁed neural network for object detec-
+their popularity increased due to their ﬂexibility and the
+tion based on state of the art neural networks working
+variety of use cases they can operate in. Tasks such as
+directly on point cloud data.
+procurement of components, transportation, commissioning
+• Combination of neural network object detection with
+or the work in hazardous environments will be executed by
+AR for improved initial calibration, thus facilitating
+such robots [1] [2]. However, operation and understanding
+more intuitive and ﬂexible integration of AR.
+of mobile robots is still a privilege to experts [3] as a result
+• Extension of an AR-based robot control application
+of their complexity. On this account, Augmented Reality
+from our previous work [9] for increased user expe-
+(AR) has gained popularity due to the high potential and
+rience
+ability to enhance efﬁciency in human robot collaboration
+• Development of an open source 3D annotation tool for
+and interaction which had been proved in various scientiﬁc
+3D point clouds
+publications [4], [5], [6]. AR has the potential to aid the
+The rest of the paper is structured as follows. Sec. II
+userwithhelpofspatialinformationandintuitiveinteraction
+gives an overview of related work. Sec. III presents the
+technology, e.g. gestures [7]. Our previous work focused on
+conceptional design of our approach while sec. IV describes
+AR-based enhancements in user understanding for robotic
+the implementation. Sec. V describes the training process
+environments:in[8]wesimplifyrobotprogrammingwiththe
+and Sec VI will demonstrate the results with a discussion in
+help of visualizing spatial information and intuitive gesture
+Sec. VII. Finally, Sec. VIII gives a conclusion.
+commands. In [9] we developed an AR-based application
+II. RELATEDWORK
+1LinhKästner,VladFrasineanuandJensLambrechtarewiththeChair Due to the high potential of AR, it has been considered
+Industry Grade Networks and Clouds Department, Faculty of Electrical
+forintegrationintovariousindustrialusecases.Theessential
+Engineering,andComputerScience,TechnicalUniversityofBerlin,Berlin,
+Germanylinhdoan@tu-berlin.de steptofacilitateARisthecalibrationbetweentheARdevice
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1135
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. andtheenvironment.Manualcalibrationusingexternaltools supported navigation. The researchers relied on 2D object
+orspecialequipmentisthemoststraightforwardmethodand detection approaches and one of the main drawbacks are
+requires the user to manually align 2D objects to objects in less accuracy compared to 3D based approaches because the
+the real environment which position is known to the calibra- 3D pose has to be estimated solely with 2D information
+tion system. Azuma and Bishop [12] propose a AR camera which leads to inaccuracy. Rapid development of 3D sensor
+pose estimation by manually aligning ﬁducial like virtual technologyhasmotivatedresearcherstodevelopefﬁcient3D
+squares to speciﬁc locations in the environment. Similar based approaches and several networks have been proposed
+work from Janin et al. [13] and Oishi et al. [14] require the to work with 3D sensor information. There exists fusion
+usertoaligncalibrationpatternstodifferentphysicalobjects approaches which require both, 2D and 3D sensor data to
+which positions are known beforehand. However, manual improveaccuracyevenfurther.The2sensorstreamshaveto
+calibration bear disadvantages in a continuously automated be synchronized and calibrated which is a not trivial tasks
+environment due to the necessity to have a human specialist to do and require additional steps. For this reason, several
+to do the calibration. The external tools themselves can be works were proposed which try to work only with the 3D
+expensive or are case speciﬁc. information. Contrary to 2D data, the 3D input data is not
+Recent research focus on automated calibration methods ordered and the large amount of points which can be up to
+rather than manual ones. Most ubiquitous are marker based millions is computationally much more demanding. Some
+approaches. Open source libraries and toolkits like Aruco works dealing with a preprocessing of the unordered 3D
+or Vuforia make it possible to deploy self created ﬁducial point cloud data to an ordered data structure. These are
+markers for pose estimation. The marker is tracked using either based on Voxels as done by the work of Zhou et.
+computer vision and image processing. Especially when al proposes with VoxelNet [23] or on a conversion of the
+working with static robots, marker based approaches are pointcloudintoabirds-eye-viewasSimonet.alproposesin
+widely used due to the simple setup and competitive accu- ComplexYolo[24].However,quantizationandpreprocessing
+racy.SeveralworkincludingAokietal.[15],Ragnietal.[16] of the point cloud increases the risk of loosing important
+or [17] et al. relied on a marker based calibration between features and information. Another popular solution is based
+robot and AR device. However, Baratoff et al. [18] stated, onthePointNet network(oritsupdatedversionPointNet++)
+that the instrumentation of the real environment, by placing proposed by Qi et. al [25] which is able to learn semantic
+additional tools like markers, sensors or cameras is a main segmentation and 3D object localization directly from raw
+bottleneck for complex use cases espe cially in navigation point clouds. Since the features are extracted directly from
+that are working with dynamically changing environments. therawrepresentation,withoutanypreprocessing,thereisno
+Furthermore, deploying additional instruments require more risk in loosing information, thus making this method much
+time to setup and are not able to react to changes within the faster and accurate. As follow-up work, several networks
+environment. Especially for industrial scenarios this is the were recently built on top of this network which are using
+main concern [18]. it as the backbone for feature learning. Two of them are
+On this account, marker-less approaches have become a ma- VoteNet from Qi et. al [26] or PointRCNN proposed by Shi
+jor focus [19] in recent research. This includes the so called et.al[27],whichshowedpromisingresultsonbenchmarking
+model based approaches which use foreknown 3D models on popular data sets. They improve the extracted features by
+to localize objects and generate the pose estimation for the considering the local structures in point clouds.
+AR device. This is done using computer vision and frame
+processing to automatically match the known 3D models on III. CONCEPTUALDESIGN
+theobjectfromtheincomingframe.Subsequentlytheposeis
+estimated. Works by Bleser et al. [20] were able to establish A. AR Device Calibration
+a competitive approach using CAD models and achieving
+highaccuracy.Themainbottleneckis,thattheseapproaches
+are very resource intensive due to the processing of each
+frame.Inaddition,thesemethodsarehighlydependentonthe
+CAD models, which are not always available. Moreover, the
+approach becomes less ﬂexible, which is crucial in dynamic
+environments for tasks such as autonomous navigation of
+mobile robots.
+With the recent advances in machine learning algorithms,
+especially deep learning, and the higher computational ca-
+pabilities, networks can be trained to recognize 3D objects. Fig.1. ConceptionofCoordinateSystemAlignment-TorealizeAR,the
+transformationbetweentheARdeviceandtheROSmapistobeconsidered
+An overview of current research is provided by Yan et al.
+(T − ),becausealldatae.g.sensorinformation,mapandnavigationdata
+AR Map
+[19]. Garon and Lalonde [21] proposed an optimized object are with reference to the ROS map. The position of the robot within the
+trackingapproachwithdeeplearningtotrack3Dobjectswith ROS map is known via the internal robot SLAM (TRobot−Map). Hence, to
+achieve a transformation between AR device and ROS map, we have to
+Augmented Reality. Alhaija et al. [22] worked with neural
+achieveatransformationbetweenARdeviceandrobot.Thisisdonewith
+networks for object detection and segmentation for AR- ourproposeddeeplearningmethod.
+1136
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. The objective of this paper is to deploy a marker-less C. Hardware Setup
+calibration method for AR device and robot using depth
+The hardware setup contains a mobile robot and a head
+sensor data. For our case, due to the mobility of our robot,
+mounted AR device - the Microsoft Hololens. We are
+a continuous localization of the robot is to be ensured. In
+working with a Kuka Mobile Youbot running ROS Hydro
+addition,theARdeviceisfullymobileaswell,whichmakes
+on a Linux version 12.04 distribution. As a development
+bothentitiesabletomovefreelyandasinglemarkertracking
+environment for the Hololens, we use a Windows notebook
+approach, like used in similar works, insufﬁcient. For the
+with Unity3D 2018 installed on which the application was
+AR application ﬁrst developed in our previous work, we
+developed. The sensor data acquisition is done with C++
+proposed a two-stage calibration between AR headset and
+within Visual Studio 2019 and Microsoft Research Mode for
+robot. First, the Hololens is calibrated with the robot using
+Hololens (RS4 Update, April.2018). Both entities, robot and
+Aruco markers. Second, the spatial anchor capability of the
+Hololens, are connected to the same network and communi-
+Hololens is used for calibration of the robot with the Robot
+cate via a WLAN connection.
+Operating System (ROS) map. The robot map is the general
+reference map from which all sensor data and information D. Overall Workﬂow
+are displayed. Thus, calibration between the AR device and The overall workﬂow of our project is depicted in Fig. 2.
+the ROS internal map is the overall goal to visualize data
+properlywithintheARheadset.Therobotpositionisalways
+known by the map through the robot SLAM packages (e.g.
+Adaptive Monte Carlo). The position of the Hololens as an
+external tool however, must be integrated into ROS. For
+detailed technical information we refer to our previous work
+[9]. This work will replace the initial calibration (ﬁrst stage)
+of the AR device and the robot, done previously with a
+marker based approach. This is done by using a neural
+network working directly on the point cloud sensor input
+of the Hololens. The conceptual design is illustrated in Fig.
+1.
+B. Neural Network Selection
+We are driven by the release of state of the art neural
+networks working directly on raw point cloud data rather
+Fig.2. OverallWorkﬂow
+thanpreprocessedpointclouds.Furthermore,improveddepth
+sensortechnologiesandthereleaseoftheMicrosoftResearch
+After the data extraction with the Hololens Research
+Mode provide easy to access raw sensor data to work with.
+Mode, the point clouds have to be annotated. A data aug-
+Onthisaccount,weusetheHololensinternaldepthsensorof
+mentationstepisincludedtoenlargeourdatasetandprevent
+theARdevicetoextractpointcloudsforourneuralnetwork
+overﬁtting. After training of the neural network, integration
+to detect the robot. As stated in the related work section,
+into the existing AR robot control application is to be
+suitable approaches are VoxelNet, VoteNet and PointRCNN
+achieved. Since all entities are connected through the same
+which operates directly on raw point cloud data without
+network, integration can be established via websocket con-
+the need of potentially harmful preprocessing steps for the
+nections that facilitates data exchange between the entities.
+sensor information. VoxelNet and PointRCNN both contain
+TheneuralnetworkmodelisdeployedatalocalGPU server.
+a large amount of layers making the network too complex
+for our use case. Additionally, for demonstration purposes IV. IMPLEMENTATION
+we will operate with a relatively small dataset consisting This chapter will present the implementation part of each
+of less then 1000 point clouds. Given the complexity of module in detail.
+those networks, overﬁtting is a main concern. VoteNet on
+A. Pointcloud Data Extraction and Processing
+the other site is a simple architecture based on the Hough
+Voting strategy in point clouds. It is end-to-end trainable ThepointcloudsareacquiredwiththeMicrosoftResearch
+and contains a comfortable amount of hyper parameters Mode and the related open source library HololensForCV,
+which makes the training process easier compared to the which contains a depth streamer project. We implement a
+ﬁrst mentioned architectures. Furthermore, VoteNet achieved new streamer on top, that converts the depth data into 3D
+remarkable results on challenging datasets. Therefore, our point clouds which are saved for each frame inside the
+implementationisbasedstronglyontheVoteNetarchitecture. Hololens. The point cloud processing takes 2-3 seconds
+For our speciﬁc use case, modiﬁcations have to be done. whichiswhyweareabletostoreapointcloudrepresentation
+These are explained in more detail in the implementation every 4 frames. The conversion from depth data to a point
+chapter IV. cloud was developed using the camera intrinsics provided
+1137
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. by the HololensForCV library for the depth sensor. The
+depthstreamerreturnsadepthbufferarrayD,whichcontains
+the distances for each pixel from the 2D image plane. We
+iterate through each pixel point of the 2D image, map it to
+the camera unit plane and normalize the results based on
+following equations. To calculate a 3D point out of the 2D
+coordinated [u,v] following equations are used.
+· · ·
+[X,Y,Z]=Z [u,v,1]=[Z u,Z v,Z] (1)
+where Z is the normalization of the distance array D which
+is computed using equ(cid:112)ation (2).
+Fig.3. Labellingtool-ThelabellingtoolbuiltusingthePPTKvisualizer.
+D Ontheleftside,theinitialvisualizationwheretheuserhastoselect3corners
+Z= (cid:112)(u2+·v2+1) (2) obfoxthtehabtastheeofustherehroasbototicsosnhﬁorwmn.isOdnistphleayriegdh.tIsfidseo,mtheethpinrgociesssinecdobrroeucnt,ditnhge
+D u usercanretrytheselectionofthecorners.
+X = (3)
+(cid:112)(u2+v2+1)
+·
+D v
+Y = (4) between different existing classes. Therefore, the original
+(u2+v2+1)
+architecture learns to vote to the closest existing object.
+This is done for each pixel from the 2D image. We work
+Since our use case require the detection of an speciﬁc
+with the long throw depth sensor of the Hololens providing
+object, the mobile robot, we modify the architecture to learn
+points with a maximum distance of 4 meters. Thus, only the
+voting only towards the center of the robot if it exists in
+depth values between 0.4 and 4 meters are considered as
+the current input. This was achieved by making changes
+valid values. For each frame that we process, we store its
+to the original loss function that we are going to discuss
+corresponding 3D point cloud representation.
+in this chapter. The network can be divided into 3 main
+B. 3D Data Annotation moduleswhichareadaptedfromtheoriginalpaper.Wehave
+visualized the architecture of each for better understanding
+The next step in the pipeline is the annotation of the
+in Fig. 4, Fig. 5 and Fig 6.
+acquired point cloud data. To the time of this work, no
+1) Feature learning module. As a ﬁrst step, the network
+reliably, open source tool could be found dealing with the
+has to learn local geometric features and sample the seed
+direct annotation of 3D point cloud. On this account, we
+points.Forthat,4setabstractionlayersareappliedfollowed
+propose a 3D point cloud labeling tool for annotating point
+by two feature propagation layers. These layers act as the
+clouddata.Inthefollowing,thetoolwillbeexplainedbrieﬂy.
+backbone network and are adapted from the Pointnet++
+The tool takes as input raw point cloud data which will be
+architecture. After each fully connected layer, a batch
+visualizedwiththepythonlibraryPPKT.Inordertoannotate
+normalization step was applied in order to keep the outputs
+the robot in the visualizer, the user has to select 3 points
+in similar scales.
+that represent 3 corners of the base of the robot, which
+are used by the tool to compute the fourth corner together
+with the base plane on which the robot is situated. Each
+point inside the point cloud is projected onto the base plane.
+All points situated inside the calculated base are considered
+as part of the object. Out of these points, the highest one
+which is smaller than a predeﬁned threshold is picked and
+the coordinates will be used to compute the height of the
+boundingbox.Thecenteriscomputedbychoosingthepoint
+onthenormalofthebaseplanethatstartsfromitscenter,itis
+atadistanceofheight/2fromthebaseplaneanditissituated
+inside the robot. The tool goes through each point cloud,
+renders it, waits for the user to select the robot inside the
+visualizerbychoosing3pointsandthencomputesthecenter
+oftheboundingboxcorrespondingtothatselectiontogether
+with its size and rotation according to above explanations.
+C. Neural Network Design
+Fig. 4. Feature Learning Module - The input goes through 4 Set
+In this section, the exact architecture together with the Abstraction layers (SA) and are concatenated together by two feature
+modiﬁcations that were made to the original network are propagationlayers(FP).Intheend,thepointssampledbythesecondSA,
+representtheﬁnalseedpointswhiletheoutputofthelastFPlayerrepresent
+presented in detail. The purpose of the original network is
+their corresponding features. The output is then further processed in the
+to ﬁnd all objects existing in a scene and then label them votingmodule.
+1138
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. 2) Voting Module After the feature learning stage, 1024 D. Loss functions
+seed points will be distributed over the input point clouds.
+In this section the loss functions and their modiﬁcations
+For our case, the point cloud contains between 30k-40k
+are explained. Our overall loss function is
+points. The seed points will learn the behavior of voting for
+the center of an object. This is closely supervised by a loss L=100Lvote−reg+Lbox+20Lsem−cls (6)
+function L − which is deﬁned as
+vote reg Center regression loss (Lvote−reg) : Here the vote offset
+Lvote−reg= M1 m∑ax |∆xi−∆xi∗| (5) oofbjtehcet asereedmpinoiimntiszethdattoarmeackleosseuraendth/oart itnhseidveottehseoefxitshtiensge
+posseediispositive
+seed points will be situated closer to the ground truth center
+Where∆x representstheoffsetvaluesofseedpointsx.∆x+
+i i i position of the bounding box.
+representsthegroundtruthoffsetthathastobeappliedtothe
+Semantic loss (L − ): This loss was a modiﬁed using
+position of each seed point in order to get to the position of sem cls
+a version that was presented in VoxelNet [23]. The loss is
+the center of the ground truth bounding box. Subsequently,
+∗ ∗ deﬁned as following:
+the positions of the votes will be ∆xi+∆xi . ∆xi represents
+tihsethgartovuontdestraurtehnoofwfsent.otTshietuaadtevdanotnagteheofsuursfiancgetohfisanstroabtjeegcyt Lsem−cls=αNp1os∑i Lds(pipos,1)+βN1neg∑j Lds(pnjeg,0)
+anymore(liketheseedpoints)andallvotesthataregenerated (7)
+byseedsclosetotheobjectwillbeclosetoeachotherwhich Using this loss, we make sure that a seed point that is
+makesiteasiertoclusterthemandconcatenatefeaturesfrom inside the object and required to vote for the center of the
+different parts of the object together. objecthasaconﬁdencescoreclose1,whileaseedpointthat
+isfarawayfromtheobjectanddoesnothavetovoteforthe
+object has a conﬁdence score close to 0.
+Box Loss (L ): This loss function was modiﬁed by
+box
+two small changes: we removed the size-cls loss since we
+have only one type of object and only on initial anchor. We
+directly predict the regression parameters for length, width
+Fig.5. VotingModule-Theinputthatcomesfromthepreviousmoduleis
+concatenatedtogetherandreshapedintoa2Dmatrixwithsizes(1024B)x259 and height that we need to apply in order to get from the
+whereBrepresentsthenumberofpointcloudsinthebatch.Subsequently, initialanchortothetruesizeoftherobotandtheangleclass
+theinputisfurtherprocessedby3fullyconnectedlayers(FC)togetherwith
+loss since we use only one class for estimating the rotation
+abatchnormalizationandRELUactivationstepfortheﬁrsttwolayers.The
+shapeoftheoutputwillbethesameastheinputanditwillrepresentthe angle and make the network directly predict the residual
+offset that has to be added to the seeds in order to get the votes. Finally, angle. The loss is deﬁned as following:
+Bx1024x3votes(XYZpositions)andBx1024x256featureswillbeoutputted
+Lbox=10Lcenter−loss+5Lheading−residualLoss+10Lsize−residualLoss
+3) The Object Proposal Module The last part of the
+(8)
+network cluster the votes and concatenate their features
+together through a PointNet set abstraction layer combined V. TRAININGPROCESS
+with another ﬁnal MLP with 3 layers that generates the
+The network was trained for 480 epochs (where a epoch
+ﬁnal proposals. The ﬁnal output contains 3+2NH+3NS+NC
+means one pass through the whole data set), using batches
+featureswhereNHrepresentsthenumberofheadingclasses,
+of size 8 and the Adam optimizer for minimizing the loss
+NS represents the anchors which is the size of the bounding
+function. We started with a learning rate of 0.001 for the
+box for a speciﬁc object. Since we have one class to detect,
+ﬁrst 200 epochs, decreased it by 10 for the next 200 and
+3 NS values (length, width, height) are considered. NC is
+then in the end decreased it again by another 10 for the last
+the number of classes to predict, which in our case is 1.
+80 epochs. This process takes approximately 12 hours on a
+Tesla K80 GPU. We split the initial data set which had 597
+point clouds into 537 point clouds that we used for training
+and 60 point clouds that were used for testing/evaluation of
+the network. For training, the size of each mini-batch must
+contain the same number of points. Therefore, 25000 points
+were randomly sub sampled from the input point clouds.
+For testing, we used batches of size 1, so the initial number
+of points in each point cloud was kept. Other than this, no
+other pre-processing step was necessary. During the training
+process,somebasicdataaugmentationmethodswereusedin
+Fig.6. ObjectProposalModule-TheSetAbstractionlayers(SA)sample ordertoavoidrapidoverﬁttingofthedataset.Thesemethods
+only256pointsfromthevotesthatwillformgroupsoflengthwith64point. included:
+Thisisprocessedalongwithanotherﬁnalmultilayerperceptron(MLP)with
+3layerstogeneratetheproposals • Scaling of all points in the point cloud by a random
+factor.
+1139
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. • Flipping the points against the X and Y axis. The cor-
+responding coordinate of the center and to the rotation
+angle θ becomes 180-θ
+• Rotatingallpointsaroundthezaxisbyarandomangle
+VI. RESULTS
+A. Training Results
+Inthefollowing,thetrainingresultsaredemonstrated.Fig.
+7 illustrates the training results on a point cloud input. The
+two main steps of seeding and voting explained earlier, can Fig.8. Demonstrationoftherobotlocalization.Left,fromthevisualizer.
+be observed clearly. The seed points, which are randomly Right,fromtheHololensview:thepointcloudsareextractedandsendto
+the neural network which makes the predication about position, size and
+distributed in the input point cloud, generate votes which
+rotationoftherobot.Afterwardsa3Dboundingbox(red)isdrawndirectly
+learned to be either at the center of the object or outside the attheusersight.
+point cloud. Fig. 7 showcases that this behavior have been
+learned throughout the training process with the modiﬁed
+loss functions mentioned in chapter IV. Seed points near the wasoverﬁttingduetothesmalldataset.Forimprovedresults
+object will generate votes which are placed near the center a larger dataset has to be created. Nevertheless, our method
+of the object, while seed points which are far away from does not rely on any external tool and is feasible to work
+the object, vote for points inside the object point cloud. In with the build in depth sensor of the AR device.
+the next step, these will be eliminated with the clusters that
+VIII. CONCLUSION
+aregeneratedwiththehighvotesasregionproposalsforthe
+object detection. We proposed a ﬂexible, intuitive method for Robot AR
+calibration using state of the art neural networks based only
+on 3D sensor data. We showed the feasibility of our method
+and could eliminate any external tools like markers. The
+method is applicable on any setup containing depth sensors.
+However, it struggles with real time object detection due to
+theintensivepointcloudprocessingoperationswhichisdone
+within the AR device. An outsourcing of these processes
+e.g. inside a cloud, would accelerate the process. Another
+aspect is an improved hardware or optimized algorithms
+Fig.7. SeedsandVotesonthetrainingdata-theyellowdotsrepresent for point cloud extraction. Additionally, another downside
+theseedsandthevotesgeneratedthroughoutthelearningprocess.Itcanbe isthatweonlytrainedthenetworkwithasmalldataset.The
+observedthattheseedsarerandomlydistributedoverthepointcloud.The
+accuracy can be improved with a larger dataset which has a
+vote points near the object cluster around the center of the object, while
+seedpointsfarawayfromtheobjectlearnedtovoteoutsidethepointcloud variety of backgrounds or different robots. Nevertheless, our
+tonotinﬂuencethelossfunctionandbeeliminatedlater workshowthefeasibilityofpointclouddetectionwithinthe
+depth sensors of an AR device which opens the door for
+Fig.8demonstratesthelocalizationviatheHololensview.
+furtherresearch.Furthermore,a3Dannotationtoolhasbeen
+The incoming point cloud data, which will be recorded by
+proposed for work with raw point cloud data.
+lookingattherobotisevaluatedbytheneuralnetworkwhich
+provides accurate results. The processing of the incoming REFERENCES
+point cloud data takes approximately 4 seconds. Communi-
+cation with the neural network and evaluation is dependent [1] V.Paelke,“Augmentedrealityinthesmartfactory:Supportingworkers
+in an industry 4.0. environment,” in Proceedings of the 2014 IEEE
+on the Internet connection usage and takes approximately
+emerging technology and factory automation (ETFA). IEEE, 2014,
+1-2 seconds. pp.1–4.
+[2] R. Siegwart, I. R. Nourbakhsh, D. Scaramuzza, and R. C. Arkin,
+VII. DISCUSSION Introductiontoautonomousmobilerobots. MITpress,2011.
+[3] Y.Guo,X.Hu,B.Hu,J.Cheng,M.Zhou,andR.Y.Kwok,“Mobile
+The detection of the robot is working reliable but still, cyber physical systems: Current challenges and future networking
+therearestillsomelimitations.Duetothelongpreprocessing applications,”IEEEAccess,vol.6,pp.12360–12368,2018.
+[4] S. Hashimoto, A. Ishida, M. Inami, and T. Igarashi, “Touchme:
+of the incoming point cloud data, the user has to wait for
+An augmented reality based remote robot manipulation,” in The
+at least 2 seconds without moving - else wise the neural 21st International Conference on Artiﬁcial Reality and Telexistence,
+network will evaluate on a different point cloud. Thats why ProceedingsofICAT2011,vol.2,2011.
+[5] H. Hedayati, M. Walker, and D. Szaﬁr, “Improving collocated robot
+the point clouds were saved within 4 frames so that an
+teleoperation with augmented reality,” in Proceedings of the 2018
+evaluationwillbedoneonthepointcloudof4framesearlier. ACM/IEEE International Conference on Human-Robot Interaction.
+Thisway,wepreventthealgorithmtouseafuzzypointcloud ACM,2018,pp.78–86.
+[6] H. Fang, S. Ong, and A. Nee, “Novel ar-based interface for human-
+in case the user head movement too fast making the point
+robot interaction and visualization,” Advances in Manufacturing,
+cloud inaccurate. The main concern of our training process vol.2,no.4,pp.275–288,2014.
+1140
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. [7] J. Carmigniani, B. Furht, M. Anisetti, P. Ceravolo, E. Damiani, and ConferenceoftheIEEEEngineeringinMedicineandBiologySociety
+M. Ivkovic, “Augmented reality technologies, systems and applica- (EMBC). IEEE,2018,pp.2158–2161.
+tions,”Multimediatoolsandapplications,vol.51,no.1,pp.341–377, [18] G. Baratoff, A. Neubeck, and H. Regenbrecht, “Interactive multi-
+2011. markercalibrationforaugmentedrealityapplications,”inProceedings
+[8] J. Lambrecht and J. Krüger, “Spatial programming for industrial ofthe1stInternationalSymposiumonMixedandAugmentedReality.
+robots based on gestures and augmented reality,” in 2012 IEEE/RSJ IEEEComputerSociety,2002,p.107.
+International Conference on Intelligent Robots and Systems. IEEE, [19] D. Yan and H. Hu, “Application of augmented reality and robotic
+2012,pp.466–472. technology in broadcasting: a survey,” Robotics, vol. 6, no. 3, p. 18,
+[9] L. Kaestner, “Augmented-reality-based visualization of navigation 2017.
+data of mobile robots on the microsoft hololens - possibilities and [20] G.Bleser,H.Wuest,andD.Stricker,“Onlinecameraposeestimation
+limitations,” in 2019 IEEE/CIS-RAM IEEE International Conference inpartiallyknownanddynamicscenes,”in2006IEEE/ACMInterna-
+onCyberneticsandIntelligentSystems(CIS)andIEEEInternational tionalSymposiumonMixedandAugmentedReality. IEEE,2006,pp.
+ConferenceonRobotics,AutomationandMechatronics(RAM). IEEE, 56–65.
+2019,pp.500–506. [21] M.GaronandJ.-F.Lalonde,“Deep6-doftracking,”IEEEtransactions
+[10] B.Giesler,T.Salb,P.Steinhaus,andR.Dillmann,“Usingaugmented on visualization and computer graphics, vol. 23, no. 11, pp. 2410–
+realitytointeractwithanautonomousmobileplatform,”inIEEEInter- 2418,2017.
+nationalConferenceonRoboticsandAutomation,2004.Proceedings. [22] H. A. Alhaija, S. K. Mustikovela, L. Mescheder, A. Geiger, and
+ICRA’04.2004,vol.1. IEEE,2004,pp.1009–1014. C. Rother, “Augmented reality meets computer vision: Efﬁcient data
+generation for urban driving scenes,” International Journal of Com-
+[11] S. A. Green, X. Q. Chen, M. Billinghurst, and J. G. Chase, “Col-
+puterVision,vol.126,no.9,pp.961–972,2018.
+laborating with a mobile robot: An augmented reality multimodal
+[23] Y.ZhouandO.Tuzel,“Voxelnet:End-to-endlearningforpointcloud
+interface,” IFAC Proceedings Volumes, vol. 41, no. 2, pp. 15595–
+based3dobjectdetection,”inProceedingsoftheIEEEConferenceon
+15600,2008.
+ComputerVisionandPatternRecognition,2018,pp.4490–4499.
+[12] R.AzumaandG.Bishop,“Improvingstaticanddynamicregistration
+[24] M. Simon, S. Milz, K. Amende, and H.-M. Gross, “Complex-yolo:
+in an optical see-through hmd,” in Proceedings of the 21st annual
+An euler-region-proposal for real-time 3d object detection on point
+conferenceonComputergraphicsandinteractivetechniques. ACM,
+clouds,”inEuropeanConferenceonComputerVision. Springer,2018,
+1994,pp.197–204.
+pp.197–209.
+[13] A. L. Janin, D. W. Mizell, and T. P. Caudell, “Calibration of head-
+[25] C. R. Qi, H. Su, K. Mo, and L. J. Guibas, “Pointnet: Deep learning
+mounteddisplaysforaugmentedrealityapplications,”inProceedings
+onpointsetsfor3dclassiﬁcationandsegmentation,”inProceedings
+ofIEEEVirtualRealityAnnualInternationalSymposium. IEEE,1993,
+oftheIEEEConferenceonComputerVisionandPatternRecognition,
+pp.246–255.
+2017,pp.652–660.
+[14] T.OishiandS.Tachi,“Methodstocalibrateprojectiontransformation [26] C.R.Qi,O.Litany,K.He,andL.J.Guibas,“Deephoughvotingfor
+parameters for see-through head-mounted displays,” Presence: Tele- 3dobjectdetectioninpointclouds,”arXivpreprintarXiv:1904.09664,
+operators&VirtualEnvironments,vol.5,no.1,pp.122–135,1996. 2019.
+[15] R.Aoki,H.Tanaka,K.Izumi,andT.Tsujimura,“Self-positionestima- [27] S. Shi, X. Wang, and H. Li, “Pointrcnn: 3d object proposal gener-
+tionbasedonroadsignusingaugmentedrealitytechnology,”in2018 ation and detection from point cloud,” in Proceedings of the IEEE
+12thFrance-Japanand10thEurope-AsiaCongressonMechatronics. Conference on Computer Vision and Pattern Recognition, 2019, pp.
+IEEE,2018,pp.39–42. 770–779.
+[16] M. Ragni, M. Perini, A. Setti, and P. Bosetti, “Artool zero: Pro-
+gramming trajectory of touching probes using augmented reality,”
+Computers&IndustrialEngineering,vol.124,pp.462–473,2018.
+[17] F.-J. Chu, R. Xu, Z. Zhang, P. A. Vela, and M. Ghovanloo, “The
+helpinghand:Anassistivemanipulationframeworkusingaugmented
+realityandtongue-driveinterfaces,”in201840thAnnualInternational
+1141
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:49:52 UTC from IEEE Xplore.  Restrictions apply. 

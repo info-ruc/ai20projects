@@ -1,0 +1,492 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+SoRX: A Soft Pneumatic Hexapedal Robot to Traverse Rough, Steep, and
+Unstable Terrain
+Zhichao Liu, Zhouyu Lu, and Konstantinos Karydis
+Abstract—Soft robotics technology creates new ways for
+legged robots to interact with and adapt to their environment.
+In this paper we develop i) a new 2-degree-of-freedom soft
+pneumatic actuator, and ii) a novel soft robotic hexapedal
+robot called SoRX that leverages the new actuators. Simula-
+tion and physical testing conﬁrm that the proposed actuator
+can generate cyclic foot trajectories that are appropriate for
+legged locomotion. Consistent with other hexapedal robots
+(and animals), SoRX employs an alternating tripod gait to
+propelitselfforward.ExperimentsrevealthatSoRXcanreach
+forward speeds of up to 0.44 body lengths per second, or
+equivalently 101 mm/s. With a size of 230 mm length, 140
+mm width and 100 mm height, and weight of 650 grams,
+SoRXisamongthefastesttetheredsoftpneumatically-actuated
+legged robots to date. The motion capabilities of SoRX are Fig. 1: SoRX, the novel soft legged robot developed in this work.
+evaluatedthroughﬁveexperiments:running,stepclimbing,and The robot is able to traverse terrains consisting of sand and rocks.
+traversing rough terrain, steep terrain, and unstable terrain.
+Experimental results show that SoRX is able to operate over
+challenging terrains in open-loop control and by following the parts, which limit the contact area along the length of legs,
+same alternating tripod gait across all experimental cases. therefore reducing the ability to navigate rough terrain.
+Softroboticsisarelativelyyoungﬁeld,withchallengesin
+I. INTRODUCTION design, fabrication and control [15]. Soft robots are particu-
+Multi-legged robots show promise in application ar- larly appropriate for locomotion in uneven and/or sensitive
+eas such as search-and-rescue and intelligence-surveillance- environment,becausetheirsoftstructureallowsthemtobend
+reconnaissance (ISR) where operation over rough and un- and squeeze to ﬁt their shape around obstacles, and reduce
+structured terrain is expected. However, achieving all-terrain the stress induced by contact over both surroundings and
+mobility remains a challenging task, especially as robots the robots surface [16]. In particular, soft robotics have been
+scale down in size [1]. investigatedanddevelopedforlocomotionapplications.Prior
+Adaptationtoterrainvariationsiskeyfortakingtherobots work includes soft robots powered by soft pneumatic actu-
+outsideoftheprotectedlaboratoryenvironment,anddeploy- ators (SPA) to achieve crawling and undulation gaits [17]–
+ing them in real-world settings. Studies have indicated that [19]. A starﬁsh-like soft robot was developed to complete
+incorporatingcompliantlegs,asanimalsdo,cansigniﬁcantly crawling gaits actuated by shape memory alloys [20]. How-
+improve the speed and stability of these robots in varying ever,theactuatorsoftheserobotsonlyhaveonlyonedegree
+environmental conditions [2]. Among the ﬁrst efforts to of freedom (DoF). Meanwhile, they are unable to traverse
+incorporate passive mechanical compliance within a robot’s over rough terrain as more rigid legged robots do. Notable
+legswasthespringyC-leginthehexapedalrobotRHex[3]– exceptions include a robot that combines soft legs with
+[5],whichisstillcommonlyusednowadays.Tunabledevices wheels for navigation on uneven terrain [21], and a soft-
+were proposed to adjust the stiffness of legs [6]–[8]. Direct- material 3D-printed pneumatic legged robot able to lift its
+drive legged robots were also developed to achieve variable legs off the ground and walk over unstructured terrain [22].
+compliance (e.g., [9]–[12]). Nevertheless, these robots rely on either rigid wheels or
+Therehavebeenotherattemptstoachievetunablestiffness multiplelegconﬁgurationstoachieveall-terrainlocomotion.
+using antagonistic pneumatic actuators such as McKibben Moreover, unlike hexapedal robots, they cannot sustain a
+actuatorsandpleatedpneumaticartiﬁcialmuscles[13],[14]. large support area, as with an alternating tripod gaits, which
+However, these compliant legs come together with rigid can be advantageous when traversing uneven terrain [23].
+Thereareotherattemptstoachievesoftleggedlocomotion
+The authors are with the Dept. of Electrical and Computer Engineer- by leveraging cable-driven actuators. The Soﬁa walking
+{
+ing, University of California, Riverside. Email: zliu157, zlu044, kary-
+} robot [24] and Puppy [25] utilize model-based optimal
+dis @ucr.edu.
+WegratefullyacknowledgethesupportofNSFundergrant#IIS-1910087 control to achieve walking locomotion. The cable-driven
+and of the UCR Ofﬁce of Research and Economic Development under legs have 2 DOFs: bending and extension. Compared to
+a Collaborative Seed Grant. Any opinions, ﬁndings, and conclusions or
+pneumatic ones, cable-driven actuators may be more direct
+recommendations expressed in this material are those of the authors and
+donotnecessarilyreﬂecttheviewsofthefundingagencies. tomodelandcontrol.However,cable-drivenactuatorscanbe
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 420
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. challenged when it comes to varying leg stiffness to adapt (a) (b)
+to terrain variations. Moreover, the necessary motors may
+render cable-driven robots top-heavy and thus unstable [25].
+In this paper we present a new soft pneumatic actuator
+Bending
+with 2 DoFs. We use Finite Element Analysis to predict its Part
+performance and expected motion in simulation. Equipped
+with a pressurizing/depressurizing air control board, we
+evaluate experimentally the bending and extension capacity
+Extension
+of physical actuator prototypes, identify a pressurization/de- Part
+pressurization sequence to generate appropriate cyclic foot
+trajectory proﬁles, and conﬁrm that the proposed actuators
+Fig. 2: (a) CAD rendering, and (b) a physical actuator prototype.
+can be used as legs for a pneumatically-actuated soft robot.
+Leveraging the new actuators, we design and manufacture
+button layer, which are molded separately. Overall, fabrica-
+a tethered soft legged robot prototype, the Soft Robotic
+tion of a leg takes place in four steps. 1) Mix the elastomer
+heXapod (SoRX) shown in Fig. 1. To the best of our
+and process it in vacuum chamber to remove bubbles. 2)
+knowledge, SoRX is the fastest soft pneumatic legged robot
+Pouritintothemoldsandwait75minutesforittocure,and
+to date. More importantly, it is the ﬁrst soft pneumatic
+demold the pieces. 3) Use an adhesive (Sil-Poxy, Smooth-
+legged robot able to operate over a range of challenging
+On) to bond together the two pieces of the bending part.
+environments, such as rough, steep, and unstable terrain,
+Meanwhile, glue two same silicone bodies made by mold
+without any additional control effort and by following the
+(c) in Fig. 3 to form the extension part. 4) Insert silicone
+same alternating tripod gait across all terrains.
+tubes for air connection and bond the two actuator parts.
+Succinctly, our contributions are as follows:
+• Wedevelopanewsoftpneumaticactuatorwith2DoFs,
+and evaluate its performance both in simulation and
+physical testing.
+• We design and manufacture a tethered soft pneumatic
+hexapedal robot and analyze its gait.
+(c) Mold for extension part 
+• We investigate the robot’s motion capabilities on loco- (a) Mold for bending part (left)                                  (half)
+moting over rough, steep and unstable terrain.
+x2
+II. SOFTLEGDESIGN,FABRICATION,ANDANALYSIS
+A. A Soft Pneumatic Actuator Leg Design
+(b) Mold for bending part (right)
+To design an all-terrain soft legged robot, each leg must
+be sufﬁciently compliant to adapt to obstacles, while stiff Fig. 3: Fabrication of the soft pneumatic actuator
+enough to support the robot’s weight. One promising way to
+balancethistrade-offisbyutilizingsoftpneumaticactuators C. Simulated Actuator Behavior
+(SPAs). Prior works on SPAs for legged locomotion have Simulation was conducted to guide the design and to
+relied on pneumatic networks (PneuNets) [17] and multiple ensuretheproposeddesigncanworkasintendedinreal-time.
+bellowed chambers [22]. However, these actuators can only We used Finite Element Method (FEM) analysis to simulate
+bend but not extend, which may constrain the locomotion large non-linear deformations undergone by soft structures,
+capabilities of the robot in practice. by following the analysis in [27]. In sum, at each step i of
+To mitigate this challenge, we introduce the SPA design the real-time simulation, the internal forces are linearized as
+shown in Fig. 2. The actuator consists of two parts: 1)
+≈
+the bending part, which is adopted by the original PneuNet f(x ) f(x− )+K(x− )dx , (1)
+i i 1 i 1
+design with one cut remaining, and 2) the extension part,
+wheref isthevolumetricinternalstiffnessforceatthenodes,
+which employs a Hyper-Elastic Bellows (HEB) actuator
+and K(x) represents the tangent stiffness matrix. Assuming
+design[26].Whenthetwopartsarepressurized,theactuator
+quasi-static motions, the model is in equilibrium in terms of
+can both bend and extend; different pressurization/depres-
+internal and external forces, that is
+surization cycles can then yield a multitude of distinct foot
+−
+trajectory proﬁles (more on this later in Section III). K(x− )dx=p+f(x− )+JTλ , (2)
+i 1 i 1
+B. Fabrication
+where p stands for the external forces, λ represents the
+Each actuator is cast separately out of two-part silicone contributions of the actuators and the contact forces (if
+elastomer (Dragon Skin 10 FAST, Smooth-On). Three pairs applicable) and J gathers the directions [27].
+of 3D-printed molds (Onyx material on Markforged Mark To solve for node displacements, we ﬁrst ﬁnd a free
+Twocarbonﬁber3Dprinter)areusedtoformshapes(Fig.3). conﬁguration xfree by solving (2) with λ = 0. The result
+The bending part consists of two pieces: the chamber and also yields δfree which is the violation for constraints. Then,
+421
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. a constraint-based so(cid:2)lver comp(cid:3)utes λ given laws of the
+constraint between δ and λ, that is
+(cid:124) (cid:123)(cid:122) (cid:125)
+−
+δ = JK 1JT λ+δfree . (3)
+W
+Finally,nodedisplacementsarecalculatedusingthevalueof
+the constraint response [27]
+−
+x =xfree+K 1JTλ . (4)
+t
+Fig. 5: Results and experimental setup for the extension test.
+AllstepsareimplementedinSOFA[28]1 withSoftRobot- Negative pressure numbers relate to depressurization (vacuum)
+Plugin [29].2 The mesh ﬁle consists of 13,344 tetrahedra mode of the air source.
+and 3,352 nodes. To build a precise simulation, elastic
+and inertial parameters have to be tuned in simulation. The
+Young’smodulusisobtainedfromsilicone’spropertieswhile
+the mass of the actuator is measured experimentally [30].
+Figure 4 shows simulation results when the actuator is pres-
+surizedanddepressurized.Comparisonsbetweentrajectories
+insimulationandinphysicaltestingaregiveninSectionIII.
+Fig. 6: Results and experimental setup for the bending test.
+In the bending test we measured bending angles as input
+pressure varies. Results (Fig. 6) show that the actuator
+can bend 91deg at 60kPa. However, angles in simulation
+Z are smaller than the measured ones. Further, simulations
+diverged when the input pressure exceeded 30kPa.
+In both tests, we observed some mismatch between the
+Y
+measured and simulated results. This mismatch may be
+X
+caused by approximations in material properties such as
+Fig. 4: FEM analysis of leg (a) pressurization and (b) depressur-
+Young’s modulus and Poisson ratio,3 measurement errors,
+ization in the SOFA environment. Each tetrahedron represents the
+FEMforceﬁeld.Nodedisplacementsdemonstratechangesinshape. and vibrations caused while the actuator was pressurized.
+Moreover,wemeasuredtheforcegeneratedbytheactuator
+as a function of the input pressure to illustrate the actuator’s
+D. Actuator Performance
+stiffness-varying property. In this test, the actuator was
+The actuator’s properties regarding extension, bending,
+mounted vertically above a load cell with ampliﬁer HX711
+and stiffness-varying have a signiﬁcant impact on its utility
+andmicrocontrollerArduinoMega(Fig.7).Theactuatorwas
+to soft legged robots. To this end, we conducted empirical
+incontactwiththeloadcellwhenthepumpwasswitchedoff.
+tests to validate simulation results, and to evaluate the
+Input pressure values ranged from 0kPa to 20kPa. Results
+performance of the physical prototype.
+indicate that the actuator can apply 10.67N at 20kPa. As
+In the extension and bending tests, the actuator was
+such, our hexapedal robot can lift a maximum weight of
+mounted horizontally (see Fig. 5). Both extension and bend-
+3.26kgwhenitfollowsanalternatingtripodgait.4 Notethat
+ingpartsarepressurized/depressurizedat2.5kPaincrements. the bending part was not actuated in this test. However, as
+The position of the actuator’s free end was recorded in
+pressureincreasesoveracriticalpoint,thelegwillpassively
+the extension test. In simulation, the direction of gravity
+bend; this effect can lead to the sharp increase observed in
+points to the negative direction along Y-axis to match the
+Fig. 7 at approximately 13kPa.
+experimental setting (see Fig. 4). To represent the additional
+rigidity created by the silicone tube in the bending part, III. SORXDESIGNANDGAITANALYSIS
+we used a model of stiff springs in the direction of the The new soft actuators are used to create the
+tubes [31]. We exported the position of the corresponding pneumatically-actuated soft robotic hexapod SoRX (Fig. 1,
+× ×
+node via a Python script in SOFA. Extension test results and Fig. 8). SoRX measures 230mm L 140mm W
+(Fig. 5) show the experimentally-measured values match the
+simulation data. The extension part can elongate by 48mm 1https://www.sofa-framework.org/
+at30kPaandbeshortenedby9mmindepressurization.Itis 2https://project.inria.fr/softrobot/
+3Materialpropertiesmayvaryduetofabrication,e.g.,itisverydifﬁcult
+worthmentioningthatthesimulationdivergedwhenpressure
+− toremoveallairbubblesduringcastingdespiteusingadegassingchamber.
+values extended beyond the range of [ 2,10]kPa. 4Thatis,threelegsaretouchingthegroundatalltimes.
+422
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. may cause non-smooth points in the trajectory. Further, we
+noticed that the bending part tended to respond faster to
+differential pressure inputs than the extension part. The last
+two points are the major differences between simulation
+and experiment (i.e. trajectories are smoother, and actuators
+Arduino respond equally fast in simulation). These differences may
+Load Cell becausedbythevariousapproximationsnotedpreviouslyin
+HX711
+Section II-D, but also by the fact that the simulation relies
+on the assumption of quasi-static motions, which is not met
+in rapid actuation cycles needed in practice.
+Fig.7:Resultsandexperimentalsetupforthestiffness-varyingtest.
+(a) (b)
+100mmHandweighs650g.TheframeofSoRXwasman-
+ufactured by combining laser-cut wood and acrylic sheets
+(Universal Laser Systems VLS 3.60 laser cutter), and six
+3D-printed leg holders (Makerbot Replicator+ 3D printer).
+Wood Acrylic Polylactic Acid
+Fig.9:(a)Empirically-derivedactuationsequenceforonelegstride.
+(b) Resulting simulated (in blue) and experimental (in red) foot
+trajectories.
+Actuators
+IV. EXPERIMENTSANDRESULTS
+Fig. 8: CAD of SoRX and materials. The motion capabilities of SoRX were evaluated through
+ﬁve experiments: running, step climbing, and traversing
+A. Gait Analysis rough terrain, steep terrain, and unstable terrain. A modiﬁed
+version of an open-source pneumatic control board [34]
+Like RHex [32] and DASH [33], among other hexapods,
+was used in all experiments. In our board, every air output
+SoRX employs an alternating tripod gait for locomotion.
+channel is connected to two pairs of valves and pumps
+Static stability is guaranteed with alternating tripods by
+to allow for both pressurization and depressurization. The
+keeping the center of mass within the support area formed
+primary experimental testbed is shown in Fig. 10. At this
+by the three legs that touch the ground.
+stage the robot runs in open loop (i.e. without steering
+To achieve effective locomotion we need to determine ap-
+control); hence, two acrylic panels were used to ensure the
+propriatecycliccontroltrajectoriesfortherobot’sfeet.How-
+robot does not fall off from the platform. The length of
+ever, determining pressurization/depressurization sequences
+forpneumatically-actuatedsoftleggedrobotsisachallenging the platform is 1.2m. A 12-camera VICON motion capture
+system was used to collect position and velocity data of the
+task.Asshownshortly,availablesimulationtoolsyieldquite
+center-of-mass (CoM) of SoRX.
+differentresultsfromthoseobservedinpractice.Inthiswork,
+we identiﬁed empirically a pressurization/depressurization
+sequencethatcanleadtoeffectivelocomotion.Thesequence
+is shown in Fig. 9(a). Bending and extension parts are pres-
+surized sequentially, and then they are depressurized simul-
+taneously. Temporal duration ratios remain ﬁxed; changing
+the total cycle time leads to different forward velocities.
+To identify the nominal foot trajectory, the actuator was
+mounted vertically as in the stiffness-varying test. The ver-
+tical axis points to the opposite direction of gravity, thus the
+vertical displacements are negative. An entire actuation se-
+quencewasappliedtotheactuatorwhilethecamerarecorded Fig. 10: Primary experimental testbed to evaluate performance in
+running, step climbing, and traversing rough terrain.
+motion.Resultingimageframeswerepost-processedandan-
+alyzedwiththevideoanalysissoftwareKinovea.Meanwhile,
+A. Running
+the same actuation sequence was applied in simulation.
+Resulting trajectories are shown in Fig. 9(b). We notice that SoRX was able to reach a top speed of 0.44body lengths
+the foot returns to its original starting point after one stride per second (BL/s), or 101mm/s, at maximum actuation
+despitetheverycompliantnatureoftheleg.Amaximumfoot pressures of 34kPa for the bending part and 10kPa for
+clearance of about 14mm was recorded. Device vibrations the extension part. Figure 11 depicts an instance of the
+423
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. robotrunning.Comparedtoothersoftrobots,SoRXcanrun through its actuated values without any damage if forces
+signiﬁcantlyfasterbothintermsofbodylengthandabsolute remain below the silicone’s yield point.
+distance (Table I). To the best of our knowledge, SoRX is
+the fastest to date pneumatically-actuated soft legged robot.
+Fig. 11: Snapshots in 0.5sec intervals of SoRX running.
+TABLE I: Speeds for soft robots
+Robots Speed[BL/s] Speed[mm/s]
+SoRX 0.44 101.0
+Quadrupedal[22] 0.14 20.0 Fig. 13: SoRX climbing over a 15mm-tall stack of foam board.
+Puppy[25] 0.12 15.6
+C. Traversing Rough Terrain
+Multigait[17] 0.05 6.7
+Five-limb[20] 0.003 0.43 Toevaluatetherobot’scapabilitytotraverseroughterrain,
+we considered locomotion over sand, rocks, and a mixed
+Further,weperformedrunningtestsattwodistinctspeeds
+terrain (Fig. 14). The mixed terrain consisted of two ﬂat
+set at 0.35BL/s and 0.44BL/s, to capture the evolution of ground parts at the two ends, as well as sand and rocks
+the position of SoRX’s CoM in forward motion. Results
+parts in the middle. The supplementary video offers a clear
+reveal that the robot’s CoM follows a repeatable cyclic
+illustration of our experiments.
+pattern (Fig. 12). This observation is consistent with the
+The speed of SoRX while traversing rough terrain is
+CoM evolution of more rigid legged robots, suggesting that
+compared to the speed of Quadrupedal [22]. Quadrupedal
+relatedtoolstostudystabilityandtodesignmotionplanners
+was tested with small pebbles and large rocks. Therefore,
+and controllers may be appropriate for soft legged robots as
+the speed of SoRX over sand is compared to the one of
+well.
+Quadrupedal over small pebbles. Results (shown in Fig. 15)
+demonstrate that SoRX is able to navigate much faster on
+190
+all types of terrain. Unlike Quadrupedal, SoRX uses one
+leg conﬁguration that is adequate for ﬂat ground and rough
+185
+terrainalike.ThespeedofSoRXovermixedterrainsuggests
+180 that keeping the same gait pattern and control effort may
+m] sufﬁce to traverse different types of terrain.
+m175
+Z [
+(a) (b) (c)
+170
+165 Fast
+Slow
+160
+4 5 6 7 8
+Time [sec]
+Fig. 14: SoRX was found capable to traverse (a) sand, (b) rocks,
+Fig. 12: CoM position evolution in the Z axis at two different and (c) mixed terrain.
+forward speeds, 0.44 BL/s (in blue) and 0.35 BL/s (in red),
+indicating that the robot’s CoM follows a cyclic pattern.
+B. Step Climbing
+SoRX was able to overcome obstacles up to 15mm tall
+passively and while following the same alternating tripod
+gait used for running (Fig. 13). Leg softness appears to
+play a dual positive role. First, it can improve locomotion
+robustness by enabling SoRX to recover when one leg
+gets stuck on the obstacle. Second, it may help overcome
+Fig. 15: Terrain traversal speeds for Quadrupedal and SoRX.
+obstacles larger than the nominal foot clearance. (Recall the
+D. Traversing Steep Terrain
+nominal foot clearance was measured at 14mm in static
+single-leg tests shown in Fig. 5.) In both cases, a leg may Walkingoverinclinedsurfaceshasbeenachallengingtask
+forcibly squeeze or over-extend beyond the range prescribed for all legged robots. A spherical soft robot [35] was able to
+424
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. climb a slope with crawling gaits. Puppy [25] can walk up
+a hill only in simulation.
+Two experiments were implemented to test SoRX’s lo-
+comotive performance on steep terrain: 1) walking on an
+inclined ﬂat surface, and 2) walking inside an inclined
+groove.Therobotwasabletoclimbuptoa10degangledﬂat
+surface made of acrylic sheet as shown in Fig. 16(a) while
+employingthesamealternatingtripodgaitasinrunningover
+ﬂat and rough terrain and climbing over a step. Moreover, (a)
+the robot was able to traverse a 15deg inclined groove
+500
+made of two ﬂat acrylic sheets as shown in Fig. 16(b). The
+actuators can bend and squeeze to ﬁt the high-slop surface. 400
+Unlike Quadrupedal, SoRX does not require any additional 300
+leg conﬁguration to handle steep terrain. The supplementary
+s] 200
+video shows more clearly how the robot performs in these m/
+challenging terrains. m 100
+d [
+e 0
+e
+p
+S-100
+-200
+-300
+(a) (b) -400
+10 10.5 11 11.5 12 12.5 13 13.5 14 14.5 15
+Time [sec]
+Fig.16:(a)SoRXclimbingupaslopeof10deg.(b)SoRXshown (b)
+insideaninclinedgroovewhereactuatorsbendandsqueezetoadapt
+to the high-slope surface. Fig. 17: (a) Experimental setup for the unstable terrain testing.
+Terrain is oscillating in the X-Y plane at speeds comparable to
+E. Traversing Unstable Terrain therobot’sforwardspeed,toppingatapproximately200mm/s.(b)
+Superimposed platform (solid curves) and robot (dashed curves)
+To further evaluate the robustness of SoRX’s running speedsfortheunstableterraintesting.(x˙ ,y˙ )and(x˙ ,y˙ )denote
+p p r r
+performance, we commanded SoRX to run on an unstable theplatformandcombinedrobotandplatformspeeds,respectively.
+(oscillating) platform. The experimental setup consisted of (Figure best viewed in color.)
+fourcasterwheelssupportingawoodensheet;seeFig.17(a).
+The platform oscillated in the X-Y plane while SoRX was tripod gait can be utilized for effective locomotion of SoRX
+running on top of it. while traversing ﬂat, rough, steep, and unstable (oscillating)
+Figure 17(b) superimposes the speed of SoRX and of the terrains. Experiments reveal that SoRX can reach forward
+oscillating platform’s as measured through motion capture. speeds of up to 0.44 BL/s, which to the authors’ best of
+SoRX was able to run on the platform without tipping over knowledge makes it the fastest soft pneumatically-actuated
+despite the platform oscillating at speeds comparable to the legged robot to date. The robot can climb over 15mm tall
+robot’s forward velocity. The employed alternating tripod obstacles, walk over terrains that contain rocks, sand, and
+gait, paired with soft legs appear to yield a robust running combination of those, climb up to 10deg slope, and walk
+performance in spite of the unstable (oscillating) terrain. inside 15deg inclined grooves. SoRX is also capable to run
+on an unstable platform oscillating at speeds comparable to
+V. CONCLUSIONS therobot’sforwardspeedwithouttippingover.Theseresults
+Pneumatically-actuated soft legged robots may serve as a suggestthatcomplianceintroducedthroughapurelysoftleg
+newtooltoapplicationswhereoperationoverroughandun- design may create new opportunities for legged robots to
+structuredterrainisrequired,e.g.,whenlookingforsurvivors navigate over challenging terrains.
+in the aftermath of an earthquake. Operation in such terrains To realize the potential of soft legged robots in appli-
+stillchallengesmorerigidleggedrobots;instead,softlegged cations, several challenges remain to be addressed. Among
+robotscouldsqueezeandbendtoovercomeobstaclesandﬁt themistoenableuntetheredoperationwhilekeepingthesize
+into crevices to explore their environment. and weight of the robot within reasonable limits. Our future
+In this paper, we presented SoRX, a novel pneumatically- work will seek to explore more motion capabilities, such as
+actuated soft hexapedal robot. SoRX utilizes our new 2- turning and moving backward. We will study the effect of
+DoF soft pneumatic actuators that can both bend and extend different elastic modules and stiffness of the ﬂexible legs on
+to create foot trajectory proﬁles that are appropriate for the moving performance. Furthermore, we plan to develop
+legged locomotion. Consistent with other hexapedal robots control strategies for trajectory tracking and enable SoRX to
+(and animals), SoRX employs an alternating tripod gait work autonomously, untethered, and with integrated sensing
+to propel itself forward. We showed that the alternating capabilities.
+425
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [18] M. T. Tolley, R. F. Shepherd, B. Mosadegh, K. C. Galloway,
+M. Wehner, M. Karpelson, R. J. Wood, and G. M. Whitesides, “A
+[1] J. Z. Kolter, M. P. Rodgers, and A. Y. Ng, “A control architecture
+resilient,untetheredsoftrobot,”Softrobotics,vol.1,no.3,pp.213–
+forquadrupedlocomotionoverroughterrain,”inIEEEInternational
+223,2014.
+ConferenceonRoboticsandAutomation(ICRA),2008,pp.811–818.
+[19] J.M.Florez,B.Shih,Y.Bai,andJ.K.Paik,“Softpneumaticactuators
+[2] J. Rummel, Y. Blum, H. M. Maus, C. Rode, and A. Seyfarth,
+forleggedlocomotion,”inIEEEInternationalConferenceonRobotics
+“Stableandrobustwalkingwithcompliantlegs,”inIEEEInternational
+andBiomimetics(ROBIO),2014,pp.27–34.
+Conference on Robotics and Automation (ICRA), 2010, pp. 5250–
+[20] S. Mao, E. Dong, H. Jin, M. Xu, and K. Low, “Locomotion and
+5255.
+gait analysis of multi-limb soft robots driven by smart actuators,” in
+[3] E. Moore, D. Campbell, F. Grimminger, and M. Buehler, “Reliable
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems
+stair climbing in the simple hexapod ’rhex’,” in IEEE International
+(IROS),2016,pp.2438–2443.
+Conference on Robotics and Automation (ICRA), vol. 3, 2002, pp. [21] A.Sadeghi,A.Mondini,E.DelDottore,A.K.Mishra,andB.Maz-
+2222–2227. zolai,“soft-leggedwheel-basedrobotwithterrestriallocomotionabil-
+[4] R. Altendorfer, N. Moore, H. Komsuoglu, M. Buehler, H. Brown, ities,”FrontiersinRoboticsandAI,vol.3,p.73,2016.
+D. McMordie, U. Saranli, R. Full, and D. E. Koditschek, “Rhex: A [22] D. Drotman, S. Jadhav, M. Karimi, P. Dezonia, and M. T. Tolley,
+biologically inspired hexapod runner,” Autonomous Robots, vol. 11, “3d printed soft actuators for a legged robot capable of navigating
+no.3,pp.207–213,2001. unstructured terrain,” in IEEE International Conference on Robotics
+[5] U. Saranli, M. Buehler, and D. E. Koditschek, “Rhex: A simple and andAutomation(ICRA),2017,pp.5532–5538.
+highlymobilehexapodrobot,”TheInternationalJournalofRobotics [23] Q. Sun, F. Gao, and X. Chen, “Towards dynamic alternating tripod
+Research,vol.20,no.7,pp.616–631,2001. trottingofapony-sizedhexapodrobotfordisasterrescuingbasedon
+[6] J. W. Hurst, J. E. Chestnutt, and A. A. Rizzi, “An actuator with multi-modalimpedancecontrol,”Robotica,vol.36,no.7,pp.1048–
+physicallyvariablestiffnessforhighlydynamicleggedlocomotion,”in 1076,2018.
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA), [24] C. Duriez, E. Coevoet, F. Largilliere, T. Morales-Bieze, Z. Zhang,
+vol.5,2004,pp.4662–4667. M. Sanz-Lopez, B. Carrez, D. Marchal, O. Goury, and J. Dequidt,
+[7] K. C. Galloway, J. E. Clark, and D. E. Koditschek, “Design of a “Framework for online simulation of soft robots with optimization-
+tunablestiffnesscompositelegfordynamiclocomotion,”inASMEIn- based inverse model,” in IEEE International Conference on Simula-
+ternationalDesignEngineeringTechnicalConferencesandComputers tion,Modeling,andProgrammingforAutonomousRobots(SIMPAR),
+and Information in Engineering Conference (IDETC/CIE), 2009, pp. 2016,pp.111–118.
+215–222. [25] J.M.Bern,P.Banzet,R.Poranne,andS.Coros,“Trajectoryoptimiza-
+[8] A.Enoch,A.Sutas,S.Nakaoka,andS.Vijayakumar,“Blue:Abipedal tionforcable-drivensoftrobotlocomotion,”inRobotics:Scienceand
+robotwithvariablestiffnessanddamping,”inIEEE-RASInternational Systems(RSS),2019.
+ConferenceonHumanoidRobots(Humanoids),2012,pp.487–494. [26] K. M. Digumarti, A. T. Conn, and J. Rossiter, “Euglenoid-inspired
+[9] G.Kenneally,A.De,andD.E.Koditschek,“Designprinciplesfora giantshapechangeforhighlydeformablesoftrobots,”IEEERobotics
+familyofdirect-driveleggedrobots,”IEEERoboticsandAutomation andAutomationLetters,vol.2,no.4,pp.2302–2307,2017.
+Letters,vol.1,no.2,pp.900–907,2016. [27] C. Duriez, “Control of elastic soft robots based on real-time ﬁnite
+[10] J. Hwangbo, J. Lee, A. Dosovitskiy, D. Bellicoso, V. Tsounis, elementmethod,”inIEEEInternationalConferenceonRoboticsand
+V. Koltun, and M. Hutter, “Learning agile and dynamic motor skills Automation(ICRA),2013,pp.3982–3987.
+forleggedrobots,”ScienceRobotics,vol.4,no.26,2019. [28] J. Allard, S. Cotin, F. Faure, P.-J. Bensoussan, F. Poyer, C. Duriez,
+[11] T.Apgar,P.Clary,K.Green,A.Fern,andJ.W.Hurst,“Fastonline H. Delingette, and L. Grisoni, “Sofa-an open source framework for
+trajectory optimization for the bipedal robot cassie,” in Robotics: medicalsimulation,”inMedicineMeetsVirtualReality(MMVR),vol.
+ScienceandSystems(RSS),2018. 125,2007,pp.13–18.
+[12] S.Seok,A.Wang,MengYeeChuah,D.Otten,J.Lang,andS.Kim, [29] E. Coevoet, T. Morales-Bieze, F. Largilliere, Z. Zhang, M. Thieffry,
+“Designprinciplesforhighlyefﬁcientquadrupedsandimplementation M.Sanz-Lopez,B.Carrez,D.Marchal,O.Goury,J.Dequidt,etal.,
+on the mit cheetah robot,” in IEEE International Conference on “Softwaretoolkitformodeling,simulation,andcontrolofsoftrobots,”
+RoboticsandAutomation(ICRA),2013,pp.3307–3312. AdvancedRobotics,vol.31,no.22,pp.1208–1224,2017.
+[13] B. Verrelst, R. Van Ham, B. Vanderborght, F. Daerden, D. Lefeber, [30] T. M. Bieze, F. Largilliere, A. Kruszewski, Z. Zhang, R. Merzouki,
+and J. Vermeulen, “The pneumatic biped lucy actuated with pleated andC.Duriez,“Finiteelementmethod-basedkinematicsandclosed-
+pneumatic artiﬁcial muscles,” Autonomous Robots, vol. 18, pp. 201– loop control of soft, continuum manipulators,” Soft robotics, vol. 5,
+213,2005. no.3,pp.348–364,2018.
+[14] T.Takuma,S.Hayashi,andK.Hosoda,“3dbipedalrobotwithtunable [31] E.Coevoet,A.Escande,andC.Duriez,“Optimization-basedinverse
+legcompliancemechanismformulti-modallocomotion,”inIEEE/RSJ model of soft robots with contact handling,” IEEE Robotics and
+International Conference on Intelligent Robots and Systems (IROS), AutomationLetters,vol.2,no.3,pp.1413–1419,2017.
+2008,pp.1097–1102. [32] U. Saranli, M. Buehler, and D. E. Koditschek, “Rhex: A simple and
+[15] D. Rus and M. T. Tolley, “Design, fabrication and control of soft highlymobilehexapodrobot,”TheInternationalJournalofRobotics
+robots,”Nature,vol.521,no.7553,p.467,2015. Research,vol.20,no.7,pp.616–631,2001.
+[16] E.Coevoet,A.Escande,andC.Duriez,“Softrobotslocomotionand [33] P.Birkmeyer,K.Peterson,andR.S.Fearing,“Dash:Adynamic16g
+manipulation control using fem simulation and quadratic program- hexapedalrobot,”inIEEE/RSJInternationalConferenceonIntelligent
+ming,”inIEEEInternationalConferenceonSoftRobotics(RoboSoft), RobotsandSystems(IROS),2009,pp.2683–2689.
+2019,pp.739–745. [34] D.Holland,E.J.Park,P.Polygerinos,G.J.Bennett,andC.J.Walsh,
+[17] R.F.Shepherd,F.Ilievski,W.Choi,S.A.Morin,A.A.Stokes,A.D. “Thesoftroboticstoolkit:Sharedresourcesforresearchanddesign,”
+Mazzeo, X. Chen, M. Wang, and G. M. Whitesides, “Multigait soft SoftRobotics,vol.1,no.3,pp.224–230,2014.
+robot,” Proceedings of the national academy of sciences, vol. 108, [35] Y. Sugiyama, A. Shiotsu, M. Yamanaka, and S. Hirai, “Circular/-
+no.51,pp.20400–20403,2011. spherical robots for crawling and jumping,” in IEEE International
+Conference on Robotics and Automation (ICRA), 2005, pp. 3595–
+3600.
+426
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 15:48:49 UTC from IEEE Xplore.  Restrictions apply. 

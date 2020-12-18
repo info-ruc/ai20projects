@@ -1,0 +1,469 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Tuning-Free Contact-Implicit Trajectory Optimization
+Aykut O¨zgu¨n O¨nol1, Radu Corcodel2, Philip Long3, and Tas¸kın Padır1
+Abstract—Wepresentacontact-implicittrajectoryoptimiza-
+tion framework that can plan contact-interaction trajectories
+for different robot architectures and tasks using a trivial
+initial guess and without requiring any parameter tuning.
+This is achieved by using a relaxed contact model along with
+an automatic penalty adjustment loop for suppressing the
+relaxation. Moreover, the structure of the problem enables
+us to exploit the contact information implied by the use of
+relaxation in the previous iteration, such that the solution
+is explicitly improved with little computational overhead. We
+test the proposed approach in simulation experiments for non-
+prehensilemanipulationusinga7-DOFarmandamobilerobot
+andforplanarlocomotionusingahumanoid-likerobotinzero
+gravity. The results demonstrate that our method provides an
+out-of-the-boxsolutionwithgoodperformanceforawiderange
+of applications. Fig. 1. Applications considered in this study: (a) 1-DOF pusher-slider
+systemforavisualanalysisoftheproblem,(b)a7-DOFrobotarmpushing
+abox,(c)amobilerobotpushingabox,and(d)locomotioninzerogravity.
+I. INTRODUCTION
+The introduction of contacts into a trajectory optimization is a function of the distance, so that dynamic motions for a
+problem leads to non-smooth dynamics and thus precludes quadruped robot can be planned in real-time.
+the use of gradient-based optimization methods in a vari- While smooth models facilitate convergence, they also
+ety of robot manipulation and locomotion tasks. Therefore, lead to physical inaccuracies and are quite difﬁcult to tune.
+much work has focused on mitigating the discrete nature of Withthisinmind,wepreviouslyproposedavariablesmooth
+contacts by developing appropriate models which enable the contact model (VSCM) [15] in which virtual forces acting
+optimizationtoreasonaboutcontacts.Forthispurpose,[1,2] at a distance are injected to the underactuated dynamics
+propose to solve a nonlinear program with complementarity with rigid-body contact mechanics. The virtual forces are
+constraints. In [3], complementarity- and penalty-based con- exploited to discover contacts and minimized throughout the
+tact models are used in a similar numerical scheme. [4, 5] optimization. Consequently, physically-feasible motions are
+present hierarchical strategies to increase the computational obtained while maintaining fast convergence. Additionally,
+efﬁciency through warm starting. In [6, 7], the complemen- shooting methods, such as iLQR, are typically sensitive to
+tarity condition is relaxed, and methods are presented to the initial guess [16]; thus, in [17], we proposed a variant of
+improve the integration accuracy of the dynamics. Mordatch the successive convexiﬁcation algorithm that was originally
+etal.[8,9]solveaconvexprogramwithsoftconstraintsthat proposedin[18,19]andshowedthatitoutperformsiLQRfor
+modelthedynamicswithcontactsbycompromisingphysical a contact-implicit trajectory optimization (CITO) problem.
+realism. In [10], a time-stepping scheme with a smoother The use of the VSCM and the successive convexiﬁcation
+variant of the complementarity constraints is proposed, and algorithm (SCVX) signiﬁcantly mitigates the sensitivity to
+iterative linear quadratic regulator (iLQR) [11] is employed the initial guess and the burden of tuning by reducing the
+to solve the problem near real-time. Similarly, [12] proposes numberoftuningparameterstoone,namelyapenaltyonthe
+a bi-level optimization based on iLQR with implicit hard- virtualstiffness.Nevertheless,itmayberequiredtotunethis
+contact constraints. iLQR is also used in [13, 14] but with penalty when the task or the robot is changed; and without
+anexplicitsmoothcontactmodel,inwhichthecontactforce extra tuning, abrupt changes may occur in the planned
+motions even with minor task modiﬁcations. Moreover, the
+ThismaterialispartiallybaseduponworksupportedbyNationalScience resulting contacts are usually impulsive due to the structure
+FoundationunderGrantNos.1451427,1544895,1928654.Thecontribution
+outlined in this paper was implemented while A.O¨. O¨nol was an intern of the contact model.
+at Mitsubishi Electric Research Labs, and R. Corcodel’s work was fully In order to address these issues, we introduce a penalty
+supportedbyMitsubishiElectricResearchLabs.Theauthorswouldliketo loop approach for CITO that is analogous to state-of-the-
+thank Scott Jordan of UMass Amherst and Carlos Jose Nohra Khouri of
+art trajectory optimization methods for collision avoidance
+CarnegieMellonUniversityforhelpfuldiscussions.
+1Institute for Experiential Robotics, Northeastern University, such as TrajOpt [20] and GuSTO [21]. In these methods,
+Boston, MA 2Mitsubishi Electric Research Labs, {Cambridge, the penalty on constraints is gradually increased so that the
+MA 3Irish Manufacturing Research, Dublin, Ireland onol.a,
+} optimization can be initialized with an infeasible trajectory
+t.padir @northeastern.edu, corcodel@merl.com,
+philip.long@imr.ie that is in collision. The robot links are eventually pulled
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1183
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. out of collisions by following the gradients. For the CITO control variables associated with the joint forces. This helps
+problem, an infeasible trajectory corresponds to a motion tocentertheoptimizationproblemintermsofthejointforces
+that completes the task by using non-physical forces that by directly relating the control term to the acceleration.
+act from a distance, namely the virtual forces. Hence, we
+B. Contact Model
+develop a method that automatically adjusts the penalty on
+the relaxation parameters until a motion that completes the Thecontactmodelconsidersnppairsofpredeﬁnedcontact
+task using only physical forces is found. In the CITO case, candidates on the robot (e.g. end-effector links) and in
+the solution can be further improved by explicitly exploiting the environment (e.g. the surfaces of an object). For each
+the contact information from the relaxation. In other words, contact pair, the magnitude of the virtual force normal to
+the residual virtual forces indicate the position, time, and the surface γ ∈R+ is∈cRalculated by γ(q)=ke−αφ(q) using
+mFoargnthitiusdpeuropfosceo,nwtaectdfeovrecleospraeqcuoimrepduttaoticoonmalplyle-ctehetahpeptaosskt-. tchoentvaicrttucaalnsdtiifdfanteesssφk ∈R+,,atnhde sthigenecdurdviasttuarneceαb∈etwRe+e.nTthhee
+processing step that improves the solution. corresponding generalized virtual force acting on the free
+ingWae1c-odnesgirdeeer-onfo-fnr-eperdeohmens(iDleOmF)anpiupsuhleart,ioan7a-pDpOliFcaatiromn,saunsd- bboydλyva(qss)o=ciaγt(eqd)[wI3ith−tˆlh(eq)c]oTnnt(aqc)t,pwaihreλrevI∈3Ris63is×c3alicduelnattietdy
+a holonomic mobile robot and a planar locomotion applica- matrix, l is the vector from the center of mass of the free
+tioninzerogravity,seeFig.1.Wetesttheproposedapproach body to the nearest point on the contact candidate on the
+for various goal positions to demonstrate the robustness of robot,ˆlistheskew-symmetricmatrixformoflthatperforms
+our framework. In all cases, the exact same conﬁguration the cross product, and n∈R3 is the contact surface normal.
+of the pipeline is used with a trivial initial guess, in which The net virtual force acting on a free body is the sum of
+the robot stands still. To the best of our knowledge, this the virtual forces corresponding to the contact candidates
+is the ﬁrst attempt to generalize CITO which is the main associated with that body. As a result, the virtual forces
+contributionofthispapertothetheoryofoptimization-based provide a smooth relationship between the dynamics of the
+planning of contact-interaction trajectories. free bodies and the conﬁguration of the system.
+In the VSCM, the virtual stiffness values k ∈ Rnp are
+II. METHODOLOGY decision variables of the optimization. Thus, the vector of
+A. Dynamic Model control variables is u(cid:44)[τTu, kT]T ∈Rm where m=na+np.
+Thedynamicsofanunderactuatedsystemwithn actuated
+a C. Trajectory Optimization Problem
+DOF and n unactuated DOF, subject to external forces due
+u A ﬁnite-dimensional trajectory optimization problem for
+to frictional rigid-body contacts and virtual forces generated
+N time steps can be written in terms of state and control
+by the contact model is given by (cid:44) (cid:44)
+trajectories X [x1,...,xN+1] and U [u1,...,uN]; ﬁnal and
+M(q)q¨+c(q,q˙)=STaτ+JTc(q)λc+STuλv, (1) integratedcosttermsCF andCI;andloweranduppercontrol
+where q(cid:44)[qT,qT]T ∈Rna+nu is the conﬁguration vector; and state bounds uL, uU, xL, and xU:
+Mrep(rqe)se∈nRts(ntah+enauC)×our(nioa+linsu,)ciesntthreifumgaasls, amnadtrgixr;avci(tqa,tiq˙o)n∈alRtenram+nsu; minimizeC(X,U)(cid:44)CF(xN+1)+∑N CI(xi,ui) (2a)
+U
+SDtjfhooaOeirnc=Fteusn[faIoaannrcatcdt×uennsaSca;tue0cλd=oncanD×∈t[a0nOucnR]Fut×6;ipnsncoτatiihn∈sIetnsutRhs×aeennnlauedv]cietsiJicsotcton(htqrhem)eov∈afestrecgRiltexeo6ncrnfetcoir×ooarf(nlnitazhg+meeendnauae)tccrrtoiaiuxslnaitzttfaeehocddert subject to:xuiL+≤1=u1f,.(..x,Ni,≤ui)uUfo,rxiL=≤1,x.1.,..,..iN,=N1,+1≤xU, ((22bc))
+Jvaecloocbiitaiensmaatttrhixemcoanptpaicntgpothinetjsoainntdvλelvo∈citRiensutiostthheeCveacrtteosriaonf weahredreynxai+m1ic=s ofv(xeir,uai)codnetsrcorlibpeesritohdeie.volution of the nonlin-
+generalized contact forces on the unactuated DOF generated Locomotionandnon-prehensilemanipulationtaskscanbe
+by the contact model. In this paper, for n free bodies in deﬁned based on the desired torso/object conﬁgurations. In
+f
+SE(3) (e.g. objects or the torso of a humanoid)(cid:44), we set nu=∈ this study, we use a weighted quadratic ﬁnal cost in terms
+6nf.Thestateofthesystemisrepresentedbyx [qT q˙T]T of the deviations of the position and orientation of the free
+Rn where n=2(na+nu). body from the desired pose, pe and θe:
+It should be noted that there are two types of contact
+mechanics in this system: (i) frictional contact forces due CF =w1p2e+w2θe2, (3)
+to physical contacts in the simulated world (i.e. contacts where w and w are the weights. To suppress all virtual
+1 2
+detected by the physics engine) which are effective on all forces, the L1-norm of the virtual stiffness variables (i.e. an
+DOF; and (ii) virtual forces due to the contact model which exactpenaltymethod[22])ispenalizedintheintegratedcost:
+areexertedonlyontheunactuatedDOF,asexplainedinII-B. || ||
+In this study, the generalized joint forces are decomposed CI =ω ki 1. (4)
+aosfτc(=q,τq˙u)+, c˜J−c(qJ˜)Tc,λ˜acn,dwhλecre; c˜a,nJd˜c,τaun∈dλR˜cnaareisththeeesvtiemctaotrionosf TdehsecrpibenedaltiynωII-iEs.adjusted by the penalty loop algorithm, as
+1184
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. D. Successive Convexiﬁcation post-processing stage by exploiting the contact information
+embedded in the stiffness variables.
+The original successive convexiﬁcation algorithm pro-
+The proposed penalty loop approach is summarized in
+posed in [18, 19] is based on repeating three main steps in
+Algorithm 1. In the ﬁrst iteration, the SCVX is run with
+successions: (i) linearizing non-convex constraints (e.g. the
+a light penalty value. If the solution satisﬁes the pose con-
+nonlinear dynamics) about the trajectory from the previous
+straints,theweightisincreasedtoreducethestiffnessvalues;
+succession, (ii) solving the resulting convex subproblem
+otherwise, the solution is rejected and the weight is reduced
+in a trust region to avoid artiﬁcial unboundedness due to
+by the half of the previous change. Then, a post process
+linearization, and (iii) adjusting the trust-region radius based
+is performed on the optimal trajectory to attract the robot
+on the ﬁdelity of the linear approximations.
+links associated with the non-zero stiffness values towards
+The convex subproblem is given by:
+the corresponding contact candidates in the environment
+(cid:44)
+minimize L C(Xs+δX,Us+δU) (5a) using a pulling controller, which is outlined in II-F. This
+δx1,...,δxN+1,δu1,...,δuN process is carried out only if the average stiffness value is
+subject to: belowathreshold,whichusuallyholdsaftertheﬁrstiteration
+in our experiments. The position constraint is normalized
+δxi+1=Aiδxi+Biδui for i=1,...,N, (5b) with respect to initial position error such that the method
+≤ ≤
+xL xsi+δxi xU for i=1,...,N+1, (5c) scales better to different orders of magnitude (meters for
+≤ ≤
+uL usi+δui uU for i=1,...,N, (5d) locomotion versus centimeters in the manipulation task).
+|| || || || ≤
+δX 1+ δU 1 rs, (5e) F. Post Process
+∂δwufh(ex(cid:44)rie,uu(iX)−/s∂,uUxs;is|)axsini,sudsit;rhBeisitr(cid:44)tahjee∂ctftro(uxrsyit,-ufrreio)gm/io∂ntuhire|axdsis,uuiucsi;sc.eδsAxsdiiod(cid:44)nitixso;in−Aalixl(cid:44)ysi;, tthimeAinrfetges,ridausnoadllvvimnirgatguntahilteusdtSiefCfnVoefXssfoavrtacreeisaabcrhleeqspueiinrnedadilctyatoteloctoohpmepiptleoerstaeittiioothnne,,
+i i i task.Toexploitthisinformation,wedevelopacontrollerthat
+virtual controls can be added to this problem to prevent
+pullsthecontactcandidatesontherobotassociatedwithnon-
+artiﬁcial infeasibility due to linearization [19].
+zero stiffness variables towards the corresponding contact
+The convex subproblem is a simultaneous problem, and
+candidates in the environment.
+therefore has a larger size but a sparse structure, which
+Foracontactpair pandacontrolperiodi,thepullingforce
+ccaonnvebxe seuxbpplrooitbeldemb,ywae asupiptlaybloenlsyolvtheer.cAhafntegresooflvcinogntrtohles f[p,i]∈R3 iscalculatedfromthedistancevectord[p,i]∈R3
+instead of applying the changes for both states and controls. and the associated virtual stiffness value k[p,i]:
+The state trajectory is then recalculated by rolling-out the f[p,i]=k[p,i]d[p,i]. (6)
+dynamics. This modiﬁcation prevents the accumulation of
+− Here, d is the vector from the center of mass of the contact
+defects (i.e. f(xi,ui) xi+1) that may occur when using the
+candidate on the robot to the point that is offset from the
+penalty approach in the original method as well as improves
+center of the contact candidate in the environment. The
+theconvergencespeedbyallowinglargertrustregionsinour
+offset is initialized at d for the ﬁrst penalty iteration and
+experiments. As a result, the modiﬁed method combines the 0
+reduced for the following iterations by dividing it by the
+numerical efﬁciency of direct methods and the accuracy of
+number of successful penalty iterations. This offset helps
+shooting methods. Although it does not have a convergence
+reachingoccludedsurfacesintheenvironment.Alternatively,
+proof, unlike the original algorithm, it is shown to provide
+a potential ﬁeld approach may be used with repulsive forces
+fast and reliable convergence for CITO in [17].
+on the surfaces with zero stiffness values.
+∈
+E. Penalty Loop The corresponding generalized joint force vector τpull[i]
+The SCVX is initialized with large virtual stiffness values Rna is calculated by:
+tWoietnhabjuleditchieouospttiumniiznagt,iotnhealgvoirrtiuthaml ftoorcreeassovannaibshouyticeoldnitnagctsa. τpull[i]=∑npp=1JtT[p,i]f[p,i], (7)
+motion that solves the task by using only physical contacts whereJt[p,i]∈R3×na isthetranslationalJacobianmatrixfor
+as the optimization converges. However, the penalty on the the center of mass of the contact candidate on the robot.
+virtual stiffness ω, plays an important role in this process. Topreventthepullingforcegeneratingabruptmotionsfor
+While a small penalty may result in physically-inconsistent largestiffnessvalues,adampingcontrollerisappliedtokeep
+motions due to leftover virtual forces, a motion that com- the joint velocities close to the planned motion:
+pletes the task may not be found if the penalty is too large.
+Although the tuning of this penalty is fairly straightforward, τdamp[i]=KvSTaM(q[i])q˙e[i], (8)
+it hinders the generalization of the method for a wide range where Kv ∈ Rna×na is a positive-deﬁnite gain matrix, q˙e
+oftasksandrobots.Inordertoaddressthisissue,wepropose is the deviation of the joint velocities from the planned
+a penalty loop approach that adjusts the penalty similar to velocities and τdamp[i]∈Rna is the generalized joint forces
+a subgradient method [23]. Furthermore, the solution is im- for damping. This computation can be done very efﬁciently
+proved after each iteration through a computationally-cheap by using the sparse form of the inertia matrix.
+1185
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. Algorithm 1: Penalty Loop III. APPLICATIONS
+Input : Initial state vector x and initial control trajectory U. A. 1-DOF Pusher-Slider System
+1
+Output: Optimal state and control trajectories.
+For a visual analysis of the problem, we evaluate the
+Data : Initial penalty value ω1>0, penalty step size
+∆ωs>0, initial position error p0e, position tolerance proposedapproachforasimplisticproblem:a1-DOFpusher-
+εp>0, rotation tolerance εθ >0, avg. stiffness slider system with a single time step of 1 s, see Fig. 1(a).
+threshold for post processing kthreshold, max. The task is to push the slider 20 cm forward (Task 1a), and
+stiffness tolerance εk>0. there is only one contact pair that consists of the tip of the
+j=1, Uj=U
+pusher and the front face of the slider.
+repeat
+←
+Step 1 (X,U) SCVX(Uj,ωj). B. Pushing with a 7-DOF Arm
+Step 2 Calculate position error p , rotation error θ , max.
+e e
+and avg. stiffness values k and k . Similar to [15, 17, 24], we test the method for pushing a
+≤ ∧ ≤ max avg
+if pe/p0e ←εp θe εθ then boxonatable,seeFig.1(b).Forthisapplication,weconsider
+∆ωj ←∆ωs a 7-DOF Sawyer Robot by Rethink Robotics. In addition to
+ωifjk+j1 ≥ωkjj−+1∆thωejn pushing the box forward, which is the only task considered
+aRvgejectatvhge solution Uj+1←Uj, kj ←kj−1, in[15,17,24],themethodisevaluatedforsideanddiagonal
+← avg avg pushes as well, which are typically more challenging as the
+j j+1, and go back to Step 1.
+end robot must use the occluded faces of the object. In this
+else environment, there are four contact pairs between the side
+←− −
+∆ωj ∆ωj 1/2 facesoftheboxandthecylindricalend-effectorﬂangeofthe
+←
+ωRejj+e1ct thωe sjo+lu∆tiωonj Uj+1←Uj, kj ←kj−1, robot. The simulation time is 1 s, and the control sampling
+← avg avg period is 0.1 s. Three forward pushing tasks are considered
+j j+1, and go back to Step 1.
+end to move the box 5 cm, 10 cm, and 30 cm (i.e. Tasks 1b,
+if kavg<kthreshold then 2b, and 3b). The goal of these tasks is to show that, even
+Step 3 App←ly the pulling controller: with identical initialization conditions, the method performs
+(Xpp,Upp) PC(x1,U). reliably for diverse problems, i.e. tasks that require gentle
+Step 4 Perform the hill-climbing search:
+(Xpp,Upp)← HCS(x1,Upjp). contact interactions for slight motions or impulsive motions
+Step 5 Recalculate p . to move the object out of the robot’s workspace. Moreover,
+≤ e
+if pe/p0e εp then we evaluate the method to push the box 10 cm left and right
+Accept the post←-processing step: (Tasks 4b and 5b) as well as for a diagonal push to move
+(Xj+1,Uj+1) (Xpp,Upp). the box 20 cm forward and 20 cm left (Task 6b).
+else
+Reject the post-processing step:
+← C. Pushing with a Mobile Robot
+(Xj+1,Uj+1) (X,U).
+end Anotherapplicationstudiedhereisnon-prehensilemanip-
+else
+ulation with a mobile robot. We consider a Human Support
+←
+Accept the solution: (Xj+1,Uj+1) (X,U) Robot (HSR) by Toyota pushing a box using its velocity-
+end
+← controlled, holonomic base, as shown in Fig. 1(c). There are
+j j+1
+until j> jmax∨(kmax≤εk∧pe/p0e≤εp); four contact pairs between the side faces of the box and
+return (Xj,Uj). the cylindrical base of the robot. As the translational and
+± ±
+rotational velocities are bounded by 2 m/s and 2 rad/s,
+a simulation time of 5 s and a control sampling period of
+0.5 s are used for this application. A forward pushing task
+In Algorithm 1, applying these two steps is referred as to move the box 50 cm (Task 1c) and two diagonal pushing
+the pulling controller (PC). The inputs of the PC are the tasks are considered. It is observed that when the default
+initialstatevectorandtheoptimalcontroltrajectoryobtained friction coefﬁcient of the physicsengine (µ=1) is used, the
+from the SCVX. The PC adds the pulling and damping robot heavily relies on the frictional forces for the diagonal
+forces to the planned joint forces, i.e. τ =τ+τpull+τdamp, pushes, which seems unrealistic. In order to show that the
+and outputs the resulting control and state trajectories. The method is capable of avoiding that as well, we repeat these
+PC attracts virtually active robot links to the corresponding tasksusing µ=0.1.Hence,Tasks2cand3crequiretomove
+contact candidates in the environment to facilitate physical the box 20 cm forward and 20 cm left, and Tasks 4c and 5c
+contacts. However, as the distances get smaller, the planned require to move the box 30 cm forward and 10 cm right.
+stiffness values may lead to excessively large virtual forces.
+D. Planar Locomotion in Zero Gravity
+To prevent that, we perform a naive hill-climbing search
+(HCS) after applying the PC. In this step, non-zero stiffness Lastly, the proposed framework is tested for a locomotion
+values are reduced by the change of the ﬁnal cost divided application to demonstrate that it can make and break multi-
+by the previous change as long as the nonlinear pose error plecontactssimultaneously.Weconsideraplanar,humanoid-
+decreases. This step also helps to suppress virtual forces likerobotwithaprismatictorsoand2-DOFcylindricalarms
+explicitly, i.e. independently of the penalty increase. and legs. The environment has zero gravity which avoids
+1186
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. stabilityconstraintsallowingexactutilizationoftheproposed
+framework. The task is speciﬁed in terms of the torso’s
+desired pose which the robot can reach by using four static
+bricks in the environment, as shown in Fig. 1(d). However,
+as the motion is undamped without contacts, the robot must
+also use contacts to slow down or stop. In this case, there
+are8contactcandidatesintheenvironmentthatarethefront
+and rear faces of the bricks, and 4 contact candidates on the
+robot that are the end links of the arms and the legs. These
+candidatesarepairedbasedonthesides,sothatthereare16
+contact candidates in total. Indeed, the legs are never used
+in the tasks considered here but are added in order to show
+Fig.2. Changeofthecostfunctionovercontrolvariablesforthe1-DOF
+thattheproposedmethodcanimmediatelyrejectsuperﬂuous pusher-slidersystemandtheprogressofthepenaltyloopalgorithm.
+virtualstiffnessvariablesaswellasitscapabilityofhandling
+many contact pairs. For this application, the simulation time
+C. Visual Analysis
+is 2 s, and the control sampling period is 0.1 s. We consider
+Figure 2 depicts the cost function with respect to the
+two tasks to move the torso forward 70 cm and 100 cm, i.e.
+control variables as well as the progress of the proposed
+Tasks 1d and 2d. Tasks 3d, 4d, 5d, and 6d require to move
+method for the 1-DOF pusher-slider system. The large blue
+the torso 70 cm forward and 20 cm right, 100 cm forward
+bandshowsthatthecostismostlyﬂatwhenthephysicaland
+and 20 cm left, 90 cm forward and 25 cm left, and 40 cm
+virtual forces are zero. In other words, it is difﬁcult for the
+forward and 20 cm right, respectively.
+gradient-based optimization to ﬁnd a motion that completes
+IV. SIMULATIONEXPERIMENTS the task without a reasonable initial guess. However, the
+A. Software Implementation virtualforcerelaxestheproblembyprovidingsteepgradients
+WesimulatethedynamicsinMuJoCo[25]sinceitisfound from the trivial initial guess, and the SCVX accomplishes
+to be advantageous for rigid-body dynamics with contacts the task using mostly the virtual force in the ﬁrst penalty
+[26] and employs a smooth contact model that facilitates iteration. Moreover, after each iteration the solution is im-
+the gradient-based optimization [27]. The large-scale, sparse proved substantially by the pulling controller that gets the
+solverSQOPT[28]isusedtosolvetheconvexsubproblemin robot closer to the box and by reducing the virtual stiffness
+(5)whichhasalargeandsparseequalityconstraint(5b)and usingtheHCS.Consequently,amotionthatsatisﬁesthetask
+a sparse quadratic cost with only 6 non-zero elements. The constraints by using only physical forces is obtained.
+distance between contact candidates and the nearest point
+D. Results
+on the robot are calculated by the Gilbert-Johnson-Keerthi
+algorithm [29] implemented in FCL [30]. The derivatives For all applications, except for the pusher-slider system,
+of the dynamics are approximated by central differences.1 we evaluate the method for several goal poses in the
+However, it is possible to make this process more computa- workspace. Please see the accompanying video2 for the
+tionallyefﬁcientandaccurateusingtheanalyticalderivatives resulting motions. Here, the progress of the algorithm over
+developedin[31,32].Computationsarerunonaworkstation penalty loop iterations is presented in terms of the penalty
+with Intel Core i7-6700K processor. over the relaxation, the average and maximum stiffness
+values, and the pose error. Figures 3, 4, and 5 demonstrate
+B. Parameter Values
+the results for all applications and tasks. These results show
+In all cases, the same parameter values and initial seed
+that in all cases, the planner ﬁnds a motion that satisﬁes the
+are used. The weights in the ﬁnal cost (3) are w1 = 104 pose constraints (i.e. the normalized position error is below
+and w2 =1. We use a trivial initial guess with zero joint 30% and the rotation error is below 1 rad) and the stiffness
+force values τu = 0 (i.e. the robot does not move) and values always converge to zero owing to the exact penalty
+large stiffness values k=10 N/m. The upper bound for the
+function in (4). Furthermore, the average stiffness is usually
+stiffnessvariablesis20N/mandα=10.Inthepenaltyloop
+reduced below the threshold in only one iteration.
+algorithm,theinitialpenaltyvalueωs=0.1,thepenaltystep Forthe7-DOFarmtasks,thecomputationtimesaveraged
+size ∆ωs=1.5,and theaverage stiffnessthresholdis 2N/m. over penalty loop iterations and tasks for solving the convex
+The tolerance values are selected as εp=30%, εθ =1 rad, subproblems, applying the post process, and calculating the
+athnedaεpkp=lic0a.t1ioNn./mFo,ryethtethpeoystc-apnrobceestsigshttaegnee,dKavs=ne2e.d5eIdafnodr dtheerivavaetirvaegseanruem2b.0e5r osf, p0e.0n5altsy, iatnedrat7io.2n3s fso,rrethspeseecttiavseklys,isan5d.
+the initial offset distance, d is arbitrarily selected as 5 cm
+0 Namely, one can plan a wide range of pushing motions for
+but the procedure is not sensitive to this value. In the HCS,
+a 7-DOF arm by using the proposed framework in about 10
+the initial step size is 0.1 N/m, and the step size and cost
+− − s, when the analytic derivatives are integrated.
+tolerances are 10 3 are 10 2.
+1Thecodeisavailableathttps://www.merl.com/research/license#CITO. 2Thevideoisavailableathttps://youtu.be/GsuxuQEgPg.
+1187
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. Fig.3. Changesof(a)thepenalty,(b)theaverageandmaximumstiffness, Fig.4. Changesof(a)thepenalty,(b)theaverageandmaximumstiffness,
+(c)positionerror,and(d)rotationerroroverpenaltyiterationsforthe7-DOF (c)positionerror,and(d)rotationerroroverpenaltyiterationsforthemobile
+robotarmtasks. robottasks.
+The video shows that the proposed method can ﬁnd
+motionswithmaintainedcontactsforsensitivepushingtasks
+(e.g. Task 1b) as well as highly-dynamic behaviors with
+impact-like contacts (e.g. Task 3b), and there are no abrupt
+changes in the behavior in between. Furthermore, the fric-
+tional forces are extensively used for the side pushing tasks
+although they are not considered in the contact model. This
+isowingtothefactthatonceacontactismade,thegradients
+make it possible to also reason about the tangential forces.
+Thus, the proposed approach is not limited to the utilization
+of normal contact forces.
+For the mobile robot application, solving the convex
+subproblems, applying the post process, and calculating the
+derivatives take 0.91 s, 0.14 s, and 25.81 s in average,
+and the average number of penalty iterations is 4.6. In this
+Fig.5. Changesof(a)thepenalty,(b)theaverageandmaximumstiffness,
+application, the frictional forces are used substantially for
+(c)positionerror,and(d)rotationerroroverpenaltyiterationsfortheplanar
+the diagonal pushes for the default friction value (i.e. Tasks locomotiontasks.
+2c and 4c), as shown in the video. However, lowering the
+frictioncoefﬁcientyieldssimilarconvergencecharacteristics, increased computational cost, and real-time implementation
+seeFig.4(a),albeitdifferentmotionpatternsthatmostlyrely remains unlikely. Nevertheless, it is possible to use the
+on normal forces to move the box will occur. penaltyloopapproachforofﬂineplanningandthenexecuting
+It is noteworthy that the algorithm cannot always ﬁnd a the resulting trajectory by running SCVX or iLQR in a
+solutionthatsatisﬁestheposeconstraintsintheﬁrstiteration receding horizon fashion.
+(i.e.forTasks1b,6b,1c,2c,and3c).However,itovercomes
+thisbyreducingthepenaltyandallowingthevirtualstiffness V. CONCLUSION
+to increase. Additionally, in some cases (e.g. Tasks 5b and In this paper, we have presented a generalized contact-
+6b), the penalty is reduced if the ﬁxed step size ∆ωs=1.5 implicit trajectory optimization framework that can be used
+is too large. for a wide range of applications and tasks with the same
+The most computationally expensive application is the trivial initial seed and without any tuning. The proposed
+planar locomotion with the average times of 38.97 s, 0.57 s, algorithmautomaticallyadjuststhepenaltyontherelaxation
+and 51.66 s for solving the convex subproblems, applying parameters while explicitly improving solutions through a
+the post process, and calculating the derivatives and the post-processing stage that exploits the contact information
+averagenumberofiterationsof5.2.Thesimilarcomputation indicated by how the relaxation is used in the solution.
+times for the post process indicates that this step scales Our ﬁndings indicate that this formulation is generic and
+well with the size of the problem. However, solving the applicable for a diverse set of problems as it can generate
+convex program takes a signiﬁcantly longer time for the motionswithsensitivecontactinteractionsaswellashighly-
+locomotion problem, which can potentially be improved by dynamic motionsfor a widevariety of tasks androbots. The
+using a customized convex programming solver. Obviously, future work will focus on validating the resulting motions
+thegeneralityoftheproposedframeworkcomesatthecostof by hardware experiments.
+1188
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [17] A. O¨. O¨nol, P. Long, and T. Padır, “Contact-implicit trajectory op-
+timization based on a variable smooth contact model and successive
+[1] K. Yunt and C. Glocker, “Trajectory optimization of mechanical
+convexiﬁcation,”in2019IEEEInternationalConferenceonRobotics
+hybrid systems using SUMT,” in 9th IEEE International Workshop
+andAutomation(ICRA). IEEE,2019,pp.2447–2453.
+onAdvancedMotionControl. IEEE,2005,pp.665–671.
+[18] Y.Mao,M.Szmuk,andB.Ac¸ıkmes¸e,“Successiveconvexiﬁcationof
+[2] M.Posa,C.Cantu,andR.Tedrake,“Adirectmethodfortrajectoryop-
+non-convexoptimalcontrolproblemsanditsconvergenceproperties,”
+timizationofrigidbodiesthroughcontact,”TheInternationalJournal
+in 2016 IEEE 55th Conference on Decision and Control (CDC).
+ofRoboticsResearch,vol.33,no.1,pp.69–81,2014.
+IEEE,2016,pp.3636–3641.
+[3] M. Gabiccini, A. Artoni, G. Pannocchia, and J. Gillis, “A com-
+[19] Y. Mao, M. Szmuk, and B. Acikmese, “Successive convexiﬁcation:
+putational framework for environment-aware robotic manipulation
+Asuperlinearlyconvergentalgorithmfornon-convexoptimalcontrol
+planning,”inRoboticsResearch. Springer,2018,pp.363–385.
+problems,”arXivpreprintarXiv:1804.06539,2018.
+[4] C. Mastalli, I. Havoutis, M. Focchi, D. G. Caldwell, and C. Semini,
+[20] J.Schulman,Y.Duan,J.Ho,A.Lee,I.Awwal,H.Bradlow,J.Pan,
+“Hierarchicalplanningofdynamicmovementswithoutscheduledcon-
+S.Patil,K.Goldberg,andP.Abbeel,“Motionplanningwithsequential
+tactsequences,”in2016IEEEInternationalConferenceonRobotics
+convexoptimizationandconvexcollisionchecking,”TheInternational
+andAutomation(ICRA). IEEE,2016,pp.4636–4641.
+JournalofRoboticsResearch,vol.33,no.9,pp.1251–1270,2014.
+[5] T. Marcucci, M. Gabiccini, and A. Artoni, “A two-stage trajectory [21] R. Bonalli, A. Cauligi, A. Bylard, and M. Pavone, “GuSTO: Guar-
+optimizationstrategyforarticulatedbodieswithunscheduledcontact anteed sequential trajectory optimization via sequential convex pro-
+sequences,”IEEERoboticsandAutomationLetters,vol.2,no.1,pp. gramming,”in2019IEEEInternationalConferenceonRoboticsand
+104–111,2017. Automation(ICRA). IEEE,2019.
+[6] Z. Manchester and S. Kuindersma, “Variational contact-implicit tra- [22] J. Nocedal and S. J. Wright, “Penalty and augmented Lagrangian
+jectoryoptimization,”inProceedingsoftheInternationalSymposium methods,”NumericalOptimization,pp.497–528,2006.
+onRoboticsResearch(ISRR),2017. [23] N. Z. Shor, Minimization methods for non-differentiable functions.
+[7] A. Patel, S. L. Shield, S. Kazi, A. M. Johnson, and L. T. Biegler, SpringerScience&BusinessMedia,2012,vol.3.
+“Contact-implicit trajectory optimization using orthogonal colloca- [24] J.-P.Sleiman,J.Carius,R.Grandia,M.Wermelinger,andM.Hutter,
+tion,”IEEERoboticsandAutomationLetters,vol.4,no.2,pp.2242– “Contact-implicit trajectory optimization for dynamic object manip-
+2249,2019. ulation,” in 2019 IEEE/RSJ International Conference on Intelligent
+[8] I. Mordatch, E. Todorov, and Z. Popovic´, “Discovery of complex RobotsandSystems(IROS). IEEE,2019.
+behaviorsthroughcontact-invariantoptimization,”ACMTransactions [25] E. Todorov, T. Erez, and Y. Tassa, “MuJoCo: A physics engine for
+onGraphics(TOG),vol.31,no.4,p.43,2012. model-basedcontrol,”in2012IEEE/RSJInternationalConferenceon
+[9] I. Mordatch, Z. Popovic´, and E. Todorov, “Contact-invariant opti- IntelligentRobotsandSystems(IROS). IEEE,2012,pp.5026–5033.
+mization for hand manipulation,” in Proceedings of the ACM SIG- [26] T.Erez,Y.Tassa,andE.Todorov,“Simulationtoolsformodel-based
+GRAPH/Eurographics Symposium on Computer Animation. Euro- robotics:ComparisonofBullet,Havok,MuJoCo,ODEandPhysX,”in
+graphicsAssociation,2012,pp.137–144. IEEEInternationalConferenceonRoboticsandAutomation(ICRA),
+[10] Y. Tassa, T. Erez, and E. Todorov, “Synthesis and stabilization of 2015. IEEE,2015,pp.4397–4404.
+complex behaviors through online trajectory optimization,” in 2012 [27] E. Todorov, “Convex and analytically-invertible dynamics with con-
+IEEE/RSJInternationalConferenceonIntelligentRobotsandSystems tactsandconstraints:Theoryandimplementationinmujoco,”in2014
+(IROS). IEEE,2012,pp.4906–4913. IEEEInternationalConferenceonRoboticsandAutomation(ICRA).
+[11] W. Li and E. Todorov, “Iterative linear quadratic regulator design IEEE,2014,pp.6054–6061.
+for nonlinear biological movement systems.” in Proceedings of 1st [28] P. E. Gill, W. Murray, M. A. Saunders, and E. Wong, “User’s
+InternationalConferenceonInformaticsinControl,Automation,and guide for SQOPT 7.7: Software for large-scale linear and quadratic
+Robotics(ICINCO),2004,pp.222–229. programming,”DepartmentofMathematics,UniversityofCalifornia,
+[12] J.Carius,R.Ranftl,V.Koltun,andM.Hutter,“Trajectoryoptimization San Diego, La Jolla, CA, Center for Computational Mathematics
+with implicit hard contacts,” IEEE Robotics and Automation Letters, ReportCCoM18-2,2018.
+vol.3,no.4,pp.3316–3323,2018. [29] E.G.Gilbert,D.W.Johnson,andS.S.Keerthi,“Afastprocedurefor
+[13] M. Neunert, F. Farshidian, A. W. Winkler, and J. Buchli, “Trajec- computingthedistancebetweencomplexobjectsinthree-dimensional
+tory optimization through contacts and automatic gait discovery for space,”IEEEJournalonRoboticsandAutomation,vol.4,no.2,pp.
+quadrupeds,” IEEE Robotics and Automation Letters, vol. 2, no. 3, 193–203,1988.
+pp.1502–1509,2017. [30] J.Pan,S.Chitta,andD.Manocha,“FCL:Ageneralpurposelibraryfor
+[14] M. Neunert, M. Sta¨uble, M. Giftthaler, C. D. Bellicoso, J. Carius, collisionandproximityqueries,”2012IEEEInternationalConference
+C.Gehring,M.Hutter,andJ.Buchli,“Whole-bodynonlinearmodel onRoboticsandAutomation,pp.3859–3866,2012.
+predictive control through contacts for quadrupeds,” IEEE Robotics [31] J. Carpentier and N. Mansard, “Analytical derivatives of rigid body
+andAutomationLetters,vol.3,no.3,pp.1458–1465,2018. dynamicsalgorithms,”inRobotics:ScienceandSystems(RSS),2018.
+[15] A.O¨.O¨nol,P.Long,andT.Padır,“Acomparativeanalysisofcontact [32] J. Carpentier, G. Saurel, G. Buondonno, J. Mirabel, F. Lamiraux,
+modelsintrajectoryoptimizationformanipulation,”in2018IEEE/RSJ O.Stasse,andN.Mansard,“ThepinocchioC++library–afastand
+International Conference on Intelligent Robots and Systems (IROS). ﬂexible implementation of rigid body dynamics algorithms and their
+IEEE,2018. analytical derivatives,” in IEEE International Symposium on System
+[16] J.T.Betts,“Surveyofnumericalmethodsfortrajectoryoptimization,” Integrations(SII),2019.
+JournalofGuidance,Control,andDynamics,vol.21,no.2,pp.193–
+207,1998.
+1189
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 21,2020 at 05:55:50 UTC from IEEE Xplore.  Restrictions apply. 

@@ -1,0 +1,412 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+A Holistic Approach in Designing Tabletop Robot’s Expressivity
+Randy Gomez1, Deborah Szapiro2, Luis Merino3 and Keisuke Nakamura1
+Abstract—Deﬁning a robot’s expressivity is a difﬁcult task
+thatrequiresthoughtfulconsiderationofthepotentialofvarious
+robot modalities and a model of communication that humans
+understand. Humanoid and zoomorphic-designed robots can
+easily take cues from human and animals, respectively when
+designing their expressivity. However, a robot design that is
+neither human nor animal-like does not have a clear model to
+follow in terms of designing expressivity. Animation presents a
+potential model in these circumstances as animated characters
+in movies take various forms, sizes, shapes and styles, and are
+Fig.1. TabletoprobotHaru
+successfulindeﬁningexpressivitythatiswidelyacceptedacross
+different languages and cultures. In this paper, we discuss the
+anoverallpositiveresponsefromtheusers[4].Furthermore,
+developmentanddesignoftheexpressivityofHaru,atabletop
+robotthatisneitherhumannoranimal-likeandtheapplication humansassociateemotionstomovingagentswithcharacter-
+ofanimation expertiseto theholistic treatmentof thedifferent istic gestures, with postures of the body signalling particular
+modalities. The method maximizes animation techniques and emotionconditions[5].Physicalmovementsfurtherreinforce
+expertise normally applied to movies to generate expressivity
+emotion expression, stimulating anthropomorphic reaction
+that is then transferred to the robot hardware. Experimental
+from human users. It was also shown that the inclusion
+results show that the robot’s expressivity generated using
+our method is easily understood and are preferred to the of sounds through vocalization impacts relationship [6][7],
+conventional approach of generating expressions. eliciting the use of vocalization with robots. In a completely
+separate study, it was shown that humans are demanding in
+I. INTRODUCTION
+terms of their preferences. One study found a correlation
+Research in social robotics has gained a lot of traction between motion parameters and attribution of affect, which
+recently partly due to the advancements in AI. Current suggests that humans are not just keen on the robot’s mere
+technologies enable us to design machines with a deep un- movements but also to their details and quality [8]. It was
+derstanding of human behavior including affects and human also shown that humans are susceptible to the quality of the
+intelligence. As these technologies mature, so too does the contents when using a display [9]. These studies highlight
+desiretodevelopsocialrobotsthatco-existwithhumans,by the complexities of designing a robot’s expressivity. Clearly,
+building bonds and forging relationship. The future success there is more to expressivity than just a robot demonstrating
+of social robots relies on a dual system that addresses that it is capable of generating expressions. If social robots
+both their functional usefulness and the social/emotional areto co-habitatewith humans,both willspenda signiﬁcant
+experiencetheyprovidefortheiruser.Hence,itisimperative amount of time together, and to be able to sustain a long-
+for social robots to communicate emotions in an effective term emotional interaction with social robots, factors such
+manner and the ﬁrst step to achieving this is through a as appeal, style, quality and even cultural factors have to be
+robot’s expressivity. Human empathic responses are strongly considered.Intheend,arobot’sexpressivenessshouldbring
+correlated with expressivity [1][2]. The importance of ex- an overall positive experience to the user.
+pressivity cannot be understated as it impacts how well a
+The animation industry has been developing characters of
+socialrobotisperceived,andiswhymostrobotarchitectures
+various forms, size and shapes for many years, and even
+havevariousmechanismsforexpressiongeneration.Herewe
+developed robot characters that people enjoy to watch. It is
+deﬁne expressivity as the ability for a robot to successfully
+of great value if the approach used by the animation sector
+communicatedynamicemotionalstatesandintentinasocial
+can be utilized in developing actual robots. Recently, a few
+context during human-robot interactions through embodied
+research projects in social robotics have employing concepts
+communication.
+from the animation sector in designing a robot’s hardware
+Studies show that human perception is inﬂuenced when a
+andcharacter[11][10].Methodsofusinganimationtoolsare
+robot’s physical appearance is inspired by a familiar facial
+also extended to control movements of simple form factor
+feature, such as the inclusion of the nose, eyelids and the
+toy robots with very limited modalities [12][13]. However,
+mouth [3]. A robot’s physical embodiment, as opposed to
+to date, there is no research work that employs animation
+a remote agent, also has a direct correlation to an increase
+techniques as extensive as our approach. In this paper,
+in engagement frequency and social facilitation, generating
+we discuss a holistic approach to designing an expressive
+tabletop robot named Haru [14] that is neither human-like
+1Honda Research Institute Japan Co., Ltd., 2University Technology
+Sydney(UTS),3UniversityPabloOlavide(UPO), nor zoomorphic shown in Fig. 1. We adopted techniques in
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1970
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. Fig.2. Robothardwarethatcanphysicallyexpressemotion(Artitst’srendition).Fromlefttoright,(Top:human-likeexpressivess;Middle:animal-like
+expressiveness;Bottom:robotdesignsthatareneitherhuman-likenorzoomorphicinwhichthetabletoprobotfallsunder)
+animation to combine several modalities in the design of It combines sounds and movements for expressive motions.
+therobot’sexpressivityusinganimationexpertise.Insection A simplistic rubbery robot with expressive movements is
+II, we present the background followed by the hardware, in KeeponfromtheNationalInstituteofInformationandCom-
+sectionIII.Animationexpertiseappliedtothetabletoprobot munication[24].LastlyisJibo,pitchedasafamilyrobotwith
+is presented in section IV, and we discuss the transfer of a design inspired from animation [25].
+animatedexpressionstothehardwareinsectionV.Weshow A number of architectures have been proposed to model
+the evaluation in section VI and we conclude the paper in expressivityofanagent[26][27],andtosomeextent,these
+section VII. are inspired by developmental psychology. However, most
+of these architectures are either very limited in scope such
+II. BACKGROUND as modeling only the facial features and do not completely
+take into account other modalities. In addition, the models
+Fig. 2 depicts a list of robots capable of generating
+are usually adopted from human-like (i.e. human facial ex-
+expressions categorized into human-like (top), animal-like
+pressions)oranimal-likeexpressions.Thesemodelsmaynot
+(middle) and those that are neither human-like nor animal-
+workwithrobotsthatareneitherhuman-likenoranimal-like
+like (bottom). The top ﬁgure (left-to-right), shows Zeno
+(i.e. tabletop robot Haru), hence we adopted the animation
+and Sophia from Hanson robotics that are equipped with
+expertise to model an animation-like character.
+actuatorsforfacialmuscleexpressions[15].Anotherhuman-
+like expressive female android with a natural TTS voice,
+III. TABLETOPROBOTHARDWARE
+is Erica [16]. Lastly, A smaller robot iCub that resembles
+a 3.5 year-old child compensates its lack in facial muscle The schematic diagram of the tabletop robot hardware
+expressionswithseveralmotorstocontrolbodilymovements is shown in Fig. 3. The robot is composed of the body,
+and LED lights in the face [17]. neck and the eyes. The body is a spherical volume with a
+Robotsintheanimal-likecategoryareshowninthemiddle diameter of 220 mm which houses all the servo motors and
+ﬁgure (left-to-right). Paro is a cuddly stuff toy baby seal the addressable LED matrix display for mouth expressions
+robot, utilized for therapeutic purposes [18]. Another cuddly among others. The robot’s neck is approximately 143 mm
+robot is Leonardo which is cosmetically designed to have in height while the eyes are composed of a 95.5 mm x 95.5
+an organic appearance [19]. Likewise, an expressive robot mm x 61.19 mm volumetric shell with a movable inner eye.
+namedTofu,equippedwithseveralexpressionsandanimacy
+A. Actuation and movements
+capabilities is developed for kids to play and interact with
+[20]. Then, the appealing robotic dog Aibo from Sony [21] • Body Rotation
+which is ﬁtted with various actuators for the mouth, head, The robot’s body pivots at the base which is made of
+legs, ear and tail for expressive movements. steel to lower the center of mass. Body can pan for a
+Robots that are neither human-like nor animal like are maximum 320 deg angle. As the body moves, the neck
+showninthebottomﬁgure.Therobot,PaPerowasdeveloped and the eyes move along and can be associated with
+with cute appearance for specialized expressiveness [22]. azimuthal gazing
+PaPeRoexpressesitscharacterthroughmovementsandsome • Neck Leaning Forward and Backwards
+visualization through LED illumination. Another robot thats The robot’s neck can lean forward and backward with
+doubles like a personal assistant is the Hub from LG [23]. a maximum displacement angle of 57 deg.
+1971
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. Fig.3. Tabletoprobotactuation
+Fig.4. Tabletoprobotvisuals
+• Eyes Tilting Up and Down passes through the body from the inside out.
+The eyes can tilt up and down with 60 degrees angle • Speaker
+of displacement. Both eyes tilt simultaneously. The robot is also equipped with an internal stereo
+• Eyes Roll In and Out speaker for vocalization and sounds.
+Both of the eyes will roll simultaneously inside and
+outside direction IV. EXPRESSIVITYTHROUGHANIMATIONEXPERTISE
+• Eyes Stroke A. Designing Expressivity
+The third and ﬁnal eye movement is the inner eyes’
+In designing the form and articulation of a robot it is
+retract-detract actuation with a 15mm displacement.
+important to identify the primary feature that will be used
+Both of the eyes can go inside or outside of the outer
+for communicating expressiveness Although Haru’s form
+shell simultaneously.
+is non-biological, its primary feature for communicating
+expressivity is its eyes. Studies have noted, that 43.4% of
+B. Audio Visuals
+the attention we focus on someone is explicitly devoted to
+• Eyes and Mouth LEDs their eyes, with the mouth coming in second at only 12.6%
+Each of the eyes (inner part) is composed of a 3-inch [28].Howtheeyesmove,gaze,contractanddilateandmake
+TFT screen display as shown in Fig. 4. Moreover, the eye contact are factors that allow us to; perceive others as
+rectangular border of the inner eyes is composed of an having minds, attribute mental states to others, coordinate
+addressableLEDstrip.Insidethebodyisanaddressable social face-to-face interactions and assist in cooperative
+LED matrix. The illumination from the LED matrix behaviour. Eyes can also act as hands as they direct the
+1972
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. user to look, and even turn their body in the direction principles we have applied to Haru’s expressivity are listed
+of the eye movement. Whilst Haru has speech affordance below with brief examples of their application :
+through TTS, an embodied communication approach was
+taken which placed an emphasis on multi-modal, non-verbal • Squash and Stretch
+expressiveness produced through eye and body gestures and This principle gives a moving object a sense of weight
+non-verbal vocalisations, with a particular emphasis on the and ﬂexibility. By elongating or compressing an object
+eyes. during movement it emphasizes an object’s speed,
+Haru has ﬁve Degrees of Freedom (DoFs), however a momentum,weightormass.InitsapplicationtoHaru’s
+robotsexpressivityisnothamperedbylimitedDoFs.Instead, eye gestures, we have used it to emphasize the speed
+it is dependent on how the DoFs are placed in relation to at which an eye darts from one eye position to the next
+the primary feature used for communicating expressiveness. when Haru is communicating the more exasperated
+Three of Haru’s DoFs relate directly to the eyes. The DoFs feelings of panic or confusion.
+associated with Haru’s eyes are: Eyes Tilting Up and Down,
+Eyes Roll In and Out, Eyes Stroke (retract/detract), with • Anticipation
+the other two DoFs - Body Rotation and Neck Leaning This is a key principle in telegraphing intent. It does
+Forward and Backwards serving as gestural elements and this by performing an action (usually in an opposite
+also to position the eyes. Haru has additional ’digital’ DoFs direction)beforethemainaction.Themoreanticipation
+associatedwiththeeyesasthe3-inchTFTscreenthatforms an object performs before the main action, the more
+the inner eye allows for an up and down, side to side, arced expectation builds for the main action, and vice
+andangledarticulationandtheabilitytoexpandandcontract versa. For example, when animating the expression
+the iris and pupil within the screen’s dimensions. A further of sadness, Haru’s eyes move brieﬂy upwards before
+emphasis is placed on the eyes by the gestural possibilities performing its main downward action, the neck moves
+of the rectangular border of LEDs that surround the inner slightly backwards before it moves fully-forward,
+eye. whilst the eye stroke retracts inwards before pushing
+out to its full capacity by the end of the gestural
+movement. Another way in which we have applied
+B. Animating Expressivity through 12PA
+anticipation to Haru’s eye gestures is to make its eye
+Our aim with Haru’s expressivity is to create a rich blink prior to moving as blinking in order to indicate a
+and diverse range of emotional affordances, social cues change in movement or thought.
+and gestural movements that bring novelty in longitudinal
+interactions, that allow Haru to engage in human-robot • Slow In and Slow Out
+interaction in an adaptive manner and to cater towards the Slow-in and slow-out describes the tendency for all
+dispositions of speciﬁc ages, genders, cultural backgrounds movement to slowly accelerate and decelerate, this
+and individualistic traits. results in movement that is more natural in appearance.
+Motion capture data, a one-to-one direct translation of The absence of this principle can result in jarring,
+human gestural movement onto robots, is limited by the mechanistic movement. When applying slow in and
+differences between a human and a robot’s form and ca- slow out in directional eye or body gestures, the
+pabilities. Animators do not work with direct translation, eyes or part of the body should slowly move in the
+theyworkwithaprocessofsimpliﬁcationandabstractionto appropriate direction, speed up, and then slow to a
+communicate emotional intent by making the most essential stop when it researches its destination. When designing
+gesturalmovementsmoreexplicitinawaythatallowspeople Haru’s expressivity for happiness and excitement, we
+to easily understand the intended emotion. The articulation applied less slow-in and slow-out to the movement
+of this process is summarized in what are commonly known of its eyes and body as the more sudden and rapid
+as the Twelve Principles of Animation (12PA)[29], These the movement that results communicates more intense
+principles provide a basic framework for translating move- bursts of emotion.
+ment and expressivity into embodied mediums to produce
+’the illusion of life’ by adhering to the fundamental laws • Arcs
+of physics, whilst dealing with more abstract issues such as Arcs highlight the organic quality of an object as most
+design, emotional timing and character appeal. living creatures move their body parts in an arc. The
+The 12PA are deﬁned under the headings: Squash and lack of an arched trajectory results in mechanistic
+Stretch,Anticipation,Staging,Straightaheadactionandpose movement. The eyes should usually follow an arched
+to pose, Follow through and overlapping action, Slow in trajectory when moving from one eye position to
+andslowout,Arcs,Secondaryaction,Timing,Exaggeration, the next. We applied a more arched trajectory for to
+Solid drawing and Appeal. Not all principles are applied Haru’s eyes and body movements for communicating
+to every action and the design of an intentional action, Haru being bored and a less arched trajectory, which
+emotional or social cue may only require the application emphasizes speed and momentum, for communicating
+of a few of these principles at any given time. The main laughter.
+1973
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. • Timing
+This refers to the amount of time given towards a
+particular action and can affect how the personality
+or nature of a character is perceived. When applying
+the principle of timing to gestures, it is important to
+apply the appropriate amount of time between start and
+rest positions of a trajectory. The more time applied
+between the ﬁrst and last position in a gesture, the
+smoother and more sustained the gesture will feel and Fig.5. Zero-crossingmotiontransformation.
+vice versa. We applied less time between eye and body
+V. TRANSFERRINGEXPRESSIVITYTOTABLETOPROBOT
+gestures for happy as it is an intense and bursting in
+A. Animation-based method
+emotion form of expressivity. More time was applied
+between Haru’s eye and body movement points for We developed a tool to load the routine ﬁles generated
+communicating emotions such as sadness. bytheanimationsoftwareandimportthedifferentelements:
+GIF for the LEDs, videos for the eyes, audio ﬁles for the
+• Exaggeration sound, and joint trajectories for base, neck, head, eyes roll,
+The principle of exaggeration is key when working eyes stroke, respectively. The tool analyzes the data and
+with robots as they do not possess the myriad of perform necessary adaptation to comply with the dynamic
+organicsubtletiesthathumanspossessandutilizewhen constraints based on the general limits for the velocity and
+communicating.Exaggerationisakeyprincipleapplied acceleration of the hardware. In particular, the tool checks if
+toallthe12PA.Thelevelofexaggerationdeterminesthe theanimatedtrajectoriescomplywiththeactualdynamics.If
+degree to which you apply each principle to a gesture. not, then the tool transforms the motion so that the dynamic
+As a stand-alone principle, it refers to making the constraints of the robot are met and, at the same time, the
+essenceofanactionclear.Itshouldbeimportanttonote synchronization of the motion with the multimedia elements
+that exaggeration does not mean to make something (i.e.,videosforeyes,eyesandmouthLEDsandsoundforthe
+more distorted or caricatured, but to make the motion speaker)arenotlost.Thegoalistotransformthetrajectories
+more readable and convincing by making that action maintaining their shapes, meaning that the moments for the
+clearandpresent.Moreexaggeratedmovementgestures changes of direction of the joints are kept. This is done by
+∈ {
+were applied to the more intense emotions such as analyzing the original motion of the joints θ (t),i body,
+} i
+excitement, extreme happiness, sadness etc. neck, head, eye tilt, eye roll, eye stroke in the animation
+domain and transforming them through T to new motions
+η (t) so that the timing of the zero-crossings of the velocity
+i
+of the joints is maintained as shown in Fig. 5. We ﬁnd
+To produce Haru’s range of expressivity, we worked with transformation T in Eq. (1) such that:
+a range of modalities that included body motion, sound,
+LEDs and eye gestures. To do this, we modeled, rigged and η|i(cid:48)(t)=| T[θi(t)]
+textured a 3D digital avatar of Haru that exactly matched |η(cid:48)i(cid:48)(t)|<vi,max (1)
+its hardware speciﬁcations, animating the DoFs directly ∀ | (cid:48) ηi(t) <a⇒i,max(cid:48)
+through the avatar. Eyes, LEDs and Mouths were animated tk θi(tk)=0 = ηi(tk)=0
+as separate ﬁles as these would eventually be transferred where v and a are the velocity and acceleration
+i,max i,max
+individually. Added to this, acoustic emotional expressions limits of joint i. This can be achieved by using the transfor-
+were designed in two different acoustic ’languages’ to allow mationT toscalethejointvalues.Theinitialjointtrajectory
+for different approaches to Haru’s personality. The ﬁrst θ (t) is discretized in time and the transformation is applied
+i
+’language’ispercussive,withallsoundsbeingmadethrough in the sectors where the constraints are not met. This way,
+percussive or musical means; the second is a non-verbal the changes on the direction of the motion, as well as the
+acoustic ’language’ based on the human voice. The ﬁles duration of the motion as a whole, are kept synchronized
+containing the multimedia elements, such as GIFs for the with the rest of actuation of the robot. The transformed data
+eye and mouth LEDs, videos for the left and right eyes, is then exported to the robot hardware.
+audio for the sound, and the actuation elements, trajectory
+B. Manual composition method
+dataforjoints(base,neck,head,eyesroll,eyesstroke),were
+then exported from the avatar and packed into a routine ﬁle The tool mentioned above also supports the generation of
+withanaccompanyingvideoreference.Thispackageisthen routines directly by hand and combine all actuators of the
+used to transfer the animation to the robot hardware in a tabletoprobot.Thecommandsfortheﬁvejointscanbesetby
+mannerthatmaintainstheintegrityoftheinherentprinciples demonstrating the trajectories using a joystick or the mouse,
+and techniques of animation that we have applied to the which are then recorded in the proper format. The tool also
+expressive movements. allows to determine the timed evolution of the addressable
+1974
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. TABLEI TABLEII
+RESULTSFORANIMATION-BASEDANDMANUALCOMPOSITIONFOR RESULTSFORANIMATION-BASEDANDMANUALCOMPOSITIONFOR
+SIMPLEEXPRESSIONS COMPLEXEXPRESSIONS
+SimpleExpressions Animation-based Manualcomposition ComplexExpressions Animation-based ManualComposition
+Happy 93.0% 66.0% Laughter 100% 7.0%
+Sad 90.0% 60.0% JapaneseBow 100.0% 10.0%
+Angry 87.0% 50.0% Bored 90.0% 3.0%
+Fear 97.0% 37.0% Curious 87.0% 0.0%
+Shy 97.0% 33.0% Agreeing 100.0% 13.0%
+Disagreeing 100.0% 10.0%
+holistictreatmentofmodalities,synchronization,etc.thatare
+LEDs for the mouth and the eyes, and the source audios of
+the strong points of the animation-based method sets a clear
+thesoundsforthespeakersandforthevideosforTFTofthe
+boundary between the two methods. The results in tables
+eyes.Theresultantroutinecanbealsosimulated.Timingand
+I and II are not surprising since animation-based expertise
+synchronization under this method is not straightforward.
+hasbeenutilizedforgenerationsinmakinganimatedmovies
+VI. EVALUATION which is more complex in nature.
+A. Experimental Setup VII. CONCLUSION
+We conducted two experimental conditions in evaluating Inthispaperwehaveshownamethodofapplyinganima-
+the tabletop’s expressivity. In the ﬁrst condition (animation- tion expertise in developing the expressivity of the tabletop
+based), the tabletop robot’s expressions are generated using robot. Our approach enables designers to work in a domain
+ourproposedmethoddescribedinSecIVinwhichdesigners in which they are comfortable with (animation domain),
+comfortably make use of the techniques and tools in the maximizing their full creative potential. Combined with
+animation domain and then transfer these expressions to engineering techniques, we are able to transfer expressive
+the hardware using the tool we developed as discussed in animationroutinesuntotherobothardware.Inthefuture,we
+Sec V-A. In the second condition, expressions are manually would like to perform more tests by increasing the currently
+composed directly using the same tool discussed in the Sec limited vocabulary of expressions.
+V-B. Two sets of expressions are prepared, the ﬁrst set is
+comprised of simple expressions (i.e., happy, sad, angry ACKNOWLEDGEMENT
+and shy). The second set is comprised of a more complex We would like to thank Paulo Alvito of IDMIND, Kerl
+expressions that are nuanced (i.e., laughter, japanese bow, Galindo of UTS, Fernando Caballero, Alvaro Paez, Gonzalo
+bored,curious,agreeinganddisagreeing).Wegatheredthirty Mier and Ricardo Ragel De la Torre of UPO for their
+participants (15 female and 15 male adult) to evaluate the contributions.
+twoconditionsdiscussedabove.Averysimpleblindtestwas
+REFERENCES
+conducted in which we presented the participants with the
+animation-based and the manually generated expressions in [1] C.Valiente,N.Eisenberg,R.Fabes,S.Shepard,A.CumberlandandS.
+Losoya,”PredictionofChildren’sEmpathy-RelatedRespondingFrom
+pair,andaskedthemto”like”or”unlike”withthefollowing
+Their Effortful Control and Parent’s Expressivity” In Proceedings of
+instructions: theJournalinDevelopmentalPsychology,2004InProceedingsofthe
+• to like only if an expression is well understood JournalinDevelopmentalPsychology,2004
+[2] M.MortillaroandD.Dukes”JumpingforJoy:TheImportanceofthe
+• select only the best between the two conditions, if BodyandofDynamicsintheExpressionandRecognitionofPositive
+possible (double likes is allowed only if warranted) Emotions”,InProceedingsoftheFrontiersinPsychology,2018
+[3] C.F.DiSalvo,F.Gemperle,J.Forlizzi,andS.Kiesler,”Allrobotsare
+The participants have no prior information as to which notcreatedequal:thedesignandperceptionofhumanoidrobotheads”
+condition an expression being presented to them belongs to. In Proceedings of the ACM Conference on Designing Interactive
+Systems:Processes,Practices,Methods,andTechniques,2002.
+We also randomize the order of the two conditions when
+[4] S.Kiesler,A.Powers,S.R.FussellandC.Torrey,”Anthropomorphic
+presenting to the participants. Interactions with a Robot and Robot-like Agent”, in proceedings
+SocialCognition2008.
+B. Results [5] A.P.Atkinson,W.H.Dittrich,A.J.GemmellandA.W.Young,”Emotion
+perceptionfromdynamicandstaticbodyexpressionsinpoint-lightand
+The results of the experiment for both the simple and
+fulllightdisplays”,InProceedingsofPerception,2004
+complex expressions are shown in tables I and II, respec- [6] D. Sauter, C. Panattoni and F. Happ,”Children’s recognition of emo-
+tively. These tables show that the animated-based method is tionsfromvocalcues”InProceedingsofJournalonBritishDevelop-
+mentalPsychology,2012
+preferred by the participants over manual composition for
+[7] I.KotlyarandD.Ariely,”Theeffectofnonverbalcuesonrelationship
+both simple and complex expressions. However, it can be formation” In Proceedings of the Journal on Computers in Human
+observed that manual composition of expressions has the Behavior,2013
+[8] M.SaerbeckandC.Bartneck,”Perceptionofaffectelicitedbyrobot
+worst performance in the complex expressions in table II
+motion”InProceedingsoftheACM/IEEEinternationalconferenceon
+than simple expressions in table I. This is because nuanced Human-robotinteraction,2010
+expressions are more difﬁcult to compose than simpler [9] E.Broadbent,V.Kumar,X.Li,J.Sollers,R.Stafford,B.MacDonald,
+andD.Wegner,”RobotswithDisplayScreens:ARobotwithaMore
+expressions. Lastly, the animation-based approach clearly
+HumanlikeFaceDisplayIsPerceivedToHaveMoreMindandaBetter
+beats the manual composition in table II, this means that the Personality”InProceedingsoftheJournalPLOSONE,2013
+1975
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. [10] A.J.N.vanBreemen,”BringingRobotsToLife:ApplyingPrinciples
+OfAnimationToRobots”,InProceedingoftheInternationalConfer-
+enceonComputerHumanInteraction,2004
+[11] T. Ribeiro and A. Paiva, ”Make Way for the Robot Animators!
+BringingProfessionalAnimatorsandAIProgrammersTogetherinthe
+Quest for the Illusion of Life in Robotic Characters”, In Proceeding
+of2014AAAIFallSymposium
+[12] E.Balit,D.VaufreydazandP,Reignier,”PEAR:PrototypingExpres-
+sive Animated Robots - A framework for social robot prototyping”,
+In Proceeding of the International Conference on Human Computer
+InteractionTheoryandApplications,2018
+[13] X.ShusongandH.Jiefeng,”Robotbehaviorexpressionbyillusionof
+life”,InProceedingoftheIEEEConferenceonRoboticsAutomation
+andMechatronics,2008
+[14] R.Gomez,D.Szapiro,K.GalindoandK.Nakamura,”Haru:Hardware
+DesignofanExperimentalTabletopRobotAssistant”InProceedings
+of the ACM/IEEE international conference on Human-robot interac-
+tion,2018
+[15] https://www.hansonrobotics.com/hanson-robots/
+[16] D.Glas,T.Minato,C.IshiandT.Kawahara,”ERICA:TheERATO
+IntelligentConversationalAndroid”InProceedingoftheIEEEInter-
+nationalSymposiumonRobotandHumanInteractiveCommunication,
+2016
+[17] G. Metta, G. Sandini, D. Vernon, L. Natale and F. Nori, ”The
+iCub humanoid robot: an open platform for research in embodied
+cognition”,InProceedingsoftheWorkshoponPerformanceMetrics
+forIntelligentSystems,2008
+[18] T. Shibata, K. Inoue and R. Irie, ”Emotional robot for intelligent
+system-artiﬁcial emotional creature project” In Proceedings of IEEE
+Workshop on Robot and Human Interactive Communication (RO-
+MAN),1996
+[19] A. L. Thomas, M. Berlin and C. Breazel, ”An Embodied Computa-
+tional Model of Social Referencing”, In Proceedings of IEEE Work-
+shop on Robot and Human Interactive Communication (ROMAN),
+2006.
+[20] R. Wistort and C. Breazeal, ”TOFU: a socially expressive robot
+character for child interaction” In Proceedings of Interaction Design
+andChildren,2009
+[21] M.Fujita,”Onactivatinghumancommunicationswithpet-typerobot
+AIBO”InProceedingsoftheIEEE,2004
+[22] J. Osada, S. Ohnaka and M. Sato, ”Scenario and design process
+of childcare robot PaPeRo” In Proceedings of the ACM SIGCHI
+International Conference on Advances in Computer Entertainment
+Technology,2006.
+[23] ”https://www.engadget.com/2017/01/04/lg-robots-at-ces-2017/”
+[24] https://www.nict.go.jp/publication/NICT-News/0910/06.html
+[25] ”https://www.jibo.com/”
+[26] C. Breazel and B. Scassellati , ”How to Build Robots that Make
+Friends and Inﬂuence People”, In Proceedings of IEEE Intelligent
+RobotsandSystems(IROS),1999.
+[27] H. Miwa, K. Itoh, H. Takanobu, A. Takanishi, ”Development of
+mentalmodelforhumanoidrobots”,CISM-IFToMMSymposiumRobot
+DesignDynamincsandControl,2004
+[28] S.W. Janek, A.R. Wellens, M.L. Goldberg, L.F. Dell’Osso and
+M.Skills, ”Eyes as the center of focus in the visual examination of
+humanfaces,”InProceedingsof,1978
+[29] F.ThomasandO.Johnston,”TheIllusionofLife:DisneyAnimation”
+Hyperion,1997
+1976
+Authorized licensed use limited to: Carleton University. Downloaded on September 22,2020 at 01:07:43 UTC from IEEE Xplore.  Restrictions apply. 

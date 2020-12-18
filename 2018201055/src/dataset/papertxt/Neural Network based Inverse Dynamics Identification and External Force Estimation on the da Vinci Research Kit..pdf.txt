@@ -1,0 +1,519 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Energy-based Safety in Series Elastic Actuation
+† †
+Wesley Roozing1, , Stefan S. Groothuis , and Stefano Stramigioli1
+e
+Abstract—This work presents the concept of energy-based Σ Σ
+safety for series-elastic actuation. Generic actuation passivity 1 f 2
+and safety is treated, deﬁning several energy storage and
+power ﬂow properties related to passivity. Safe behaviour is
+Fig.1:TwosystemsΣ andΣ connectedbyanenergytransferringpower
+not guaranteed by passivity, but can be guaranteed by energy portwithassociateddu1alpowe2rvariablesefforteandﬂowf.
+and power limits that adapt the nominal behaviour of an
+impedance controller. A discussion on power ﬂows in series-
+elastic actuation is presented and an appropriate controller is One way to enforce passivity of an actuated system is the
+developed.Experimentalresultsvalidatetheeffectivenessofthe Embedded Energy-Aware Actuation method as presented in
+energy-based safety in elastic actuation. the previous work [4], [5]. In this framework, passivity is
+enforced at the interface between continuous time dynamics
+I. INTRODUCTION
+and discrete time control systems: at the actuation, where
+With the increased interest in collaborative robots, the
+it is exactly determined how much energy is injected into
+area of truly safe and stable interaction between humans
+a system. This is contrary to other techniques that strive to
+and robots has seen signiﬁcant development in the past
+dissipate excess energy above the passive energy level, such
+years. Many developments have taken place to increase
+as the Passivity Observer/Controller (POPC) approach [6],
+the level of safety, using various control techniques [1]
+[7], energy tank based approaches [8], or methods that
+and novel mechanical implementations [2]. All of these
+passivate a system using a passive setpoint modulation [9].
+show a paradigm shift from rigid high-bandwidth, highly
+However, safe behaviour is not guaranteed by passivity.
+accurate position controlled systems to compliant and softer
+Passivity puts no limit on the total energy content as long as
+interaction controlled systems. Series-elastic actuation uses
+it was injected at some point, or on the rate of energy ﬂow
+a physical elastic element to decouple the motor side from
+(power). In general, safety criteria are directly or indirectly
+the link side of the actuator or joint. This actuation is able
+dependent on energy transfers. In this work, total energy
+to store and release energy, having merits in energy efﬁcient
+content, passivity, and rate of energy ﬂow (that is, power)
+actuation.However,whenenergyisputintheelasticelement
+at the interaction port are explicitly controlled.
+and no locking mechanism exists to keep the energy stored,
+Torque and impedance control of series-elastic actuators
+it is immediately released and, thereby, possibly causing
+has been discussed thoroughly in literature [10]–[13]. While
+undesired behaviour in the intended application.
+many algorithms are either passive or passivity-based, most
+Inphysicalsystems,thepropertyofpassivityisanenergy-
+do not consider safety issues that may arise in spite of pas-
+basedmeasureofstability.Itisaspecialcaseofdissipativity,
+sivity. The main contribution of this paper is to combine the
+as introduced in [3], that arises naturally in physical dynam-
+concept of energy-based safety with series elastic actuation,
+icalsystems.Intuitivelystated,andconsideringtheenergetic
+to ensure passive or strictly dissipative and safe behaviour
+connectionoftwosystemΣ andΣ bypowerport(e,f)as
+1 2 through modulated impedance control.
+showninFig.1,systemΣ issaidtobepassivewithrespect
+2 Theremainderofthepaperisstructuredasfollows.Sec.II
+to the port (e,f) if the stored energy of Σ is never more
+2 elaborates on the properties of passivity and requirements
+than what has been added through (e,f) plus the energy
+for safety. Sec. III presents the contribution of energy-
+initially present in Σ . System Σ can be thought of as an
+2 1 awarenessinserieselasticactuators,andexperimentalresults
+actuator that delivers power to a mechanism Σ . In general,
+2 are presented in Sec. IV. The results and limitations are
+existing literature does not explicitly deal with discrete time
+discussed in Sec. V and the paper concludes with Sec. VI.
+control implementations and their performance implications,
+even though it cannot be guaranteed that a stable continuous
+time control system remains stable when it is implemented II. GENERICACTUATIONPASSIVITYANDSAFETY
+inadiscretetimecomputer.Apassivesystem,however,does General passivity can be mathematically described by
+remain stable. considering a system with a (cid:90)storage function V(s(t)):S →
+R
+This project has received funding from the European Union’s Horizon , in which the state s∈S, such that:
+2020researchandinnovationprogrammeundergrantagreementNo.688857
+(SoftPro). The content of this publication is the sole responsibility of t1
+the authors. The European Commission or its services cannot be held V(s(t1)) ≤ V(s(t0))+ P(σ)dσ ∀t1 ≥t0, (1)
+responsibleforanyusethatmaybemadeoftheinformationitcontains. t0
+1Robotics and Mechatronics group, University of Twente, The Nether-
+lands.Email:{w.roozing,s.stramigioli}@utwente.nl. where P(σ) is a supply function to the system with stored
+†Theseauthorshavecontributedequallytothiswork. energy V(s(t)). This is visualized in the generic model of
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 914
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. (cid:90)
+∂H(s) storing behaviours are mathematically deﬁned by:
+eint
+∂s
+C D (cid:90) t1
+H.(.s) s˙ fint Passive: V(s(t1))≤V(s(t0))+ P(σ)dσ
+t0
+(cid:90) t1
+Conservative: V(s(t ))=V(s(t ))+ P(σ)dσ
+1 0
+econ fcon t0
+(cid:16) (cid:17) t1
+Dissipative: V(s(t ))<V(s(t ))+ P(σ)dσ
+1 0
+Fig. 2: Visualization of a generic port-Hamiltonian model, with storage
+t0
+port ∂H(s),s˙ , control port (econ,fcon) and interaction port (eint,fint). Strictly (cid:90)
+∂s R
+Nirroetveertshiabtleaedniesrsgipyatdiiosnsippaotriton. with (edis,fdis) can be included to model Dissipative: P(t)≤0 ∀t
+t1
+Active: V(s(t ))>V(s(t ))+ P(σ)dσ, (2)
+1 0
+a physical dynamical system in Fig. 2 (in which the time-
+t0
+dependence notation is dropped), with storage C and associ- for all t >t . Note that the deﬁnition of strictly dissipative
+atedHamiltonianstoragefunctionH(s)≡V(s),controlport systems1only0places a constraint on the power ﬂow at a
+(econ,fcon)andassociatedsupplyfunctionthatcanbedeﬁned consideredport,anddoesnotdeﬁneaconstraintonthestored
+asthedualityproductofefforteconandﬂowfconaccordingto energy.
+Pcon := (cid:104)econ,fcon(cid:105). Moreover, an interaction port (eint,fint)
+is shown, with corresponding power ﬂow Pint := (cid:104)eint,fint(cid:105). B. Passivity and safety
+A natural choice for the storage function V(s(t)) in (1) Although passivity guarantees the stability of a system,
+is the total energy in the system. The supply function is
+it implies nothing about the safety of the system with
+the supplied power through the control port of the system,
+respect to itself or the environment. Safe behaviour of a
+for example the duality product of mechanical force F and system is often loosely stated as behaviour that causes no
+velocity v, i.e., P = (cid:104)F,v(cid:105). Systems that contain only damage to the system itself or to the environment with
+passivephysicalelements,e.g.masses,springs,anddampers,
+which energy is exchanged, i.e., interaction. A more formal
+cannot contain more energy than what was initially present.
+rating can be obtained with the deﬁnition of various safety
+Consequently, the energy is bounded and thus a system that
+criteria, like the Head Injury Criterion, Maximum Power
+is overall passive is always stable [14], [15].
+Index, and Maximum Mean Strain Injury Criterion. To meet
+these criteria, the amount of energy, power, force, and/or
+A. Energy storage properties acceleration that is transferred to the environment needs to
+be limited [16]. In general, all safety criteria are directly or
+Eq. (1) states the condition for a passive system. If indirectlydependentonenergytransfers,makingenergyand
+a system can be described such that strictly the equality powerareasonablefocusforsafetyconsiderations[17],[18].
+holds, the system is conservative, i.e., non-dissipative. This Safe behaviour of a robot has been treated in [19], where
+means that exactly all supplied energy is stored, and none itwasproposedthatwhenunwantedenergyinanimpedance
+is dissipated. A dissipative system always stores less energy controlled system is identiﬁed, the controller drains energy
+than was supplied, i.e., only the inequality holds in (1). If a by being more compliant and when unsafe power output is
+system is designed to only extract energy from an attached detected, the controller increases the damping on its output.
+system through a power port at any time instance, i.e., the Theformerpreventspossiblesuffocatingforcestobeapplied
+powerﬂowthroughthatportisnegativeorzero,itisdeﬁned byaroboticsystemtotheenvironment,e.g.,aperson,while
+here to be strictly dissipative. Hence, strictly dissipative thelatterpreventsahigh-energy,largemomentummovement
+systems cannot supply any energy. These properties deﬁne having the risk of causing a potentially harmful collision.
+special cases of passive systems. Safety can also be established at the actuation level of
+On the other hand, if (1) does not hold at all, the system a system using an actuation energy budget, as shown in
+is deﬁned as being active. Formally, physical systems are previous work [4], [5]. This budget is the amount of energy
+always passive, and energy cannot be created or destroyed thatcanbeinjectedbytheactuatorinasystem.Byallocating
+according to the ﬁrst law of thermodynamics. An active energy needed for task execution to the budget, safety is
+system may arise when certain physical energetic connec- achieved because the amount of energy in the system can be
+tions are not present in the mathematical description of the chosentoneverbeoutsideofsafelimits,whilestillallowing
+system. In that way, the systems seem to be able to increase enough for task execution.
+their stored energy without having exchanged or received This paper proposes to ensure safety by imposing con-
+that energy through a considered power port, which can be ditions on the actuation energy storage and output power,
+considered the generation of energy. For example, a naive varying it between strictly dissipative and passive depending
+controllerimplementationonasystemthatdoesnotconsider on the set safety limits. In the former, energy in a connected
+and limit supplied actuation power may render a system systemisonlyeverextracted,meaningthatnoenergycanbe
+active and unstable [4]. Similar to (1), the various energy releasedintotherobotandtheenvironmentcausingpotential
+915
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. and where elastic element deﬂection ∆=(θ−q). The rate
+of change of stored energy is the sum of the power ﬂowing
+throughtheports,whichisrepresentedbythedualityproduct
+of the collocated output and input port variables y and u:
+V˙(s)=(cid:104)y,u(cid:105)=yTu
+=τmθ˙−τq˙
+Fig.3:Lineardynamicsmodelofseries-elasticactuation.
+=Pcon−Pact.
+harm. In the latter, energy may be stored up to a safe limit Hence, the change in actuation energy storage is the energy
+and only released at a safe rate. supplied via the control port minus the energy released via
+the actuation output port.
+III. ENERGY-BASEDSAFEELASTICACTUATION 1) Shaping energy exchange: As was shown, the energy
+One of the main differences between stiff actuation and ﬂow out of the actuation into the robot is deﬁned by the
+elastic actuation is indirect coupling of the control input actuation port (τ,q˙) and its corresponding power Pact =
+to the control variable. In stiff actuation the mechanical (cid:104)τ,q˙(cid:105). Thus, shaping the relationship between τ and q˙ im-
+forces following control inputs are directly applied to the plies shaping the energy exchange between the two systems.
+robot.Hence,thechoiceofcontroleffortdirectlydetermines Consider the following ﬁrst-order impedance relationship:
+power ﬂow into the system. Conversely, in elastic actuation
+only motor-side states can be directly inﬂuenced, which are τ =τimp :=−Kq−Dq˙, (7)
+indirectly coupled to the robot-side states. The consequence with corresponding storage function given by Vimp = 1Kq2.
+2
+is that the choice of control effort at the motor-side does Taking the derivative and computing Pact = τq˙ using (7)
+not directly inﬂuence power ﬂow out of the elastic element yields1:
+into the robotdynamics. At a particular pointin time, stored
+elastic energy may be injected into the robot, even though V˙imp =Kqq˙ ≤ −Pact =Kqq˙+Dq˙2,
+the control power may be negative. forK,D ≥0,whichisasufﬁcientconditionforpassivitycf.
+As an example, to provide damping (i.e. negative power) (2). In fact, the actuation port is dissipative for any D >0.
+at the output (actuation port), some deﬂection in the elastic However, it is only strictly dissipative ∀ q,q˙ if K = 0 and
+element is required, to generate the desired torque. This D ≥ 0, in which case Pact = −Dq˙2 ≤ 0 (cf. (2)), i.e.
+may momentarily require positive power at the control port the actuator can only absorb power from the robot. Hence,
+to create the required deﬂection, even though power at the realising the torque dynamics τ = τimp above, the system
+actuation port is nonpositive. Interestingly, for any nonzero canbemadeeitherpassive,dissipative,orstrictlydissipative
+power to be generated at the actuation port, nonzero energy w.r.t. the actuation port by choosing K and D.
+must be present in the system in the form of elastic energy. While the desired impedance (7) can theoretically be
+realised by control (as will be shown in the next section),
+A. Modelling and energy ﬂows
+notallrequiredhigher-ordersignalscanbeobtainedexactly,
+Consider the linear model of an elastic actuator with load as in practice they need to be approximated by numerical
+in Fig. 3, with motor and load inertiae B and M, with methods or estimators. Secondly, aspects such as discrete-
+positionsθ andq,respectively,coupledbyanelasticelement time digital control and delays of any realisable system
+with stiffness k. The input torque as generated by the motor will reduce performance. Thus, in practice, even control
+isdenotedbyτm,andexternalinteractiontorquesaredenoted algorithms that are theoretically passive in continuous time
+as τext. Its dynamics are given by: cannot be fully guaranteed to be passive in practice. Hence,
+actively monitoring the energy ﬂow out of an actuator into
+Bθ¨=τm−k(θ−q), (3) the actuated system is necessary, to take appropriate action
+Mq¨=τext+k(θ−q). (4) so that safety can be guaranteed at all times.
+The output torque that is applied to the robot is deﬁned as B. Control
+τ :=k(θ−q). The dashed vertical lines in Fig. 3 depict the
+As discussed above, the goal is to realise the following
+control port (econ,fcon):=(τm,θ˙) and actuation output port behaviour:
+(eact,fact):=(τ,q˙).Focusingontheactuationsubsystem,its
+∗ ∗ ∗
+total storage function is given by: τ →τ =K(q −q)+D(q˙ −q˙)+τid, (8)
+V(s)= 1Bθ˙2+ 1k∆2, (5) where ∗ denotes reference conﬁgurations and velocities, K
+2 (cid:20) (cid:21) 2 and D denote impedance stiffness and damping, and τid
+with the state s deﬁned as: denotes a link-side inverse dynamics based term to achieve
+s= θ˙ , (6) 1The minus sign stems from the positive direction of Pact to b−e energy
+∆ ﬂowoutoftheactuator,henceenergysuppliedtotheactuatoris Pact.
+916
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. 2) Rendering intrinsic stiffness: Consider a truly elastic
+actuator, that is, one with a physical stiffness close to what
+should be rendered at the output. In such a case it is useful
+torendertheactuator’sintrinsicstiffnessexactly,i.e.K =k.
+The motor-side coordinate θ then simpliﬁes to
+∗ − ∗
+θ =q +k 1(De˙ +Mq¨ ), (13)
+q
+−
+which is equal to θ = −k 1Dq˙ in the regulation case
+∗ ∗ ∗
+q¨ ≡ q˙ ≡ q ≡ 0. The motor position is only adjusted to
+produce the desired link-side damping, as the desired link-
+(cid:16) (cid:17)
+side stiffness is already produced by the physical stiffness.
+The feed-forward terms reduce to
+− ∗
+τff =k(cid:124)(cid:123)(cid:122)1(cid:125)B (cid:124)De(q3)+(cid:123)M(cid:122) q(4) (cid:125)+
+∗ ∗
+Bq¨ +ke +De˙ +Mq¨ , (14)
+q q
+θ¨=q¨∗ τ∗
+which for the regul(cid:124)ation c(cid:123)a(cid:122)se is e(cid:125)q(cid:124)ual t(cid:123)o(cid:122) (cid:125)
+Fig.4:Cascadedimpedanceandforcecontrolwithfeed-forwardterms.
+−
+∗ τff =−k 1BDq(3)−Dq˙−kq. (15)
+exact link-side tracking, given by τid =Mq¨ in the consid- ∗
+ered case. Notice that (8) is equal to (7) for the regulation Bθ¨ τ
+∗ ∗ ∗ where the ﬁrst term can be recognised as motor acceleration
+case q ≡ q˙ ≡ q¨ ≡ 0, fulﬁlling the earlier conditions for
+feed-forward given the desired motor-side coordinate above,
+passivity and (strict) dissipativity at the port (τ,q˙).
+and the second term compensates for spring force. Hence,
+1) Torque feedback and feed-forward terms: Suppose a
+torque control law of the form: choosing K = k simpliﬁes required motor dynamics as
+well as control terms. This choice also demonstrates how
+∗ ∗
+τm =Kp(τ −τ)+Kd(τ˙ −τ˙)+τff, (9) the central design idea in [12] is effectively a special case
+where τff denotes feed-forward terms. The resulting control of the conventional cascaded impedance control scheme4
+structure is shown in Fig. 4, constituting a well-known cas- with K = k. Notice that compared to (11), (14) does not
+caded control scheme augmented with feed-forward terms. depend on q¨. The earlier mentioned work [12] neglected the
+Toobtainthefeed-forwardterms,werecallk(θ−q)=:τ, remaining q(3) term, seemingly without signiﬁcant loss in
+set τ =τ∗, and solve for(cid:124)the motor(cid:123)-(cid:122)side coord(cid:125)inate θ: performance.
+− ∗
+θ =q+k 1(Ke +De˙ +Mq¨ ), (10) C. Energy-based impedance modulation for safety
+q q
+The strategy for ensuring safety, as discussed in Sec. III-
+∗
+τ
+where e = q∗ − q(cid:16)denotes the link-side tra(cid:17)cking error. A, relies on modulation of rendered impedance parameters
+Substitutqing into (3) and solving for τm, we obtain K and D that allow to vary the system between passive
+(cid:124) (cid:123)(cid:122) (cid:125) and strictly dissipative. The technique proposed in [19] is
+− ∗
+τff =k 1B Ke¨q+De(q3)+Mq(4) + employed, with some minor modiﬁcations.
+1) Limiting energy storage: The energy stored in the
+(cid:124)(cid:123)(cid:122)(cid:125) (cid:124) (cid:123)(cid:122) ∗ (cid:125)
+τ¨ ∗ controlledactuationsystemisdeﬁnedbythevirtualpotential
+Bq¨+Keq+De˙q+Mq¨ . (11) energy in the impedance stiffness:
+∗
+Lastly, substituθt¨i=nq¨g (8), (9), anτd (11) into (4) leads to the Ep = 12Kq2. (16)
+∗
+followinglink-sidedynamics,expressedinthetrackingerror whereq ≡0wasassumedwithoutlossofgenerality.Hence,
+dynamics: modulation of K ca(cid:40)n be utilised to limit the stored virtual
+Me¨q+De˙q+Keq =τext, (12) energybelowamaximumEp ≤Epmax.SettingK asfollows:
+which for M,D,K >0 and τext =0 has the unique equilib- 2Epmax 1kq2 >Emax
+rium e¨ =e˙ =e =0, thus creating an actuator impedance K = q2 2 p (17)
+q q q k Otherwise,
+as speciﬁed by (7), with the addition of a reference position
+∗
+input q (t) ∈ C4 and its derivatives2,3, as shown in Fig. reducestheimpedancestiffnessdownfromk asitisbrought
+4. However, notice that the feed-forward terms (11) require furtheroutofequilibrium–effectivelyabsorbinganyenergy
+measurements of q˙,q¨,q(3). To partially reduce this burden a injected through the actuation port above the threshold of
+speciﬁc choice for K can be made. Epmax via the control port.
+C
+2 k denotesthesetofk timescontinuouslydifferentiablefunctions. 4Including the feed-forward terms (14), however with the exception of
+∈C
+3Notethatassumingﬁnitecontrolinputs,τext hastobeatleast 1 to thekeq term,leadingtotherenderedstiffnessbeingaseriesconnectionof
+ensureﬁniteq(3). thephysicalstiffnessandmotorproportionalgainintheircase.
+917
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. 2) Limiting output power: Contrary to stored energy, Current Belt
+Embedded board ampliﬁer B drive
+output power is a function of both impedance parameters K
+andD.First,recallPact =−Kq(cid:112)q˙−Dq˙2,withK nowgiven k
+by (17). Secondly, deﬁne the nominal impedance damping
+D¯ as
+D¯ =2Mζ K/M (18) M
+where ζ deﬁnes the damping ratio of the load. Notice D¯
+Ethernet 48V Motor
+decreases(cid:40)with decreasing K given by (17), to maintain the
+desired damping ratio. Now, setting D as follows:
+Fig. 5: The compliant actuation experimental setup used for testing the
+−Kqq˙+Pamctax −Kqq˙−D¯q˙2 >Pmax controllerperformance.
+D = q˙2 act , (19)
+D¯ Otherwise 4
+2
+increases D >D¯ if necessary, to ensure Pact ≤Pamctax. 0
+3) Choosing safety parameters: From the physical inter-
+pretation of a spring-damper for the rendered impedance, -2
+it becomes clear that not every combination of Emax and -4
+p
+Pmax is desirable. Consider TableI, which shows that either 0 2 4 6 8 10
+act
+both parameters need to be zero for strict dissipativity, or
+0.6
+both must be positive for passive operation (with limited
+0.3
+energy storage and output power for ﬁnite values). Other
+0
+combinationsresultinconﬂictingenergystorageandrelease
+requirements. With regards to passive operation, the two -0.3
+parameters are not independent: a system with large energy -0.6
+storage will generally tend towards high power output, and 0 2 4 6 8 10
+forcing small power output requires large and rapid changes
+in damping5. Fig.6:Experiment,safetyoff:Positionandtorques.
+IV. EXPERIMENTALRESULTS the software implementation the sample rate was set to
+A. Experimental setup 200Hz; together with ﬁltering of the encoder signals, this
+To validate the effectiveness of the proposed approach, necessitated lowering the nominal stiffness to K = 1k
+2
+to ensure satisfactory performance. Higher order derivatives
+experiments were performed with a compliant actuation
+were neglected as the relatively low encoder resolution
+setupasshowninFig.5.ItconsistsofaDCmotorconnected
+makes numerical approximation infeasible.
+toaﬂywheelthroughabeltdrivemechanism,withcombined
+ResultswithoutimpedancemodulationareshowninFig.6
+inertia B, which drives a load inertia M through a ﬂexible
+and 7. In Fig. 6 it can be observed that upon release at
+shaft with stiffness k. Because the ﬂexible shaft is consider-
+4.5s and 9.7s, the motor inertia ﬁrst moves in the opposite
+ably more compliant than the belt drive, parasitic belt drive
+direction to generate desired damping torques, after which
+compliance is neglected. Optical incremental encoders on
+the motor and load allow angular position measurements. both inertiae converge asymptotically (ζ = 1.0) to the
+equilibrium position. Up to approx. 0.7J of energy is stored
+The motor is driven by a current controlled power ampliﬁer,
+due to the large deﬂection, corresponding to a torque of
+and control and data acquisition run on an embedded FPGA
+approx. 0.66Nm. Upon release of the load this energy is
+board. Physical and control parameters are listed in Table II.
+released, resulting in a peak actuation power of over 3.3W,
+B. Results as shown in Fig. 7. Most of this energy is then re-absorbed
+Two experiments were performed, with impedance mod- and dissipated by the actuation to dampen the load in its
+ulation switched off and on, respectively. In both cases, equilibrium position.
+the load was brought out of its equilibrium position by Next experiments were performed with impedance modu-
+approx. ±2rad, and then released. Due to limitations in lation enabled. The safety parameters were set to Epmax =
+0.25J and Pmax = 0.25W, respectively, i.e. passive be-
+act
+5AusefulguidelineappearstobechoosingEpmax andPamctax relativelyas
+functionofthetimeconstantofthephysicalspringandloadcombination. TABLEII:Physicalandcontrolparametersoftheexperimentalsetup.
+Component Value Unit
+TABLEI:Choosingsafetyparameters.
+Flexibleshaftstiffnessk 0.551 Nm/rad
+Epmax=0 Epmax>0 LoadﬂywheelinertiaM 1.37··10−−3 kgm2
+Pamctax=0 Strictlydissipative Undesirable (Energy may Motor+ﬂywheelinertiaB 1.02 10 3 kgm2
+bestoredbutnotreleased) Beltdrivespeedreductionratio 60 –
+Pamctax>0 Undesirable (No energy is Passive Encoderresolution 201600 counts/rev
+stored,butmaybereleased) Controlsamplerate 200 Hz
+918
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. 0.6 0.6
+0.4 0.4
+0.2 0.2
+0 0
+0 2 4 6 8 10 0 5 10 15 20
+3 3
+1.5 1.5
+0 0
+-1.5 -1.5
+0 2 4 6 8 10 0 5 10 15 20
+Fig.7:Experiment,safetyoff:Energyandpower. Fig.9:Experiment,safetyon:Energyandpower.
+4 0.3
+2
+0.2
+0
+-2 0.1
+-4
+0 5 10 15 20
+0
+0 5 10 15 20
+0.6
+0.3 Fig.10:Experiment,safetyon:Impedanceparameters.
+0
+sample rate and encoder resolution, which are straightfor-
+-0.3
+ward avenues to increase performance further.
+-0.6
+The current safety implementation imposes ﬁxed limits
+0 5 10 15 20
+on energy storage and actuation power. The choice of these
+limits at the moment is heuristic and would beneﬁt from
+Fig.8:Experiment,safetyon:Positionandtorques.
+further future investigation. Furthermore, execution of tasks
+may (momentarily) require larger energy content or output
+haviour with limits on energy content and actuation power
+power. For such situations temporarily increasing the safety
+output. The results are shown in Fig. 8–10. In the ﬁrst part,
+limitsorimplementingactuationbudgetingmayproveuseful
+the load is again brought to approx. ±2rad and released.
+further developments to this strategy.
+However, the stored energy is limited to 0.25J (Fig. 9),
+due to the modulation of impedance stiffness as shown in VI. CONCLUSIONS
+Fig. 10. Even when brought to almost ±4rad (from 15s), This paper presented the implementation of energy-based
+theenergyis limitedappropriately.Thisis reﬂected inlower
+safety in series-elastic actuation. Generic actuation passivity
+torques shown in Fig. 8. The actuation power shown in
+and safety were treated, deﬁning several energy storage
+Fig. 9 shows that the system does not manage to stay within
+properties. It was concluded that passivity is not a sufﬁcient
+the imposed limit just after release, but converges quickly.
+condition for safety, and that limitations on energy content
+Thisisattributedtoinsufﬁcientlyaccuratetorquetrackingas
+and output power, or even strict dissipativity, are necessary.
+the reference changes rapidly. However, the peak of almost
+The developed controller for an elastic actuation system
+0.6W is a signiﬁcant reduction over the earlier >3.3W showsimpedanceregulatingbehaviourtorealisesafetylimits
+without impedance modulation.
+basedonenergyandpower.Theexperimentalresultsvalidate
+the theoretical foundations of the proposed approach.
+V. DISCUSSION
+REFERENCES
+Although some issues were observed in the experimental
+[1] N. Hogan, “Impedance control: An approach to manipula-
+results, they validate the effectiveness of the energy-based tion: Part i, part ii, part iii,” ASME Journal of Dynamic
+safety concept. While Sec. III-B.1 showed that rendering Systems, Measurement and Control, 1985.
+the desired (modulated) impedance in principle requires [2] G.A.PrattandM.Williamson,“Serieselasticactuators,”in
+Proceedings of the IEEE/RSJ International Conference on
+higher order derivatives of system states, the results indicate
+Intelligent Robots and Systems, 1995.
+that satisfactory performance can be achieved without them.
+[3] J. C. Willems, “Dissipative dynamical systems part i: Gen-
+Indeed, the system was able to enforce the safety limits to eral theory,” Archive for rational mechanics and analysis,
+a large extent. Control performance was mainly limited by vol. 45, no. 5, pp. 321–351, 1972.
+919
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. [4] G. A. Folkertsma, S. S. Groothuis, and S. Stramigioli,
+“Safety and guaranteed stability through embedded energy-
+aware actuators,” in IEEE International Conference on
+Robotics and Automation, 2018.
+[5] S. Groothuis, G. Folkertsma, and S. Stramigioli, “A gen-
+eral approach to achieving stability and safe behavior in
+distributed robotic architectures,” Frontiers in Robotics and
+AI, 2018.
+[6] B. Hannaford, “Time-domain passivity control of haptic
+interfaces,” IEEE TRANSACTIONS ON ROBOTICS AND
+AUTOMATION, vol. 18, no. 1, p. 10, 2002.
+[7] J.-H. Ryu, C. Preusche, B. Hannaford, and G. Hirzinger,
+“Time domain passivity control with reference energy fol-
+lowing,”IEEETransactionsonControlSystemsTechnology,
+vol. 13, no. 5, pp. 737–742, 2005.
+[8] C. Secchi, S. Stramigioli, and C. Fantuzzi, “Position drift
+compensation in port-hamiltonian based telemanipulation,”
+in 2006 IEEE/RSJ International Conference on Intelligent
+Robots and Systems, Beijing, China: IEEE, Oct. 2006,
+pp. 4211–4216.
+[9] D. Lee and K. Huang, “Passive-set-position-modulation
+framework for interactive robotic systems,” Robotics, IEEE
+Transactions on, vol. 26, no. 2, pp. 354–369, 2010.
+[10] A. Albu-Schaffer, C. Ott, and G. Hirzinger, “A uniﬁed
+passivity-based control framework for position, torque and
+impedancecontrolofﬂexiblejointrobots,”TheInternational
+Journal of Robotics Research, vol. 26, no. 1, pp. 23–39,
+Jan. 1, 2007.
+[11] W. Roozing, J. Malzahn, N. Kashiri, D. G. Caldwell, and
+N. G. Tsagarakis, “On the stiffness selection for torque-
+controlled series-elastic actuators,” IEEE Robotics and Au-
+tomation Letters, vol. 2, no. 4, pp. 2255–2262, 2017.
+[12] M.Keppler, D.Lakatos, C.Ott, A.Albu-Scha¨ffer,and oth-
+ers,“Apassivity-basedapproachfortrajectorytrackingand
+link-side damping of compliantly actuated robots,” in 2016
+IEEEInternationalConferenceonRoboticsandAutomation
+(ICRA), IEEE, 2016, pp. 1079–1086.
+[13] A. Calanca, R. Muradore, and P. Fiorini, “A review of al-
+gorithmsforcompliantcontrolofstiffandﬁxed-compliance
+robots,”IEEE/ASMETransactionsonMechatronics,vol.21,
+no. 2, pp. 613–624, 2015.
+[14] A. v. d. Schaft, L2-gain and passivity in nonlinear control.
+Springer-Verlag New York, Inc., 1999.
+[15] R. Ortega, A. v. d. Schaft, F. Castan˜os, and A. Astolﬁ,
+“Control by Interconnection and Standard Passivity-Based
+Control of Port-Hamiltonian Systems,” IEEE Trans. Au-
+tomat. Contr., vol. 53, no. 11, pp. 2527–2542, 2008.
+[16] R. Alami et al., “Safe and dependable physical human-
+robot interaction in anthropic domains: State of the art
+and challenges,” in Intelligent Robots and Systems, 2006
+IEEE/RSJ International Conference on, 2006, pp. 1–16.
+[17] M.Laffranchi,N.Tsagarakis,andD.Caldwell,“Safehuman
+robotinteractionviaenergyregulationcontrol,”inIntelligent
+Robots and Systems, 2009. IROS 2009. IEEE/RSJ Interna-
+tional Conference on, 2009, pp. 35–41.
+[18] T. Tadele, T. de Vries, and S. Stramigioli, “The safety of
+domestic robotics: A survey of various safety-related pub-
+lications,” Robotics Automation Magazine, IEEE, vol. 21,
+no. 3, pp. 134–142, 2014.
+[19] T.S.Tadele,T.J.deVries,andS.Stramigioli,“Combining
+energy and power based safety metrics in controller design
+for domestic robots,” in IEEE International Conference on
+Robotics and Automation, 2014.
+920
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:02:49 UTC from IEEE Xplore.  Restrictions apply. 

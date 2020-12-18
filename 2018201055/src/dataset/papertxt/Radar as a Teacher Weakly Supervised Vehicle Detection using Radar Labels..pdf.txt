@@ -1,0 +1,578 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Temporal Segmentation of Surgical Sub-tasks through Deep Learning
+with Multiple Data Sources
+Yidan Qin1,2, Sahba Aghajani Pedram1,3, Seyedshams Feyzabadi1,
+Max Allan1, A. Jonathan McLeod1, Joel W. Burdick2, Mahdi Azizian1
+Abstract—Many tasks in robot-assisted surgeries (RAS) can
+be represented by ﬁnite-state machines (FSMs), where each
+state represents either an action (such as picking up a needle)
+oranobservation(suchasbleeding).Acrucialsteptowardsthe
+automationofsuchsurgicaltasksisthetemporalperceptionof
+thecurrentsurgicalscene,whichrequiresareal-timeestimation
+of the states in the FSMs. The objective of this work is to
+estimate the current state of the surgical task based on the
+actionsperformedoreventsoccurredasthetaskprogresses.We
+propose Fusion-KVE, a uniﬁed surgical state estimation model time time
+thatincorporatesmultipledatasourcesincludingtheKinemat-
+Fig.1. SampledatafromJIGSAWS(left)andRIOUSdataset(right).The
+ics, Vision, and system Events. Additionally, we examine the
+bottomrowshowsasamplestatesequenceofeachtask,whereeachcolor
+strengths and weaknesses of different state estimation models
+denotesastatelabel.
+in segmenting states with different representative features or
+levels of granularity. We evaluate our model on the JHU-ISI
+GestureandSkillAssessmentWorkingSet(JIGSAWS),aswell
+thatlastforafewseconds,suchascutting[5]–[8],aswellas
+as a more complex dataset involving robotic intra-operative
+ultrasound (RIOUS) imaging, created using the da Vinci(cid:13)R Xi surgicalphasesthatlastforupto10minutes,suchasbladder
+surgicalsystem.Ourmodelachievesasuperiorframe-wisestate dissection [9]–[11]. The recognition of ﬁne-grained surgical
+estimation accuracy up to 89.4%, which improves the state- states is particularly challenging due to their short duration
+of-the-art surgical state estimation models in both JIGSAWS
+and frequent state transitions. Most work in this ﬁeld has
+suturing dataset and our RIOUS dataset.
+focused on developing models using only one type of input
+I. INTRODUCTION data,suchaskinematicsorvision.Somestudieshavefocused
+onlearningbasedonrobotkinematics,usingmodelssuchas
+In the ﬁeld of surgical robotics research, the development
+Hidden Markov Models [12]–[14] and Conditional Random
+of autonomous and semi-autonomous robotic surgical sys-
+Fields (CRF) [15]. Zappella et al. proposed methods of
+tems is among the most popular emerging topics [1]. Such
+modeling surgical video clips for single-action classiﬁcation
+systemsallowRAStogobeyondteleoperationandassistthe
+[16]. The Transition State Clustering (TSC) and Gaussian
+surgeons in many ways, including autonomous procedures,
+Mixture Model methods provide unsupervised or weakly-
+user interface (UI) integration, and providing advisory in-
+supervisedmethodsforsurgicaltrajectorysegmentation[17],
+formation [2], [3]. One prerequisite for these applications
+[18]. More recently, deep learning methods have come to
+is the perception of the current state of the surgical task
+deﬁne the state-of-the-art, such as Temporal Convolutional
+being performed. These states include the actions performed
+Networks(TCN)[19],TimeDelayNeuralNetwork(TDNN)
+or the changes in the environment observed by the system.
+[7],andLong-ShortTermMemory(LSTM)[6],[20].Instead
+For instance, during suturing, the system needs to know
+of using robot kinematics data, vision-based methods have
+if the needle is visible from the endoscopic view before
+been developed based on Convolutional Neural Networks
+providing more advanced applications such as advising the
+(CNN).Vision-basedmodelsinRASusethevisiondatathat
+needle position or autonomous suturing. Additionally, the
+isreadilyavailablefromtheendoscopicview.Concatenating
+recognitionofhigher-levelsurgicalstates,orsurgicalphases,
+spatial features on the temporal axis with spatio-temporal
+has a wide range of applications in post-operative analysis
+CNNs (ST-CNN) has been explored in [21]. Jin et al.
+and surgical skill evaluation [4].
+introduced the post-processing of predictions using prior
+The recognition and segmentation of the robot’s current
+knowledgeinference[22].TCNcanalsobeappliedtovision
+action is one of the main pillars of the surgical state esti-
+dataforactionsegmentation,takingtheencodingofaspatial
+mation process. Many models have been developed for the
+CNN as input [19]. Ding et al. proposed a hybrid TCN-
+segmentationandrecognitionofﬁne-grainedsurgicalactions
+BiLSTMnetwork[23].Thelimitationsharedbysingle-input
+action recognition models is the large discrepancy among
+1IntuitiveSurgicalInc.,1020KiferRoad,Sunnyvale,CA,94086,USA
+2Department of Mechanical and Civil Engineering, California Institute states’ representative visionand kinematics features, making
+ofTechnology,1200ECaliforniaBlvd,Pasadena,CA,91125,USA them distinguishable through different types of input data.
+3Department of Mechanical and Aerospace Engineering, University of
+Comparing to action recognition datasets such as Activ-
+California,LosAngeles,LosAngeles,CA,90095,USA
+Emails:Ida.Qin@intusurg.com,Mahdi.Azizian@intusurg.com ityNet [24], RAS data enjoys the luxury of having syn-
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 371
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. chronized vision, system events, and robot kinematics data. different representative features. Each model has its respec-
+The attempts of incorporating multiple types of input data tive strengths and weaknesses, which supports the superior
+have been focusing on using derived values as additional performance of our uniﬁed approach of state estimation.
+variables to a single model. Lea et al. measured two scene-
+II. METHOD
+based features in JIGSAWS as additional variables to the
+robot kinematics data in their Latent Convolutional Skip- Ourproposedmodel(Fig.2)consistsoffoursingle-source
+Chain CRF (LC-SC-CRF) model [5]. Zia et al. collected state estimation models based on vision, kinematics, and
+the robot kinematics and system events data from RAS system events, respectively. The outputs are fed to a fusion
+to perform surgical phase recognition [10]. While these modelthatmakesacomprehensiveinference.Inthissection,
+attempts have proven to improve the model accuracy, to the wediscusseachindividualmodelaswellasthefusionmodel
+bestofourknowledge,thereisyettobeauniﬁedmethodthat which effectively combines the outputs of each model.
+incorporates multiple data sources directly for ﬁne-grained
+A. Vision-based Method
+surgical state estimation.
+The vision-based state estimation model is a CNN-TCN
+Inadditiontorobotactions,theﬁnitestatemachine(FSM)
+model [19] that takes the endoscopic camera stream as the
+of a surgical task should also include the environmental
+input in the form of a series of video frames. The CNN
+changes observed by the robot. The non-action states were
+architecture we deploy is VGG16 [27]. The spatial CNN
+omittedinpopularsurgicalactionsegmentationdatasetssuch ×
+asJIGSAWS[25]andCholec80[26];howeverareimportant com×ponentservesasafeatureextractor∈anRdmapseach224
+for applications such as autonomous procedures. They are 224 3 RGB image to a vector Xvis N where N is the
+also challenging to recognize as some non-action states may numberoffeatures.Xvis isthenfedtotheTCNcomponent,
+which is an encoder-decoder network (Fig. 3). At time step
+not be well-reﬂected in a single-source dataset. (cid:54)
+Contributions: In this paper, we propose a uniﬁed ap- t, the input vector is denoted by X∈tv{is for 0}< t T. For
+thelth 1-Dconvolutionallayers(l 1,...,L ),F ﬁltersof
+proachofﬁne-grainedstateestimationinRASusingmultiple l
+(cid:13) kernelsizek areappliedalongthetemporalaxisthatcapture
+types of input data collected from the da VinciR surgical
+the temporal progress of the input data. T is the number
+system. The input data we use includes the endoscopic l
+of time steps in the lth layer. In each layer, the ﬁlters are
+video,robotkinematics,andthesystemeventsofthesurgical ∈R × ×
+system. Our goal is to achieve the real-time ﬁne-grained parameterized b∈y aRweight tensor W(l) Fl k Fl−1 and a
+state estimation of the surgical task being performed. To re- bias vector b(l) Fl. The raw output activation vector for
+emphasize, we refer to ﬁne-grained states as states that last the lth layer at time t, Et(l), is calculated from a subsection
+of the normalized activation matrix from the previous layer
+in the scale of seconds. Our main contributions include: Eˆ(l−1) ∈RFl−1×Tl−1
+• Implement a uniﬁed state estimation model that in-
+∗ −
+corporates vision-, kinematics-, and event-based state E(l) =f(W(l) Eˆ(l 1)− +b(l)) (1)
+t t:t+k 1 i
+estimation results;
+where f is a Rectiﬁed Linear Unit (ReLU) [28]. A max
+• Improve the frame-wise state estimation accuracy of
+pooling layer of stride 2 is applied after each convolutional
+state-of-the-art methods by up to 11% through the
+layer in the encoder part such that T = Tl−1. The pooling
+incorporation of multiple sources of data; l 2
+layerisfollowedbyanormalizationlayer,whichnormalizes
+• Demonstrate the advantages of a multi-input state es-
+thelthactivationvectorattimet,E(l),usingitshighestvalue
+timation model through the comparison of single-input t
+models’ performances in recognizing states with differ-
+E(l)
+ent representative features or levels of granularity in a Eˆ(l) = t (2)
+complex and realistic surgical task. t max(E(l))+
+t
+−
+where  = 10 5 is a small number to ensure non-zero
+We evaluated the performance of our model using JIG-
+denominators, and Eˆ(l) is the normalized output activation
+SAWSandanewRIOUS(roboticintra-operativeultrasound) t
+vector. In the decoder part, an upsampling layer that repeats
+dataset we developed. RIOUS consists of phantom and
+(cid:13) each data point twice proceeds each temporal convolutional
+porcine experiments on a da VinciR Xi surgical system
+(Fig.1).ComparingtoJIGSAWS,whichisrelativelysimple and normalization layers. The output vector Dˆt(l) is calcu-
+latedandnormalizedinthesamemannerastheencoderpart.
+as it only contains dry-lab tasks with no camera motion
+nor non-action annotations, RIOUS dataset better resembles The state estimation at frame t is done by a time-distributed
+fully-connected layer with softmax to normalize the logits.
+real-world surgical tasks. This is because RIOUS dataset
+Implementation details:ThetrainingoftheCNNfeature
+containsdry-lab,cadavericandin-vivoexperiments1,aswell
+extractor starts with the VGG16 network initialized with
+as camera movements and annotations of both action and
+ImageNet pre-trained weights. We ﬁne-tune the weights by
+non-action states. We evaluated the accuracy of multiple
+trainingwithonefully-connectedlayerontopoftheVGG16
+state estimation models in the recognition of states with ∈
+model for state estimation. The feature vector Xvis
+R { }t
+1All in-vivo experiments were performed on porcine models under N=1024. We use L = 3 with Fl = 32,64,96 , and
+InstitutionalAnimalCareandUseCommittee(IACUC)approvedprotocol. k =6.1sfortheJIGSAWSsuturingdatasetandk =3.4sfor
+372
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. Vision Kinematics Events
+Extract
+feature VGG-16 VGG-16 VGG-16
+vector Xvis
+FC FC FC
+Normalization: Xkin Xevt
+TCN TCN LSTM Ensemble method
+Weighted voting
+Fig.2. Ourmodelcontainsfoursingle-inputstateestimationmodelsreceivingthreetypesofinputdata(X:visionfeaturesextractedfrom).Afusion
+modelthatreceivesindividualmodeloutputsisusedtomakethecomprehensivestateestimationresult.
+Input: X future data is available; therefore we use a forward LSTM
+r 1-D Conv with forget gates and peephole connections [30]. The loss
+e Max pooling
+od Normalize: E(1) function for the LSTM model is the cross entropy between
+nc the ground truth and the predicted labels, and the stochastic
+E 1-D Conv
+Max pooling gradient descent (SGD) is used to minimize loss.
+Normalize: E(L)
+Implementation details: For the LSTM model, we per-
+Upsampling form a grid search over the initial learning rate (0.5 or 1.0),
+1-D Conv
+er Normalize: D(L) the number of hidden layers (1 or 2) in the model, the
+d
+co Upsampling number of hidden units per layer (256, 512, 1024, or 2048),
+De Nor1m-Da lCizoen: vD(1) and the dropout probability (0 or 0.5). The optimized set of
+Output: Y parametersis1hiddenlayerswith1024hiddenunitsand0.5
+dropout probability for JIGSAWS, and 512 hidden units for
+Fig.3. Theencoder-decoderTCNnetworkthathierarchicallymodelsvision
+theRIOUSdataset.Theoptimizedinitiallearningrateis1.0.
+orkinematicsdatatostates.
+For the TCN model, we mostly follow the same protocol of
+thevision-basedTCNmodeldescribedearlier.WeuseL=2
+{ }
+the RIOUS dataset. For training, we use the cross entropy with F = 64,96 . The feature vector for the kinematics
+l ∈R
+loss with Adam optimization algorithm [29]. data Xkin N, where N =26 for the JIGSAWS suturing
+Forourapplicationofreal-timestateestimation,themodel dataset and N =19 for the RIOUS dataset.
+can only use the information from the current and preceding
+time steps; therefore for the RIOUS dataset, we assume a C. Event-based Method
+causal setting and pad the temporal input with k2 zeros on At each timestamp t, The da Vinci(cid:13)R Xi surgical system
+the left side before the convolutional layer and crop k data registers multiple binary system events (details in section
+2
+points on the right side afterwards. IIIA). We experimented with various classiﬁcation algo-
+rithms, including Adaboost classiﬁer, decision tree, Ran-
+B. Kinematics-based Methods
+dom Forest (RF), Ridge classiﬁer, Support Vector Machine
+We incorporate both forward LSTM and TCN to bet- (SVM), and SGD [31]. The classiﬁcation was performed
+ter capture states with different duration. LSTM has no directly for state estimation using the set of system events
+constraints on learning only from the nearby data on the collected at each timestamp Xevt as features. We performed
+t
+temporal axis. Rather, it maintains a memory cell and learns grid search over the parameters of each model and evalu-
+when to read/write/reset the memory [30]. It has been ated each model’s performance using the Area Under the
+shown that LSTM-based approaches exceed the state-of-the- Receiver Operating Characteristic Curve (ROC AUC) score
+artperformanceinlonger-durationactionrecognition[6].We [32]. The evaluation process was iterated 200 times, with
+incorporate both TCN, which applies temporal convolution an early stopping criterion of score improvement under
+−
+to learn local temporal dependencies, and LSTM, which is 10 6. At each iteration, we recorded the best-performing
+able to capture longer-term data progress. Although the bi- model with replacement. The top three models that were
+directional LSTM model yields a higher accuracy [6], it is selected most frequently are included, and the ﬁnal state
+notapplicableforthereal-timestateestimationtaskwhereno estimation result is the mean of each model’s prediction.
+373
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. The three top-performing models for our RIOUS dataset are RIOUS:Toexplorethefullpotentialofouruniﬁedmodel,
+RF (n =500, min samples split=2), SVM (penalty=L2, we collected a robotic intra-operative ultrasound (RIOUS)
+trees (cid:13)
+kernel=linear, C=2, multi class=crammer singer), and RF datasetonadaVinciR XisurgicalsystematIntuitiveSurgi-
+(n =400, min samples split=3). calInc.(Sunnyvale,CA),inwhichweperformedultrasound
+trees
+scanning on both phantom and porcine kidneys. In RAS,
+D. Fusion of Multiple Models
+usingadrop-inultrasoundprobetoscantheorgansisacom-
+The individual state estimation models have their respec- mon technique practiced by surgeons to localize underlying
+tive strengths and weaknesses, since different states have anatomical structures including tumors and vasculature. The
+inherent features that make them easier to be recognized real-time state estimation of this task allows us to develop
+by one type of data than the other(s). For instance, the smart-assist technologies for surgeons as well as enabling
+‘transferring needle from left to right’ state in the JIGSAWS supervised autonomous techniques to perform such tasks.
+suturing dataset can be distinctly characterized by the se- The RIOUS dataset contains 30 trials performed by 5
+quential opening and closing of the left and right needle users with no RAS experience but familiar with the da
+(cid:13)
+drivers which is captured by the kinematics data. VinciR surgical system. Each trial is around 5 minutes and
+We therefore use a weighted voting method that incor- containsroughly80actioninstances.26trialsareperformed
+porates the prediction vectors in all models. At time t, let on a phantom kidney in dry-lab setting and 4 are performed
+Y(t) ∈ Ra×b, where a is the number of models and b is on a porcine kidney in operating room setting. The data
+t(cid:80)he total number of possible states in a dataset. Row vector is annotated with eight states (Fig. 4b). Two out of the
+Y(t·) is the output vector of the ith model at time t and four arms were used, one holding an endoscope and the
+ib, Yt =1. The overall probability for the system to be other holding a pair of PrograspTM forceps. The ultrasound
+j=1 i,j machine used is the bk5000 with a robotic drop-in probe
+in the jth state at time t - a(cid:88)ccording to the models - is then
+from BK Medical Holding Company, Inc. Both video and
+a kinematics entries were synchronized and down-sampled to
+P(t) = α Y(t) (3) 30Hz. The kinematics variables we used include the instru-
+j i,j i,j
+i=1 ment’s end-effector positions, velocities, gripper angles, and
+the endoscope positions. We used the same pre-processing
+where α is the weighting factor for the ith model predict-
+i,j
+method as the suturing kinematics data. We also collected
+ing the jth state. α is calculated from the diagnostic odds (cid:13)
+ratio(OR)derivedfromthemodel’saccuracyinrecognizing six system events data from the da VinciR surgical system,
+each state in the training data: α = TPi,·j·TNi,j where including camera follow, instrument follow, surgeon head
+the (i,j)’s components of TP, TNi,,j FP,FFPNi,jaFreNit,hj+enumber in/out of the console, master clutch for the hand controller,
+and two ultrasound probe events. The ultrasound probe
+of true positives, true negatives, false positives, and false
+events detect if the probe is being held by the forceps and
+negatives of the ith model on recognizing the jth state,
+(cid:80) − if the probe is in contact with the tissue, respectively. All
+respectively.  = 10 5 is a placeholder such that the
+events are represented as binary on/off time series.
+denominatorisnotzero.αisnormalizedproportionallysuch
+that ai=1αi,j =1. The comprehensive estimate of state at B. Metrics
+time t S(t) is then made by
+We use two evaluation metrics for our state estimation
+model: the frame-wise state estimation accuracy and the
+S(t) =argmaxP(t). (4)
+j edit distance. The frame-wise accuracy is the percentage
+j
+of correctly recognized frames, which is measured without
+III. EXPERIMENTALEVALUATIONS
+accounting for the temporal consistency. This is because the
+We used two datasets to evaluate our models: JIGSAWS model has only the knowledge of the current and preceding
+and RIOUS datasets (Table I).
+A. Datasets TABLEI
+DATASETSSTATEDESCRIPTIONSANDDURATION
+JIGSAWS: The JIGSAWS dataset consists of three types
+ofﬁnely-annotatedRAStasks[25],withsynchronizedvideo JIGSAWSSuturingDataset
+ActionID Description Duration(s)
+andkinematicsdata.Thesetasksareperformedinabenchtop G1 Reachingfortheneedlewithrighthand 2.2
+G2 Positioningthetipoftheneedle 3.4
+setting. We used the suturing dataset, which has 39 trials G3 Pushingneedlethroughthetissue 9.0
+G4 Transferringneedlefromlefttoright 4.5
+recordedat30Hz,eacharound1.5minutesandcontainsclose G5 Movingtocenterwithneedleingrip 3.0
+G6 Pullingsuturewithlefthand 4.8
+to20actioninstances.Thereare9possibleactions(Fig.4a). G7 Orientingneedle 7.7
+G8 Usingrighthandtohelptightensuture 3.1
+The kinematics variables we used include the end effector G9 Droppingsutureandmovingtoendpoints 7.3
+RIOUSDataset
+positions, velocities, and gripper angles of the patient-side StateID Description Duration(s)
+manipulator (PSM). The raw kinematics data uses the ro- S1 Probereleased,outofendoscopicview 17.3
+S2 Probereleased,inendoscopicview 10.6
+tation matrix to represent the end-effector’s orientation. To S3 Reachingforprobe 4.1
+S4 Graspingprobe 1.3
+reduce data dimensionality, weconverted the rotation matrix S5 Liftingprobeup 2.2
+S6 Carryingprobetotissuesurface 2.3
+(9 variables) to Euler angles (3 variables). S7 Sweeping 8.1
+S8 Releasingprobe 2.5
+374
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. method. Although kinematics-based state estimation models
+a b
+G0 S0 generally have a higher frame-wise accuracy comparing to
+vision-based models (Tables II and III), which are very
+S2
+G1 sensitivetocameramovements,eachmodelhasitsrespective
+S1
+G5 strengthsandweaknesses.Forinstance,ataround200softhe
+S3
+G2
+illustrated sequence in Fig. 5, both kinematics-based models
+S4
+show a consecutive block of errors where the models fail
+G3
+G7 S5 to recognize the ‘probe released and in endoscopic view’
+G6 S8 state. Considering the relatively random robotic motions in
+G8 S6
+this state, this is to be expected. The low weighting factors
+G9 G4 S7
+for both kinematics-based model in estimating this state,
+as shown in Fig. 6, also support this observation. On the
+Fig.4. FSMsoftheJIGSAWSsuturingtask(a)andtheRIOUSimaging
+task (b). The 0 states are the starting of tasks. The states with a double other hand, the vision-based model correctly estimates this
+circlearetheaccepting(ﬁnal)states.TheactionsintheJIGSAWSsuturing state, since the state is more visually distinguishable. When
+taskarerepresentedwithgestures(G)andthestatesintheRIOUSimaging
+incorporating both vision- and kinematics-based methods,
+taskarerepresentedwithstates(S).
+our fusion models perform weighted voting based on the
+trainingaccuracyofeachmodel.Inthisexample,theweight-
+data entries in the real-time state estimation setting. The ing factor for the vision-based model is higher than the
+edit distance, or Levenshtein distance [33], measures the kinematics-based models; therefore, our fusion models are
+number of insertion, deletion, and substitution needed to able to correctly estimate the current state of the surgical
+converttheinferredsequenceofstatesinthesegmentlevelto task. In other states where the robotic motions are more
+the ground truth. We normalize the edit distance following consistent but the vision data is less distinguishable, the
+[5], [6]. We evaluate both datasets using Leave One User kinematics-based models have higher weighting factors.
+Out as described in [34]. For the ultrasound imaging task, The incorporation of system events further improves the
+we assume a causal setting, in which the models only have accuracy of our fusion model. Comparing Fusion-KV and
+knowledge of the current and preceding time steps. This is Fusion-KVE, we observe fewer errors - many are corrected
+to mimic the real-time state estimation application of our where α for the event-based model is high, such as states
+model, in which the robot cannot foresee the future. For the with shorter duration or frequent camera movements. At
+JIGSAWS suturing task, we assume a non-causal setting for around 250s to 300s of the presented sequence, frequent
+more direct comparisons with the reported accuracy of the state transitions can be observed. Fusion-KVE is able to
+state-of-the-art methods. The edit distance is therefore only estimate the states more accurately and shows fewer ﬂuc-
+used for JIGSAWS. tuations comparing to other models. The event-based model
+is less sensitive to environmental noises, as the events are
+IV. RESULTSANDDISCUSSIONS
+Table II compares the performances of the state-of-the-art
+TABLEII
+surgical state estimation models with an ablated version of
+our model (Fusion-KV), consisting of the kinematics- and RESULTSONJIGSAWSSUTURINGDATASET
+vision-based models as well as the fusion model. Table III JIGSAWSSuturing
+comparestheperformancesofourfullfusionmodel(Fusion- Method Inputdatatype Accuracy(%) EditDist.
+ST-CNN[21] Vis 74.7 66.6
+KVE) and Fusion-KV with their single-source components
+TCN[19] Kin 79.6 85.8
+using the RIOUS dataset. In Fig. 5, we show an example ForwardLSTM[6] Kin 80.5 75.3
+of state estimation results of our fusion models and their TCN[19] Vis 81.4 83.1
+TDNN[7] Kin 81.7 -
+components for a string of ultrasound imaging sequences.
+TricorNet[23] Kin 82.9 86.8
+Fig. 6 shows the weight matrix α distributions used in our Bidir.LSTM[6] Kin 83.3 81.1
+fusion models. A large α indicates that the ith model LC-SC-CRF[5] Kin+Vis 83.5 76.8
+i,j Fusion-KV Kin+Vis 86.3 87.2
+performs well in estimating the jth state during training.
+In Table II, Fusion-KV achieves a frame-wise accuracy
+TABLEIII
+of 86.3% and edit distance score of 87.2 for the JIGSAWS
+RESULTSONRIOUSDATASET
+suturing dataset, both improving the state-of-the-art surgical
+state estimation models. For the RIOUS dataset (Table III), RIOUSdataset
+Fusion-KVE achieves a frame-wise accuracy of 89.4%, with Method Inputdatatype Accuracy(%)
+ST-CNN[21] Vis 46.3
+an improvement of 11% comparing to the best-performing
+TCN[19] Vis 54.8
+single-input model. Fusion-KV also achieves a higher accu- LC-SC-CRF[5] Kin 71.5
+racy comparing to single-input models. ForwardLSTM[6] Kin 72.2
+TDNN[7] Kin 78.1
+A closer observation of the inferred state sequences by
+TCN[19] Kin 78.4
+various models and their weighting factors as shown in Fig. Fusion-KV Kin+Vis 82.7
+5 and Fig. 6 reveals the key aspects of improvements of our Fusion-KVE Kin+Vis+Evt 89.4
+375
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. Accuracy (%)
+64.4
+70.1
+74.5
+81.1
+89.3
+Fig.5. Exampleultrasoundimagingstateestimationresultsofthevision-basedmodel(Vis)andthekinematics-basedmodels(Kin-LSTMandKin-TCN)
+usedinourfusionmodels,alongwithFusion-KVandFusion-KVE,comparingtothegroundtruth(GT).ThemodelusedistrainedwithLOUO,andthe
+example trial is performed by the unseen user. The top row of each block bar shows the state estimation results, and the frames marked in red in the
+bottomrowarethediscrepanciesbetweenthestateestimationresultsandthegroundtruth.
+V. CONCLUSIONSANDFUTUREWORK
+In this paper, we introduce a uniﬁed approach of ﬁne-
+grained state estimation for various surgical tasks using
+(cid:13)
+multiplesourcesofinputdatafromthedaVinciR Xisurgical
+system.Ourmodels(includingFusion-KVandFusion-KVE)
+improve the state-of-the-art performance for both the JIG-
+SAWSsuturingdatasetandtheRIOUSdataset.Fusion-KVE,
+which takes advantage of the system events (absent in the
+Fig.6. Distributionsofthenormalizedweightingfactormatrixαforthe JIGSAWSdataset),furtherimprovesFusion-KV.OurRIOUS
+JIGSAWS suturing task and the RIOUS imaging task. A larger weighting
+dataset is more complex than JIGSAWS and resembles the
+factormeansthatthemodelperformsbetteratestimatingthecorresponding
+state. real-worldsurgicaltasks,withdry-lab,cadavericandin-vivo
+experiments, as well as camera movements and annotations
+of both action and non-action states. Our uniﬁed model
+collected directly from the surgical system. Additionally,
+proves its robustness against complex and realistic surgical
+when the state transition is frequent, models that solely
+tasks by achieving a superior frame-wise accuracy even in a
+explore the temporal dependencies of input data, such as
+causal setting, where the model has knowledge of only the
+TCNandLSTM,arelessaccurate.Astheevent-basedmodel
+current and preceding time steps.
+does not take the temporal correlations into consideration,
+We show how different types of input data (vision, kine-
+incorporating such data source reduces the ﬂuctuation in
+matics, and system events) have their respective strengths
+state estimation results, especially when the state transition
+andweaknessesintherecognitionofﬁne-grainedstates.The
+is frequent or the duration of each state is short.
+ﬁne-grained state estimation of surgical tasks is challenging
+The average duration of each state in both JIGSAWS
+due to the duration of various states and frequent state
+suturing dataset and the RIOUS dataset varies signiﬁcantly,
+transitions. We show that by incorporating multiple types of
+as shown in Table I. To better capture states with different
+input data, we are able to extract richer information during
+lengths of duration, we implemented two kinematics-based
+trainingandmoreaccuratelyestimatethestatesinasurgical
+state estimation models: TCN and forward LSTM. Fig. 6
+setting. A possible next step of our work would be to use
+supportsourdecision.Whentheaveragedurationofastateis
+the weighting factor matrix for boosting methods to more
+high, the LSTM-based model has a higher weighting factor.
+efﬁciently train the uniﬁed state estimation model. Although
+Similarly, the TCN-based model has a higher weighting
+modeled as an FSM, the ﬁne-grained states within each
+factor for shorter-duration states.
+surgical task are estimated independently, without inﬂuence
+Asmentionedbefore,theRIOUSdatasetismorecomplex
+fromthepreviousstate(s).Anotherpotentialnextstepwould
+compared to JIGSAWS and resembles real-world surgical
+be to perform state prediction based on previously estimated
+tasks more closely. It is, therefore, more complicated and
+state sequence. In the future, we also plan to apply this state
+harder to be well-captured by a single-input state estimation
+estimation framework to applications such as smart-assist
+model. Furthermore, our application of real-time state es-
+technologies and supervised autonomy for surgical subtasks.
+timation limits the amount of data available to the model.
+Although running multiple state estimation models at the
+ACKNOWLEDGMENT
+same time inevitably requires higher computing power, our
+fusion state estimation model is robust against complex ThisworkwasfundedbyIntuitiveSurgical,Inc.Wewould
+and realistic surgical tasks such as ultrasound imaging and like to thank Dr. Azad Shademan and Dr. Pourya Shirazian
+achieves a superior frame-wise accuracy. for their support of this research.
+376
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [18] B. van Amsterdam, H. Nakawala, E. De Momi, and D. Stoyanov,
+“Weakly supervised recognition of surgical gestures,” in 2019 Inter-
+national Conference on Robotics and Automation (ICRA). IEEE,
+[1] G. P. Moustris, S. C. Hiridis, K. M. Deliparaschos, and K. M. Kon-
+2019,pp.9565–9571.
+stantinidis, “Evolution of autonomous and semi-autonomous robotic
+[19] C.Lea,R.Vidal,A.Reiter,andG.D.Hager,“Temporalconvolutional
+surgicalsystems:areviewoftheliterature,”Theinternationaljournal
+networks: A uniﬁed approach to action segmentation,” in European
+ofmedicalroboticsandcomputerassistedsurgery,vol.7,no.4,pp.
+ConferenceonComputerVision. Springer,2016,pp.47–54.
+375–392,2011.
+[20] R. DiPietro, N. Ahmidi, A. Malpani, M. Waldram, G. I. Lee, M. R.
+[2] P. Chalasani, A. Deguet, P. Kazanzides, and R. H. Taylor, “A com-
+Lee, S. S. Vedula, and G. D. Hager, “Segmenting and classifying
+putational framework for complementary situational awareness (csa)
+activities in robot-assisted surgery with recurrent neural networks,”
+in surgical assistant robots,” in 2018 Second IEEE International
+Internationaljournalofcomputerassistedradiologyandsurgery,pp.
+ConferenceonRoboticComputing(IRC). IEEE,2018,pp.9–16.
+1–16,2019.
+[3] S.P.DiMaio,C.J.Hasser,R.H.Taylor,D.Q.Larkin,P.Kazanzides,
+[21] C.Lea,A.Reiter,R.Vidal,andG.D.Hager,“Segmentalspatiotempo-
+A.Deguet,B.P.Vagvolgyi,andJ.Leven,“Interactiveuserinterfaces
+ralcnnsforﬁne-grainedactionsegmentation,”inEuropeanConference
+forminimallyinvasivetelesurgicalsystems,”Feb.152018,uSPatent
+onComputerVision. Springer,2016,pp.36–52.
+App.15/725,271.
+[22] Y.Jin,Q.Dou,H.Chen,L.Yu,J.Qin,C.-W.Fu,andP.-A.Heng,“Sv-
+[4] A.Zia,A.Hung,I.Essa,andA.Jarc,“Surgicalactivityrecognitionin rcnet:workﬂowrecognitionfromsurgicalvideosusingrecurrentcon-
+robot-assistedradicalprostatectomyusingdeeplearning,”inMedical volutionalnetwork,”IEEEtransactionsonmedicalimaging,vol.37,
+Image Computing and Computer Assisted Intervention – MICCAI no.5,pp.1114–1126,2017.
+2018,A.F.Frangi,J.A.Schnabel,C.Davatzikos,C.Alberola-Lo´pez, [23] L. Ding and C. Xu, “Tricornet: A hybrid temporal convolutional
+and G. Fichtinger, Eds. Cham: Springer International Publishing, andrecurrentnetworkforvideoactionsegmentation,”arXivpreprint
+2018,pp.273–280. arXiv:1705.07818,2017.
+[5] C. Lea, R. Vidal, and G. D. Hager, “Learning convolutional action [24] F. Caba Heilbron, V. Escorcia, B. Ghanem, and J. Carlos Niebles,
+primitivesforﬁne-grainedactionrecognition,”in2016IEEEinterna- “Activitynet: A large-scale video benchmark for human activity un-
+tionalconferenceonroboticsandautomation(ICRA). IEEE,2016, derstanding,” in Proceedings of the IEEE Conference on Computer
+pp.1642–1649. VisionandPatternRecognition,2015,pp.961–970.
+[6] R.DiPietro,C.Lea,A.Malpani,N.Ahmidi,S.S.Vedula,G.I.Lee, [25] N.Ahmidi,L.Tao,S.Sefati,Y.Gao,C.Lea,B.B.Haro,L.Zappella,
+M. R. Lee, and G. D. Hager, “Recognizing surgical activities with S.Khudanpur,R.Vidal,andG.D.Hager,“Adatasetandbenchmarks
+recurrent neural networks,” in International conference on medical forsegmentationandrecognitionofgesturesinroboticsurgery,”IEEE
+imagecomputingandcomputer-assistedintervention. Springer,2016, Transactions on Biomedical Engineering, vol. 64, no. 9, pp. 2025–
+pp.551–558. 2041,2017.
+[7] G. Menegozzo, D. DallAlba, C. Zandona`, and P. Fiorini, “Surgical [26] A.P.Twinanda,S.Shehata,D.Mutter,J.Marescaux,M.DeMathelin,
+gesturerecognitionwithtimedelayneuralnetworkbasedonkinematic andN.Padoy,“Endonet:adeeparchitectureforrecognitiontaskson
+data,”in2019InternationalSymposiumonMedicalRobotics(ISMR). laparoscopicvideos,”IEEEtransactionsonmedicalimaging,vol.36,
+IEEE,2019,pp.1–7. no.1,pp.86–97,2016.
+[8] E. Mavroudi, D. Bhaskara, S. Sefati, H. Ali, and R. Vidal, “End-to- [27] K. Simonyan and A. Zisserman, “Very deep convolutional networks
+endﬁne-grainedactionsegmentationandrecognitionusingconditional for large-scale image recognition,” arXiv preprint arXiv:1409.1556,
+randomﬁeldmodelsanddiscriminativesparsecoding,”in2018IEEE 2014.
+Winter Conference on Applications of Computer Vision (WACV). [28] V. Nair and G. E. Hinton, “Rectiﬁed linear units improve restricted
+IEEE,2018,pp.1558–1567. boltzmann machines,” in Proceedings of the 27th international con-
+[9] T.Yu,D.Mutter,J.Marescaux,andN.Padoy,“Learningfromatiny ferenceonmachinelearning(ICML-10),2010,pp.807–814.
+datasetofmanualannotations:ateacher/studentapproachforsurgical [29] D. P. Kingma and J. Ba, “Adam: A method for stochastic optimiza-
+phaserecognition,”arXivpreprintarXiv:1812.00033,2018. tion,”arXivpreprintarXiv:1412.6980,2014.
+[10] A.Zia,C.Zhang,X.Xiong,andA.M.Jarc,“Temporalclusteringof [30] F.A.GersandJ.Schmidhuber,“Recurrentnetsthattimeandcount,”in
+surgical activities in robot-assisted surgery,” International journal of ProceedingsoftheIEEE-INNS-ENNSInternationalJointConference
+computer assisted radiology and surgery, vol. 12, no. 7, pp. 1171– on Neural Networks. IJCNN 2000. Neural Computing: New Chal-
+1178,2017. lengesandPerspectivesfortheNewMillennium,vol.3. IEEE,2000,
+[11] G.Yengera,D.Mutter,J.Marescaux,andN.Padoy,“Lessismore:sur- pp.189–194.
+gicalphaserecognitionwithlessannotationsthroughself-supervised [31] K. P. Murphy, Machine learning: a probabilistic perspective. MIT
+pre-trainingofcnn-lstmnetworks,”arXivpreprintarXiv:1805.08569, press,2012.
+2018. [32] A.P.Bradley,“Theuseoftheareaundertheroccurveintheevaluation
+[12] L.Tao,E.Elhamifar,S.Khudanpur,G.D.Hager,andR.Vidal,“Sparse of machine learning algorithms,” Pattern recognition, vol. 30, no. 7,
+hidden markov models for surgical gesture classiﬁcation and skill pp.1145–1159,1997.
+evaluation,”inInternationalconferenceoninformationprocessingin [33] V. I. Levenshtein, “Binary codes capable of correcting deletions,
+computer-assistedinterventions. Springer,2012,pp.167–177. insertions, and reversals,” in Soviet physics doklady, vol. 10, no. 8,
+1966,pp.707–710.
+[13] J.Rosen,J.D.Brown,L.Chang,M.N.Sinanan,andB.Hannaford,
+[34] Y.Gao,S.S.Vedula,C.E.Reiley,N.Ahmidi,B.Varadarajan,H.C.
+“Generalizedapproachformodelingminimallyinvasivesurgeryasa
+Lin,L.Tao,L.Zappella,B.Be´jar,D.D.Yuh,etal.,“Jhu-isigesture
+stochasticprocessusingadiscretemarkovmodel,”IEEETransactions
+andskillassessmentworkingset(jigsaws):Asurgicalactivitydataset
+onBiomedicalengineering,vol.53,no.3,pp.399–413,2006.
+forhumanmotionmodeling,”inMICCAIWorkshop:M2CAI,vol.3,
+[14] M. Volkov, D. A. Hashimoto, G. Rosman, O. R. Meireles, and
+2014,p.3.
+D.Rus,“Machinelearningandcoresetsforautomatedreal-timevideo
+segmentation of laparoscopic and robot-assisted surgery,” in 2017
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA).
+IEEE,2017,pp.754–759.
+[15] L. Tao, L. Zappella, G. D. Hager, and R. Vidal, “Surgical gesture
+segmentationandrecognition,”inInternationalConferenceonMedi-
+calImageComputingandComputer-AssistedIntervention. Springer,
+2013,pp.339–346.
+[16] L. Zappella, B. Be´jar, G. Hager, and R. Vidal, “Surgical gesture
+classiﬁcationfromvideoandkinematicdata,”Medicalimageanalysis,
+vol.17,no.7,pp.732–745,2013.
+[17] S. Krishnan, A. Garg, S. Patil, C. Lea, G. Hager, P. Abbeel, and
+K.Goldberg,“Transitionstateclustering:Unsupervisedsurgicaltrajec-
+torysegmentationforrobotlearning,”inRoboticsResearch. Springer,
+2018,pp.91–110.
+377
+Authorized licensed use limited to: UNIVERSITY OF ROCHESTER. Downloaded on September 20,2020 at 14:44:04 UTC from IEEE Xplore.  Restrictions apply. 

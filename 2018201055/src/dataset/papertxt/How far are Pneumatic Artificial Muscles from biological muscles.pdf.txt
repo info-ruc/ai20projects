@@ -1,0 +1,497 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Modulating hip stiffness with a robotic exoskeleton immediately
+changes gait
+Jongwoo Lee1, Haley R. Warren2, Vibha Agarwal3, Meghan E. Huber1,4, and Neville Hogan1,5
+Abstract—Restoring healthy kinematics is a critical com- A
+STIFFNESS CONTROLLER
+ponent of assisting and rehabilitating impaired locomotion.
+Here we tested whether spatio-temporal gait patterns can be 5
+modulated by applying mechanical impedance to hip joints.
+UsingtheSamsungGEMS-Hexoskeleton,weemulatedavirtual m)
+spring(positiveandnegative)betweentheuser’slegs.Wefound ߬(NL   0
+that applying positive stiffness with the exoskeleton decreased
+stride time and hip range of motion for healthy subjects dur- -5
+-1 0 1
+ing treadmill walking. Conversely, the application of negative ߠREL ߠREL,DZ  (rad) GEMS-H
+stiffness increased stride time and hip range of motion. These ݇
+effects did not vary over long nor short repeated exposures to Negative Positive
+applied stiffness. In addition, minimal transient behavior was – ߠREL
+observedinspatio-temporalmeasuresofgaitwhenthestiffness ߠR
+controllertransitionedbetweenonandoffstates.Theseresults + EXT FLEX
+suggest that changes in gait behavior induced by applying hip ߠL (+) (-)
+stiffnesswerepurelyamechanicaleffect.Together,ourﬁndings
+indicate that applying mechanical impedance using lower-limb
+assistive devices may be an effective, minimally-encumbering
+intervention to restore healthy gait patterns.
+B
+BASELINE SHORT EXPOSURE LONG EXPOSURE
+I. INTRODUCTION BL SE LE
+Thepotentialofusinglower-limbexoskeletonstoaugment OFF ON
+human performance by reducing metabolic cost and muscle 1200 STRIDES 60 STRIDES 1000 STRIDES
+effort during normal walking has been well-demonstrated Fig. 1. A Experimental Setup. Subjects were instructed to walk com-
+over the past decade [1]–[8]. However effective methods fortably on treadmill while the Samsung GEMS-H exoskeleton emulated
+mechanical impedance (positive and negative stiffness) between two legs.
+for modulating gait kinematics, bothto assist or retrain indi-
+B Experimental protocol consisted of baseline, short-exposure, and long-
+vidualswithgaitimpairments,throughtheuseoflower-limb exposuretrials.
+exoskeletons are still needed. Recent studies have examined
+changes in joint trajectories and joint power (estimated by
+inverse dynamics) in an effort to explain the reduction in planned,repetitivekinematicpatternsonpatientsusinghigh-
+energy consumption resulting from the use of ankle [1]– gain trajectory-tracking controllers. However, these methods
+[3] and hip exoskeletons [4], [5]. Still, changes in joint do not improve clinical outcome measures more than the
+kinematics were usually a secondary outcome rather than current standard of care [9]–[11]. We posit that the lim-
+a primary concern. ited efﬁcacy of robotic gait rehabilitation stems from the
+Conventional lower-extremity robotic rehabilitation has fact that a pre-determined kinematics approach discourages
+aimed to retrain impaired gait kinematics by imposing pre- active engagement of patients in making movements [12]
+and interferes with natural dynamics of walking [13], [14].
+This work was supported by the Global Research Outreach program of
+We propose that applying mechanical impedance at the leg
+Samsung Advanced Institute of Technology. J.L. was also supported by
+the Samsung scholarship. H.W. was also supported by the MIT Summer joints may be a promising alternative method to guide users
+Research Program (MSRP). V.A. was also supported by the MIT Under- to change their gait pattern, either through assistance or
+graduateResearchOpportunityProgram(UROP).N.H.wasalsosupported
+rehabilitation, without discouragingtheir active engagement.
+bytheEricP.andEvelynE.Newmanfund,NIH-R01-HD087089,NSF-NRI
+1637824,andNSF-CRCNS-1724135. The purpose of the present study was to evaluate whether
+1DepartmentofMechanicalEngineering,MassachusettsInstituteofTech- applying hip joint stiffness using the Samsung Gait En-
+nology,Cambridge,MA02139USA
+hancing and Motivating Systems for hip (GEMS-H ex-
+2DepartmentofBiomedicalEngineering,UniversityofVermont,Burling-
+ton,VT05405USA oskeleton; Fig. 1a) can induce quantiﬁable changes in the
+3Department of Electrical Engineering and Computer Science, Mas- spatio-temporal pattern of gait during treadmill walking,
+sachusettsInstituteofTechnology,Cambridge,MA02139USA
+and whether the induced changes varied with extended
+4Department of Mechanical and Industrial Engineering, University of
+MassachusettsAmherst,Amherst,MA01003USA and repeated exposure. A time-varying effect of applied
+5DepartmentofBrainandCognitiveSciences,MassachusettsInstituteof stiffness on gait behavior would suggest that the changes
+Technology,Cambridge,MA02139USA
+were induced by a combined mechanical and neural effect,
+Email Addresses: jw127@mit.edu, hrwarren@uvm.edu, agar-
+walv@mit.edu,mehuber@umass.edu,neville@mit.edu rather than a purely mechanical effect. This would not be
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 733
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. surprising given prior evidence that humans adjust or adapt the legs apart from the unstable equilibrium point (θ =
+REL
+their neural controller of locomotion in response to external 0rad). The high-level control loop rate was 200Hz while the
+perturbations during gait [15]–[18]. Understanding whether low-level current tracking control ran at 10kHz.
+any change in overt behavior is induced in part by neural In an ideal spring, the net energy ﬂow from the ex-
+changes has important implications for both gait assistance oskeleton to the human over a single stride cycle should
+and rehabilitation. be zero. However, as may be expected, digital emulation of
+In the experiment, we controlled the GEMS-H to behave a spring departed from this ideal. In the positive stiffness
+as a virtual spring (either with positive or negative stiffness) condition,theestimatedtotalworkdonebytheGEMS-Hon
+between two legs and examined changes in hip joint kine- the subjects over a gait cycle was positive (positive work:
+−
+matics and stride time measured by on-board sensors. More M = 1.21J,SD = 0.26J, negative: M = 0.96J,SD =
+speciﬁcally, we tested the following predictions: 0.22J, net: M = 0.26J,SD = 0.08J). With negative
+• Applying stiffness to the hip joints will result in quan- stiffness, the exoskeleton absorbed energy (positive work:
+−
+tiﬁable changes in kinematics. M = 5.79J,SD = 1.53J, negative: M = 7.26J,SD =
+−
+• Changes in spatio-temporal gait patterns will be depen- 1.96J, net: M = 1.48J,SD=0.49J). While not perfectly
+dent on stiffness parameters (positive or negative). zero, the net work over a stride cycle calculated from the
+• The effect of applied stiffness on hip kinematics will torque and velocity measurements estimated by the onboard
+vary with extended and repeated exposure, indicating sensors was small in each condition.
+neural adaptation.
+D. Experimental Procedure
+II. METHODS The experiment took place over two consecutive days.
+A. Subjects On each day, subjects performed three trials [baseline (BL),
+short-exposure (SE), and long-exposure (LE)] wearing the
+Four healthy, young adults (gender: one female, three
+± GEMS-H exoskeleton while walking on a Sole Fitness
+males; age: 24.8 5.5 years) participated in this study. ×
+F80 treadmill (0.84m 1.90m deck; 0.045m/s belt speed
+None had previously worn a hip exoskeleton nor partook
+resolution) (Fig. 1a).
+in a similar experiment. All subjects gave informed written
+1) Baseline Trial: In the BL trials, subjects walked with
+consent before the experiment. The experimental protocol
+was reviewed and approved by the Institutional Review the stiffness controller off (i.e., τL = τR = 0Nm) for
+1200 strides (Fig. 1b). Subjects were instructed to adjust the
+Board of the Massachusetts Institute of Technology.
+treadmill to a comfortable speed within the ﬁrst 200 strides
+B. GEMS-H Exoskeleton (Positive stiffness: M =1.67m/s,SD=0.17m/s; Negative
+The GEMS-H exoskeleton used in this study was devel- stiffness:M =1.65m/s,SD=0.19m/s).Thetreadmillwas
+opedbySamsungAdvancedInstituteofTechnology(Suwon- thenﬁxedatthisspeedfortheremainderoftheBLtrialand
+si, Gyeonggi-do, South Korea) (Fig. 1a). This lightweight all subsequent trials performed on that day. Only the last
+(2.1kg) robotic exoskeleton is capable of applying torque 1000 strides were used in the data analysis.
+about hip joints in the sagittal plane. Passive hinges allow 2) Short-exposure Trial: In the SE trials, subjects walked
+for hip abduction and adduction in the frontal plane. Output for 540 strides. The stiffness controller started off for the
+torque from the actuator is estimated and controlled by ﬁrst 60 strides and then toggled between on and off for
+sensing electrical current in the motor, and encoders are four blocks. Each block consisted of 60 strides with the
+embeddedintheactuatormodules.Allelectronics,actuators, controller on, followed by 60 strides with the controller
+and power sources are located onboard the device, allowing off (Fig. 1b). Stiffness k was positive (5Nm/rad) on one
+for autonomous operation. day and negative (-5Nm/rad) on the other, and this order
+was counterbalanced across subjects. While subjects were
+C. Stiffness Controller informedthatthecontrollerwouldturnonandoffduringthe
+The GEMS-H w(cid:20)as (cid:21)used(cid:20)to emulate a(cid:21) virtual spring be- trial,theywerenottoldhowtheexoskeletonwascontrolled.
+tween two legs using the following control law: For safety purposes, subjects walked for approximately 10
+− stridesovergroundwithexoskeletonpoweredbeforethestart
+τ kθ
+L = REL,DZ (1) of the SE trial. Only the last 480 strides were used in the
+τ kθ
+R REL,DZ data analysis.
+where τ ,τ are joint torques of left and right side, respec- 3) Long-exposure Trial: In the LE trials, subjects walked
+L R −
+tively. θ = θ θ is relative angle between left (θ ) for 1000 strides with the stiffness controller on (Fig. 1b).
+REL L R L
+and right (θ ) hip joints and k is the stiffness of the spring. The stiffness value was the same as that used in the SE trial
+R ± ◦
+Adeadzoneof 0.035rad(approximately2 )wasappliedto of that day.
+relative angle (θ ) to prevent an abrupt sign change in
+REL,DZ E. Data Processing
+the output torque (Fig. 1a).
+When k is positive, the controller acts to push the legs All signals were sampled at 200Hz. The angular position
+together towards a stable equilibrium point at θ =0rad. of each hip joint was directly measured by the embedded
+REL
+Conversely when k is negative, the controller acts to pull encoders. Angular velocity was calculated by ﬁltering the
+734
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. position signals ofﬂine. An FIR ﬁlter of order 50 with 20Hz were performed using SPSS Statistics for Windows, Version
+passband frequency and 30Hz stopband frequency was de- 25.0 (IBM Corporation, Armonk, NY). For all statistical
+signed using the designfilt function in MATLAB (The tests, the signiﬁcance level was set to p<0.05.
+Mathworks,Natick,MA,USA)toapproximateanideallow-
+III. LONGEXPOSURERESULTS
+pass ﬁltered differentiator. The ﬁltered velocity signal was
+The following analysis assessed the effect of applying
+shiftedintimebythegroupdelayoftheﬁltertocompensate
+stiffness between legs on temporal and spatial patterns of
+for delay introduced by the ﬁlter. Hip extension and ﬂexion
+gait and tested whether the effects varied over the course of
+were deﬁned as positive and negative, respectively (Fig. 1a).
+1000strides.Fig.2exempliﬁeshowthedependentmeasures
+F. Dependent Measures changed over strides in the LE and BL trials for a represen-
+tative subject.
+The gait cycle (%) was deﬁned using the maxima of
+the left hip angle proﬁle. 0% of the gait cycle was de- A. Effect of positive stiffness
+ﬁned as maximum extension of the left hip joint, which
+1) Temporalmeasures: Meanstridetimewassigniﬁcantly
+roughly coincides with toe-off [19]. From 0% to 50% of
+lower in the LE trial compared to the BL trial (Fig. 3a). The
+the gait cycle, the left hip was ﬂexing (i.e., negative joint
+effect of block and interaction on mean stride time were
+velocity) while the right hip was extending (i.e., positive
+not statistically signiﬁcant (ps > 0.05). There were also no
+joint velocity). From 50% to 100% of the gait cycle, the
+signiﬁcant effects nor interactions on the standard deviation
+left hip was extending while the right hip was ﬂexing. The
+of stride time (ps>0.05) (Fig. 3b).
+angular position and velocity trajectories from each trial
+2) Spatial measures: Mean θ RoM was signiﬁcantly
+were segmented and time-normalized per stride using the REL
+lowerintheLEtrialcomparedtotheBLtrial(Fig.3c).This
+interp1 function in MATLAB to calculate the following
+arosefromthefactthatthemeanθ andθ RoMwereboth
+dependent measures for each stride. The temporal aspect of L R
+signiﬁcantlylowerintheLEtrial(Fig.3d,g).Whiletheeffect
+each stride was characterized by stride time, and the spatial
+of block on mean θ RoM was signiﬁcant, the interaction
+aspect was quantiﬁed by the range of motion (RoM) of the R
+was not. In both trials, mean θ RoM tended to increase
+relative angle between the left and right hip joints (θREL). from the ﬁrst 250 strides (M =R 34.85◦) to the last 250
+To further dissect how changes in θREL RoM arose, the strides (M = 35.41◦). Though statistically signiﬁcant, the
+maximum, minimum, and RoM of the individual left (θL) magnitudeofthisincreasemaynotbepracticallymeaningful
+and right (θR) hip angles were also calculated. and the result of measurement error.
+For each subject, the mean of all spatial and temporal
+The decrease in mean θ and θ RoM in the LE trial
+measures and the standard deviation (SD) of the temporal R L
+resulted from a reduction in hip extension. The mean max-
+measureduringtheinitial250andterminal250stridesinthe
+imum values of θ and θ , which quantiﬁed the extent of
+BL and LE trials were calculated. In the SE trials, the mean L R
+hipextension,weresigniﬁcantlyreducedintheLEtrial(Fig.
+ofalldependentmeasuresandthestandarddeviationofstride
+3e,h). The extent of hip ﬂexion, as quantiﬁed by the mean
+timeforcondition(i.e.,every60strides)werecalculated.To
+minimumvaluesofθ andθ ,wasnotsigniﬁcantlydifferent
+detect whether there was transient behavior in stride time L R
+in the LE and BL trials (Fig. 3f,i).
+and θREL RoM when the controller transitioned between on Besides mean θ RoM, the effects of block and inter-
+and off states in the SE trial, the correlation coefﬁcient (r) actions on the spatRial measures were not signiﬁcant (ps >
+of the dependent measures over the initial 15 strides was
+0.05).
+calculated for each block. An r of a dependent measure
+would be zero during steady-state and non-zero if there was B. Effect of negative stiffness
+an approximately linear trend. 1) Temporal measures: Whereas applying positive stiff-
+ness decreased mean stride time, applying negative stiffness
+G. Statistical Analysis
+in the LE trial signiﬁcantly increased mean stride time com-
+The ﬁrst analysis tested whether long application of hip paredtotheBLtrial(Fig.3a).Therewasnosigniﬁcanteffect
+stiffness affected the dependent measures, as well as the of block nor interaction on mean stride time (ps > 0.05).
+stationarity of the effect over the course of 1000 strides. For Again, there were also no signiﬁcant effects nor interaction
+eachstiffnesscondition(positiveandnegative),a2(Trial:BL on the standard deviation of stride time (ps > 0.05) (Fig.
+vs. LE) x 2(Block: initial vs. terminal) analysis of variance 3b).
+(ANOVA) was conducted on each dependent measure. The 2) Spatial measures: Mean θ , θ , and θ RoM were
+REL L R
+second analysis tested whether short applications of hip all signiﬁcantly higher in the LE trial compared to the BL
+stiffness affected the dependent measures and whether the trial (Fig. 3c,d,g).
+effect evolved with repeated exposure. For each stiffness The increase in mean θ and θ RoM in the LE trial
+R L
+condition, a 2(Controller state: ON vs. OFF) x 4(Block) resulted from a increase in both hip extension and ﬂexion.
+ANOVA was conducted for each measure. If the assump- The mean maximum values of θ and θ were signiﬁcantly
+L R
+tion of sphericity was violated in the effect of block, the greater in the LE trial compared to the BL trial (Fig. 3e,h),
+Greenhouse-Geisser correction factor was applied to adjust andthemeanminimumvaluesweresigniﬁcantlylower(Fig.
+the degrees of freedom accordingly. The statistical analyses 3f,i).
+735
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. POSITIVE STIFFNESS NEGATIVE STIFFNESS A B C
+STRIDE TIME (ms)M (°)1110241100002000000 200 400 600 800 1000 1110241100002000000 200 400 600 800 1000 MEAN STRIDE TIME (ms)1111123400000000 LE ** BL SD STRIDE TIME (ms) 246000 LE nnss BL MEAN θ ROM (°)REL11055000 LE ****** BL
+D E F
+θ ROREL 4680000 20S0TR4I0D0E N60U0MB80E0R1B00L0 4680000LE20S0TR4I0D0E N60U0MB80E0R1000 MEAN θ ROM (°)L 468000 ****** MEAN MAX θ (°)L 123000 *** MEAN MIN θ (°)L---432000 n*s*
+Fig.2. Representativesubjectdatafrombaseline(BL)andlong-exposure 20 -50
+LE BL LE BL LE BL
+(LE) trials. Stride time and θREL RoM over strides in the LE (red) trials
+and baseline (black) trials for a representative subject in the positive (left G H I
+panel)andnegative(rightpanel)stiffnessconditions. **** * ns
+80 *** *** *
+Me2a(sTuRreIAL:BLVSLET)riXPalo2s(iBtivLeOTASCtKBif:LfnIENeBsIIsTloIAckLVSTERMINNAeTLgr)aiatAilvNeOStVifAfneBsslock N θ ROM (°)R 4600 N MAX θ (°)R 2300 N MIN θ  (°)R---324000
+Meanstridetime Fp1,=3=4.91e0-0.227 ns Fp1,=3=4.21e1-0.621 ns MEA MEA 10 MEA
+20 -50
+SDstridetime ns ns ns ns LE BL LE BL LE BL
+TRIAL TRIAL TRIAL
+MeanθRELRoM F1p,3==1.21e4-90.379 ns F1p,3==1.91e0-70.335 ns
+Negative Stiffness Positive Stiffness
+MeanθLRoM Fp1,=3=3.27e5-0.135 ns Fp1,=3=2.19e9-0.839 ns
+MeanθRRoM F1p,3==8.51e8-50.478 Fp1,=3=4.91e0-0.327 Fp1,=3=2.88e3-0.038 ns Fdeigp.en3d.entmLoeansgu-reexspofosrureeac(hLsEu)bjaencdt(rbeapsreelsinenete(dBbLy)dtrififaelrernetsuclotslo.rsA)vienratghee
+MeanmaxθL Fp1,=3=4.41e1-0.127 ns Fp1,=3=7.64e1-0.239 ns LstEiffntreiasslswaansdaBpLpliterdialisn.tDheasLheEdtrliinale,sarnedprseosleindtlitnrieaslsreopnretsheentdatryisalsneognattihvee
+MeanmaxθR Fp1,=3=3.31e4-0.225 ns Fp1,=3=4.06e0-0.336 ns dayspositivestiffnesswasapplied.nsindicatesanon-signiﬁcanteffectof
+MeanminθL ns ns Fp1,=3=7.74e1-0.231 ns tpri<al.0*.,0*1*,,p**<*,0a.n0d05*,**p*<in0di.c0a0t1e,arseisgpneicﬁtcivaenlty.effectoftrialwithp<0.05,
+MeanminθR ns ns Fp1,=3=1.52e6-0.120 ns
+Therewasnosigniﬁcanteffectsofinteractionsonanydependentmeasure.ns
+indiciatesnon-signiﬁcanteffect(p>0.05). was not signiﬁcantly different when the positive stiffness
+controller was on compared to when it was off in the SE
+trial (Fig. 5a). There was no signiﬁcant effect of block nor
+Therewasnosigniﬁcanteffectofblocknorinteractionon
+interaction on mean stride time (ps > 0.05). Neither the
+any of these spatial measures (ps>0.05).
+effectsnorinteractiononthestandarddeviationofstridetime
+3) Summary: As predicted, applying stiffness induced
+andther ofstridetimeovertheinitialstrides(M =0.0093)
+changes in hip kinematics. Applying positive stiffness re-
+were signiﬁcant (ps>0.05) (Fig. 5b,c).
+sulted in both reduced hip RoM and stride time, whereas
+applying negative stiffness resulted in both increased hip 2) Spatial measures: The effect of controller state on all
+RoM and stride time compared to baseline. Counter to our spatialmeasureswassigniﬁcant.Consistentwiththeeffectof
+predictions, however, the effects of applied stiffness did not applying positive stiffness in the LE trial, mean θ , θ ,
+REL R
+vary with with time as indicated by the lack of signiﬁcant and θ RoM were signiﬁcantly reduced when the positive
+× L
+trial block interaction. stiffnesscontrollerwasoncomparedtowhenitwasoff(Fig.
+6a,b,e).Themaximumvaluesofθ andθ weresigniﬁcantly
+R L
+IV. SHORTEXPOSURERESULTS decreased when the controller was on (Fig. 6c,f). While
+The following analysis assessed the effects of applying applying positive stiffness did not signiﬁcantly affect the
+stiffness evolved over repeated, short exposures (60 strides). minimumvaluesofθ andθ intheLEtrial,theseminimum
+R L
+Fig.4exempliﬁeshowthegaitpatternschangedoverstrides values were signiﬁcantly increased when the controller was
+in SE trials for the same representative subject in Fig. 2. onintheSEtrial6d,g).Theeffectofblockandinteractionof
+block was not statistically signiﬁcant on any of these spatial
+A. Effect of Positive stiffness measures (ps>0.05).
+1) Temporal measures: While applying positive stiffness Neithertheeffectsnorinteractiononrofθ overinitial
+REL
+decreased mean stride time in the LE trial, mean stride time strides (M =0.0036) were signiﬁcant (ps>0.05) (Fig. 6h).
+736
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. TABLEII
+2(CONTROLLERSTATE:ONVSOFF)X4(BLOCK)ANOVA
+PositiveStiffness NegativeStiffness
+POSITIVE STIFFNESS NEGATIVE STIFFNESS Measure
+State Block State Block
+s) Meanstridetime ns ns F1,3=67.17 ns
+m p=3.8e-03
+ME (1400 1400 SDstridetime ns ns Fp1,=3=3.21e4-0.322 ns
+E TI1200 1200 rofstridetime ns ns Fp1,=3=4.21e1-0.621 ns
+RID1000 1000 MeanθRELRoM F1p,3==2.434e2-0.5424 ns F1p,3==1.41e3-50.366 F2.p07=,6.12.06e=-028.50
+ST 0 100 200 300 400 500 0 100 200 300 400 500 MeanθLRoM F1p,3==6.82e1-60.429 ns F1p,3==1.41e3-10.365 F1.p97=,5.19.26e=-029.06
+°) 120 120 MeanθRRoM F1p,3==2.34e5-40.412 Fp1,=3=4.91e0-0.327 Fp1,=3=2.19e9-0.535 ns
+M ( 100 100 MeanmaxθL F1p,3==1.31e4-10.360 ns F1p,3==1.75e4-10.434 ns
+θ ROREL 468000 468000 MMeeaannmmainxθθLR FFpp11,,==33==37..1974ee70--00..113349 nnss FF1pp1,,3==3==15..2215ee44--600..233493 nnss
+0 100 200 300 400 500 0 100 200 300 400 500 MeanminθR Fp1,=3=1.22e9-0.223 ns Fp1,=3=3.37e4-0.638 ns
+STRIDE NUMBER STRIDE NUMBER
+rofθRELRoM ns ns ns ns
+Fig.4. Representativesubjectdatafromshort-exposure(SE)trials.Stride Therewasnosigniﬁcanteffectsofinteractionsonanydependentmeasure.nsindiciates
+timeandθRELRoMoverstridesintheSEtrialsforarepresentativesubject non-signiﬁcanteffect(p>0.05).
+(same as in Fig. 2) in the positive (left panel) and negative (right panel)
+stiffnessconditions.Shadedregionsrepresentwhenthestiffnesscontroller
+wason. B. Effect of Negative stiffness
+1) Temporalmeasures: Meanstridetimewassigniﬁcantly
+higher when the negative stiffness controller was on com-
+pared to off (Fig. 5a). Standard deviation of stride time was
+A signiﬁcantlyhigherwhenthenegativestiffnesscontrollerwas
+ms)1400 *n*s* ms)1400 BLOCK 1 BLOCK 2 BLOCK 3 BLOCK 4 on (Fig. 5b). There was neither a signiﬁcant effect of block
+ME ( ME ( nor interaction on either temporal measure (ps>0.05). The
+RIDE TI1200 RIDE TI1200 e(Mffec=ts0a.n0d40in)twerearcetiaolnsoonnortsoifgnstirﬁidcaenttim(peso>ve0r.0in5i)ti(aFlisgt.ri5dce)s.
+ST ST 2) Spatial measures: Similar to the LE trial, the effect of
+N  N 
+A1100 A1000 controllerstateonallspatialmeasureswassigniﬁcant.Mean
+E ON OFF E OFFONOFFONOFFONOFFONOFF
+M M θ ,θ ,andθ RoMweresigniﬁcantlyincreasedwhenthe
+REL R L
+B negativestiffnesscontrollerwasoncomparedtowhenitwas
+ns
+ms) 50 * MS) 50 BLOCK 1 BLOCK 2 BLOCK 3 BLOCK 4 off (Fig. 6a,b,e). The maximum values of θR and θL were
+E ( 40 E ( 40 signiﬁcantly increased (Fig. 6c,f), and the minimum values
+M M
+DE TI 30 DE TI 30 ostfifθfRneasnsdwθaLswapeprelieadlso(Fsiigg.ni6ﬁdc,gan).tlydecreasedwhennegative
+TRI 20 TRI 20 The effect of block on mean θ RoM was statistically
+S S REL
+D  10 D  10 signiﬁcant, as was the effect of block on θ RoM. While
+S ON OFF S OFFONOFFONOFFONOFFONOFF L
+statistically signiﬁcant, neither the overall change in mean
+C 1.0 nnss 1.0 BLOCK 1 BLOCK 2 BLOCK 3 BLOCK 4 θ2R:EML R=oM104o.v2e2rdbelgo,ckBslo(Bcklo3ck: M1: M= 1=051.0235.d4e8gd,eBg,loBclkoc4k:
+ME 0.5 ME 0.5 M = 105.02deg; Fig. 6a) nor the overall change in mean
+RIDE TI 0 RIDE TI 0 θ2R:EML R=oM53o.2ve3rdbeglo,cBkslo(cBklo3c:kM1: M= 5=3.3552.d8e6gd,eBg,loBckloc4k:
+ST -0.5 ST -0.5 M = 53.49deg) was practically meaningful. The effect of
+r  -1.0 r  -1.0 blockontheremainingspatialmeasureswasnotstatistically
+ON OFF OFFONOFFONOFFONOFFONOFF
+signiﬁcant (ps > 0.05). The interaction on any of the
+CONTROLLER CONTROLLER
+aforementioned spatial measures was also not statistically
+STATE STATE
+signiﬁcant (ps>0.05).
+Negative Stiffness Positive Stiffness
+Neithertheeffectsnorinteractiononr ofθ RoMover
+− REL
+Fig. 5. Short-exposure (SE) trial temporal measure results. Average initial strides (M = 0.061) were signiﬁcant (ps > 0.05)
+temporal dependent measures for each subject (represented by different (Fig. 6h).
+colors)whencontrollerstatewasonandoffintheSEtrials.Dashedlines
+represent trials on the days negative stiffness was applied in the SE trial, C. Summary
+and solid lines represent trials on the days positive stiffness was applied.
+nsindicatesanon-signiﬁcanteffectoftrial.*,**,***,and****indicatea When positive stiffness was applied in short, repeated
+signiﬁcanteffectoftrialwithp<0.05,p<0.01,p<0.005,p<0.001, bouts,hipRoMwasreduced,andapplyingnegativestiffness
+respectively.
+resultedinbothincreasedhipRoMandstridetimecompared
+tobaseline.Theeffectsofappliedstiffnessdidnotvarywith
+737
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. A *** response was characterized by changes in spatio-temporal
+150 ** 150 BLOCK 1 BLOCK 2 BLOCK 3 BLOCK 4 measures of gait behavior such as decreased/increased stride
+°) °) time and decreased/increased hip joint range of motion for
+M ( M (
+O 100 O100 positive/negative stiffness, respectively.
+R R
+θ REL θ REL oveWrestarlisdoesp,readsiscutmedintghatthbatehuavnidoerrallyirnegsponneuseralwocuolndtrovlalreyr
+N  50 N  50
+A A of locomotion would gradually adapt to compensate for
+ME ON OFF ME OFFONOFFONOFFONOFFONOFF the stiffness applied externally by the robotic exoskeleton.
+CONTROLLER CONTROLLER
+However, we saw little evidence of such adaptation. There
+STATE STATE
+was no meaningful change in the behavioral response to
+B C D applied stiffness over 1000 strides nor over shorter, repeated
+**** **** **
+80 *** *** ** exposures. In addition, there was minimal transient behavior
+MEAN θ ROM (°)L 4600 MEAN MAX θ (°)L 123000 MEAN MIN θ (°)L---324000 wsothtvaheeTteerehnsfrefetaehlpnaceedctaskottneifoofdfftnhseneyexesspustroerecasmdoulunaracettdeirscoadpl(rliotee.aerrdt.iu,tiorncsantcanirvocseioniantuisgiolensdnd)e.tbhdreaenbdgeturteaewnotesofeientmnhoteontbfieaoahcnntadvwthoioaafsfrt
+20 -50
+ON OFF ON OFF ON OFF not perceived as an error that the nervous system needed
+E F G to correct. It is also possible that the additional constraint of
+**** *** *
+80 *** *** *** walkingspeedimposedbythetreadmillmayhavesuppressed
+θ ROM (°)R 60 MAX θ (°)R 2300 MIN θ  (°)R--3200 satoul.bjpfeoucultsnse’ddnsaumtbuesrctaahlnaatnidiacalapldtiivfpfeeerrrteeunsrpcbeoasntisoienn.sFsuoibnrjeitncrtsesta’adngmcaeii,ltlOrwecshapolokaninseget
+N  40 N  N -40 compared to overground walking [13].
+A A A
+E E 10 E While we did not observe signatures of neural adaptation
+M M M
+20 -50
+ON OFF ON OFF ON OFF in response to applied hip stiffness, we cannot deﬁnitively
+CONTROLLER CONTROLLER CONTROLLER ruleoutthepossibilitythatitoccurred.Forexample,adapta-
+STATE STATE STATE tionmighthaveoccurredwithinasinglestrideasifastride-
+H ns based dead-beat controller existed. The hip joints contribute
+1.0 ns 1.0 BLOCK 1 BLOCK 2 BLOCK 3 BLOCK 4 to upholding an upright posture and guiding foot placement,
+M (°) 0.5 M (°) 0.5 bcoomthootifown.hTichhusa,reitcirsitfiecaaslifbolremthaaitnatadijnuisntgmbenaltasntcoeedxuterirnngallloy--
+O O
+θ RREL-0.50 θ RREL-0.50 iinsdaulscoedpocshsainbgleesthianttshuebhjeicptsjocionutlmdehcahvaenaicdsjuwstoeudldthbeebreahpaidv.ioIrt
+ r  r of the other leg joints (e.g., knee and ankle) to compensate
+-1.0 -1.0
+ON OFF OFFONOFFONOFFONOFFONOFF for applied stiffness. Future analysis of additional measures
+CONTROLLER CONTROLLER offullleggaitkinematicsandmoredirectmeasuresofneural
+STATE STATE
+control such as muscle activity would shed further light on
+Negative Stiffness Positive Stiffness this open question.
+Fig.6. Short-exposure(SE)trialspatialmeasureresults.Averagespatial VI. CONCLUSIONS
+dependentmeasuresforeachsubject(representedbydifferentcolors)when
+Thisstudyinvestigatedthechangesinspatio-temporalgait
+controllerstatewasonandoffintheSEtrials.Dashedlinesrepresenttrials
+on the days negative stiffness was applied in the SE trial, and solid lines patterns induced by applying stiffness at the hip joints with
+representtrialsonthedayspositivestiffnesswasapplied.nsindicatesanon- the Samsung GEMS-H exoskeleton. We found that both
+signiﬁcanteffectoftrial.*,**,***,and****indicateasigniﬁcanteffect
+stride time and hip joint range of motion were affected
+oftrialwithp<0.05,p<0.01,p<0.005,p<0.001,respectively.
+by the applied mechanical impedance, which was consistent
+over different subjects and repeated exposure. Moreover, we
+repeated exposure as indicated by the lack of a signiﬁcant foundlittleevidenceofneuraladaptationtoappliedstiffness.
+×
+controller state block interaction. Moreover, there was These results suggest that applying mechanical impedance
+minimal transient behavior in the dependent measures when using lower-limb exoskeleton robots may be an effective,
+the controller transitioned between on and off states. minimally-encumbering intervention to restore healthy gait
+pattern.
+V. DISCUSSION
+REFERENCES
+This study examined how healthy subjects’ gait patterns
+changed in response to the addition of positive and negative [1] B. Quinlivan, S. Lee, P. Malcolm, D. Rossi, M. Grimmer, C. Siviy,
+N.Karavas,D.Wagner,A.Asbeck,I.Galianaetal.,“Assistancemag-
+virtual springs between the two legs applied by the GEMS-
+nitude versus metabolic cost reductions for a tethered multiarticular
+H exoskeleton during treadmill walking. As predicted, the softexosuit,”SciRobot,vol.2,no.2,p.4416,2017.
+738
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. [2] L.M.MooneyandH.M.Herr,“Biomechanicalwalkingmechanisms
+underlying the metabolic reduction caused by an autonomous ex-
+oskeleton,” Journal of neuroengineering and rehabilitation, vol. 13,
+no.1,p.4,2016.
+[3] J. R. Koller, D. A. Jacobs, D. P. Ferris, and C. D. Remy, “Learning
+to walk with an adaptive gain proportional myoelectric controller
+for a robotic ankle exoskeleton,” Journal of neuroengineering and
+rehabilitation,vol.12,no.1,p.97,2015.
+[4] A.J.Young,J.Foss,H.Gannon,andD.P.Ferris,“Inﬂuenceofpower
+deliverytimingontheenergeticsandbiomechanicsofhumanswearing
+a hip exoskeleton,” Frontiers in bioengineering and biotechnology,
+vol.5,p.4,2017.
+[5] I.Kang,H.Hsu,andA.Young,“Theeffectofhipassistancelevelson
+humanenergeticcostusingrobotichipexoskeletons,”IEEERobotics
+andAutomationLetters,vol.4,no.2,pp.430–437,2019.
+[6] R. Kitatani, K. Ohata, H. Takahashi, S. Shibuta, Y. Hashiguchi,
+andN.Yamakami,“Reductioninenergyexpenditureduringwalking
+usinganautomatedstrideassistancedeviceinhealthyyoungadults,”
+Archivesofphysicalmedicineandrehabilitation,vol.95,no.11,pp.
+2128–2133,2014.
+[7] K. Seo, J. Lee, Y. Lee, T. Ha, and Y. Shim, “Fully autonomous
+hip exoskeleton saves metabolic cost of walking,” in Robotics and
+Automation(ICRA),2016IEEEInternationalConferenceon. IEEE,
+2016,pp.4628–4635.
+[8] F.A.Panizzolo,G.M.Freisinger,N.Karavas,A.M.Eckert-Erdheim,
+C. Siviy, A. Long, R. A. Zifchock, M. E. LaFiandra, and C. J.
+Walsh,“Metaboliccostadaptationsduringtrainingwithasoftexosuit
+assistingthehipjoint,”Scientiﬁcreports,vol.9,no.1,p.9779,2019.
+[9] A. Duschau-Wicke, A. Caprez, and R. Riener, “Patient-cooperative
+control increases active participation of individuals with sci during
+robot-aided gait training,” Journal of neuroengineering and rehabili-
+tation,vol.7,no.1,p.43,2010.
+[10] A. Duschau-Wicke, J. von Zitzewitz, A. Caprez, L. Lunenburger,
+andR.Riener,“Pathcontrol:amethodforpatient-cooperativerobot-
+aided gait rehabilitation,” IEEE Transactions on Neural Systems and
+RehabilitationEngineering,vol.18,no.1,pp.38–48,2010.
+[11] H. I. Krebs and N. Hogan, “Robotic therapy: the tipping point,”
+American journal of physical medicine & rehabilitation/Association
+ofAcademicPhysiatrists,vol.91,no.1103,p.S290,2012.
+[12] J. Hidler, D. Nichols, M. Pelliccio, K. Brady, D. D. Campbell,
+J. H. Kahn, and T. G. Hornby, “Multicenter randomized clinical
+trial evaluating the effectiveness of the lokomat in subacute stroke,”
+Neurorehabilitationandneuralrepair,vol.23,no.1,pp.5–13,2009.
+[13] J. Ochoa, D. Sternad, and N. Hogan, “Treadmill vs. overground
+walking:differentresponsetophysicalinteraction,”Journalofneuro-
+physiology,vol.118,no.4,pp.2089–2102,2017.
+[14] J. Ahn and N. Hogan, “Walking is not like reaching: evidence from
+periodicmechanicalperturbations,”PloSone,vol.7,no.3,p.e31767,
+2012.
+[15] K.E.GordonandD.P.Ferris,“Learningtowalkwitharoboticankle
+exoskeleton,”Journalofbiomechanics,vol.40,no.12,pp.2636–2644,
+2007.
+[16] T. Lam, M. Anderschitz, and V. Dietz, “Contribution of feedback
+and feedforward strategies to locomotor adaptations,” Journal of
+neurophysiology,vol.95,no.2,pp.766–773,2006.
+[17] J. W. Noble and S. D. Prentice, “Adaptation to unilateral change in
+lowerlimbmechanicalpropertiesduringhumanwalking,”Experimen-
+talbrainresearch,vol.169,no.4,pp.482–495,2006.
+[18] J. M. Finley, A. J. Bastian, and J. S. Gottschall, “Learning to be
+economical:theenergycostofwalkingtracksmotoradaptation,”The
+Journalofphysiology,vol.591,no.4,pp.1081–1095,2013.
+[19] J. Perry and J. Burnﬁeld, Gait analysis: normal and pathological
+function.2nd. SlackIncorporated,2010.
+739
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:57:03 UTC from IEEE Xplore.  Restrictions apply. 

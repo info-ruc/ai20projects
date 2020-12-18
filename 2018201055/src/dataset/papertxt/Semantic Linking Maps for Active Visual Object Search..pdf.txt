@@ -1,0 +1,537 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Low-Cost Fiducial-based 6-Axis Force-Torque Sensor
+Rui Ouyang1, Robert Howe2
+Abstract—Commercial six-axis force-torque sensors suffer Fiducial Tags
+frombeingsomecombinationofexpensive,fragile,andhard-to-
+Light Shield (camera view)
+use.Weproposeanewﬁducial-baseddesignwhichaddressesall
+three points. The sensor uses an inexpensive webcam and can
+LED
+be fabricated using a consumer-grade 3D printer. Open-source
+software is used to estimate the 3D pose of the ﬁducials on the
+Springs
+sensor,whichisthenusedtocalculatetheappliedforce-torque.
+Abrowser-based(installationfree)interfacedemonstratesease- Camera
+of-use. The sensor is very light and can be dropped or thrown
+with little concern. We characterize our prototype in dynamic
+conditions under compound loading, ﬁnding a mean R2 of
+over 0.99 for the F ,F ,M , and M axes, and over 0.87
+x y x y
+and 0.90 for the F and M axes respectively. The open
+source design ﬁles alzlow the seznsor to be adapted for diverse Mounting Plate 1cm
+applications ranging from robot ﬁngers to human-computer
+interfaces,whilethesdesignprincipleallowsforquickchanges Fig. 1: Consumer webcams and a printed ﬁducial markers can be
+with minimal technical expertise. This approach promises to used to create a six-axis force-torque sensor. We used four springs
+bring six-axis force-torque sensing to new applications where tobuildaplatformfreetomoveinallangulardirections.Weafﬁxed
+the precision, cost, and fragility of traditional strain-gauge two printed ﬁducials to the platform, and then aimed a consumer
+based sensors are not appropriate. The open-source sensor de- camera up at them. To the right, the camera view reveals the tag
+sign can be viewed at http://sites.google.com/view/ location. The tags are glued to the light shield, which is removable,
+fiducialforcesensor. allowing for easy design changes. Note that cardstock, which was
+removed for picture clarity, was used to diffuse the LED and avoid
+I. INTRODUCTION overexposing the camera. Green bottle cap is for scale.
+A. Motivation
+facing markers embedded in transparent or semi-transparent
+Force-torque sensors are used extensively in both industry elastomer (often with supplemental LED lighting). These can
+andresearch.Wefocushereontheuseofthesesensorsintwo be used to estimate shear, slip, and force, but tend not to
+examples: robotic grasping, where they are used to provide do well in cases where the object hits the side of the ﬁnger
+tactile feedback (e.g. detecting when contact is made), and instead of dead on. They also require casting elastomers.
+in human computer interaction. However, commercial six- Several MEMS multi-axis force-torque sensors have been
+axis force-torque sensors can be both expensive and fragile. developed, which use the same principle of creating a device
+This combination makes them tricky to use for grasping, free to deﬂect into multiple axes, but then measures them
+where controlled contact is desired, but a small coding error using capacitative [5] or piezoresistive [6] means. In [7] the
+could easily smash and overload the sensor. One of the most deﬂectionismeasuredusingacameraaswell,aCCDcamera
+common types of sensors, the ATI force/torque sensor, costs mounted to a microscope, however the device only measures
+tens of thousands of dollars and relies on strain gauges that two directions of force.
+are fragile and have to be surrounded in a bulky package. PriorworkusedMEMSbarometerstocreatesix-axisforce-
+For these reasons, we are motivated to consider new sensor torque sensors with very low parts cost and good durability
+designs that could promote the use of tactile data in the [8]. However, fabricating the sensor requires specialized lab
+robotics community through being a combination of cheaper, equipment such as a degassing machine.
+easier to use, and more robust.
+Other work explored estimating ﬁngertip force via video,
+but only for human ﬁngers [9], [10]. Commercial sensors
+B. Related Work
+like the Spacemouse and the OptoForce use similar ideas,
+Multiple designs have emerged recently taking advantage
+but rely on custom circuitboards for a ranging sensor inside.
+of the rich information available from consumer webcams.
+In contrast, our work is straightforward to fabricate even for
+Even low-end webcams will output 640x480 RGB images at
+users unfamiliar with electronics.
+15 frames-per-second (fps). The webcam-based sensors are
+particularly easy to manufacture and wire. Notable examples C. Contributions
+include the Gelsight [1], GelForce [2], TacTip [3], the
+In this paper, we investigate novel combinations of readily-
+Fingervision [4], and others. These sensors rely on cameras
+accessibletechnologiestocreatesix-axisforce-torquesensors
+that are inexpensive, require minimal expertise to design and
+1,2School of Engineering and Applied Sciences, Harvard University,
+Cambridge,MA.1nouyang@g.harvard.edu build, and are easily customized for diverse applications.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1653
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. w
+At rest Displaced Rotated shield
+y
+z x
+×
+Camera View
+d
+Sidze View Fx tag wtag h
+Mz
+w
+y x
+gap
+w
+bottom
+Fig. 2: The top row shows the viewpoint from the camera when
+different forces or torques are applied (the dotted grey line shows Fig.3:Left,thefour3Dprintedpartsareshown.Right,adiagramof
+the center of the camera view). By tracking the movement of the thesensorasmountedtothecommercialforcesensor(ingreyonthe
+ﬁducial(s),wecanderivetheforceandtorqueexertedonthesensor. bottom) used in our experiments. The footprint of the sensor itself
+is the same as the camera circuitboard, 35.7 mm by 22.5 mm. The
+The proposed novel type of sensor makes six-axis force- sensor height h = 51 mm, while the camera lens is approximately
+torque measurements by tracking position and orientation d =21mmfromthecenterofthetags.Thelightshieldisoffset
+tag
+displacement using the 3D pose estimate from ﬁducial tags, on all three sides by w = 2.5 mm gap from the camera cover,
+gap
+and uses a linear ﬁt between displacement and applied force- and has width wshield = 31 mm. The ﬁducials are each wtag =
+3.8mmwide(or4.5mmincludingthewhiteborder).Themounting
+torque. Fiducials are markers used to help locate objects or
+plate attaches to mounting holes in the force sensor and has width
+serve as points of reference. They can be found in robotics w = 45 mm.
+bottom
+and augmented reality applications, where they usually take
+the form of printed paper markers glued onto various objects and the force-torque applied, a short calibration procedure
+of interest. Sensors employing these ﬁducials operate by using known weights can be used to collect datapoints for
+detecting the sharp gradients that are created between black regression. Given a known linear ﬁt, the sensor can then
+and white pixels, such as one might ﬁnd on a checkerboard. output force and torque measurements. Fig. 2 shows the
+An example of two ﬁducials can be found in the top right principle behind this ﬁducial-based force sensor.
+of the labelled diagram of our sensor at Fig. 1. Using the
+B. Design Goals
+known geometry of the tag (e.g. perpendicular sides of
+When designing the sensor prototype, a few considerations
+checkeboard), as well as known tag size and pre-determined
+were made. First and foremost, the sensor needs to be
+camera calibration matrix, the 3D object pose (location and
+sensitive to all six degrees of freedom (displacement in
+orientation)oftheobjectcanbeestimated.Thiscalculationis
+known as the solving the Perspective-n-Point (PnP) problem. x, y, z and rotation in yaw, pitch, roll). For illustrative
+purposes, the following analysis is performed in terms of
+Wecreatedprototypesutilizingtwoopen-sourcetagprotocols,
+speciﬁc speciﬁcation values that are appropriate for a sample
+AprilTags [11] and ArUco markers [12]; pictured in Fig. 1
+robot gripper. Alternate values for other use cases such as
+are two ArUCo markers.
+human-computer interfaces can be easily substituted. For
+In the following sections, we begin with the design ±
+grasping, between 40 N is realistic, and sensitivity of at
+and fabrication process for our sensor. We follow with a
+least 1/10 N is desirable. Qualitatively, we want the sensor
+theoreticalanalysisofhowthesensordesignparametersaffect
+to be small (for grasping applications, the sensor should be
+resolution, sensitivity, measurement range, and bandwidth.
+roughly ﬁnger-sized), inexpensive, and robust. The sensor
+Wealsopresentananalysisofdatacollectedfromaprototype
+should allow for rapid prototyping and easy customization
+sensor. We conclude with a discussion of the advantages and
+with minimal technical expertise. The sensor should be not
+limitations of this sensor.
+only easy to fabricate, but also easy to use.
+II. DESIGN
+C. Fabrication
+A. Sensor Design
+1) Physical Fabrication: The four pieces in Fig. 3 (ﬁgure
+At a high level, the sensor consists of two main parts: a includes dimensions) are 3D-printed in two to three hours
+baseandaplatformabovethebase.Theplatformisconnected on an inexpensive consumer-grade device (Select Mini V2,
+to the base with 4 springs and can move in all directions Monoprice).Epoxyisusedtogluethespringsintothecamera
+with respect to the base. Two ﬁducial tags were glued to the cover and top plate. The tags are printed on paper and glued
+underside of the platform. Then, a webcam pointed up at the in. A small piece of white cardstock is used to diffuse the
+tags was installed at the base. As force or torque is applied LED (in the future, this would be built into the 3D design).
+to the platform, the tags translate and rotate accordingly. The Conveniently,theposeestimateisrelativetothecameraframe,
+camera is used to track the 3D pose of the tags. Should there and the sensor relies only on relative measurements, so the
+be a suitably linear relationship between the displacement tag placement can be imprecise. The LED is mounted in and
+1654
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. d d z
+connectedtoa3.3Vpowersource.Theheat-setthreadinserts 1 2
+(forboltingthelightshieldtotheplatform)aremeltedinwith y x
+w θ
+a soldering iron. The camera is placed between the mounting img dz
+plateandcameracoverandtheneverythingisboltedtogether.
+d
+The springs are steel compression springs available online as    θ tag
+h h
+part of an assortment pack from Swordﬁsh Tools. The spring frame img
+dimensions are 2.54 cm long, 0.475 cm wide, and wire width
+of 0.071 cm, with a stiffness of approximately 0.7N/mm. w ½ w Fz
+Fabrication can be completed in a day. The actual assembly, frame tag
+givenacompletesetofhardwareandtools,canbecompleted
+in 30 minutes, depending on the epoxy setting time. (a) A frame f×rom the cam- (b) Side view. As per Fig. 3, dtag =
+era. w h = 21 mm and w = 4.5 mm. Light
+2) Usage and Software: The only data cable used is the ×frame frame tag
+640 480 pixels, and orange indicates original tag posi-
+USBfromthewebcamtothecomputer.Onthecomputer,the w × h = 150 × tionbeforedisplacement.Insetshows
+img img
+OpenCV Python library [13] (version 4.1.2) is used to detect 240 pixels. force applied.
+the ArUco markers in the video feed. We used a commercial
+Fig. 5: Sensitivity calculation diagrams.
+force-torque sensor to characterize our sensor, for which we
+used another freely available Python library (see [14]). The resolution, sensitivity, force range, and bandwidth. Here,
+data from the commercial sensor (Model HEX-58-RE-400N, sensor resolution is deﬁned in bits (relative terms) and
+OptoForce, Budapest, Hungary) and the markers are read sensitivity in millimeters and degrees.
+in parallel threads and timestamped, then recorded to CSV.
+A. Resolution
+Python is used for further analysis.
+By using a consumer webcam, sensor reading is also Let us conservatively estimate the discernible resolution
+possible without installing Python. To demonstrate this, we of the tag system to be d = 1/4 pixel, or C = 4 counts
+R
+developed a simple interface using a Javascript ArUco tag per pixel. This factor exists because we have more than just
+detector library (see [15]). Fig. 4 shows a graphical user binary information (1 bit) for every pixel. For instance, if a
+interface(GUI)that plotsthex,y,and z-axesofthe 3Dpose black/white intersection is halfway between two pixels, the
+estimate for a single tag. pixels will be gray. (Tag algorithms also use the known
+grid geometry to achieve subpixel resolution – see the
+Realtime  cornerSubPix function in the OpenCV library).
+Distance  graph of x,y,z  In that case, we can determine the resolution of the sensor
+(relative) pose values
+itself geometrically, by looking at the number of pixels.
+Time Detected Tag  The fact that the tags must stay on-screen limits the sensor
+(secs)
+Boundary resolution.
+Camera We can characterize an approximate y-axis resolution r
+View Printout of   y
+3D Pose  of the camera by taking the number of pixels available,
+Estimate multiplying by C, and converting our counts into bits.
+(cid:98) · − (cid:99)
+Fig. 4: Our prototype JavaScript-based interface (modiﬁed from the r = log (C (h h )) +1 (1)
+Js-arucolibraryexample)[15].Inthisway,sensordatacanberead y 2 frame img
+just by loading a webpage. For instance, the calculations for our sensor prototype are
+as follows. In the y-axis,
+In theory, the sensor reading can be done on-the-go with
+(cid:98) · − (cid:99)
+a smartphone and a wireless or USB-C webcam (such as r = log (4 (480 240)) (2)
+y 2
+inexpensive inspection cameras found online). r =10 bits (3)
+y
+3) Calibration: Although we calibrated using a commer-
+cial force-torque sensor, the same can be achieved with a set In the x-axis, repeating the same calculations we have
+of weights and careful clamping. The sensor can be clamped (cid:98) · − (cid:99)
+r = log (C (w w )) +1 (4)
+sideways to a sturdy surface to calibrate the x- and y-axes. A x (cid:98) 2 · fr−ame (cid:99)img
+set of known weights is then attached to the center bolts on rx = log2(4 (640 150)) +1 (5)
+the light shield piece via a string. The same procedure can r =11 bits (6)
+x
+be applied to calibrate the z-axis, with the sensor clamping
+upside down to a tabletop. Finally, weights can be applied to In the z-axis, our limitation is the same as the y-axis, so
+the two side bolts to produce known torques while hanging we have rz =11 bits.
+upside down or sideways.
+B. Sensitivity
+III. ANALYSIS Let us now calculate the sensitivity of the sensor. We will
+Considering the above design goals, there are a few start by looking at the minimum detectable travel in each of
+primary concerns amenable to theoretical analysis: the sensor the x, y, and z-axes.
+1655
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. y
+lc h or d z x z maFttoerrrooftadteiotenrmabinoiuntgththeexza-anxdisy-cahxaensg,ethineamnmal,yasnisdbuescionmgethsaat
+× y x
+θ to determine the pixels changed in the x-y plane. Consider
+r a 45 degree rotation around the z-axis of a tag that starts
+w θ d out ﬂat (facing the camera), as shown in Fig. 6b. Using
+Mz My im z wimg =150px a√s before, the z sensitivity is as follows:
+wimg g w wimg/2= 2·dz (18)
+x
+d +w =w /2 (19)
+z x img
+− 0.5√w
+(a) Camera view. The light or- (b) Top-down view. The light or- w =0.5w img =21.97px (20)
+x img
+ange shows original tag orien- ange shows original tag orienta- 2
+◦ ◦ ◦
+tationbeforea45 turnaround tion before a 45 turn around the s = θ d = 45 · 1 =0.51◦ (21)
+the z axis. y-axis (or equivalently x-axis). τxy w R 21.97 4
+x
+Fig.6:Sensitivitycalculationdiagrams.Insetsshowappliedmoment. C. Notes on z-axis measurements
+1) Translational Sensitivity: In the x and y directions, we Intuitively, we expect that the sensor is much less reliable
+can measure the mm/px at rest (the sensor resolution varies in the z displacement direction. For movement along the x
+a bit since the tag gets larger or smaller depending on the z and y-axes axes, the camera sees the entire set of black/white
+distance). Roughly, the tag measures 4.5mm and appears as intersections moving left or right.
+w =150 pixels in the image. Assuming as above that we For the same reason, in the single tag setup it would be
+tag
+can discern 4 counts per pixel, the theoretical sensitivity is easytodetectrotationsaboutthez-axis,anddifﬁculttodetect
+h (mm) 4.5 · 1 rotations around the x and y-axes. Data collected from this
+sy = hframe (px) dR = 150 4 =0.0075mm (7) initial(single-tag)designexactlyreﬂectedtheaforementioned
+frame
+issue. Consequently, the design was enhanced with two tags
+For the z-axis sensitivity, we consider that the tag will get
+oriented at 45 degrees to the camera. This proved sufﬁcient
+smaller as it displaces in the +z direction. Using a simple
+for recovering all six force/torque axes.
+geometrical model (see Fig. 5b), given that the smallest
+detectable change in xy plane is 1/4 pixel, we can calculate D. Force Range Versus Sensitivity
+what is the resulting change in z.
+There is a clear trade-off between sensitivity (minimum
+Using similar triangles, we see that
+detectablechangeinforce)andthemaximumforcerange.As
+±
+d1 = d2 (8) an example, for adesired force range Frange = 1N=2N
+d d (close to the observed force range for our prototype), and a
+z tag
+−
+d +d =w /2 (9) maximum displacement of y = h h , the y
+1 2 img range frame img
+d2 =(wimg/2)−d1 (10) sensitivity sy in Newtons is as follows.
+We would like to work in mm, therefore we use the fact s = F·range = · 2− =0.0021N (22)
+that the tag is 4.5 mm and appears as 150 px. y C y 4 (480 240)
+range
+d =d =1/4px· 4.5mm =0.0075mm (11) Oursy isthus2.1mN(givenourassumptionofdR =0.25).
+1 R 150px Similarly, for the x-axis we ﬁnd a sensitivity s = 1.0mN
+x
+4.5 − at this force range. Now consider instead the grasping use
+d = 0.0075=2.2425mm (12) ±
+2 2 case, with a desired force range of 40 N, and desired
+d 0.0075 · sensitivity of at least 0.1 N. If we scale the calculations in
+s =d = 1d = 21=0.07mm (13) ±
+z z d tag 2.2425 Eq. (22) by 40 to get a 40 N force range while keeping
+2
+2) Rotational Sensitivity: For rotation about the z axis, the other parameters the same, the sensor has 0.04 N and
+we can calculate the chord length in pixels traveled when a 0.08 N sensitivities in the x and y directions respectively.
+tag is rotated 45 degrees (about its center), and use the same
+IV. SENSORPROTOTYPEEVALUATION
+assumption of four counts per pixel to estimate our rotational
+sensitivity. Geometrically, we know that A. Linearity
+θ In order to evaluate the linearity (and therefore usefulness)
+l =2 rsin (14)
+chord 2 of the sensor, we used a commercial force-torque sensor
+In our case, wit√h wimg =150px, we see that (ModelHEX-58-RE-400N,OptoForce,Budapest,Hungary)to
+· provide ground truth measurements. Although the OptoForce
+r = √2 wimg/2 (15) measures force and torque at a different origin than where
+· · π/4 the load is applied, the analysis of the linearity of the sensor
+l =2 2 150/2 sin =81.18px (16)
+chord 2 holds. Data was collected with a Python script which used
+θ · 81.18 · 1 ◦ the OpenCV library to interface with the camera. The setup
+s = d = =0.14 (17)
+τz l R 150 4 is shown in Fig. 7.
+chord
+1656
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. Weight 
+a R2 of 0.991, 0.996, 0.875, 0.997, 0.997, and 0.902 for
+Attachment
+Point the F ,F ,F ,M ,M , and M axes respectively. The F
+x y z x y z z
+yz axis ﬁt is notably worse than the F and F ﬁts, which was
+x x y
+Sensor  expected as explained in Section III-C.
+Prototype
+Optoforce
+(HEX-58-RE-400N)
+(a) Experimental setup. (b) Calibration method.
+Fig. 7: Left, the data collection setup is shown (with the LED off
+– note that out-of-frame, there is an Arduino supplying 3.3V to
+the LED. Later designs used a 3.3 V coin cell battery to make the
+sensor standalone). Right, a method to calibrate the sensor without
+usingthecommercialsensorisdemonstrated.Thesensorismounted
+upside down and weights are hung by string from the sensor to
+apply force uniaxially to the +z axis.
+Autocorrelation was used to determine the lag between
+our sensor and the OptoForce. The sensor lag between the Fig.8:Theblacklinerepresentsaperfectlylinearresponsebetween
+oursensorandthecommercialsensor.Thereddotsshowtheactual
+prototype sensor and the OptoForce was roughly 40 mil-
+sensor measurements using the ArUco tags.
+liseconds. Next, linear interpolation was used to match our
+sensor data with the OptoForce data, which were output at
+For qualitative comparison, Fig. 8 shows an example of a
+roughly 25 Hz and 125 Hz respectively. The sensor data was
+reconstructed dataset, where the linear ﬁts are plotted against
+smoothed with an exponential ﬁlter with weight of 0.2 to
+the original signal for qualitative comparison. This diagram
+improve the autocorrelation results.
+For calibration, we take a dataset of displacements D and shows the relatively large deviations in Fz from the original
+signal, indicating noisiness in the tag measurements.
+apply linear regression (with an afﬁne term) against all six
+axes.θ,φ,andγ refertorotationaroundthex,y,andz axes
+   
+respectively. K then forms a 6-by-6 matrix as shown below.
+   
+      
+F   D   
+ x   x  
+F   D   
+ y   y  
+F  D 
+z = K × z + B (23)
+M 6 6 D
+x θ
+M D
+y φ
+M D
+z γ
+B. Bandwidth
+Sensor bandwidth is directly limited by the camera framer-
+ate.ThismustbephysicallymeasuredsincethePythonscript
+will output at unrealistically high framerate – the OpenCV
+library reads from a buffer of stale images and will return
+a result even if the camera has not physically delivered a Fig. 9: For qualitative inspection, a compound-loading dataset is
+shownhere.Thecommercialsensormeasurementsareinblack,and
+new frame. The webcam is pointed at a display with high
+the interpolated and linearly ﬁtted prototype sensor’s measurements
+refresh rate. A script turns the screen black, and as soon as
+are shown in red.
+the camera detects the black color, the screen changes to
+white, and so forth, and the frames displayed is compared to
+system time to obtain the framerate of the webcam.
+B. Bandwidth
+Note that this calculates our maximum sensor bandwidth;
+ouractualsensorbandwidthisdeterminedbythetagdetection Our maximum sensor bandwidth is experimentally de-
+rate. If dynamic instead of quasi-static loading is assumed, termined to be 25 Hz. Additionally, the camera we used
+then motion blur can lead to tag detection failure. was one of three cameras bought by selecting for low cost,
+quick availability, and lack of external camera case. We also
+V. RESULTS
+measured the other two cameras which, despite advertising
+A. Linearity
+similar framerates, exhibited noticeable differences in framer-
+In multiaxial loading, the sensor was manually moved ate. Operating at 640x480, we measured 25 fps, 33 fps, and
+around in all directions. As shown in Fig. 8, the ﬁts had 15 fps for the three cameras, as listed in Table I.
+1657
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. TABLE I: Camera Speciﬁcations TABLE II: List of components and approximate costs.
+CameraModuleName NominalMaxRes. Price Year FPS@640p Part Details Cost
+D7004G14-A(ours) 1280*720p@30fps $20 N/A 25 Camera MiniCameramodule,AmazonSIN:B07CHVYTGD $20
+OV2710 1920*1080@30fps $20 2017 33 LEDand2wires GoldenDRAGONPlusWhite,6000K,124lumens $2
+4springs Assortedsmallspringsset $5
+ELPSuperMini 1280*720p@30fps $30 2015 15
+3Dprintedpieces PLAﬁlament $5
+Heat-setThreadedInserts Packageof50fromMcMaster-Carr(use2) $1
+VI. DISCUSSION Misc.Bolts Hexsockethead $1
+Epoxy 5minute $5
+Ourprototypesensorshowedmostlylinearresponsesunder
+(perhaps solely a checkerboard) could improve the force-
+dynamic loading. While the linearity is not precise, these
+torque measurements.
+results still validate the underlying hypothesis that with
+2) Noiseinz-axis: Thesensorisnoisyinforceandtorque
+ﬁducials it is possible to collect data on all three axes of
+forceandthreeaxesoftorque.Furtherdesigniterationscould measurementsalongthez-axis.Toaddressthis,onepossibility
+improve on these results, although this approach is unlikely is to use a mirror and two tags which are laid ﬂat on the xy
+to achieve the 0.1% accuracy claimed for strain-gauge based plane and the yz plane respectively. The “sideways” tag (on
+force-torque sensors. the yz plane) has good sensitivity to z-axis displacements,
+and the ﬂat xy plane tag is addresses rotations around the
+A. Design Goals z-axis. A 45-degree mirror then allows the camera to also
+Thesensorcannowbeevaluatedagainstthegoalsspeciﬁed observethe”sideways”tagontheyz plane.Onthedownside,
+the small mirror could make assembly difﬁcult.
+previously in Section II-B. The sensor design is indeed
+3) Sensor Size: Closer placement of the tag, to minimize
+responsive in all six axes (after our pivot from one tag to two
+the size of the sensor, may also be desired this would
+tags, as well as using a much brighter LED). Additionally,
+necessitate a custom lens for the camera to allow for closer
+for grasping applications, the calculations in Eq. (22) shows
+focus (e.g. a macro lens). Miniaturization could also be
+that if a much stiffer spring were chosen so that 40 N of load
+accomplished with a smaller camera, as in [3].
+could be applied without exceeding the y , the sensor
+range 4) Replacing Springs: The use of springs means that
+would still have better than 0.1 N of sensitivity.
+the sensor may behave poorly in high frequency domains.
+The qualitative design goals were also met. The sensor
+Replacing the springs with another mechanism, such as a
+is small, measuring only 3.6 cm by 3.1 cm by 5.1 cm in
+Stewart platform, could allow custom tuning of the response.
+size. The sensor is inexpensive, with the majority of the cost
+Another possibility would be to ﬁll the gap between the
+being a $20 webcam. The sensor is robust and has survived
+camera and the tag with optically clear material that would
+multiple plane trips and the occasional throw or drop. The
+be resistant to high frequency inputs. [16] used a similar idea
+sensor is also easy to modify. The light shield can easily
+with a magnet and hall effect sensor, for a three-axis force
+be unbolted to change the ﬁducials, or re-printed in an hour
+sensor. However, such a design would complicate fabrication
+to accommodate different designs (e.g. a single-tag vs. dual-
+andpotentiallymakecameracalibrationdifﬁcultduetoimage
+tag design). Fabrication is easy and non-toxic, requiring no
+warping.
+degassing machine (as with elastomer-based sensors) nor
+electrical discharging machines (as with custom strain-gauge
+VII. CONCLUSION
+based designs). The sensor by design does not suffer from
+We present a novel type of six-axis force-torque sensor
+thermal considerations (as in [8]) or electrical noise (as with
+using ﬁducial tags and a webcam. The design is fast to
+designs based on strain gauges).
+fabricate and simple to use, and is also strong enough to
+B. Error Sources survive drops and crashes common in contact-rich tasks such
+asroboticgrasping.Withonly3D-printedcustomcomponents,
+An important consideration is the coordinate origin around
+the design needs minimal technical expertise to adapt to
+which measurements are made. As load must be applied
+applications ranging from manipulation to human-computer
+to the spring platform on which the tags are glued, the
+interaction research. The open-source design also allows for
+origin around which measurements are collected may be
+direct integration in designs for tasks such as grasping where
+different than desired, although a linear offset matrix should
+sensor size is important. This ﬁducial-based sensor is less
+sufﬁce to correct for this. Our six-axis measurement reﬂects
+accurate than commercial force-torque sensors, but is also
+a combination of a camera pose estimation and mechanical
+orders-of-magnitude less expensive – commercial sensors can
+coupling,eachofwhichcanintroduceerrors.Inthefollowing
+cost thousands of dollars, while the parts cost of our sensor
+section on sensor improvement, we focus on camera sensor
+is under $50 (see Table II). These combined advantages of
+issues.
+our prototype sensor validates the general design principle
+C. Sensor Improvements of using 3D pose estimates from printed ﬁducials to create a
+six-axis force-torque sensor. Future work on improving the
+1) Fiducial Changes: Unlike the standard use cases for
+ArUco markers, we do not care about distinguishing multiple Fz andMz axescouldallowforaninexpensive,user-friendly,
+and robust alternative to current commercial sensors, opening
+objects and care more about the quality of the pose estimate
+up a new range of use cases for six-axis force-torque sensors.
+for a tag guaranteed to be in-frame. A custom ﬁducial
+1658
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. REFERENCES
+[1] W.Yuan,R.Li,M.A.Srinivasan,andE.H.Adelson,“Measurementof
+shearandslipwithagelsighttactilesensor,”2015IEEEInternational
+ConferenceonRoboticsandAutomation(ICRA),pp.304–311,2015.
+[2] K.Sato,K.Kamiyama,N.Kawakami,andS.Tachi,“Finger-shaped
+gelforce:Sensorformeasuringsurfacetractionﬁeldsforrobotichand,”
+IEEETransactionsonHaptics,vol.3,pp.37–47,2010.
+[3] B. Ward-Cherrier, N. Pestell, L. Cramphorn, B. Winstone, M. E.
+Giannaccini,J.Rossiter,andN.F.Lepora,“Thetactipfamily:Soft
+opticaltactilesensorswith3d-printedbiomimeticmorphologies,”in
+Softrobotics,2018.
+[4] A.YamaguchiandC.G.Atkeson,“Combiningﬁngervisionandoptical
+tactilesensing:Reducingandhandlingerrorswhilecuttingvegetables,”
+2016IEEE-RAS16thInternationalConferenceonHumanoidRobots
+(Humanoids),pp.1045–1051,2016.
+[5] F.Beyeler,S.Muntwyler,andB.J.Nelson,“Asix-axismemsforce-
+torquesensorwithmicro-newtonandnano-newtonmeterresolution,”
+JournalofMicroelectromechanicalSystems,vol.18,pp.433–441,2009.
+[6] P. Estevez, J. Bank, M. Porta, J. Wei, P. Sarro, M. Tichem, and
+U. Staufer, “6 dof force and torque sensor for micro-manipulation
+applications,”SensorsandActuatorsA:Physical,vol.186,pp.86–93,
+2012.
+[7] D.J.Cappelleri,G.Piazza,andR.V.Kumar,“Two-dimensional,vision-
+based µn force sensor for microrobotics,” 2009 IEEE International
+ConferenceonRoboticsandAutomation,pp.1016–1021,2009.
+[8] J. Guggenheim, L. P. Jentoft, Y. Tenzer, and R. D. Howe, “Robust
+andinexpensivesix-axisforcetorquesensorsusingmemsbarometers,”
+IEEE/ASMETransactionsonMechatronics,vol.22,pp.838–844,2017.
+[9] M.S.SunYu,HollerbachJohn,“System,methodandapparatusfor
+detectingaforceappliedtoaﬁnger,”U.S.Patent20080091121,2008.
+[10] A.Sartison,D.Mironov,K.Youcef-Toumi,andD.Tsetserukou,“Finger
+gripforceestimationfromvideousingtwostreamapproach,”CoRR,
+vol.abs/1803.01630,2018.
+[11] E. Olson, “Apriltag: A robust and ﬂexible visual ﬁducial system,”
+2011IEEEInternationalConferenceonRoboticsandAutomation,pp.
+3400–3407,2011.
+[12] S.Garrido-Jurado,R.Mun˜oz-Salinas,F.J.Madrid-Cuevas,andM.J.
+Mar´ın-Jime´nez,“Automaticgenerationanddetectionofhighlyreliable
+ﬁducial markers under occlusion,” Pattern Recognition, vol. 47, pp.
+2280–2292,2014.
+[13] G.Bradski,“TheOpenCVLibrary,”Dr.Dobb’sJournalofSoftware
+Tools,2000.
+[14] (2018) Ros driver for the optoforce sensor. [Online]. Available:
+https://github.com/shadow-robot/optoforce
+[15] J.Mellado.(2018)js-aruco:Javascriptlibraryforaugmentedreality
+applications.[Online].Available:https://github.com/jcmellado/js-aruco
+[16] R.Ko˜iva,T.Schwank,R.Haschke,andH.J.Ritter,“Fingernailwith
+staticanddynamicforcesensing,”inFingernailwithstaticanddynamic
+forcesensing,2016.
+1659
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 13:58:19 UTC from IEEE Xplore.  Restrictions apply. 

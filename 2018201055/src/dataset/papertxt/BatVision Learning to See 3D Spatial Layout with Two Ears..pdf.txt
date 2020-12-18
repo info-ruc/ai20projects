@@ -1,0 +1,504 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+Learning Object Placements For Relational Instructions
+by Hallucinating Scene Representations
+Oier Mees*, Alp Emek*, Johan Vertens, Wolfram Burgard
+Abstract(cid:151)Robots coexisting with humans in their environ-
+Place the mug on
+ment and performing services for them need the ability to the right of the box
+interactwiththem.Oneparticularrequirementforsuchrobots
+is that they are able to understand spatial relations and can
+placeobjectsinaccordancewiththespatialrelationsexpressed
+by their user. In this work, we present a convolutional neural
+networkforestimatingpixelwiseobjectplacementprobabilities
+for a set of spatial relations from a single input image.
+During training, our network receives the learning signal by
+classifying hallucinated high-level scene representations as an
+auxiliary task. Unlike previous approaches, our method does
+not require ground truth data for the pixelwise relational
+probabilities or 3D models of the objects, which signi(cid:2)cantly
+expands the applicability in practical applications. Our results
+obtained using real-world data and human-robot experiments
+demonstratetheeffectivenessofourmethodinreasoningabout
+the best way to place objects to reproduce a spatial relation.
+Videos of our experiments can be found at https://youtu.
+be/zaZkHTWFMKM
+Fig. 1: The goal of our work is to follow natural language
+I. INTRODUCTION
+instructions based on spatial relations to place arbitrary
+Understanding and leveraging spatial relations is a key objects. Our network learns to predict pixelwise placing
+capabilityofautonomousservicerobotsoperatinginhuman- probability distributions (heatmap on the table) solely from
+centered environments. In this work, we aim to develop an classifyinghallucinatedhigh-levelscenerepresentationsinto
+approach that enables a robot to understand spatial relations a set of spatial relations.
+in natural language instructions to place arbitrary objects.
+The spatial relations include common ones such as (cid:147)left(cid:148),
+for relational instructions in this context requires estimating
+(cid:147)right(cid:148) or (cid:147)inside(cid:148). In Figure 1, the robot is asked to (cid:147)place
+pixelwise spatial distributions of placement locations, as
+the mug on the right of the box(cid:148). To do so, the robot needs
+shown in Figure 1. One of the key challenges to estimate
+toreasonaboutwheretoplacethemugrelativetotheboxin
+suchpixelwisespatialdistributionsisthelackofground-truth
+order to reproduce said spatial relation. Moreover, as natural
+data. This originates from the inherent ambiguity on model-
+language placement instructions do not uniquely identify
+ing such ground-truth distributions without using heuristics.
+a location in a scene, it is desirable to model this using
+If one wants to model the relation (cid:147)left(cid:148), how far left of
+distributions to capture the inherent ambiguity.
+the reference object would form a valid relation? Should the
+Object-object spatial relations can be learned in a fully-
+distribution have a single or multiple modes? And where is
+supervised manner [1](cid:150)[7] from 3D vision. The main lim-
+the boundary between (cid:147)left(cid:148) and (cid:147)in front of(cid:148) for instance?
+iting factor for exploiting this setup in practical robotics
+applications is the need for collections of corresponding 3D Inthispaper,wepushthelimitsofrelationallearningfur-
+objectshapesandrelationaldata,whicharedif(cid:2)culttoobtain therandpresentamethodwhichleveragesaweakerformof
+and require additional instrumentation for object tracking. supervisiontomodelobjectplacementlocationsconditioned
+Thislimitspriormethodstotrainingonsyntheticdatasetsor on a set of spatial relations. We address the problem of the
+simulators, leading to dif(cid:2)culties in their application to real- unavailability of ground-truth pixelwise annotations of spa-
+world scenarios. A possible solution to this problem is to tial relations from the perspective of auxiliary learning. Our
+modelrelationsdirectlyfromRGBimages[8],whichallows approachreliessolelyonrelationalboundingboxannotations
+direct training on real image data without the need of mod- and the image context to learn pixelwise distributions of
+eling the scene in 3D. Reasoning about object placements objectplacementlocationsoverspatialrelations,withoutany
+additional form of supervision or instrumentation. Though
+(cid:3)These authors contributed equally. All authors are with the University classifying two objects into a spatial relation does not carry
+of Freiburg, Germany. Wolfram Burgard is also with the Toyota Research any information on the best placement location to reproduce
+Institute, Los Altos, USA. This work has been supported partly by the
+a relation, inserting objects at different locations in the
+FreiburgGraduateSchoolofRoboticsandtheGermanFederalMinistryof
+EducationandResearchundercontractnumber01IS18040B-OML. image would allow to infer a distribution over relations.
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 94
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. Most commonly, (cid:147)pasting(cid:148) objects realistically in an image Subject	Features
+requires either access to 3D models and silhouettes [9](cid:150)
+RGB	Image RGB	Image
+[12] or carefully designing the optimization procedure of
+generativeadversarialnetworks[13],[14].Moreover,naively
+(cid:147)pasting(cid:148)objectmasksinimagescreatessubtlepixelartifacts Relation Relation
+d
+Object	Attention Object	Attention
+that lead to noticeably different features and to the training
+eswhreroowtnaektoheuaastlsdyuifcffheorcmeunostidnaegplsporleonaadcthhtoeasnreeddduimicsecpdrleappneatrnhfcoigiremhs-.alenOvceeul.rfIenrasettsueuarledtss, Subject	Attention RelNet Right Subject	Attention RelNet In	front	of
+of objects into feature maps of the scene generated by a
+network to hallucinate scene representations, which are then
+classi(cid:2)ed as an auxiliary task to get the learning signal.
+(a) (b)
+Training a network in this setup solely requires being able
+Fig. 2: In the (cid:2)rst stage of our approach, we train an
+to classify relations between pairs of objects from an image.
+auxiliary convolutional neural network, called RelNet, to
+We demonstrate both qualitatively and quantitatively that
+predict spatial relations given the input image and the two
+our network trained on real-world images successfully pre-
+attention masks referring to the two objects forming a
+dicts pixelwise placement probability distributions for each
+relation (a). After training, we can (cid:147)trick(cid:148) the network to
+spatial relation.Our approach can be trainedon images with
+classifyhallucinatedscenesbyimplantinghigh-levelfeatures
+relationalboundingboxannotationsanddoesnotrequire3D
+of items at different spatial locations (b).
+information or any additional instrumentation to predict the
+spatialdistributionofarbitraryobjects,thusmakingitreadily
+applicable in a variety of practical robotics scenarios. We interactions [27] or relational learning in visual question
+exemplifythisbyusingtheprobabilitydistributionsproduced answering [28], [29]. While these approaches reason about
+by our method in a robot experiment to place objects on anexistingscene,ourmethodlearnswhichfuturestatemight
+a tabletop scene by following natural language instructions follow best a spatial relation grounded in natural language
+from humans. instructions. Generating a future state in a object placement
+scenario would mean to insert the object to be placed into
+II. RELATEDWORK different locations in the robot’s view image. There exists
+Learning spatial relations by relying on the geometries of a plethora of work for learning how to synthetize objects
+objectsprovidesarobotwiththenecessarycapabilitytocarry realistically into images [9](cid:150)[12]. Most commonly, such
+outtasksthatrequireunderstandingobjectinteractions,such methods requires either access to 3D models and silhouettes
+asobjectplacing[1],[2],humanrobotinteraction[15](cid:150)[18], or carefully designing the optimization procedure of gener-
+object manipulation [5] or generalizing spatial relations to ative adversarial networks [13], [14]. Instead, our approach
+new objects [3], [4], [19]. Commonly, spatial relations are implants high-level features of objects to hallucinate scene
+modeledbasedonthegeometriesofobjectsgiventheirpoint representations, which are then classi(cid:2)ed by an auxiliary
+cloud models [3](cid:150)[5]. However, learning object relations network to learn spatial distributions.
+from3Ddata[3](cid:150)[7]typicallyrequiresadditionalinstrumen-
+tationtotrackobjects,withtheconsequentdif(cid:2)cultiesdueto III. METHODDESCRIPTION
+occlusionsforexample.Onewaytoovercomethislimitation In this section we describe the technical details of our
+couldbelearningtopredict3Dshapesfromsingleimagesin method for estimating pixelwise object placement probabil-
+aself-supervisedmanner[20].Incontrasttotheseworks,we ities for a set of spatial relations from a single input image.
+learn spatial distributions directly from real-world images. We consider pairwise relations and express the subject item
+Spatial relations also play a crucial role in understand- asbeinginrelationtothereferenceitem.Weextractsubject,
+ing natural language instructions [21](cid:150)[23], as objects are object and relation from natural language instructions.
+often described in relation to others. Several studies on
+A. Auxiliary Network
+human(cid:150)robot interactions have been conducted, mainly for
+picking objects. These works focus on analyzing the expres- In the (cid:2)rst stage of our approach, we encode the
+sive space of abstract spatial concepts as well as notions of input RGB image together with an object and a subject
+ordinalityandcardinality [17],[21].Complementarytothese attention mask to classify them into a set of spatial
+works, we propose to learn distributions of object relations, relations with an auxiliary convolutional neural network
+for commonly used prepositions in natural language, to (CNN). We denote the RGB image, the object and
+enableaservicerobottoplacearbitraryobjectsgivennatural subject attention masks as xi;ai;ai respectively and yi
+o s
+language instructions. corresponds to the relation label in one-hot encoding (cid:150)
+2 f gj j
+Therehasbeenalargebodyofresearchtargetingrelations i.e., yi 0;1 C is a vector of dimensionality C (the
+in the vision community. Multiple works attempt to ground number of relations). We model relations for a set of
+object relationships from images for classi(cid:2)cation [8], re- commonly used natural language spatial prepositions C =
+f g
+ferring expression comprehension [24](cid:150)[26], human-object inside;left;right;in front;behind;on top .
+95
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. Training	only
+Subject	Features
+Sample (u;v)
+RGB	Image
+RGB	Image
+d
+1.0
+Object	Attention
+Spatial-RelNet 0.8 RelNet
+Object	Attention 00..64 k(cid:0)(u;v)(cid:0)f’k22
+0.2
+Pixelwise	probability	maps 0.0 Subject	Attention
+for	each	relation	
+((cid:0))
+Fig. 3: Our encoding-decoding Spatial-RelNet network processes the input RGB image and the object attention mask to
+produce pixelwise probability maps (cid:0) over a set of spatial relations. During training, we sample locations (u;v) according
+to (cid:0), implant inside the auxiliary network RelNet at the sampled locations high level features of objects and classify the
+hallucinated scene representation to get a learning signal for Spatial-RelNet. At test time the auxiliary network is not used.
+D f g 2 R (cid:2) (cid:2)
+Let = (x1;a1;a1;y1);:::;(xN;aN;aN;yN) be the slice of the feature map s Ws Hs Nf corresponding
+o s o s
+labeleddataavailablefortrainingourauxiliaryclassi(cid:2)cation to a bounding box containing an item in the image. Thus,
+network,whichwenameRelNet,seeFigure2a.Let(cid:18) hallucinating a scene representation requires no more than
+RelNet
+be the parameters of the network. We denote the mapping making a forward pass with RelNet and implanting the high
+2 Rj j
+of RelNet as f(xi;ai;ai;(cid:18) ) C . The attention level features of a subject object s into the feature map M
+o s RelNet o
+masks are calculated as a Gaussian distance transform at a sampled location (u;v) by summation and continuing
+a(u;v)= p1 e(cid:0)12((1(cid:0)duv)=(cid:27))2 with duv being the distance the forward pass with the modi(cid:2)ed feature map. We de(cid:2)ne
+(cid:27) 2(cid:25)
+transform between (u;v) and the bounding box center, the implanting operation as:
+based on the L2 norm and with (cid:27) =2.
+The goal of RelNet is to learn classifying scenes of ’(M8o;s;u;v)=Mo+Ms(u;v); (2)
+<
+pairwise object relations by minimizing the cross-entropy where
+(softmax) loss. The softmax functiPon converts a score : (cid:0) (cid:0) if u (cid:20) j (cid:20) u+W
+zbce fcoormcpluatsesdCasinLto(Xzac)po=steerxiopr(zccl)a=ss pjjrC=ojb1aebxipli(tzyj)t.haUtscinang (Ms(u;v))jk = s0(;j u;k v); aonthdervw(cid:20)isek: (cid:20)v+Hss:
+stochastic gradient descent (SGD) we then optimize: (3)
+This way we can reason over what pairwise spatial relations
+(cid:3) 2 N
+(cid:18) argmin L(f(xi;ai;ai;(cid:18) );yi): (1) aremostlikelytobeformedgivenanexistingitemintheim-
+RelNet o s RelNet
+(cid:18)RelNet i=1 ageandasubjectitemwhichcanbehallucinatedatdifferent
+RelNet is only utilized during training time and discarded at locations. In other words, what relation would the two items
+inference time. form,ifthesubjectitemwasplacedatthespeci(cid:2)edlocation.
+Formally,wede(cid:2)nethemappingofaRelNetwithimplanted
+B. Hallucinating Scene Representations 2Rj j
+features s at location u;v as f (xi;ai;ai;s;u;v) C .
+’ o s
+Clearly, classifying the spatial relation formed by two
+C. Learning pixelwise item placement distributions
+items is not suitable to identify the best placing location to
+reproduce a relation. However, inserting objects at different In the (cid:2)nal stage of our approach, we model the primary
+locationsintheimagewouldallowtoinferadistributionover task of inferring pixelwise spatial distributions to (cid:2)nd the
+relations.Asmentionedbefore,(cid:147)pasting(cid:148)objectsrealistically best placing locations by following a natural language in-
+in an image requires commonly either access to 3D models struction containing a spatial relation. We de(cid:2)ne a second
+and silhouettes [9](cid:150)[12] or carefully designing the optimiza- network, named Spatial-RelNet, with an encoding-decoding
+(cid:2)
+tion procedure of generative adversarial networks [13], [14]. architecture. Given an image xi of size W H and the
+To tackle this challenge, we take a different approach and objectattentionmaskai,thenetworkpredictsforeachpixel
+o
+implanthigh-levelfeaturesofobjectsintoahigh-levelfeature intheinputimagetheprobabilitiesofbelongingtooneofthe
+P
+representationofRelNettohallucinatescenerepresentations, C classes with respect to the reference object attention, see
+whicharethenclassi(cid:2)edtogetthelearningsignal,asshown Figure 3. Thus, we denote the mapping of Spatial-RelNet
+inFigure2b.Givenaninputimagexi ofsizeW(cid:2)H,weuse as g(xi;ai) = (cid:0) 2 RW(cid:2)H(cid:2)jCj and jCj (cid:0) (u;v) = 1
+o j=1 j
+the RelNet network on the image to obtain a spatial feature for all u = 1:::W;v = 1:::H. Due to the unavailability
+(cid:2) (cid:2)
+map M of size W H N (width, height, number of ground-truth pixelwise annotation of spatial relations
+o f f f
+of (cid:2)lters) at depth d. Given an input image, we extract a we propose a novel formulation which leverages auxiliary
+96
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. 2
+learning.Duringtraining,wesamplepixellocations(u;v)
+(cid:18) f g (cid:2) f g
+(cid:24) 0;:::;W 0;:::;H according to the probability
+maps (cid:0) produced by Spatial-RelNet and then implant at the
+speci(cid:2)ed locations the subject object features to compute
+withRelNeta posteriorclassprobabilityover relations.This
+way, we can reason over what relation would most likely
+be formed if we placed an object at the given location.
+Ourformulationallowspredictingnon-parametricprobability
+distributions. Thus, by sampling multiple locations in the
+scenefrom(cid:0)andleveragingtheauxiliarytaskofclassifying
+thespatialrelationformedbytwoobjectsinanimagewecan
+Fig. 4: Examples of the scenes recorded for training the
+train ourXprimary network Spatial-RelNet with the following
+auxiliary RelNet classi(cid:2)er. We recorded a total of 1237
+mean squared error loss:
+images of 165 tabletop scenes and manually annotated the
+jj (cid:0) jj
+g(xi;ai) f (xi;ai;ai;s;u;v) 2: (4) bounding boxes of the objects and their spatial relations.
+o uv ’ o s 2
+2
+u;v (cid:24)
+We note that at inference time the auxiliary RelNet network camera viewpoints helps the approach become less
+is discarded. sensitive to viewpoint changes and generalize better.
+We annotate 5304 pairwise bounding boxes with the
+D. Implementation Details
+commonly used natural language spatial prepositions C =
+f g
+In the (cid:2)rst stage of our approach, we train the auxiliary inside;left;right;in front;behind;on top .
+RelNet network on the task of classifying spatial relations For all recorded scenes we use different tablecloths and
+betweentwoobjectsinimages.TheauxiliaryRelNetnetwork tables in different rooms to avoid over(cid:2)tting. To evaluate
+is based on a ResNet-18 [30] architecture and is initialized the pixelwise probability distributions predicted by Spatial-
+with ImageNet pre-trained weights. We use the SGD opti- RelNet,werecord105scenescontainingunseenobjectsand
+(cid:0)
+mizer with a learning rate of 10 3. tables. Due to the inherent ambiguity of de(cid:2)ning pixelwise
+In the (cid:2)nal stage of our approach, we train Spatial- spatial distributions, we ask 3 participants to annotate them.
+RelNettopredictpixelwisespatialdistributionsbyusingthe Todoso,theuserusea(cid:147)spray(cid:148)tooltodrawpointsinwhich
+auxiliaryRelNetnetworkforsupervision.TheSpatial-RelNet placing an item would reproduce a given spatial relation,
+is inspired by the FastSCN [31] semantic segmentation as shown in Figure 5a. The points are then convolved with
+architecture and initialized randomly. We apply a per-pixel a (cid:2)xed kernel to generate a dense pixelwise ground-truth
+sigmoid activation function for the last layer instead of distribution, as seen in Figure 5b.
+softmax. We use the ADAM optimizer with a learning rate
+of 10(cid:0)3.We sample 20 locations per distributions and use a B. Evaluation protocol
+feature map of the size 128;10;10 pertaining to an object To compare the pixelwise distributions predicted by our
+to hallucinate the scene representations. For all experiments, methodwiththeground-truthpixelwiseannotationsprovided
+we implant the subject features after the third convolutional by the participants, we report several metrics. Inspired by
+block (cid:147)conv3 x(cid:148) (d = 3) of the ResNet-18 architecture metricsfromobjectdetectionandsegmentation,wethreshold
+that characterizes RelNet. In order to speed up the training the distributions at different ranges and compute their mean
+h i
+we apply a Sobel (cid:2)lter on the output probability maps intersectionoverunion(IoU).Additionally,weareinterested
+Hh to propiagate the gradient to local neighborhoods. We in comparing the modes between the distributions. First,
+(cid:0)
+de(cid:2)ne the Sobel kernels as (cid:0)(cid:0)120012 for the x direction and we compute the maximum mode from each distribution and
+101 reporttheeuclideanpixeldistancebetweenthem(Mode).As
+(cid:0)10 (cid:0)20 (cid:0)10 for the y direction. the distance between the modes does not model the tails of
+1 2 1
+IV. EXPERIMENTS the distributions, we also calculate the distance between the
+In this section we showcase our approach both qualita-
+tively and quantitatively, and demonstrate its applicability
+in a human-robot experiment, where participants ask a PR2
+robot to place objects with natural language instructions
+based on spatial relations.
+(a) (b) (c)
+A. Dataset
+Fig. 5: Example user annotation of ground-truth points for
+We record and annotate a total of 1237 images of 165
+therelation(cid:147)right(cid:148)witha(cid:147)spray(cid:148)painttool(a).Weconvolve
+tabletop scenes. The images depict tabletop scenes from
+theuserannotatedpointstogenerateadensedistribution(b).
+three different viewpoints (object-centric to top-down)
+The shown network output distribution and the ground-truth
+containing spatial relations formed by using combinations
+of 40 different household objects. Learning from multiple distribution have a IoU0:5 of 0.39 (c).
+97
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. Input Inside Left Right In Front Behind On Top
+Fig. 6: Qualitative results for predicting pixelwise distributions for every spatial relation. Placing an object at a location
+sampledfromthesedistributionsmaximizestheprobabilityofreproducingtheselectedspatialrelation.Ournetworkproduces
+meaningfuldistributions,despiterelyingsolelyonanauxiliarytaskofclassifyinghallucinatedhigh-levelscenerepresentations
+into a set of spatial relations for supervision.
+centroidpixelsofthepredictedandground-truthdistributions line model in which we naively (cid:147)paste(cid:148) objects masks
+(Centroid). Due to the non-parametric nature of the distribu- in the RGB images to predict pixelwise distributions for
+tions, we perform a Kruskal-Wallis (KW) test by analyzing spatial relations. We report mean Ious of 0.44, 0.4, 0.3
+if 100 points sampled from the ground-truth distribution and for the thresholds of 0.25, 0.5 and 0.75 respectively. This
+another 100 points sampled from the predicted distribution shows that the artifacts created by (cid:147)pasting(cid:148) object masks
+originated from the same distribution, with a signi(cid:2)cance in RGB images lead to noticeably different features and to
+of p < 0:05. Finally, we measure the similarity of the the training erroneously focusing on these discrepancies. In
+probabilitydistributionswiththeKullback(cid:150)Leibler(KL)and comparison,ourSpatial-RelNetachievesmeanIoUsof0.63,
+Jensen(cid:150)Shannon (JS) divergences. 0.6and0.44,asshowninTableII,byclassifyinghallucinated
+scenerepresentations,alleviatingthisproblem.Moreover,for
+C. Quantitative Results
+Spatial-RelNet the mean distance between the modes of the
+First, we analyze the performance of the auxiliary RelNet distributionsliesat67.2pixels,correspondingapproximately
+network to model spatial relations, as we rely on it to to 5.74cm. As this metric depends on the image resolution
+get the learning signal for Spatial-RelNet. We evaluate the and the distance of the camera to the objects, for each
+performanceofRelNetonatestsplitcontaining975pairwise image in the test set, we sample uniformly 100 pixels
+relations and report an average accuracy of 97% over all and compute their average distance to the mode of the
+relations, as shown in Table I. We compare its performance ground-truth distribution. Thus, the mean distance between
+against a model that was trained only on binary masks of a random pixel and the ground-truth mode is 504.5 pixels.
+the objects to analyze the importance of using the image To model the tails of the distributions, we also calculate the
+context to model the relations. This model achieves an distance between the centroid pixels of the predicted and
+accuracy of 84:4% and we (cid:2)nd that the image context is ground-truth distributions and we report a mean distance
+specially important to disambiguate the relations on top of 113.5 pixels, which corresponds approximately to 9.88
+and inside. We also train an intermediate model, which cm. We measure the similarity of the distributions with the
+takes as input the image and binary object masks to model
+the relations, and achieves an accuracy of 94:3%. Our (cid:2)nal
+model shows the best performance by incorporating the use Metric Mean Inside Left Right InFront Behind OnTop
+of the Gaussian distance transforms for the attention masks. IoU0:25 0.63 0.66 0.69 0.65 0.64 0.51 0.65
+IoU0:5 0.6 0.62 0.6 0.62 0.57 0.57 0.62
+Model Mean Inside Left Right InFront Behind OnTop IoU0:75 0.44 0.47 0.41 0.46 0.39 0.48 0.5
+Mode 67.2 43.5 71 59.2 86.8 115.3 90.5
+Masksonly 84.4 60.8 99.3 93.2 99.3 98.1 56.6 Centroid 113.5 116.7 241.1 85.1 70.9 51.4 163.4
+Image+Masks 94.3 81.3 99.3 100 98.7 97.5 88.5 KL 3.78 5.35 4.47 3.5 1.62 3.9 5.7
+Fullmodel 97 93.1 98.7 100 100 98.7 91.5 JS 0.46 0.54 0.48 0.45 0.34 0.5 0.57
+KW 0.55 0.63 0.5 0.51 0.51 0.43 0.73
+TABLE I: Quantitative comparison of RelNet with its vari-
+ants. Adding the image context helps disambiguating the TABLE II: Quantitative comparison of the predicted pixel-
+relations on top and inside. wise distributions with ground-truth annotations for a range
+of metrics. Our methods yields good results though relying
+on a weaker form of supervision.
+Next, we quantitatively evaluate the capability of a base-
+98
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. 10
+8
+Score 6
+kert  4
+Li
+Fig.8:ExampleobjectplacingexecutionwiththePR2robot
+2
+for the natural language instruction (cid:147)place the can on top of
+0 the box(cid:148), which is synthesized with the Amazon Echo Dot.
+Mean Inside Left Right In Front Behind On Top
+Fig. 7: Performance of a PR2 robot following natural lan-
+2) Results: Figure 7 shows the performance of our ap-
+guage instructions of 11 participants for object placement.
+proach on a PR2 robot for a total of 220 natural language
+Error bars indicate 95% con(cid:2)dence intervals.
+instructions of 11 participants. We report a mean rating of
+8.1 over all relations and trials. We observe a lower score
+Kullback(cid:150)LeiblerandJensen(cid:150)Shannondivergences,werewe
+for (cid:147)behind(cid:148) as many points sampled were outside the reach
+report mean values of 3.78 and 0.46 respectively. Finally,
+of the robot’s gripper and therefore no valid motion plan
+we found in 0.55% of the cases the samples drawn from the
+was found. We observe a similar behaviour for the success
+predicted and ground-truth distribution to originate from the
+ratesreportedonTableIII.Manyparticipantschosereference
+same distribution according to the Kruskal-Wallis test, with
+items with a small area to place the object for the relations
+a signi(cid:2)cance of p<0:05.
+(cid:147)on top(cid:148) and (cid:147)inside(cid:148), requiring a precision placement. For
+WeshowqualitativeresultsinFigure6.Inthischallenging
+such challenging scenarios, we observed some failure cases
+setting, the network learns to produce meaningful distribu-
+whenthesampledlocationliedattheborderofthereference
+tions,fromwhichonecansampleobjectplacementlocations
+item or the depth information from the RGB-D camera
+to reproduce a spatial relation.
+contained noise. Overall, our results demonstrate the ability
+D. Human-Robot Object Placement Experiment of our approach to effectively learn object placements for
+We also evaluate the performance of our approach in a relational instructions.
+realistic human-robot collaboration context. We exemplify
+Metric Mean Inside Left Right InFront Behind OnTop
+the ability of our approach to reason about the best way
+SuccessRate 0.84 0.84 0.87 0.95 0.84 0.80 0.79
+to place objects by asking a group of participants to provide
+TABLE III: Performance of our approach on a real robot
+relationalnaturallanguageinstructionstoaPR2servicerobot
+platform following natural language instructions of 11 par-
+in a tabletop scene.
+ticipants to place objects in a tabletop scenario.
+1) Procedure: Our study involved 11 participants re-
+cruited from a university community. Each participant was
+asked to give 20 natural language instructions to the PR2 V. CONCLUSION
+robot, whichwere parsedwith anAmazon EchoDot device. In this paper, we presented a novel approach to the
+For each placement trial, the participants were asked to problemoflearninglearningobjectplacementsforrelational
+chooseareferenceitemfromarangeof30householdobjects instructions from a single image. We exempli(cid:2)ed how the
+and to place it on the table at a random location. Next, the distributions produced by our method enables a real-world
+participants were instructed to choose a different item to put robot to place objects by following relational natural lan-
+onthegripperoftherobot.Afterwards,theparticipantswere guage instructions. Our method is based on leveraging three
+askedtoprovideanaturallanguageinstructionthatcontained key ideas: i) modeling object-object spatial relations on nat-
+one of the six spatial relations. We relied on keyword ural images instead of 3D, which helps avoiding additional
+spotting to select the corresponding predicted distribution. instrumentation for object tracking and the need for large
+The instruction was repeated in case of failures synthesizing collectionofcorresponding3Dshapesandrelationaldata ii)
+the voice input. After sampling a (u;v) location from the reasoning about the best way to place objects to reproduce
+predicteddistribution,weusedtherobot’sAsusXtionRGB- a spatial relation by estimating pixelwise, non-parametric
+D camera to localize the pixel coordinate in 3D space. Our distributions, without the use of priors iii) leveraging aux-
+systemthenplannedatop-downgraspposetothecalculated iliary learning to overcome the problem of unavailability
+3Dpoint.Thereachabilityoftheproposedplanwaschecked of ground-truth pixelwise annotation of spatial relations and
+using MoveIt! [32]. The end-effector was moved above thus receive the training signal by classifying hallucinating
+the desired location and then the gripper was opened to scene representations.
+complete the placement. After each trial the participants Wefeelthatthisisapromising(cid:2)rststeptowardsenabling
+rated the placement on a 10-point Likert scale as well as a a shared understanding between humans and robots. In
+binarysuccessrate.TheLikertscalehelpsusrateambiguous the future, we plan to extend our approach to incorporate
+placements such as a top left or diagonal placements for a understandingofreferringexpressionstodevelopapick-and-
+instruction containing the relation (cid:147)left(cid:148). place system that follows natural language instructions.
+99
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [20] OierMees,MaximTatarchenko,ThomasBrox,andWolframBurgard.
+Self-supervised3dshapeandviewpointestimationfromsingleimages
+[1] Yun Jiang, Marcus Lim, Changxi Zheng, and Ashutosh Saxena. for robotics. In Proceedings of the International Conference on
+Learningtoplacenewobjectsinascene. TheInternationalJournal IntelligentRobotsandSystems(IROS),Macao,China,2019.
+ofRoboticsResearch,31(9):1021(cid:150)1043,2012. [21] Rohan Paul, Jacob Arkin, Nicholas Roy, and Thomas M Howard.
+[2] Yun Jiang, Marcus Lim, and Ashutosh Saxena. Learning object Ef(cid:2)cient grounding of abstract spatial concepts for natural language
+arrangements in 3d scenes using human context. arXiv preprint interactionwithrobotmanipulators. 2016.
+arXiv:1206.6462,2012. [22] Jun Hatori, Yuta Kikuchi, Sosuke Kobayashi, Kuniyuki Takahashi,
+[3] Oier Mees, Nichola Abdo, Mladen Mazuran, and Wolfram Burgard. Yuta Tsuboi, Yuya Unno, Wilson Ko, and Jethro Tan. Interactively
+Metric learning for generalizing spatial relations to new objects. In picking real-world objects with unconstrained spoken language in-
+ProceedingsoftheInternationalConferenceonIntelligentRobotsand structions. In 2018 IEEE International Conference on Robotics and
+Systems(IROS),Vancouver,Canada,2017. Automation(ICRA),pages3774(cid:150)3781.IEEE,2018.
+[4] PhilippJund,AndreasEitel,NicholaAbdo,andWolframBurgard.Op- [23] AlyMagassouba,KomeiSugiura,andHisashiKawai. Amultimodal
+timizationbeyondtheconvolution:Generalizingspatialrelationswith classi(cid:2)ergenerativeadversarialnetworkforcarryandplacetasksfrom
+end-to-end metric learning. In 2018 IEEE International Conference ambiguous language instructions. IEEE Robotics and Automation
+onRoboticsandAutomation(ICRA),pages1(cid:150)7.IEEE,2018. Letters,3(4):3113(cid:150)3120,2018.
+[5] Konstantinos Zampogiannis, Yezhou Yang, Cornelia Fermu¤ller, and [24] Varun K Nagaraja, Vlad I Morariu, and Larry S Davis. Modeling
+Yiannis Aloimonos. Learning the spatial semantics of manipulation context between objects for referring expression understanding. In
+actions through preposition grounding. In 2015 IEEE international EuropeanConferenceonComputerVision,pages792(cid:150)807.Springer,
+conference on robotics and automation (ICRA), pages 1389(cid:150)1396. 2016.
+IEEE,2015. [25] Licheng Yu, Zhe Lin, Xiaohui Shen, Jimei Yang, Xin Lu, Mohit
+[6] SeverinFichtl,AndrewMcManus,WailMustafa,DirkKraft,Norbert Bansal, and Tamara L Berg. Mattnet: Modular attention network
+Kru¤ger, and Frank Guerin. Learning spatial relationships from 3d for referring expression comprehension. In Proceedings of the IEEE
+vision using histograms. In 2014 IEEE International Conference on ConferenceonComputerVisionandPatternRecognition,pages1307(cid:150)
+RoboticsandAutomation(ICRA),pages501(cid:150)508.IEEE,2014. 1315,2018.
+[7] BenjaminRosmanandSubramanianRamamoorthy. Learningspatial [26] Ranjay Krishna, Ines Chami, Michael Bernstein, and Li Fei-Fei.
+relationshipsbetweenobjects. TheInternationalJournalofRobotics Referring relationships. In Proceedings of the IEEE Conference on
+Research,30(11):1328(cid:150)1342,2011. ComputerVisionandPatternRecognition,pages6867(cid:150)6876,2018.
+[8] Bo Dai, Yuqi Zhang, and Dahua Lin. Detecting visual relationships [27] Georgia Gkioxari, Ross Girshick, Piotr Dolla·r, and Kaiming He.
+withdeeprelationalnetworks.InProceedingsoftheIEEEConference Detectingandrecognizinghuman-objectinteractions. InProceedings
+onComputerVisionandPatternRecognition,pages3076(cid:150)3086,2017. oftheIEEEConferenceonComputerVisionandPatternRecognition,
+[9] DebidattaDwibedi,IshanMisra,andMartialHebert. Cut,pasteand pages8359(cid:150)8367,2018.
+learn:Surprisinglyeasysynthesisforinstancedetection. InProceed- [28] Peter Battaglia, Razvan Pascanu, Matthew Lai, Danilo Jimenez
+ingsoftheIEEEInternationalConferenceonComputerVision,pages Rezende, et al. Interaction networks for learning about objects,
+1301(cid:150)1310,2017. relations and physics. In Advances in neural information processing
+systems,pages4502(cid:150)4510,2016.
+[10] HaoSu,CharlesRQi,YangyanLi,andLeonidasJGuibas.Renderfor
+[29] AdamSantoro,DavidRaposo,DavidGBarrett,MateuszMalinowski,
+cnn:Viewpointestimationinimagesusingcnnstrainedwithrendered
+Razvan Pascanu, Peter Battaglia, and Timothy Lillicrap. A simple
+3dmodelviews.InProceedingsoftheIEEEInternationalConference
+neuralnetworkmoduleforrelationalreasoning.InAdvancesinneural
+onComputerVision,pages2686(cid:150)2694,2015.
+informationprocessingsystems,pages4967(cid:150)4976,2017.
+[11] GeorgiosGeorgakis,ArsalanMousavian,AlexanderCBerg,andJana
+[30] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep
+Kosecka. Synthesizing training data for object detection in indoor
+residual learning for image recognition. In Proceedings of the IEEE
+scenes. arXivpreprintarXiv:1702.07836,2017.
+conference on computer vision and pattern recognition, pages 770(cid:150)
+[12] Jonathan Tremblay, Aayush Prakash, David Acuna, Mark Brophy,
+778,2016.
+Varun Jampani, Cem Anil, Thang To, Eric Cameracci, Shaad Boo-
+[31] RudraPKPoudel,StephanLiwicki,andRobertoCipolla. Fast-scnn:
+choon, and Stan Birch(cid:2)eld. Training deep networks with synthetic
+fastsemanticsegmentationnetwork.arXivpreprintarXiv:1902.04502,
+data: Bridging the reality gap by domain randomization. In Pro-
+2019.
+ceedings of the IEEE Conference on Computer Vision and Pattern
+[32] SachinChitta,IoanSucan,andSteveCousins.Moveit!IEEERobotics
+RecognitionWorkshops,pages969(cid:150)977,2018.
+&AutomationMagazine,19,2012.
+[13] DonghoonLee,SifeiLiu,JinweiGu,Ming-YuLiu,Ming-HsuanYang,
+and Jan Kautz. Context-aware synthesis and placement of object
+instances. In Advances in Neural Information Processing Systems,
+pages10393(cid:150)10403,2018.
+[14] Chen-Hsuan Lin, Ersin Yumer, Oliver Wang, Eli Shechtman, and
+SimonLucey. St-gan:Spatialtransformergenerativeadversarialnet-
+worksforimagecompositing.InProceedingsoftheIEEEConference
+onComputerVisionandPatternRecognition,pages9455(cid:150)9464,2018.
+[15] RuthSchulz.Collaborativerobotslearningspatiallanguageforpicking
+andplacingobjectsonatable.InProceedingsofthe5thInternational
+ConferenceonHumanAgentInteraction,pages329(cid:150)333.ACM,2017.
+[16] Sergio Guadarrama, Lorenzo Riano, Dave Golland, Daniel Go,
+YangqingJia,DanKlein,PieterAbbeel,TrevorDarrell,etal.Ground-
+ing spatial relations for human-robot interaction. In 2013 IEEE/RSJ
+International Conference on Intelligent Robots and Systems, pages
+1640(cid:150)1647.IEEE,2013.
+[17] Mohit Shridhar and David Hsu. Interactive visual grounding of
+referring expressions for human-robot interaction. In Proceedings of
+Robotics:ScienceandSystems,2018.
+[18] Amir Aly and Tadahiro Taniguchi. Towards understanding object-
+directedactions:Agenerativemodelforgroundingsyntacticcategories
+of speech through visual perception. In 2018 IEEE International
+Conference on Robotics and Automation (ICRA), pages 7143(cid:150)7150.
+IEEE,2018.
+[19] JimmyLi,DavidMeger,andGregoryDudek. Learningtogeneralize
+3d spatial relationships. In 2016 IEEE International Conference on
+RoboticsandAutomation(ICRA),pages5744(cid:150)5749.IEEE,2016.
+100
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 10:19:05 UTC from IEEE Xplore.  Restrictions apply. 

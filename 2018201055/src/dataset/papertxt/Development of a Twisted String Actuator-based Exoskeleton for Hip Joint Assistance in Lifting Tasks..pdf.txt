@@ -1,0 +1,529 @@
+2020 IEEE International Conference on Robotics and Automation (ICRA)
+31 May - 31 August, 2020. Paris, France
+OmniSLAM: Omnidirectional Localization and Dense Mapping
+for Wide-baseline Multi-camera Systems
+∗ ∗ †
+Changhee Won1 , Hochang Seok1 , Zhaopeng Cui2, Marc Pollefeys2, and Jongwoo Lim1
+Abstract—Inthispaper,wepresentanomnidirectionallocal-
+ization and dense mapping system for a wide-baseline multi-
+view stereo setup with ultra-wide ﬁeld-of-view (FOV) ﬁsheye
+◦
+cameras,whichhasa360 coverageofstereoobservationsofthe
+environment. For more practical and accurate reconstruction,
+we ﬁrst introduce improved and light-weighted deep neural
+networks for the omnidirectional depth estimation, which are
+faster and more accurate than the existing networks. Second,
+we integrate our omnidirectional depth estimates into the
+visual odometry (VO) and add a loop closing module for
+globalconsistency.Usingtheestimateddepthmap,wereproject
+keypoints onto each other view, which leads to a better and
+more efﬁcient feature matching process. Finally, we fuse the
+omnidirectionaldepthmapsandtheestimatedrigposesintothe
+truncated signed distance function (TSDF) volume to acquire
+a 3D map. We evaluate our method on synthetic datasets
+with ground-truth and real-world sequences of challenging
+environments, and the extensive experiments show that the
+proposed system generates excellent reconstruction results in
+both synthetic and real-world environments.
+I. INTRODUCTION Fig.1:Top:exampleinputimagesofachallengingindoorenviron-
+ment.Bottom:Denselyreconstructedmapofaduplexbuildingwith
+3D geometric mapping of an environment is an essential
+estimated trajectory. The colors of the trajectory encode heights.
+partofautonomousnavigationforcarsorrobots.Tothisend,
+manyrangesensors,forexample,laser-basedLiDAR[1]and
+both the depths and the camera poses need to be accurately
+structured light 3D scanners [2] can be used as their depth
+estimated and are critical to the mapping results.
+sensing is accurate, which is critical to the mapping results.
+Meanwhile, there have also been strong needs on om-
+However, they often suffer from low vertical resolution,
+nidirectional sensing, which cannot be estimated by the
+inter-sensor interference due to emitting light operation, or
+traditional camera setup due to the limited ﬁeld-of-view
+practical issues such as size, cost, and power consumption.
+(FOV), to detect obstacles around a vehicle. Multiple sets
+Meanwhile, the camera-based systems [3], [4] are also used
+of stereo cameras [10] or catadioptric lenses [11], [12] can
+for the 3D dense mapping since they have a sufﬁcient
+beused,butthesizeandcostofthemultiplecamerasorblind
+resolution with lower cost and smaller size, and the sensors ◦
+spotsbetween360 FOVlensescouldbeproblems.Recently,
+operatepassively.Althoughcamerasdonotdirectlysensethe
+a wide-baseline omnidirectional stereo setup which consists
+distancesfromsurfaces,3Ddepthcanbeestimatedbyusing ◦
+of four 220 FOV ﬁsheye cameras facing the four cardi-
+amulti-viewstereo.Moreover,duetothedrasticperformance
+nal directions has been presented [13]. This wide-baseline
+improvement recent deep learning-based algorithms for the ◦
+setup enables long-range sensing while having a full 360
+stereodepthestimateshaveshown[5]–[7],thecamera-based
+coverage, and due to the sufﬁcient overlaps between stereo
+systems have become more favorable.
+pairs, most areas are visible from more than two cameras.
+Traditional stereo camera systems consist of two or more
+Using the same capture system, a robust visual odometry
+cameras looking in the same direction to ﬁnd stereo corre-
+(VO)ROVO[14],andanend-to-enddeepneuralnetworkfor
+spondences from a set of rectiﬁed images. After computing
+the omnidirectional depth estimation OmniMVS [15] have
+stereo disparities, corresponding output depth maps can be
+been also proposed.
+fused temporarily into a global map using camera poses
+In this paper, we propose an omnidirectional localization
+which can be estimated using image features, for example,
+and dense mapping system for the wide-baseline omnidirec-
+ORB feature descriptor [8], [9]. For the dense mapping,
+tional stereo setup. We integrate the omnidirectional dense
+∗ depth and the pose estimates into a uniﬁed dense mapping
+Authorscontributedequally.
+†Correspondingauthor. system while being more efﬁcient and accurate. We adopt
+{ 1Department of Computer Sicence}, Hanyang University, Korea. the OmniMVS [15] for the omnidirectional depth estimation
+chwon, hochangseok, jlim @hanyang.ac.kr ◦
+which estimates a whole 360 depth map from the input
+{ 2Department of Computer Science, ET}H Zurich, Switzerland.
+zhaopeng.cui, marc.pollefeys @inf.ethz.ch ﬁsheye images. However, since the network warps unary
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 559
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. features extracted from each input image onto 3D global
+Depth  Omnidirectional
+spheres, it requires a huge GPU memory and computational Estimation Depth Map
+Input
+resources to handle the multiple 4D feature volumes. There-
+Fisheye Dense
+fore,weproposelight-weightedandalsoimprovednetworks
+Images Depth Map Integration Mapping
+using our new training strategy. We also present improved
+versions of ROVO [14] by integrating the depth estimates Visual  Loop
+Rig Poses
+Odometry Closing
+into the pose estimation process. Using the omnidirectional
+(Post Processing)
+densedepthoutputbythenetwork,weboosttheperformance Fig. 2: Flowchart of the proposed system. We ﬁrst estimate omni-
+of the inter-view matching and triangulation. Besides, we directional depth maps and poses with given ﬁsheye images. The
+implementaloopclosingmodulespecializedforouromnidi- depth map is integrated into the visual odometry, when available.
+rectionalcapturesystem.Finally,wefusetheomnidirectional WefuseoutputdepthmapsandposesintoaTSDFvolumetobuild
+the 3D map. Corrected poses by the loop closing module are used
+depthandtheposeestimationintoatruncatedsigneddistance
+for building a globally consistent map in the post processing.
+function (TSDF) volume [16] to obtain a global 3D map.
+Figure 1 shows an example 3D map of a challenging indoor are used also for more robust pose estimation. Caruso et
+environment reconstructed by our proposed system. al. [31] propose a ﬁsheye camera-based visual simultane-
+The main contributions are summarized as: ous localization and mapping (SLAM) with direct methods
+(i) We propose light-weighted and improved networks for whichoptimizephotometricerrorsofimages.Fisheyestereo
+the omnidirectional depth estimation from the wide- camera-based visual odometry systems have been also pro-
+baseline stereo setup. The accuracy, the number of posed by Liu et al. [32] and Matsuki et al. [33].
+parameters, and the running time of our network have There have been relatively few systems and works for
+◦
+become better than the previous versions, which makes omnidirectionalsensing.Using360 FOVcatadioptricstereo
+our system more practical. cameras,Geyeretal.[11]andScho¨nbeinetal.[12]compute
+(ii) WebuildarobustomnidirectionalvisualSLAMsystem stereo disparity from a pair of rectiﬁed omnidirectional
+by integrating the depth map into ROVO and adding images. Pretto et al. [34] propose a triangulation-based
+a loop closing module. The accuracy of the estimated omnidirectional dense mapping system using a catadioptric
+trajectory is improved than the previous versions in camera and vehicle wheels’ motion. Multi-camera systems
+both challenging indoor and large scale outdoor envi- havebeenalsoproposedfortheomnidirectionalstereodepth
+ronments. estimation [10] and the visual odometry [35], however,
+(iii) We present an integrated omnidirectional localization they require many cameras which could be problematic in
+and dense mapping system, and the extensive experi- some cases. Recently using only a few ﬁsheye cameras,
+ments on synthetic, and real-world indoor and outdoor a wide-baseline omnidirectional stereo system has been
+environments show that our proposed system generates proposed [13]. Using the same rig setup, Won et al. [15]
+well reconstructed 3D dense maps for various scenes. proposeanend-to-endnetworkfortheomnidirectionaldepth
+estimation, and Seok and Lim [14] present a robust visual
+II. RELATEDWORK
+odometry.
+Most image-based 3D dense mapping systems follow
+III. METHOD
+two steps: dense depth estimation, and temporal fusion of
+the estimated depths using camera poses. For the dense In this section, we describe our omnidirectional localiza-
+depth estimation, temporal or motion stereo methods using tionanddensemappingsystem.Figure2illustratestheover-
+a monocular camera can be used for static scenes [17]– allprocedureofourproposedsystemconsistingofthreemain
+[19],whereasmulti-camerasystemsincludingstereocameras modules: omnidirectional depth estimation, omnidirectional
+are mainly used for more general scenes. Recent deep visual SLAM, and TSDF-based dense mapping.
+learning-based methods [5]–[7], [20] perform stereo depth
+A. Omnidirectional Depth Estimation
+estimationfromthetraditionalstereopinholecameras,which
+assumes a pair of rectiﬁed images as input, in an end-to- We use the wide-baseline multi-camera rig system and
+endfashion.Withoutrectifyingorundistortinginputimages, the spherical sweeping-based approach [13] for the om-
+the plane-sweeping stereo [21]–[23] allows for dense stereo nidirectional stereo matching. In such a wide-baseline
+matching among multi-view images. Adopting the plane- setup, spherical sweeping stereo ﬁnds stereo correspon-
+sweeping stereo, Cui et al. [24] propose a real-time dense dences from the multi-view images by warping them
+depth estimation from multiple ﬁsheye cameras which have onto the global sweeping spheres centered at the rig ori-
+a wider FOV than pinhole cameras. For the camera pose gin, and the radius of each sweeping sphere corresponds
+estimation, several visual odometry methods [9], [25]–[28] to an inverse depth hypothesis for each ray p(θ,φ) =
+(cid:62) ×
+have been proposed for monocular systems, however, due (cos(φ)cos(θ),sin(φ),cos(φ)sin(θ)) inthewarpedW
+to the limitation of monocular setup, the metric scale of H equirectangular images where (θ,φ) is the spherical
+the poses cannot be estimated. Mur-Artal and Tardo´s [29], coordinate of p.
+and Wang et al. [30] propose stereo camera-based systems Recently, an end-to-end network OmniMVS [15] which
+estimating metric scale poses. Meanwhile, ﬁsheye cameras consists of unary feature extraction, spherical sweeping, and
+560
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. cost volume computation modules, allows for dense omnidi- poses and observed 3D points in the local window are
+rectional multi-view stereo matching from the wide-baseline simultaneouslyoptimizedbylocalbundleadjustment(LBA).
+× ×
+rig. To estimate an omnidirectional depth, 12WI 12HI C DepthMapIntegration WeadoptROVO[14]asabaseline
+unary feature maps are extracted from the input ﬁsheye
+of our localization module, however, triangulated 3D points
+images using the residual blocks [36] where WI and HI inthefeaturetrackingstagemayhavelargeuncertaintysince
+are the size of the images, and C is the number of channels. it is highly dependent on the camera motion. Moreover, the
+The feature maps then are warped onto the global spheres
+× × × inter-view matching process, which ﬁnds correspondences
+using4 (W H (N/2))sweepingx,y coordinateswhere from unspeciﬁed areas in the other view, is inefﬁcient
+N is the number of inverse depths, and are concatenated to and easy to mismatch them. Therefore, we integrate the
+build the 4D omnidirectional matching cost volume. The 3D
+omnidirectional depth map estimated in Section III-A into
+encoder-decoder architecture [20] computes and regularizes
+our localization module ROVO+ for better efﬁciency and
+the cost volume. Finally, one minimum index of inverse
+robustness. We ﬁrst replace the triangulated depth with the
+depths for each ray is picked by the softargmin operation
+network’sestimation toavoidthe uncertainty.Second, inthe
+whileconsideringthemultipletruematcheswhichmayoccur
+inter-view feature matching stage, we reproject the features
+in such a global sweeping approach [15].
+to other adjacent views using the depth and ﬁnd the best
+Light-weighted OmniMVS We use the OmniMVS [15] to match around the projected location by using the nearest
+acquire a dense omnidirectional depth. However the size of neighbor search. These processes give better initialization
+× × ×
+tensor in the network grows up to 1W 1H 1N 4C of depth and help to avoid local minimum in the joint
+2 2 2
+(C = 32 in [15]) which requires a huge GPU memory and optimization process: pose-only BA and LBA. Considering
+computational resources. To develop light-weight networks, the running time of the depth estimation as described in
+we reduce the number of channels C of all layers several Table I, both integration processes are activated only in the
+times, and to train the network more effectively with the depth-availableframes.Duetothehigh-accuracyofthedepth
+small number of channels, we guide the network by adding estimation, these integration processes improve the overall
+a 2D convolutional layer without ReLU into the end of performance of the visual odometry.
+the feature extraction module. This enables the networks to
+Loop Closing Loop closing has been widely used in many
+discriminate the negative features and the invisible area in
+SLAMsystemstocorrectlargedriftsofestimatedtrajectory.
+the warped spherical feature maps, which are set to 0 by
+We propose a loop closing module for the wide-baseline
+ReLU and warping process respectively. We also apply the
+omnidirectional stereo system while utilizing the beneﬁts of
+disparity regression [20] to regress inverse-depth indices by
+thewideFOV.First,weusethevocabularytree [39]trained
+the weighted summation of all the candidates rather than
+in [9], [29] for detecting loop closures. We create the query
+picking one minimum index. In this way, the discretization
+for the vocabulary tree by stacking all feature descriptors
+errors can be reduced as shown in Fig. 3. In order to train ◦
+(cid:88) observedbyeachcameratotakefulladvantagesofthe360
+the network, we use the smooth L1 loss as
+FOV of the rig system in place recognition. After selecting
+L 1 − ∗ the loop candidates, we check the geometric consistency of
+(p)= L (n(p) n (p)),
+M 1;smooth them by using the multi-view P3P RANSAC [14]. When
+where n and n∗ are the estimated and ground-truth inverse- matchingfeaturesbetweencurrentandcandidate’sviews,we
+depth index respectively, and M is the number of valid pix- onlyconsiderthecircularshiftoftherig(e.g.,1-2-3-4,2-3-4-
+els. We use the stochastic gradient descent with momentum 1,3-4-1-2,or4-1-2-3),assumingtherigdoesnotﬂiporskew.
+to minimize the loss. Finally,weprocessthepose-graphoptimizationtocorrectthe
+trajectory.Sincealocal3Dmapisenoughforpathplanning
+B. Ominidrectional Visual SLAM and obstacle detection [24], we use the corrected trajectory
+for building a global map in post-processing.
+Localization is also an essential part of the 3D dense
+mapping and recently proposed ROVO [14] robustly esti-
+C. TSDF-based Dense Mapping
+mates rig poses of the wide-baseline omnidirectional stereo
+system.In[14],ROVOfollowsfoursteps:hybridprojection; In order to obtain a global 3D map, we fuse the om-
+intra-view tracking, and inter-view matching; pose estima- nidirectional depth maps and the rig poses estimated in
+tion; and joint optimization. At ﬁrst, input ﬁsheye images Section III-A and III-B into the truncated signed distance
+are warped onto the hybrid projection images in which function (TSDF) volume [16]. The volume consists of a
+the ORB features [8] are detected. Secondly, the detected set of voxels containing a truncated signed distance to an
+ORB features are temporally tracked using KLT [37], and objectsurface.WereproducetheTSDFintegratorinVoxblox
+the inter-view feature matching between adjacent cameras library [40] which runs in real-time on a single CPU core.
+is performed. Both tracked and matched features are then When a new omnidirectional depth arrives, we convert it
+triangulated to each corresponding 3D point. Thirdly using toa3Dpointcloudandtransformitintotheglobalcoordinate
+the2D-3Dfeaturecorrespondences,therigposeisinitialized system using the estimated rig position. We then cast a ray
+by multi-view P3P RANSAC [14] and optimized by pose- from the estimated current rig position to every point in the
+only bundle adjustment (BA) [38]. Finally, the estimated pointcloud, and update the voxels along the ray so as to
+561
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. Omni #Param. Run   Total
+Network Sunny Cloudy Sunset House (M) Time(s) Dataset ROVO[14] ROVO+ Metric Length
+OOSmmmannliilMM+VVSS+[15] 000...734918 000...734205 000...735920 001...066419 11000...969118 000...662616 SCulonundyy 00..5841 00..2208 ATEtrans  426ms
+Tiny+ 0.64 0.61 0.66 0.94 0.17 0.13 Sunset 0.78 0.29 RMSE(ms)
+Garage 0.0011 0.0010 28ms
+TABLE I: Quantitative evaluation of the networks. We use the IT/BT 1.28 0.78 Start-to-End(m) 230m
+mean absolute error of the inverse depth index. The errors are
+TABLE II: Quantitative evaluation of the visual SLAM. In all
+averaged over all test frames.
+datasets, ROVO+ shows better performance than ROVO [14].
+2
+duplex building and returning to the starting position while
+(a) ×
+holding a small square-shaped rig (0.3 0.3m) and has a
+length of about 230m. Wangsimni sequence is captured by
+(b) the outdoor rig installed on a minivan moving around the
+very narrow alley and has a length of about 2.6km, and we
+(c) mask out the minivan area from the input ﬁsheye images
+0 while sphere sweeping and adapting hybrid projection. For
+×
+Fig. 3: Comparison of the networks on the Garage, (a) Omn- the synthetic data, realistically rendered 800 768 input
+iMVS [15], (b) OmniMVS+, and (c) Tiny+. From left: estimated images are converted to grayscale, and we deﬁne scaled
+inverse depth index, and error map of (3) ranges from 0 to 2.
+meterm byreferring3Dmodelssuchascarssincethesyn-
+s
+remove noisy surfaces or moving objects by voxel carving. thetically rendered data have no actual unit. Sunny, Cloudy,
+We update the voxel’s existing distance and weight values, Sunset datasets are realistic cityscape datasets proposed
+D and Γ with a new observed distance d(X,P,O )=|P− in [15]. They have different photometric environments and
+Or|−(P−Or)•(X−Or),wherePisthepositiornofa3D a length of 426ms. Garage is a realistic indoor dataset
+point, Or is the rig position, and X is the center position of whichisveryshort(28ms)andhaslargetexturelessregions.
+the voxel. We also use the linear drop-off strategy [40], [41] In the Sunny, Cloudy, and Sunset, 1ms = 100/3, and
+for updating theweight γ as 1ms = 100 in the Garage. We also use the ground-truth
+intrinsic and extrinsic parameters of the virtual rig in the
+−
+ρ v <d synthetic datasets.
+− −
+γ = −ρ (d+δ) δ <d< v ,
+δ v − B. Evaluation of Omnidirectional Depth Estimation
+0 d< δ
+We evaluate our proposed networks on the synthetic
+where ρ is the initial weight parameter, v is the voxel size,
+datasets as [15] with the ground-truth depths. As a baseline
+andδ isthetruncationdistance.Usingnewobservations,the
+network, we use the ﬁne-tuned version of the OmniMVS
+new distance and weight are updated as
+in [15] whose the number of base channels C is set to 32,
+D(X) ← Γ(X)D(X)+γ(X,P,Or)d(X,P,Or) (1) and we set the number of base channels C of our networks,
+Γ(X)+γ(X,P,O ) OmniMVS+,Small+,andTiny+ to32,8,and4respectively.
+← r
+Γ(X) Γ(X)+γ(X,P,O ) (2) We use the percent error of estimated inverse depth index
+r
+from ground-truth as
+We also add a parameter representing the number of
+observationsintoeachvoxeltoconsiderunreliableestimates E 100| − ∗ |
+(p)= n(p) n (p). (3)
+on the hard regions, for example, textureless or differently N
+appeared surfaces due to the wide-baseline of the capture We set the size of omnidirectional depth output by the
+system. Meanwhile, reliable areas can be sufﬁciently ob- networks to H =160 and W =640, the number of inverse
+served due to the 360◦ FOV of the depth sensing. We depth N = 192, and φ from −45◦ to 45◦ for the IT/BT,
+use the marching cubes surface construction [42] for the Sunny, Cloudy, Sunset, and Garage. For the Wangsimni,
+visualization. we set the size of omnidirectional depth to H = 128 and
+− ◦ ◦
+W =768andφfrom 30 to30 .Wealsomeasurerunning
+IV. EXPERIMENTALRESULTS
+time of each networks on the IT/BT dataset using Nvidia
+A. Experimental Setup
+QuadroGV100GPU.TableI shows themeanabsoluteerror
+Weevaluateourproposedmethodsontherealdata:IT/BT of (3), the number of parameters of each networks, and the
+and Wangsimni, and the synthetic datasets: Sunny, Cloudy, runningtime.AsshowninTableI,thenetworkstrainedusing
+Sunset, and Garage. For the real data, we use four cameras our strategy signiﬁcantly improve the performances, and our
+◦ ×
+with220 ﬁsheyelensesas[13].Thecapturesystemcaptures Tiny+ is 5 faster and much lighter than OmniMVS [15]
+× ×
+4 (1600 1532)grayimagessynchronizedbythesoftware andperformsbetterwhichmakesoursystemmorepractical.
+triggeratupto20Hz.Wecalibratetheintrinsicandextrinsic From the error maps in Fig. 3, we can clearly observe
+parameters of the rig using a checkerboard [13], [43], [44]. the discretization error of OmniMVS [15], which is greatly
+IT/BT sequence is captured by a person walking around a reduced by our proposed networks.
+562
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. 1 1 1 1
+0.8 0.8 0.8 0.8
+ness0.6 ness0.6 ness0.6 ness0.6
+Complete0.4 OTimnyn+iM+GVTS +[0+.G82T] [0.90] Complete0.4 OTimnyn+iM+GVTS +[0+.G82T] [0.88] Complete0.4 OTimnyn+iM+GVTS +[0+.G81T] [0.90] Complete0.4 OTimnyn+iM+GVTS +[0+.G80T] [0.82]
+OmniMVS+GT [0.68] OmniMVS+GT [0.70] OmniMVS+GT [0.68] OmniMVS+GT [0.64]
+0.2 OmniMVS++ROVO+ [0.61] 0.2 OmniMVS++ROVO+ [0.60] 0.2 OmniMVS++ROVO+ [0.58] 0.2 OmniMVS++ROVO+ [0.88]
+Tiny++ROVO+ [0.57] Tiny++ROVO+ [0.60] Tiny++ROVO+ [0.56] Tiny++ROVO+ [0.80]
+Tiny++ROVO [0.38] Tiny++ROVO [0.42] Tiny++ROVO [0.34] Tiny++ROVO [0.80]
+0 OmniMVS+ROVO [0.36] 0 OmniMVS+ROVO [0.40] 0 OmniMVS+ROVO [0.33] 0 OmniMVS+ROVO [0.65]
+0 0.2 0.4 0.6 0.8 1 0 0.2 0.4 0.6 0.8 1 0 0.2 0.4 0.6 0.8 1 0 0.2 0.4 0.6 0.8 1
+1 1 1 1
+0.8 0.8 0.8 0.8
+uracy0.6 uracy0.6 uracy0.6 uracy0.6
+Acc0.4 OmniMVS++GT [0.82] Acc0.4 OmniMVS++GT [0.82] Acc0.4 OmniMVS++GT [0.81] Acc0.4 OmniMVS++GT [0.76]
+Tiny++GT [0.64] Tiny++GT [0.66] Tiny++GT [0.62] Tiny++GT [0.63]
+OmniMVS+GT [0.56] OmniMVS+GT [0.61] OmniMVS+GT [0.55] OmniMVS+GT [0.46]
+0.2 OmniMVS++ROVO+ [0.55] 0.2 OmniMVS++ROVO+ [0.58] 0.2 OmniMVS++ROVO+ [0.52] 0.2 OmniMVS++ROVO+ [0.71]
+Tiny++ROVO+ [0.46] Tiny++ROVO+ [0.51] Tiny++ROVO+ [0.44] Tiny++ROVO+ [0.63]
+Tiny++ROVO [0.29] Tiny++ROVO [0.35] Tiny++ROVO [0.27] Tiny++ROVO [0.62]
+0 OmniMVS+ROVO [0.30] 0 OmniMVS+ROVO [0.36] 0 OmniMVS+ROVO [0.28] 0 OmniMVS+ROVO [0.46]
+0 0.2 0.4 0.6 0.8 1 0 0.2 0.4 0.6 0.8 1 0 0.2 0.4 0.6 0.8 1 0 0.2 0.4 0.6 0.8 1
+(a) Sunny (b) Cloudy (c) Sunset (d) Garage
+Fig. 4: Evaluation of dense mapping results. Top: completeness, Bottom: accuracy. The mean ratio for each method is shown in the
+legend. We use OmniMVS [15], OmniMVS+, and Tiny+ for the depth; and the GT trajectory, ROVO [14], and ROVO+ for the pose.
+ROVO+ start and end position. As shown in Table II, our method
+ROVO++𝐿𝑜𝑜𝑝 Front-Left
+shows better accuracy than that of ROVO in overall. In
+Loop Closure
+Sunny, Sunset, Cloudy datasets, the errors of ROVO+ are
+×
+reduced by 0.4 that of ROVO on average. In Garage
+dataset, ROVO+ shows a slightly better result than that of
+ROVO. These results show that using the depth information
+has beneﬁts of improving the VO performance.
+Effectiveness of Loop Closing To prove the effectiveness
+of our loop closing module, we use a part of the Wangsimni
+Front-Left
+dataset.Weshowthequalitativecomparisonoftheestimated
+Fig. 5: Effectiveness of our loop closing on the Wangsimni. Left: rig poses with and without the loop closing in Fig. 5.
+comparative results of the trajectories with detected loop closures. While the rotational drifts exist in ROVO+, the trajectory
+Right: feature inliers of matched keyframes in the loop closure of ROVO++Loop is well aligned to the satellite map.
+markedasawhitecircle.Eventhedirectionofcurrentkeyframeis
+opposite to the matched keyframe, the loop is correctly closed. D. Evaluation of Dense Mapping
+In order to evaluate the 3D map output by our system,
+C. Evaluation of Estimated Poses
+we reconstruct the ground-truth 3D maps by registering the
+In this section, we evaluate the accuracy and robustness ground-truthomnidirectionaldepthmapsandrigposesofall
+of our pose estimation module on both synthetic and real- theframesintotheTSDFvoxelgrid.Wealsorendersemantic
+world datasets. To show the improvement of ours against level segmentation masks and remove dynamic objects such
+the previous work, we compare our method to [14]. For the as moving cars from the ground-truth depth maps using the
+×
+experiments, we use the number of features to 4 600 in masks. We use completeness and accuracy [24], [45] for the
+×
+Sunny, Cloudy, Sunset, and 4 400 in Garage and IT/BT. evaluation criteria and evaluate the methods on the Sunny,
+Notethatthenumberoffeaturesisheuristicallychosencon- Cloudy, Sunset, and Garage datasets.
+(cid:48)
+sideringtheenvironmentalcharacteristic,forexample,unlike Giventwosetsofreconstructedmesh’sverticesV andV ,
+∈ (cid:48) ∈ (cid:48)
+the texture-rich outdoor (Sunny, Cloudy and Sunset), indoor the distance of vertex v V to its closets vertex v V
+D (cid:48)
+scenes (Garage, IT/BT) mainly consist of large textureless is deﬁned as (V,V ). Then the completeness is deﬁned
+C ∗ v |{ ∗ | D ∗ }| | ∗|
+environments such as walls and ﬂoors, so that we use a as (V,V ) = v ∗(V ,V) < t /V , and the
+smaller number of feature points for the indoor datasets. accutrcacy is deﬁned as A v(V,V∗) = |{vc | D (V,V∗) <
+}| | | ∗ta v
+We use two types of the error metric for the quantita- t /V ,whereV andV aretheestimatedandground-truth
+a
+tive evaluation: the absolute trajectory error of translation 3D maps respectively, t and t are the distance thresholds,
+| · | c a
+(ATE ) and the Start-to-End error. ATE is a widely and represents the number of points in a set. We
+trans trans
+usedmetricformeasuringaccuracyofVO/SLAMalgorithms reconstruct the 3D map by using the omnidirectional depth
+and is calculated by the root mean squared error (RMSE) from OmniMVS [15], our OmniMVS+, and Tiny+. We use
+after aligning the estimated poses to the ground-truth poses. ground-truth poses, ROVO [14], and our ROVO+ for the
+Start-to-Enderrorismeasuredbythedifferencebetweenthe pose without loop closing, and only the selected keyframes
+563
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. (a) Tiny++ROVO [14] (top) and Tiny++ROVO+ (b) GT (top) and OmniMVS++ROVO+
+Fig. 6: Qualitative dense mapping results on the synthetic datasets. (a) Results on the Sunny. Green represents GT map. Our ROVO+
+reduces the drift errors of the estimated poses. (b) Results on the Garage. Green represents the estimated trajectory of the front camera.
+Fig. 7: Qualitative results on the Wangsimni dataset. Left: estimated trajectory orthographically projected on the satellite image. Right:
+corresponding dense mapping result. We apply the histogram equalization to the vertices’ color for the visualization.
+bytheodometersareusedforthedensemapping.TheTSDF v is set to 0.05m, and the weight parameter ρ is set to 1 for
+| − |
+voxel size v is set to 0.15m , and the weight parameter IT/BT,andv =0.15mandρ=1/P O 2 forWangsimni.
+s r
+ρ is set to 1 for Sunny, Cloudy, and Sunset, and 0.05m Our proposed system successfully reconstructs the 3D maps
+s
+for Garage, and for the Garage, we only use voxels whose of both challenging indoor and outdoor environments.
+number of observations is more than 3 since it has large
+textureless regions. V. CONCLUSIONS
+Figure 4 shows the completeness and the accuracy graph
+In this paper, we propose an integrated omnidirectional
+of the dense mapping results on the synthetic datasets. Our
+localization and dense mapping system for a wide-baseline
+networks OmniMVS+ and Tiny+ reconstructs the 3D map
+multi-camera rig with wide FOV ﬁsheye lenses. The pro-
+more precisely than the OmniMVS [15] especially for the
+posed light-weighted deep neural networks estimate omnidi-
+lower thresholds as shown in Fig. 3. Using poses from
+rectionaldepthmapsfasterandmoreaccuratelywhilehaving
+ROVO+ alsoperformsbetterthanROVO[14]inalldatasets,
+a smaller number of parameters. The output depth map is
+and Figure 6a shows the qualitative comparison between
+then integrated into the visual odometry, and our proposed
+them. The qualitative result on the Garage is also shown in
+visual SLAM module achieves better performances of pose
+Fig. 6b, and our method successfully reconstructs the small
+estimation. The extensive experiments demonstrate that our
+objects such as table and sofa, and also the large textureless
+system can generate well-reconstructed 3D maps of both
+regions like walls and the ﬂoor.
+synthetic and real-world environments.
+We also show qualitative results of our system on the
+real-world datasets: IT/BT and Wangsimni, in Fig. 1 and 7 ACKNOWLEDGEMENT
+respectively. We use the depths from OmniMVS+ and the
+poses from ROVO+ + Loop, and only use voxels whose This research was supported by Next-Generation Information
+ComputingDevelopmentprogramthroughNationalResearchFoun-
+numberofobservationsismorethan3forbothdatasets.For
+dation of Korea (NRF) funded by the Ministry of Science, ICT
+Wangsimni,wereducetheresolutionofinputimagesinhalf (NRF-2017M3C4A7069369), and the NRF grant funded by the
+and apply gamma correction to them. The TSDF voxel size Korea government(MSIT)(NRF-2019R1A4A1029800).
+564
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. REFERENCES [21] R.T.Collins,“Aspace-sweepapproachtotruemulti-imagematching,”
+in Proceedings of the IEEE Conference on Computer Vision and
+[1] H. Ye, Y. Chen, and M. Liu, “Tightly coupled 3d lidar inertial PatternRecognition(CVPR),1996,pp.358–363.
+odometry and mapping,” in Proceedings of the IEEE International [22] D. Gallup, J.-M. Frahm, P. Mordohai, Q. Yang, and M. Pollefeys,
+Conference on Robotics and Automation (ICRA), 2019, pp. 3144– “Real-timeplane-sweepingstereowithmultiplesweepingdirections,”
+3150. in Proceedings of the IEEE Conference on Computer Vision and
+[2] R.A.Newcombe,S.Izadi,O.Hilliges,D.Molyneaux,D.Kim,A.J. PatternRecognition(CVPR),2007,pp.1–8.
+Davison, P. Kohli, J. Shotton, S. Hodges, and A. W. Fitzgibbon, [23] C.Ha¨ne,L.Heng,G.H.Lee,A.Sizov,andM.Pollefeys,“Real-time
+“Kinectfusion: Real-time dense surface mapping and tracking.” in directdensematchingonﬁsheyeimagesusingplane-sweepingstereo,”
+Proceedings of the IEEE International Symposium on Mixed and inIEEEInternationalConferenceon3DVision(3DV),vol.1,2014,
+AugmentedReality(ISMAR),vol.11,no.2011,2011,pp.127–136. pp.57–64.
+[3] A. Geiger, M. Roser, and R. Urtasun, “Efﬁcient large-scale stereo [24] Z. Cui, L. Heng, Y. C. Yeo, A. Geiger, M. Pollefeys, and T. Sattler,
+matching,” in Proceedings of the Asian Conference on Computer “Real-time dense mapping for self-driving vehicles using ﬁsheye
+Vision(ACCV),2010,pp.25–38. cameras,” in Proceedings of the IEEE International Conference on
+[4] A. Geiger, J. Ziegler, and C. Stiller, “Stereoscan: Dense 3d recon- RoboticsandAutomation(ICRA),2019,pp.6087–6093.
+structioninreal-time,”inProceedingsoftheIEEEIntelligentVehicles [25] C. Forster, M. Pizzoli, and D. Scaramuzza, “Svo: Fast semi-direct
+Symposium(IV),2011,pp.963–968. monocularvisualodometry,”inProceedingsoftheIEEEinternational
+[5] F. Zhang, V. Prisacariu, R. Yang, and P. H. Torr, “Ga-net: Guided conferenceonroboticsandautomation(ICRA),2014,pp.15–22.
+aggregation net for end-to-end stereo matching,” in Proceedings of [26] D.Cremers,“Directmethodsfor3dreconstructionandvisualslam,”in
+the IEEE Conference on Computer Vision and Pattern Recognition ProceedingsoftheIEEEInternationalConferenceonMachineVision
+(CVPR),2019,pp.185–194. Applications(MVA),2017,pp.34–38.
+[6] J.-R. Chang and Y.-S. Chen, “Pyramid stereo matching network,” in [27] M. Yokozuka, S. Oishi, S. Thompson, and A. Banno, “Vitamin-e:
+ProceedingsoftheIEEEConferenceonComputerVisionandPattern Visualtrackingandmappingwithextremelydensefeaturepoints,”in
+Recognition(CVPR),2018,pp.5410–5418. ProceedingsoftheIEEEConferenceonComputerVisionandPattern
+[7] E. Ilg, T. Saikia, M. Keuper, and T. Brox, “Occlusions, motion and Recognition(CVPR),2019,pp.9641–9650.
+depthboundarieswithagenericnetworkfordisparity,opticalﬂowor [28] J.Engel,V.Koltun,andD.Cremers,“Directsparseodometry,”IEEE
+scene ﬂow estimation,” in Proceedings of the European Conference TransactionsonPatternAnalysisandMachineIntelligence(TPAMI),
+onComputerVision(ECCV),2018,pp.614–630. vol.40,no.3,pp.611–625,2017.
+[8] E. Rublee, V. Rabaud, K. Konolige, and G. R. Bradski, “Orb: An [29] R. Mur-Artal and J. D. Tardo´s, “Orb-slam2: An open-source slam
+efﬁcient alternative to sift or surf.” in Proceedings of the IEEE systemformonocular,stereo,andrgb-dcameras,”IEEETransactions
+InternationalConferenceonComputerVision(ICCV),vol.11,no.1, onRobotics,vol.33,no.5,pp.1255–1262,2017.
+2011,p.2. [30] R. Wang, M. Schworer, and D. Cremers, “Stereo dso: Large-scale
+[9] R. Mur-Artal, J. M. M. Montiel, and J. D. Tardos, “Orb-slam: a directsparsevisualodometrywithstereocameras,”inProceedingsof
+versatileandaccuratemonocularslamsystem,”IEEEtransactionson theIEEEInternationalConferenceonComputerVision(ICCV),2017,
+robotics,vol.31,no.5,pp.1147–1163,2015. pp.3903–3911.
+[10] Y. Wang, X. Gong, Y. Lin, and J. Liu, “Stereo calibration and [31] D. Caruso, J. Engel, and D. Cremers, “Large-scale direct slam for
+rectiﬁcationforomnidirectionalmulti-camerasystems,”International omnidirectional cameras,” in Proceedings of the IEEE/RSJ Interna-
+JournalofAdvancedRoboticSystems,vol.9,no.4,p.143,2012. tional Conference on Intelligent Robots and Systems (IROS), 2015,
+[11] C. Geyer and K. Daniilidis, “Conformal rectiﬁcation of omnidi- pp.141–148.
+rectional stereo pairs,” in Proceedings of the IEEE Conference on [32] P.Liu,L.Heng,T.Sattler,A.Geiger,andM.Pollefeys,“Directvisual
+ComputerVisionandPatternRecognitionWorkshop(CVPRW),vol.7, odometryforaﬁsheye-stereocamera,”inProceedingsoftheIEEE/RSJ
+2003,pp.73–73. International Conference on Intelligent Robots and Systems (IROS),
+[12] M. Scho¨nbein and A. Geiger, “Omnidirectional 3d reconstruction 2017,pp.1746–1752.
+in augmented manhattan worlds,” in Proceedings of the IEEE/RSJ [33] H.Matsuki,L.vonStumberg,V.Usenko,J.Stu¨ckler,andD.Cremers,
+International Conference on Intelligent Robots and Systems (IROS), “Omnidirectionaldso:Directsparseodometrywithﬁsheyecameras,”
+2014,pp.716–723. IEEERoboticsandAutomationLetters(RA-L),vol.3,no.4,pp.3693–
+[13] C.Won,J.Ryu,andJ.Lim,“Sweepnet:Wide-baselineomnidirectional 3700,2018.
+depth estimation,” in Proceedings of the IEEE International Confer- [34] A.Pretto,E.Menegatti,andE.Pagello,“Omnidirectionaldenselarge-
+enceonRoboticsandAutomation(ICRA),2019,pp.6073–6079. scalemappingandnavigationbasedonmeaningfultriangulation,”in
+[14] H.SeokandJ.Lim,“Rovo:Robustomnidirectionalvisualodometry Proceedings of the IEEE International Conference on Robotics and
+for wide-baseline wide-fov camera systems,” in Proceedings of the Automation(ICRA),2011,pp.3289–3296.
+IEEEInternationalConferenceonRoboticsandAutomation(ICRA), [35] P.Liu,M.Geppert,L.Heng,T.Sattler,A.Geiger,andM.Pollefeys,
+2019,pp.6344–6350. “Towards robust visual odometry with a multi-camera system,” in
+[15] C. Won, J. Ryu, and J. Lim, “Omnimvs: End-to-end learning for ProceedingsoftheIEEE/RSJInternationalConferenceonIntelligent
+omnidirectional stereo matching,” arXiv preprint arXiv:1908.06257, RobotsandSystems(IROS),2018,pp.1154–1161.
+2019. [36] K.He,X.Zhang,S.Ren,andJ.Sun,“Deepresiduallearningforimage
+[16] B.CurlessandM.Levoy,“Avolumetricmethodforbuildingcomplex recognition,” in Proceedings of the IEEE Conference on Computer
+modelsfromrangeimages,”1996. VisionandPatternRecognition(CVPR),2016,pp.770–778.
+[17] M. Pollefeys, D. Niste´r, J.-M. Frahm, A. Akbarzadeh, P. Mordohai, [37] B. D. Lucas, T. Kanade, et al., “An iterative image registration
+B.Clipp,C.Engels,D.Gallup,S.-J.Kim,P.Merrell,etal.,“Detailed techniquewithanapplicationtostereovision,”1981.
+real-time urban 3d reconstruction from video,” International Journal [38] B. Triggs, P. F. McLauchlan, R. I. Hartley, and A. W. Fitzgibbon,
+ofComputerVision(IJCV),vol.78,no.2-3,pp.143–167,2008. “Bundleadjustment—amodernsynthesis,”inInternationalWorkshop
+[18] C. Ha¨ne, T. Sattler, and M. Pollefeys, “Obstacle detection for self- onVisionAlgorithms,1999,pp.298–372.
+driving cars using only monocular cameras and wheel odometry,” in [39] D.Ga´lvez-Lo´pezandJ.D.Tardo´s,“Bagsofbinarywordsforfastplace
+ProceedingsoftheIEEE/RSJInternationalConferenceonIntelligent recognition in image sequences,” IEEE Transactions on Robotics,
+RobotsandSystems(IROS),2015,pp.5101–5108. vol.28,no.5,pp.1188–1197,October2012.
+[19] T.Scho¨ps,T.Sattler,C.Ha¨ne,andM.Pollefeys,“Large-scaleoutdoor [40] H. Oleynikova, Z. Taylor, M. Fehr, R. Siegwart, and J. Nieto,
+3d reconstruction on a mobile device,” Computer Vision and Image “Voxblox: Incremental 3d euclidean signed distance ﬁelds for on-
+Understanding(CVIU),vol.157,pp.151–166,2017. board mav planning,” in Proceedings of the IEEE/RSJ International
+[20] A. Kendall, H. Martirosyan, S. Dasgupta, P. Henry, R. Kennedy, ConferenceonIntelligentRobotsandSystems(IROS),2017.
+A. Bachrach, and A. Bry, “End-to-end learning of geometry and [41] E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers, “Real-
+context for deep stereo regression,” in Proceedings of the IEEE time camera tracking and 3d reconstruction using signed distance
+InternationalConferenceonComputerVision(ICCV),2017,pp.66– functions.” in Proceedings of the Robotics: Science and Systems,
+75. vol.2,2013.
+565
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. [42] W. E. Lorensen and H. E. Cline, “Marching cubes: A high resolu-
+tion 3d surface construction algorithm,” in Proceedings of the ACM
+SIGGRAPHComputerGraphics,vol.21,no.4,1987,pp.163–169.
+[43] D.Scaramuzza,A.Martinelli,andR.Siegwart,“Aﬂexibletechnique
+for accurate omnidirectional camera calibration and structure from
+motion,” in Proceedings of the IEEE International Conference on
+ComputerVisionSystems(ICVS),2006,pp.45–45.
+[44] S.Urban,J.Leitloff,andS.Hinz,“Improvedwide-angle,ﬁsheyeand
+omnidirectionalcameracalibration,”ISPRSJournalofPhotogramme-
+tryandRemoteSensing,vol.108,pp.72–79,2015.
+[45] T. Schops, J. L. Schonberger, S. Galliani, T. Sattler, K. Schindler,
+M. Pollefeys, and A. Geiger, “A multi-view stereo benchmark with
+high-resolution images and multi-camera videos,” in Proceedings of
+the IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR),2017,pp.3260–3269.
+566
+Authorized licensed use limited to: University of New South Wales. Downloaded on September 20,2020 at 15:46:29 UTC from IEEE Xplore.  Restrictions apply. 

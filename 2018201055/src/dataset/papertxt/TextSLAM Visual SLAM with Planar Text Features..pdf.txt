@@ -1,0 +1,581 @@
+ 2020 IEEE International Conference on Robotics and Automation (ICRA)  
+31 May - 31 August, 2020. Paris, France
+An ERT-based Robotic Skin with Sparsely Distributed Electrodes: 
+Structure, Fabrication, and DNN-based Signal Processing 
+Kyungseo Park, Student Member, IEEE, Hyunkyu Park, Student Member, IEEE, 
+Hyosang Lee, Member, IEEE, Sungbin Park, Student Member, IEEE, *Jung Kim, Member, IEEE 
+ 
+1 
+Abstract—  Electrical  resistance  tomography  (ERT)  has 
+previously been utilized to develop a large-scale tactile sensor 
+because this approach enables the estimation of the conductivity 
+distribution among the electrodes based on a known physical 
+model. Such a sensor made with a stretchable material can 
+conform to a curved surface. However, this sensor cannot fully 
+cover a cylindrical surface because in such a configuration, the 
+edges  of  the  sensor  must  meet  each  other.  The  electrode 
+configuration becomes irregular in this edge region, which may 
+degrade the sensor performance. In this paper, we introduce an 
+ERT-based robotic skin with evenly and sparsely distributed 
+electrodes. For implementation, we sprayed a carbon nanotube 
+(CNT)-dispersed solution to form a conductive sensing domain 
+on a cylindrical surface. The electrodes were firmly embedded in 
+the surface so that the wires were not exposed to the outside. The 
+sensor  output  images  were  estimated  using  a  deep  neural 
+network (DNN), which was trained with noisy simulation data. 
+An indentation experiment revealed that the localization error 
+of  the  sensor  was  5.2  ±  3.3  mm,  which  is  remarkable 
+performance with only 30 electrodes. A frame rate of up to 120 
+Hz could be achieved with a sensing domain area of 𝟗𝟎 𝐜𝐦𝟐. The 
+proposed  approach  simplifies  the  fabrication  of  3D-shaped 
+sensors, allowing them to be easily applied to existing robot arms 
+in a seamless and robust manner. 
+Figure 1. (a) Concept of an ERT-based 3D robotic skin with 
+I.  INTRODUCTION  distributed and embedded electrodes; (b) the completed tactile 
+sensor; (c) image reconstruction result on a 3D surface plot 
+In an unstructured environment, robots interacting with 
+people  must  obtain  information  about  their  surroundings  for large-scale tactile sensors. Nevertheless, several methods 
+because  such  information  is  directly  related  to  decision  have been introduced to address this wiring issue. 
+making,  motion  planning,  and  human  safety  [1],  [2]. 
+Array indexing utilizes orthogonally aligned electrodes to 
+Audiovisual data can be utilized to recognize the external 
+measure  physical  quantities  at  the  intersections  of  the 
+environment, but it is difficult to obtain data about physical 
+electrodes. This approach can efficiently reduce the number 
+contact from a camera or microphone. Thus, a robot needs 
+of electrodes needed by accessing sensing points through 
+another  complementary  sensory  system  for  measuring 
+combinations of electrodes [4]. However, all sensing points 
+physical interaction. Furthermore, such physical contact data 
+related  to  an  electrode  become  unavailable  when  that 
+can be combined with visual data to allow robots to perform 
+electrode fails, and it is also not easy to repair such a sensor. 
+contact-rich tasks [3]. 
+In the modularization approach, physical quantities such as 
+Since physical contacts can occur on any part of a robot,  voltage and capacitance are measured by individual sensor 
+there is a need to develop a whole-body robotic skin. Tactile  modules [5]–[7]. The measured data are transferred through 
+sensors have been studied for use in robotic skin, but most of  serial communication, so only a few channels are required. 
+them are limited to small-scale applications, such as fingertip  However, each module has its own micro control unit (MCU); 
+sensors. It is not easy to extend these works to a larger scale  consequently,  the  energy  consumption  increases  as  the 
+because the electrical wiring becomes highly complex as the  number of modules increases. In addition, these modularized 
+number of sensing points increases. This is a major obstacle  sensors are based on flexible PCBs, which have difficulty 
+covering a complexly curved surface. 
+ 
+K. Park, H. Park, S. Park, and J. Kim are with Korea Advanced Institute  H. Lee is with the Max Planck Institute for Intelligent Systems, Stuttgart, 
+of Science and Technology, Daejeon 34141, South Korea. (e-mail: bbq2686,  70569 Germany. (e-mail: hslee@is.mpg.de)  
+hkpark94, robot0826, jungkim@kaist.ac.kr)  * This work was supported by the National Research Foundation of 
+Korea(NRF) grant funded by the Korea government(MEST) (No. NRF-
+2018R1A2A2A05021472) 
+978-1-7281-7395-5/20/$31.00 ©2020 IEEE 1617
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+In contrast, electrical resistance tomography (ERT) has  means  of  EIDORS,  which  is  an  open-source  MATLAB 
+been introduced to implement large and curved soft tactile  library for EIT [22], [23]. This software suite includes the 
+sensors due to its unique working principle [8]. ERT is a  functions for the mesh generation, drive pattern, forward 
+virtual  sensing  technique  in  which  the  conductivity  solving, image reconstruction, etc. The details are described 
+distribution of an inner sensing domain is estimated using  in  the  following  section,  along  with  mathematical 
+only  several  boundary  electrodes.  This  is  a  remarkable  formulations. 
+advantage for a large-scale tactile sensor because the sensing 
+A.  Forward problem 
+points and electrodes are untethered to each other. As a result, 
+the shape of the sensor and the electrode configuration can be  For a conductive domain Ω and its boundary ∂Ω, the ERT 
+freely customized depending on the application requirements.  forward problem is to find the boundary potential 𝜙 on ∂Ω 
+Previously, we introduced an ERT-based tactile sensor made  due to the given conductivity 𝜎. Maxwell’s equations give the 
+with a conductive fabric [9]. Since the developed sensor was  following relationship between the boundary potential 𝜙 and 
+stretchable and durable, it showed promising results, such as  the conductivity distribution 𝜎 in the region Ω under the 
+scalability, conformability, and ease of fabrication. However,  assumption of direct current and the absence of any interior 
+the electrical wires were exposed to the outside, and modeling  current source: 
+error arose during attachment. It was also challenging to cover 
+∇∙(𝜎∇𝜙)=0   in Ω  (1) 
+a cylindrical surface. 
+If the conductivity is known, the potential can be estimated 
+  In this paper, we introduce an ERT-based robotic skin with 
+from knowledge of the boundary conditions on ∂Ω: 
+sparsely distributed electrodes to achieve a tactile sensing 
+capability  on  a  cylindrical  surface.  The  concept  of  the  𝑗=𝜎∇𝜙∙𝐧   on ∂Ω  (2) 
+developed robotic skin is shown in Fig. 1. The electrodes are 
+evenly and sparsely distributed over the surface and are firmly  where j is the current density and n denotes the outward unit 
+embedded in the robotic skin. The conductive domain is  vector normal to ∂Ω. This is a Dirichlet–Neumann boundary 
+formed  by  spraying  a  carbon  nanotube  (CNT)-dispersed  value problem for the Laplacian elliptical partial difference 
+solution on the cylindrical surface. To form a piezoresistive  equation expressed in (1). To solve this equation, we first need 
+structure, we also cover the rigid part with an array of highly  to build a forward model for the finite element method (FEM); 
+conductive fabric patches. When the sensor is indented, a  this model is composed of nodes connected to adjacent nodes 
+contact resistance is formed between the coating layer and the  and can be regarded as a passive resistor network that is 
+fabric patches, causing the conductivity to locally decrease.  equivalent to the sensor. Then, the electrical behavior of the 
+The output signal is processed by a deep neural network  conductive domain is described by  a transfer impedance 
+(DNN) that has been trained on noisy simulation data.  matrix 𝐑(𝜎)∈ℝ𝑁×𝑁 such that 
+This paper is organized as follows: Section II briefly explains  𝐯(∙ ;𝜎,𝐢)=𝐑(𝜎) 𝐢  (3) 
+the working principle and procedure of ERT, along with some 
+mathematical formulations. Then, the neural-network-based  where 𝐢∈ℝ𝑁 and 𝐯∈ℝ𝑁 are the current through a finite 
+image  reconstruction  technique  is  explained.  The  sensor  element and the resulting potential across it, respectively [24]. 
+structure and fabrication process are described in Section III.  The transfer impedance matrix 𝐑(𝜎) is determined by the 
+Next, the performance of the sensor is investigated in Section  conductivity  distribution 𝜎 in  the  conductive  domain Ω. 
+IV by means of an indentation experiment. Finally, the results  Current can only be injected through the nodes corresponding 
+of this research are discussed in Section V.  to the electrodes, so we can reduce the network by neglecting 
+the other nodes, as shown below: 
+II.  ELECTRICAL RESISTANCE TOMOGRAPHY 
+𝐯̂(∙ ;𝜎,𝐩)=𝐒(𝜎) 𝐩  (4) 
+ERT is a geophysical technique for imaging the subsurface 
+structure of the ground [10]–[13]. It is closely related to  where 𝐩∈ℝ𝑳 is the current vector injected into the electrodes 
+electrical impedance tomography (EIT), which is used for  and  𝐯̂ ∈ℝ𝑳  represents  the  resulting  voltages  on  the 
+medical  imaging  [14]–[17]  and  in  industrial  applications  electrodes. The real symmetric matrix 𝐒(𝜎)∈ℝ𝑳×𝑳 is the 
+[18]–[21].  The  major  advantage  of  ERT  is  that  the 
+transfer  impedance  matrix  of  the  reduced  network  with 
+conductivity  distribution  of  the  sensing  domain  can  be 
+respect to only the L nodes corresponding to electrodes. For 
+mathematically  reconstructed  using  boundary  voltages  the conductivity change ∆𝜎, the change in the measurement 
+because it is known, based on a physical model, how the  voltages ∆e for measurement pattern 𝐦∈ℝ𝐿×1 and injection 
+boundary  voltages  are  determined  from  the  conductivity  pattern 𝐩∈ℝ𝑳×1 can be determined as shown below: 
+distribution. The ERT procedure consists of two parts: one is 
+a forward problem, and the other is an inverse problem. The  ∆e=𝐦𝐓{𝐯̂(∙ ;𝜎+∆𝜎,𝐩)−𝐯̂(∙ ;𝜎,𝐩)} 
+(5) 
+forward problem is to simulate the electrical behavior of the 
+=𝐦𝐓(𝐒(𝜎+∆𝜎)−𝐒(𝜎))𝐩 
+sensor by solving a partial differential equation with given 
+conditions such as the base conductivity, the shape of the  By means of the transfer impedance matrix, the electrical 
+domain, and the boundary conditions. The inverse problem is  behavior of the sensor can be described by a linear equation. 
+to reconstruct the conductivity image from the boundary  The injection and measurement vectors p and m can be 
+voltages. This procedure can be numerically implemented by  extended to matrix form as shown below: 
+1618
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+∆𝐄=𝐌𝐓(∆𝐒)𝐏  (6) 
+where 𝐏=[𝐩 ,𝐩 ,⋯𝐩 ] and 𝐌=[𝐦 ,𝐦 ,⋯,𝐦 ]. Then, 
+1 2 𝑛 1 𝟐 𝑚
+the  resulting  measurement  ∆𝐄∈ℝ𝑚×𝑛  is  expressed  in 
+vectorized form with a Kronecker product as follows: 
+∆𝐄 =(𝐏𝐓⊗𝐌𝐓)∆𝐒 =𝐆 ∆𝐒 =𝐉 ∆𝜎  (7) 
+𝒗𝒆𝒄 𝒗𝒆𝒄 𝒗𝒆𝒄
+where  ∆𝐒  denotes  the  vectorization  of  the  transfer 
+𝒗𝒆𝒄
+impedance matrix ∆𝐒. The matrix 𝐆∈ℝ𝑚𝑛×𝐿2 is defined to 
+express the relationship between the vector ∆𝐒  and the 
+𝒗𝒆𝒄
+resulting voltages ∆𝐄  for the given pattern matrices. Here, 
+𝒗𝒆𝒄
+the Jacobian matrix 𝐉 can be said to represent the relationship 
+between the conductivity change ∆𝜎 and ∆𝐄 . 
+𝒗𝒆𝒄
+B.  Inverse problem 
+The goal of the ERT inverse problem is to estimate the 
+conductivity  distribution  σ  from  the  measured  voltage. 
+However,  this  is  an  ill-posed  and  nonlinear  problem. 
+Figure 2. DNN for ERT image reconstruction: (a) example of 
+Consequently, linearization and regularization are applied to 
+an input voltage sequence; (b) example of a conductivity 
+solve  the  EIT  inverse  problem.  First,  the  nonlinear  image with perturbations; (c) scheme of the network 
+relationship between the conductivity 𝜎 and the measured 
+inverse problem with a suitable computational speed [27]–
+potential E needs to be approximated by the linear equation 
+[30]. Park et al. proposed a DNN approach for an EIT-based 
+below: 
+real-time soft tactile sensor [31]. The results revealed that the 
+∆𝐄𝒗𝒆𝒄 = 𝐉 ∆𝜎 + 𝐰  (8)  blurring effect of the sensor was successfully mitigated by 
+where 𝐉 is the Jacobian matrix and 𝐰 is the measurement  means of the DNN, while the frame rate of the sensor was still 
+noise. Then, the linearized inverse problem can be solved by  fast compared to the iterative approach [26]. Thus, we utilize 
+calculating  the  pseudoinverse  of  the  Jacobian  matrix 𝐉.  a similar network architecture in this paper. 
+However, this calculation is difficult for a fine mesh because 
+The scheme of the network is shown in Fig. 2. The neural 
+the rank of 𝐉 is smaller than the number of mesh elements. 
+network is designed with four fully connected layers. The 
+Therefore,  we  need  to  introduce  additional  a  priori 
+numbers of neurons in each hidden layer, from first to last, are 
+information  to  supplement  the  available  data.  Then,  the 
+empirically selected as 870, 880, 890, and 900. The input 
+linearized inverse problem can be solved by minimizing the 
+variables  in  each  hidden  layer  are  modified  by  batch 
+cost function shown below: 
+normalization, and the activation function is the rectified 
+𝛌(∆𝜎)=‖𝛿𝐄−𝐉∆𝜎‖2+ ‖𝛼 𝚪∆𝜎‖2  (9)  linear unit (ReLU) function. Training data were obtained by 
+2 2
+solving the forward problem for a 3D ERT model. In each 
+where 𝚪∈ℝ𝑀×𝑀 is a regularization matrix established based  simulation, Gaussian-shaped conductivity perturbations were 
+on a priori knowledge, such as a spatial high-pass filter or  applied at several locations on the sensor, as shown in Fig. 
+NOSER [25]. The level of regularization is adjusted by the  2(b). The conductivity image was defined on an automatically 
+hyperparameter 𝛼. Finally, the relationship between ∆𝜎 and  generated mesh, which was mapped to a 30-by-30 rectangular 
+𝛿𝐄 is approximated as follows:  grid for visibility. 
+∆𝜎̃ =(𝐉T𝐉+α2𝚪T𝚪)−1𝐉T 𝛿𝐄=𝐐 𝛿𝐄  (10)  The perturbed conductivity image was used as an output 
+where 𝐐 is the regularized linear reconstruction matrix. By  variable for the training dataset. The simulated voltages were 
+also obtained from the given conductivity perturbations and 
+using this approximate equation, the reconstructed image can 
+electrode pattern. We used an adjacent pattern such that the 
+be analytically stabilized. 
+length of the voltage vector was 870. The simulated voltages 
+C.  DNN-based image reconstruction  were normalized with respect to their mean and standard 
+Even if we obtain a stable output image by approximating  deviation and used as an input variable for the training dataset. 
+the inverse problem, the output image is still blurred and  The total number of samples in the training dataset was 
+distorted due to the regularization and linearization. For more  approximately 1,100,000. A test dataset was also generated 
+accurate reconstruction, an iterative reconstruction method  through simulations with randomly perturbed conductivity 
+can  be  adopted  [14],  [26],  but  this  will  incur  a  high  images. The number of samples in the test dataset was 40,000, 
+computational  cost.  Considering  the  importance  of  the  and the test dataset was also normalized with respect to the 
+sampling frequency, the iterative approach is not practical for  mean and standard deviation of the training dataset. 
+robotic skin applications. Thus, it is desirable to develop a 
+Training was conducted on a graphics processing unit (a 
+reconstruction method for the ERT inverse problem that is not 
+single 12 GB NVIDIA GeForce GTX Titan), and the code 
+only accurate but also fast. Neural networks have shown 
+was written with Keras. The mean squared error was used as 
+promising results for addressing the nonlinearity of the ERT 
+1619
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+the loss, and the Adam optimizer was utilized for fast and 
+robust training performance [32]. To obtain generalizable 
+results, Gaussian noise with a measured standard deviation 
+was added to the input tensor during training. The imposition 
+of the simulated noise takes a role of regularization [33], and 
+using the exact value of the measured standard deviation 
+circumvents  heuristic  selection  of  hyperparameters.  The 
+minibatch size was 360. In each epoch, the network was 
+validated on the test dataset. The validation loss decreased and 
+eventually  converged  to  6.42e-4,  while  the  training  loss  Figure 3. (a) Electrode configuration of the developed sensor 
+converged to 6.17e-4. The performance of the trained network  (yellow: triangular grid); (b) corresponding simulation model 
+will be validated with experimental data in Section IV.  (green: electrodes, red: simulated perturbation) 
+III.  SENSOR STRUCTURE AND FABRICATION 
+  To implement a robust and reliable tactile sensor, it is 
+necessary to simultaneously improve the sensor structure and 
+fabrication process. The structure of the sensor is determined 
+by  considering  the  sensor's  performance,  such  as  spatial 
+resolution and sensitivity.  We also propose a fabrication 
+method for establishing a stable sensing domain on large and 
+curved  surface.  In  this  section,  the  sensor  structure  is 
+introduced, including the shape of the sensor, the electrode 
+configuration, the wiring, and the piezoresistive structure. 
+Then, the fabrication process is explained step by step. 
+A.  Sensor structure 
+ An ERT-based tactile sensor can estimate external stimuli 
+with only a few electrodes, but the sensor's performance varies 
+with the placement of the electrodes. If the sensing region is 
+far from the electrodes, the performance of the sensor will 
+degrade due to the low current density, which is directly 
+related to the sensitivity and spatial resolution. For example, 
+the  center  region  of  the  sensor  will  show  poor  spatial 
+resolution and sensitivity when electrodes are placed only on 
+the boundary [9]. Therefore, we attempt to evenly distribute 
+Figure 4. Sensor fabrication process: (a) base part with 
+the electrodes throughout the sensing domain. The conductive 
+electrodes; (b) spray coating; (c) highly conductive fabric array; 
+domain is formed on a cylindrical surface, and the electrodes 
+(d) attachment to neoprene foam; (e) assembly of the two parts 
+are placed to form a triangular grid, as shown in Fig. 3. As 
+shown in this figure, yellow dashed lines indicate the virtual  with  a  highly  conductive  layer  to  achieve  piezoresistive 
+triangular grid, and the electrodes are placed at the nodes of  characteristics. 
+the grid. 
+B.  Fabrication 
+A corresponding mesh model was also built for simulations. 
+The  developed  robotic  skin  consists  of  two  parts:  a 
+The length and diameter of the cylinder are 300 mm and 100 
+conductive-coated  rigid  body  with  multiple  embedded 
+mm, respectively. The total number of electrodes is 30, and 
+electrodes and a soft cover layer with highly conductive fabric 
+they are divided into 6 groups of 5 electrodes each. The 
+patches. The overall fabrication process is shown in Fig. 4. The 
+electrodes in each group are placed on the same cross section 
+rigid base part was printed with a 3D printer (Dimension Elite, 
+of the cylinder at equal angular intervals. The distance between 
+Stratasys,  USA)  and  finished  with  an  epoxy  (XTC-3D, 
+each electrode group is 60 mm. Wires are connected to the 
+Smooth-On, USA). The part was also sanded to achieve fine 
+electrodes  underneath  the  surface,  and  the  electrodes  are 
+surface conditions. The electrodes were installed on the rigid 
+connected to the ERT multiplexer board through the wires. 
+body and connected to the connector with electrical wires. To 
+The sensing domain needs to be not only conductive but also  form  the  conductive  surface,  a  CNT-dispersed  solution 
+piezoresistive.  Tawil  et  al.  showed  that  a  piezoresistive  (HANOS, Hanwha, South Korea) was sprayed several times 
+structure  can  be  achieved  by  means  of  a  contact-based  until a suitable sheet resistance was achieved. Silver paste 
+transducing mechanism with conductive fabric [34]. When  (ELCOAT P-100, CANS, Japan) was applied to the electrodes 
+highly conductive fabric patches are attached to and pressed  to establish a stable electrical connection between the coating 
+against  the  base  conductive  domain,  a  contact  resistance  surface and the electrodes. The base part was completed once 
+appears, and current flows through the fabric patches, causing  the silver paste had dried sufficiently. 
+the sheet resistance to locally decrease. Similarly, we form a 
+The  soft  cover  layer  was  fabricated  with  a  stretchable 
+conductive surface on the rigid body of the skin and cover it 
+polyurethane (PU) film (Stretchfix, Vlieseline, Germany) and 
+1620
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+Figure 5. Schematic of the operating system of the ERT sensor  
+a highly conductive fabric (Med-tex P130, Statex, Germany). 
+The PU film was applied to the fabric by ironing. The fabric 
+was placed on a laser cutter and cut into an array of patches. 
+Neoprene foam was then placed on the array of patches and 
+fixed with glue.  Figure 6. Indentation experiment setup, including an indenter 
+(VC motor, load cell, and tip) and a moving stage for the 
+Finally, the rigid part of the sensor was covered with the soft  indenter 
+cover  layer.  The  completed  sensor  exhibits  piezoresistive 
+characteristics due to the contact resistance between the CNT 
+coating layer and the highly conductive fabric patches. 
+C. Electronics of the ERT system 
+To use an ERT-based sensor, it is necessary to perform 
+current injection and measurement on the electrodes.  For 
+efficient implementation, we have chosen to use a pairwise 
+injection and measurement scheme [35]. The electrodes are 
+connected to a multiplexer (ADG1206, Analog Devices, USA), 
+which  is  controlled  by  a  DAQ  (myRIO-1900,  National 
+Instruments, USA). The multiplexer is also connected to a 
+current source and a voltage measurement channel to enable 
+current injection and voltage measurement on the electrodes. 
+The schematic of the ERT operating system is shown in Fig. 
+5. Instead of using a constant current source, we use a constant 
+voltage source and a serially connected reference resistor for 
+compensation. In addition,  the  DAQ  has  an  FPGA  chip, 
+enabling switching and measurement up to 120 kHz. Due to 
+the fast sampling rate, the developed sensor also has a high 
+Figure 7. Localization result with DNN-based reconstruction 
+frame rate of 120 Hz. 
+output image: 
+IV.  EXPERIMENTS AND RESULTS 
+∑𝑚 𝑥 ∑𝑚 𝑦
+A.  Indentation experiment setup  (x ,𝑦 =( 𝑖 𝑖, 𝑖 𝑖)  (11) 
+𝑚 𝑚) ∑𝑚 ∑𝑚
+We conducted an indentation experiment with the setup  𝑖 𝑖
+shown in Fig. 6. The sensor was fixed to a shaft and connected  where 𝑖 =1,…,900. Then, the positions of the centroids were 
+to a stepper motor. The indenter consisted of a voice coil (VC)  compared with the indentation locations. The localization 
+motor, a load cell, and a spherical tip. The indenter was  errors  of  the  DNN-based  method  and  the  regularization 
+installed on a linear motion guide and connected to another 
+method were 5.2 ± 3.3 mm and 5.5 ± 3.2 mm, respectively. 
+stepper motor via a timing belt to allow it to move along the 
+These results indicate that the localization performance of the 
+linear guide. During the experiment, we indented the sensor 
+sensor is significantly improved compared to that achieved in 
+900 times at the nodes of a 30x30 rectangular grid. When the 
+the previous study [9]. In addition, the estimated centroids are 
+indenter had moved to the proper position, the sensor was 
+not biased toward the center of the sensor because of the 
+indented, and the sensor output, position, and force value were 
+connectivity  of  the  conductive  domain.  The  DNN-based 
+logged simultaneously. Then, these single-point indentation 
+localization result is shown in Fig. 7. Note that the left and 
+data were used to evaluate the sensor performance, such as its 
+right edges of the plot are connected on the cylindrical surface. 
+localization accuracy, distribution of spatial sensitivity, and 
+The  black  dots  and  red  circles  indicate  the  indentation 
+imaging clarity. 
+locations and the corresponding estimates, respectively. The 
+B.  Localization performance 
+yellow circles indicate the positions of the electrodes. 
+The experimental data were converted into a conductivity 
+C.  Sensitivity fluctuation 
+image (30x30) by using a regularization method (linear) and 
+the  DNN-based  method,  and  the  centroids  of  the  The scale of the resulting voltage change is determined by 
+reconstructed  image  (x ,𝑦 )  were  calculated  from  the  the current density at the indentation location. Since the 
+𝑚 𝑚
+1621
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+Figure 8. Sensitivity distributions of the developed sensor:  Figure 9. Reconstructed conductivity images:  
+(a) regularization method; (b) DNN-based method  (a) regularization method; (b) DNN-based method 
+current density varies with the location and drive pattern, the 
+V.  DISCUSSION AND CONCLUSION 
+sensitivity of the sensor also fluctuates. We attempt to solve 
+this problem by using a DNN, and we compare the results  This paper has introduced an ERT-based robotic skin with 
+with those of the regularization method. For an output image  sparsely  distributed  electrodes,  including  the  design, 
+𝐼  obtained  from  the  output  voltages  observed  with  an  fabrication,  and  DNN-based  signal  processing  (image 
+𝑖,𝑗
+indentation at position (𝑖,𝑗), the sensitivity distribution 𝐶  is  reconstruction) of the proposed system. The electrodes are 
+𝑖,𝑗
+calculated by dividing the peak value of the reconstructed  used for injecting current and measuring the resulting voltages, 
+image 𝐼  by the corresponding measured force value 𝐹 :  and they are sparsely distributed and firmly embedded in the 
+𝑖,𝑗 𝑖,𝑗
+developed sensor. Since the wires are not directly exposed to 
+max(𝐼𝑖,𝑗) the outside, the developed robotic skin is robust and clean. 
+𝐶 =    (12) 
+𝑖,𝑗 𝐹 The base conductive domain is formed by spraying a CNT-
+𝑖,𝑗
+dispersed solution; consequently, a conductive domain can be 
+where  𝑖 =1,…,30  and  𝑗 =1,…,30 .  The  corresponding 
+formed  on  any  curved  surface.  Highly  conductive  fabric 
+sensitivity  distributions  are  shown  in  Fig.  8.  When  the 
+patches are also applied to establish a piezoresistive structure 
+standard  deviations  of  the  sensitivity  distributions  are 
+in  the  sensing  domain.  Due  to  the  simple,  durable,  and 
+normalized with respect to the average sensitivity value, the 
+customizable  sensor  structure,  it  would  be  possible  to 
+corresponding standard distributions are 0.39 and 0.45 for the 
+integrate  the  proposed  tactile  sensing  method  into  a 
+DNN-based  method  and  the  regularization  method, 
+commercialized robot arm. 
+respectively.  These  findings  indicate  that  the  sensitivity 
+distribution of the sensor becomes more uniform with DNN-
+To evaluate the performance of the sensor and the neural 
+based reconstruction. 
+network, we conducted an indentation experiment using a 
+D.  Image reconstruction results  rotary indenter setup. The localization errors of the DNN-
+based method and the regularization method were 5.2 ± 3.3 
+We have used the data from the previously described 
+mm and 5.5 ± 3.2 mm, respectively. Considering the number 
+indentation experiment to quantitatively evaluate the sensor 
+performance, but this experiment considered  only single- of electrodes (N=30) and the size of the sensing domain (30 
+point  indentation.  If  the  sensor  is  indented  at  multiple  cm x 31.4 cm), these results are remarkable. This result could 
+locations simultaneously, the reconstructed image becomes  be improved by increasing the number of electrodes. However, 
+blurred and distorted because of the nonlinear characteristics  the localization accuracy of the DNN-based method and the 
+of the sensor. To provide an example, we simultaneously  regularization method (linear) are very similar because the 
+indented four locations on the sensor by hand to obtain the  linear reconstruction matrix was derived by regularizing the 
+corresponding measurement data and then converted these  Jacobian  matrix  obtained  from  a  simulation  with  single-
+data into heatmap images, as shown in Fig. 9. The red dots  element perturbations. 
+indicate the indentation locations. Images (a) and (b) were 
+The sensitivity of the sensor was also quantified based on 
+reconstructed using the linear method (regularization) and the 
+the measured force and peak value corresponding to each 
+DNN-based method, respectively. The results show that the 
+linear method yields a blurred and noisy image, in which it is  recorded image, and the results revealed that the sensitivity 
+not easy to distinguish each indentation location. In contrast,  fluctuations  are  partially  mitigated  by  the  DNN.  This 
+the DNN-based method produces a sharper image, in which  demonstrates that the proposed ERT-based tactile sensor can 
+each perturbation can be clearly distinguished. This is because  be calibrated using a DNN and measurement data. In addition, 
+the neural network can partially compensate for the nonlinear  we compared the quality of the reconstructed images for a 
+behavior of the sensor. These results also qualitatively imply  case of multipoint indentation. Even two stimuli in close 
+that  the  DNN-based  method  can  improve  the  spatial  proximity were clearly distinguishable with the DNN-based 
+resolution (two-point discriminability) of the sensor.  method because the DNN can compensate for the nonlinear 
+behavior of the sensor. Consequently, the spatial resolution of 
+the sensor is improved by the DNN-based method. 
+1622
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+REFERENCES  [14]  A. Borsic, B. M. Graham, A. Adler, and W. R. B. 
+Lionheart, “In Vivo Impedance Imaging With Total 
+[1]  S. Haddadin et al., “On making robots understand 
+Variation Regularization,” IEEE Trans. Med. 
+safety: Embedding injury knowledge into control,” 
+Imaging, vol. 29, no. 1, pp. 44–54, 2010. 
+Int. J. Rob. Res., vol. 31, no. 13, pp. 1578–1602, 
+[15]  R. J. Halter, A. Hartov, and K. D. Paulsen, “A 
+2012. 
+broadband high-frequency electrical impedance 
+[2]  C. Paxton, Y. Barnoy, K. Katyal, R. Arora, and G. 
+tomography system for breast imaging,” IEEE 
+D. Hager, “Visual Robot Task Planning,” pp. 8832–
+Trans. Biomed. Eng., vol. 55, no. 2, pp. 650–659, 
+8838, 2018. 
+2008. 
+[3]  M. A. Lee et al., “Making Sense of Vision and 
+[16]  M. T. Clay and T. C. Ferree, “Weighted 
+Touch : Self-Supervised Learning of Multimodal 
+regularization in electrical impedance tomography 
+Representations for Contact-Rich Tasks,” pp. 8943–
+with applications to acute cerebral stroke,” IEEE 
+8950, 2019. 
+Trans. Med. Imaging, vol. 21, no. 6, pp. 629–638, 
+[4]  K. Park, S. Kim, H. Lee, I. Park, and J. Kim, “Low-
+2002. 
+hysteresis and low-interference soft tactile sensor 
+[17]  T. Tidswell, A. Gibson, R. H. Bayford, and D. S. 
+using a conductive coated porous elastomer and a 
+Holder, “Three-dimensional electrical impedance 
+structure for interference reduction,” Sensors 
+tomography of human brain activity,” Neuroimage, 
+Actuators, A Phys., vol. 295, pp. 541–550, 2019. 
+vol. 13, no. 2, pp. 283–294, 2001. 
+[5]  A. Schmitz, P. Maiolino, M. Maggiali, L. Natale, G. 
+[18]  H. Garbaa, L. Jackowska-Strumiłło, K. Grudzień, 
+Cannata, and G. Metta, “Methods and technologies 
+and A. Romanowski, “Application of electrical 
+for the implementation of large-scale robot tactile 
+capacitance tomography and artificial neural 
+sensors,” IEEE Trans. Robot., vol. 27, no. 3, pp. 
+networks to rapid estimation of cylindrical shape 
+389–400, 2011. 
+parameters of industrial flow structure,” Arch. 
+[6]  G. Cannata, M. Maggiali, G. Metta, and G. Sandini, 
+Electr. Eng., vol. 65, no. 4, pp. 657–669, 2016. 
+“An embedded artificial skin for humanoid robots,” 
+[19]  J. Jia, M. Wang, H. I. Schlaberg, and H. Li, “A novel 
+IEEE Int. Conf. Multisens. Fusion Integr. Intell. 
+tomographic sensing system for high electrically 
+Syst., pp. 434–438, 2008. 
+conductive multiphase flow measurement,” Flow 
+[7]  P. Mittendorfer and G. Cheng, “Humanoid 
+Meas. Instrum., vol. 21, no. 3, pp. 184–190, 2010. 
+multimodal tactile-sensing modules,” IEEE Trans. 
+[20]  A. Seppänen, A. Voutilainen, and J. P. Kaipio, 
+Robot., vol. 27, no. 3, pp. 401–410, 2011. 
+“State estimation in process tomography - 
+[8]  D. Silvera-Tawil, D. Rye, M. Soleimani, and M. 
+Reconstruction of velocity fields using EIT,” Inverse 
+Velonaki, “Electrical impedance tomography for 
+Probl., vol. 25, no. 8, 2009. 
+artificial sensitive robotic skin: A review,” IEEE 
+[21]  H. S. Tapp, A. J. Peyton, E. K. Kemsley, and R. H. 
+Sens. J., vol. 15, no. 4, pp. 2001–2016, 2015. 
+Wilson, “Chemical engineering applications of 
+[9]  H. Lee et al., “Internal Array Electrodes Improve the 
+electrical process tomography,” Sensors Actuators, 
+Spatial Resolution of Soft Tactile Sensors Based on 
+B Chem., vol. 92, no. 1–2, pp. 17–24, 2003. 
+Electrical Resistance Tomography,” 2019 IEEE Int. 
+[22]  M. Vauhkonen, W. R. Lionheart, L. M. Heikkinen, 
+Conf. Robot. Autom., pp. 5411–5417, 2019. 
+P. J. Vauhkonen, and J. P. Kaipio, “A MATLAB 
+[10]  T. Rymarczyk, “Application of neural reconstruction 
+package for the EIDORS project to reconstruct two-
+of tomographic images in the problem of reliability 
+dimensional EIT images.,” Physiol. Meas., vol. 22, 
+of flood protection facilities Zastosowanie 
+no. 1, pp. 107–111, 2001. 
+neuronowej rekonstrukcji obrazów tomograficznych 
+[23]  A. Adler and W. R. B. Lionheart, “EIDORS: 
+w problematyce niezawodności zabezpie,” vol. 20, 
+Towards a community-based extensible software 
+no. 3, pp. 425–434, 2018. 
+base for EIT,” 6th Conf. Biomed. Appl. Electr. 
+[11]  G. Bouchette, P. Church, J. E. McFee, and A. Adler, 
+Impedance Tomogr. London, UK, pp. 1–4, 2005. 
+“Imaging of compact objects buried in underwater 
+[24]  W. R. B. Lionheart, K. Paridis, and A. Adler, 
+sediments using electrical impedance tomography,” 
+“Resistor networks and transfer resistance matrices,” 
+IEEE Trans. Geosci. Remote Sens., vol. 52, no. 2, 
+in 13th International Conference on Biomedical 
+pp. 1407–1417, 2014. 
+Applications of Electrical Impedance Tomography, 
+[12]  P. Church, J. E. McFee, S. Gagnon, and P. Wort, 
+2012, pp. 23–25. 
+“Electrical impedance tomographic imaging of 
+[25]  D. Isaacson, S. Simske, J. Goble, J. C. Newell, and 
+buried landmines,” IEEE Trans. Geosci. Remote 
+M. Cheney, “NOSER: An algorithm for solving the 
+Sens., vol. 44, no. 9, pp. 2407–2420, 2006. 
+inverse conductivity problem,” Int. J. Imaging Syst. 
+[13]  E. Zimmermann, A. Kemna, J. Berwix, W. Glaas, 
+Technol., vol. 2, no. 2, pp. 66–75, 1990. 
+and H. Vereecken, “EIT measurement system with 
+[26]  S. Liu, J. Jia, Y. D. Zhang, and Y. Yang, “Image 
+high phase accuracy for the imaging of spectral 
+Reconstruction in Electrical Impedance Tomography 
+induced polarization properties of soils and 
+Based on Structure-Aware Sparse Bayesian 
+sediments,” Meas. Sci. Technol., vol. 19, no. 9, 
+Learning,” IEEE Trans. Med. Imaging, vol. 37, no. 
+2008. 
+9, pp. 2090–2102, 2018. 
+1623
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply.    
+[27]  M. Michalikova, M. Prauzek, and J. Koziorek, 
+“Impact of the Radial basis function spread factor 
+onto image reconstruction in electrical impedance 
+tomography,” IFAC-PapersOnLine, vol. 28, no. 4, 
+pp. 230–233, 2015. 
+[28]  P. C. Shetiye, “Detection of Breast Cancer Using 
+Electrical Impedance and RBF Neural Network,” 
+Int. J. Inf. Electron. Eng., vol. 5, no. 5, 2015. 
+[29]  A. Adler and R. Guardo, “A Neural Network Image 
+Reconstruction Technique for Electrical Impedance 
+Tomography,” IEEE Trans. Med. Imaging, vol. 13, 
+no. 4, pp. 594–600, 1994. 
+[30]  S. Russo and R. Assaf, “Towards a practical 
+Implementation of EIT-based Sensors using 
+Artificial Neural Networks,” pp. 9–11, 2017. 
+[31]  H. Park et al., “Deep Neural Network Approach in 
+Electrical Impedance Tomography-based Real-time 
+Soft Tactile Sensor,” pp. 7441–7446, 2019. 
+[32]  D. P. Kingma and J. Lei Ba, “ADAM: A METHOD 
+FOR STOCHASTIC OPTIMIZATION,” in Iclr, 
+2015, pp. 1–15. 
+[33]  C. M. Bishop, “Training with Noise is Equivalent to 
+Tikhonov Regularization,” Neural Comput., vol. 7, 
+no. 1, pp. 108–116, 1995. 
+[34]  D. S. Tawil, D. Rye, and M. Velonaki, “Improved 
+image reconstruction for an EIT-based sensitive skin 
+with multiple internal electrodes,” IEEE Trans. 
+Robot., vol. 27, no. 3, pp. 425–435, 2011. 
+[35]  D. S. Holder and A. J. Temple, “Effectiveness of the 
+Sheffield EIT system in distinguishing patients with 
+pulmonary pathology from a series of normal 
+subjects,” Clin. Physiol. Appl. Electr. impedance 
+Tomogr., pp. 277–298, 1993. 
+ 
+1624
+Authorized licensed use limited to: Carleton University. Downloaded on September 21,2020 at 05:55:16 UTC from IEEE Xplore.  Restrictions apply. 
