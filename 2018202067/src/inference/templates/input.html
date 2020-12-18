@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>植物种类查询</title>
+    <link href="https://fonts.googleapis.com/css?family=Muli:300,400,500,600,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/main.css" />
+    <script src="../static/js/uikit.js"></script>
+</head>
+
+<body>
+    <header class="uk-background-primary uk-background-norepeat uk-background-cover uk-background-center-center uk-light"
+    	style="background-image: url(../static/images/bg.jpg);">
+    	<nav class="uk-navbar-container">
+    	  <div class="uk-container">
+    	    <div data-uk-navbar>
+    	      <div class="uk-navbar-left">
+    	        <a class="uk-navbar-item uk-logo uk-visible@m"></a>
+    	        <a class="uk-navbar-toggle uk-hidden@m" data-uk-toggle><span
+    	          data-uk-navbar-toggle-icon></span> <span class="uk-margin-small-left"></span></a>
+    	      </div>
+    	    </div>
+    	  </div>
+    	</nav>
+    	<div class="uk-section uk-position-relative uk-position-z-index" data-uk-scrollspy="cls: uk-animation-slide-bottom-medium; repeat: true">
+    		<div class="uk-container">
+    			<h1 class="uk-text-center uk-margin-remove-top">植物种类查询</h1>
+    		</div>
+    	</div>
+    </header>
+
+    <div class="uk-section uk-section-muted">
+        <form action = "http://127.0.0.1:5000/" method="POST" enctype = "multipart/form-data">
+            
+            <div class="uk-container uk-container-small">
+                <input class="uk-accordion-title1 uk-box-shadow-hover-small" type="file" name="img_file" accept="image/*">
+            </div>
+
+            <div class="uk-margin-medium-top uk-text-center"
+            data-uk-scrollspy="cls: uk-animation-slide-bottom-medium; repeat: true">
+              <p><input type = "submit" class="uk-button uk-button-primary uk-border-rounded" value = "识别"/></p>
+            </div>
+
+        </form>
+    </div>
+</body>
+
+</html>
