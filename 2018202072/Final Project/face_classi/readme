@@ -1,2 +1,4 @@
 ORL_face.npz为转换为矩阵的数据集文件
 result中包含损失函数图像结果
+datachanger.ipynb为将ORL数据集转换为npz的文件
+CNN.ipynb为主要实现部分
