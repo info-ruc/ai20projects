@@ -1,0 +1,1 @@
+Ryanodine receptor;Calcium sparks;Gillespie algorithm;Global optimization;genetic algorithm;simulated annealing

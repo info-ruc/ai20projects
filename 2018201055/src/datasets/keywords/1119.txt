@@ -1,0 +1,1 @@
+adaptive traffic signals;Intelligent Transportation Systems (ITS);Floating Car Data (FCD);traffic management;connected;autonomous vehicles

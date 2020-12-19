@@ -1,0 +1,1 @@
+The paper is aimed at the problem of the distribution of roles in groups of robots with limited communications and based on the principles of the swarm intelligence. The iteration approach to the distribution of roles in a group of robots is proposed. There are results of the study and computer simulation of the proposed approach.

@@ -1,0 +1,1 @@
+Semantic scene completion;Single depth image;Dense conditional random field (CRF);Truncated signed distance function (TSDF);Inference

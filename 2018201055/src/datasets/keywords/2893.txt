@@ -1,0 +1,1 @@
+Parallel computing;GPU;Activity-based travel demand modeling;Speed-up;ActivitySim

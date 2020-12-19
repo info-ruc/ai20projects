@@ -1,0 +1,1 @@
+Mechanical performance prediction;Image analysis;Random forest;Deep neural network;Machine learning

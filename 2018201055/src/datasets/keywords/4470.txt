@@ -1,0 +1,1 @@
+hardening;phase transformations;ABAQUS;numerical modeling

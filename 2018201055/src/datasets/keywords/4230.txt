@@ -1,0 +1,1 @@
+Atlantic salmon;Hyperspectral imaging;Computer vision;TreeBagger classifier;Machine learning;Saumon atlantique;Imagerie hyperspectrale;Vision par ordinateur;Classificateur TreeBagger;Apprentissage automatique

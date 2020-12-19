@@ -1,0 +1,8 @@
+To develop a new patient-reported outcome measure that captures feelings of being trapped that are commonly experienced by caregivers of individuals with traumatic brain injury (TBI).
+Cross-sectional.
+Three TBI Model Systems rehabilitation hospitals, an academic medical center, and a military medical treatment facility.
+Caregivers (N=560) of civilians with TBI (n=344) and caregivers of service members/veterans with TBI (n=216).
+Not applicable.
+Traumatic Brain Injury Caregiver Quality of Life (TBI-CareQOL) Feeling Trapped item bank.
+From an initial item pool of 28 items, exploratory and confirmatory factor analyses supported the retention of 16 items. After graded response model (GRM) and differential item functioning analyses were conducted, 15 items were retained in the final measure. GRM calibration data, along with clinical expert input, were used to choose a 6-item, static short form (SF), and the calibration data were used for programming of the TBI-CareQOL Feeling Trapped computer adaptive test (CAT). CAT simulation analyses produced an r=0.99 correlation between CAT scores and the full item bank. Three-week short-form test-retest reliability was very good (r=0.84).
+The new TBI-CareQOL Feeling Trapped item bank was developed to provide a sensitive and efficient examination of the effect that feelings of being trapped, due to the caregiver role, have on health-related quality of life for caregivers of individuals with TBI. Both the CAT and corresponding 6-item SF demonstrate excellent psychometric properties. Future work is needed to establish the responsiveness of this measure to clinical interventions for these caregivers.

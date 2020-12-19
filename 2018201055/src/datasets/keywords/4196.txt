@@ -1,0 +1,1 @@
+Deep learning;Transfer learning;Non-handcrafted features;Texture descriptors;Texture classification;Ensemble of descriptors

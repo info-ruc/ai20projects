@@ -1,0 +1,1 @@
+Software defect prediction;Heterogeneous defect prediction;Unsupervised defect prediction;Non-effort-aware performance indicators;Effort-aware performance indicators;Diversity analysis;Empirical studies

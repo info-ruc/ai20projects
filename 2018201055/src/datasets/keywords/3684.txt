@@ -1,0 +1,1 @@
+Electroencephalography (EEG);Emotion classification;Human machine interaction;Machine learning;Brain–computer interface (BCI);Higher Order Statistics (HOS)

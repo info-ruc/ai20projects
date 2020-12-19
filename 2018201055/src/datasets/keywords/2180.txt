@@ -1,0 +1,1 @@
+65N99;35J61;92D25;Uniqueness of nodal ground state solutions;Numerical computations using Mathematica

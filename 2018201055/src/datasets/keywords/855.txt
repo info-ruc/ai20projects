@@ -1,0 +1,1 @@
+45J05;65R20;65L60;Integro-differential equations;Delay arguments;Matrix-collocation method;Orthoexponential polynomials;Error bound analysis;Infinite boundary

@@ -1,0 +1,1 @@
+Typical opinion mining;Extraction;Word2Vec;K-means

@@ -1,0 +1,1 @@
+Electroencephalogram;Multivariate empirical mode decomposition;Intrinsic mode function;Multivariate autoregressive model;Non-motor mental task;Least-square support vector machine

@@ -1,0 +1,1 @@
+Abnormality detection;Computer aided diagnosis (CAD);Color histogram;Segmentation;Endoscopy;Support vector machine (SVM)

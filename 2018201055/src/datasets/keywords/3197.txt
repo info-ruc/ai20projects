@@ -1,0 +1,1 @@
+Density;Intracerebral hemorrhage;Outcome;Shape;C;Compactness;CF;Circle factor;CI;Confidence interval;CT;Computed tomography;DH;Density heterogeneity;FD;Fractal dimension;FF;Fourier factor;GCS;Glasgow Coma Scale;GOS;Glasgow Outcome Scale;ICH;Intracerebral hemorrhage;PIA;Pole of inaccessibility

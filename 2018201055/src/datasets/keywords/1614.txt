@@ -1,0 +1,1 @@
+3D imaging;Deep learning;Segmentation;Convolutional neural network;UNet;Biomineralization;Bone;Chick skeleton;Eggshell;Coral;FIB-SEM;microCT

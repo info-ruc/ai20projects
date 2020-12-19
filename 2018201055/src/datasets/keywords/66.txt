@@ -1,0 +1,1 @@
+Statistical shape modeling (SSM);Lung morphology;Principal component (PC);PC-Based parametric model;Variability;Asthma

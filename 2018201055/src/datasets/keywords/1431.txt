@@ -1,0 +1,1 @@
+Computer science;Random access;Distributed Bitmap Index;Star Join;Low-selectivity queries;Hadoop ecosystem

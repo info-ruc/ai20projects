@@ -1,0 +1,1 @@
+Multiple-image encryption;Quick response code;Elliptic curve cryptography

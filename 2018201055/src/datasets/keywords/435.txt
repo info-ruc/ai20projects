@@ -1,0 +1,1 @@
+Convolution Recurrent Neural Network;Salient object detection;Spatial features;Temporal features;Local constraint cues

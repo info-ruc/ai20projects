@@ -1,0 +1,1 @@
+Computer-aided diagnosis (CAD);Lung cancer;Endobronchial ultrasound images (EBUS);Convolutional neural network (CNN);Transfer learning

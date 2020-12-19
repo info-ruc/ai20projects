@@ -1,0 +1,1 @@
+Cluster Segmentation;Histogram of Gradient(HOG);Support Vector Machine (SVM);Action Recognition;Part Level Segmentation;Object Level Segmentation

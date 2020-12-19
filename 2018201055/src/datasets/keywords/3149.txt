@@ -1,0 +1,1 @@
+Mammography;Breast masses;Content-based image retrieval (CBIR);Geometric verification;Computer-aided diagnosis (CAD)

@@ -1,0 +1,1 @@
+Cortana forensics;Windows 10;Windows forensics;ESE database;Microsoft Edge forensics

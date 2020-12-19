@@ -1,0 +1,1 @@
+Computer science;Task placement;Process virtual machine;Language translation;Loosely-coupled;Real-time

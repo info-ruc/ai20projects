@@ -1,0 +1,1 @@
+Stomach Adenocarcinoma;Generative adversarial network;cancer data

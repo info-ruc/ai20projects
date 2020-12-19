@@ -1,0 +1,1 @@
+Wireless sensor network;Soil moisture sensor;PIR sensor;ESP8266 module;Arduino UNO R3

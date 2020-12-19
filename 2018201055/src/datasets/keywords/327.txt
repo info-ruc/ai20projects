@@ -1,0 +1,1 @@
+RD;respiratory diseases;ALS;adventitious lung sounds;MFCC;mel frequency spectral coefficients;Pulmonary diseases;Lung sound analysis;Shannon entropy;Spectral entropy;Bootstrap aggregation;Adaptive boosting

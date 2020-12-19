@@ -1,0 +1,1 @@
+MLC flash memory;Inter-cell interference;Retention error;Random telegraph noise;Probability distribution;Error-correction coding

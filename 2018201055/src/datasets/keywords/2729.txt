@@ -1,0 +1,1 @@
+Finite state machines;healthcare informatics;medical examinations;pre-diagnosis protocols

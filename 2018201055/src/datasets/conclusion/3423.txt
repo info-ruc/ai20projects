@@ -1,0 +1,1 @@
+At present, TensorD only released the first version. The future work will add more decomposition algorithms such as Tensor Train [42] and Block-Term decomposition [43], and attempt to solve the tensor regression problem. Furthermore, TensorD will utilize distributed settings, and support both CPU and GPU computations.

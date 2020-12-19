@@ -1,0 +1,1 @@
+Complex-valued neural networks;Hyperbolic-valued Hopfield neural networks;Rotor Hopfield neural networks;Projection rule

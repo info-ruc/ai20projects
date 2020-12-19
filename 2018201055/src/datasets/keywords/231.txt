@@ -1,0 +1,1 @@
+Global diverse attention;Pairwise temporal relation;Video summarization;Convolutional neural networks

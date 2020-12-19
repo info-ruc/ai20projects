@@ -1,0 +1,1 @@
+Maximal clique;Bitstring;Branch-and-bound;Subgraph enumeration;Combinatorial optimization

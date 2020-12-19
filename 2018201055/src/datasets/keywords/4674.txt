@@ -1,0 +1,1 @@
+FDEP;Functional dependence;LAN;Local area network;LF;Local failure;PF;Propagated failure;PFGE;Propagated failure with global effect;PFSE;Propagated failure with selective effect;PMS;Phased-mission system;Competing failures;Failure isolation;Functional dependence;Markov chain;Phased-mission system;Propagated failure;Reliability analysis

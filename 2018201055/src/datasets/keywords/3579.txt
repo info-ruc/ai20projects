@@ -1,0 +1,1 @@
+Multiple object tracking;Tracking-by-detection method;Exchanging object context model;Online tracking

@@ -1,0 +1,1 @@
+Manifold;Transfer learning;Alternating direction method of multipliers;Object tracking;Augmented lagrange multiplier;Image tracking;Image recognition;Object categorization

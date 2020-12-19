@@ -1,0 +1,1 @@
+C81;R21;R40;Walkability;Land use;Residential real estate;Hedonic regression;Computer vision

@@ -1,0 +1,1 @@
+Computer science;Video summarization;Keyframes;SIFT flow;Uniform sampling;Dual Layer Loopy Belief Propagation Network (DLBPN)

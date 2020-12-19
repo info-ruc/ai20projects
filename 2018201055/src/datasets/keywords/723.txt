@@ -1,0 +1,1 @@
+Vehicular fog computing;VANET;Fog computing;Internet of things;Green computing;Quality of service;Energy efficiency;Load-balancing

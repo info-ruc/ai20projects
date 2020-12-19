@@ -1,0 +1,1 @@
+Apache spark;Non-parametric;Weighted feature extraction;EEG data analysis;Brain computer interface

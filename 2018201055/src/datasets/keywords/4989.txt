@@ -1,0 +1,1 @@
+Automatic karyotyping system;Classification;FPGA;Human chromosome;Kohonen;Neural network;System on chip

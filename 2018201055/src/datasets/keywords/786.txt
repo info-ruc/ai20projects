@@ -1,0 +1,1 @@
+Multi-label learning;Feature selection;Manifold framework;Regression model;Spectral graph

@@ -1,0 +1,20 @@
+In the current paper an innovative approach was presented to improve auditory emotion recognition studies. The system, composed of a mobile application and a server application, was developed and validated in cooperation with the Faculty of Psychology of the University of Lisbon, where it will be used to assess vocal emotion recognition both in research and clinical settings.
+In this paper the developed system was described, with a special emphasis on the functionalities implemented. Moreover, the main innovative aspects of the work were described, accompanied with examples of the information that can be extracted from each study.
+In terms of Human–Computer Interaction, it is now clear that user profile (e.g. gender, age) and user state (e.g. emotional state) influence interaction patterns with technological devices, in the same way that they influence the individual’s interaction with others. Moreover, we show that this relationship appears to be consistent within the user profile. That is, interaction patterns seem to depend largely on aspects such as age and/or gender.
+Specifically, we show that interaction is different for individuals in different age groups. We compare young individuals with elderly ones to conclude that older people touch the screen with increased intensity and area. Interaction is also significantly different according to gender. Collected data showed that male participants touch the screen with more intensify and finger area. Based on these differences, we trained a neural network that is able to classify gender based solely on the observation of the participant’s interaction with the device, with an accuracy of 72%.
+In terms of auditory emotion recognition and Human–Computer Interaction, conclusions are two-fold. In terms of emotion recognition, data shows which emotions are easier and harder to recognize by the participants. While this does not represent a novel contribution, results are in line with existing knowledge. Namely, we conclude that women are better at perceiving emotion when compared with men, and that younger participants are also better than older ones.
+When analyzing the relationship between emotion and Human–ComputerInteraction, some interesting conclusions where put forward. Namely, Disgust, which is the emotion that is more easily identified by all participants, is also the emotion that more significantly affects touch intensity and area, with both variables being higher than with other emotions. Moreover, data also shows that different participants are affected differently by emotions: some are more susceptible to the influence of different emotions on their interaction patterns. While considerable future work is still necessary, these findings show that it may be feasible to develop emotion-aware devices and applications.
+Finally, when comparing the developed system with existing approaches, the following key innovative aspects can be identified:
+
+
+
+•
+Studies are easy to design and share among researchers. The mobile application generates all the necessary graphical interfaces according to the study design, in a transparent way for the researcher;
+•
+Data collection and storage in a structured manner is automatized and requires no Human intervention, improving the efficiency of the process and its validity by eliminating potential Human error;
+•
+Many new variables are now considered that may provide important information about participants’ behavior. This may be very important to clarify how each participant is affected by different types of emotions;
+•
+Several studies can be conducted simultaneously as now there is not a dependence on the researcher to play the stimuli and record the participants’ responses;
+•
+Data are readily available during and immediately after the collection, facilitating and accelerating its analysis.

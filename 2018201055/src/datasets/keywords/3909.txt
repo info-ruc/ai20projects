@@ -1,0 +1,1 @@
+HIPI;OpenCV;In-Situ;Mapper;Reducer;PSNR;MSE;nonlocal;HDFS(Hadoop database file system);JPEG;PNG

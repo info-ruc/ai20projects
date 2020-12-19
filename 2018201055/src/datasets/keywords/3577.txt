@@ -1,0 +1,1 @@
+CT;Geometric Active Contours;VOI;Level set;Dice;Jaccard coefficient

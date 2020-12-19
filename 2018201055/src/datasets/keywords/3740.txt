@@ -1,0 +1,1 @@
+Community detection;Networks;Genetic algorithm;Normalized mutual information;Modularity

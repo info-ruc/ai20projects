@@ -1,0 +1,1 @@
+46E39;34B15;39A10;39A70;35B20;46N10;Multiple solutions;Discrete fourth-order boundary value problems;Green’s function;Variational methods;Critical point theory

@@ -1,0 +1,5 @@
+Recently, the most computer and digital systems are built based on the parallelism to increase their speed of processing.
+The complications of these systems are increasing proportionally with the complexity of the used parallelism methodologies. According to the growing of this complexity, this research proposes a modification to enhance designing tasks by the concept of the 3-dimensions easily.
+This research introduces a novel terminology called “Bit-Vector-Matrix”. Moreover, this research modifies the standard logic symbols beside reformulates their conventional Boolean algebraic expressions to become more convenient and compatible with the “Bit-Vector-Matrix”.
+We proposed novel logic gate symbols called “Peer-logic-gates”. They are useful for representing the intensive concurrent logical operations through intensive parallel digital buses in computer systems. In addition, they will be a promising teaching tool to instruct many computer courses.
+This paper constructed based on the deterministic algorithm, realized using VHDL codes and evaluated by the reliable simulator “Modelsim”.

@@ -1,0 +1,1 @@
+Makeup face verification;Multiview learning;Distance metric learning;Marginal samples;Face verification

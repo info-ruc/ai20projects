@@ -1,0 +1,1 @@
+Saliency detection;Multi-layer graph;Diffusion;Random walk with restart

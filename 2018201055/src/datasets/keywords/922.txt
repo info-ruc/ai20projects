@@ -1,0 +1,1 @@
+Heterogeneous multicore systems;Fault tolerance;Energy management;Periodic real-time scheduling

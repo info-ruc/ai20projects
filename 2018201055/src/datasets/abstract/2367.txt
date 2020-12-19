@@ -1,0 +1,8 @@
+ComDMFT is a massively parallel computational package to study the electronic structure of correlated-electron systems (CES). Our approach is a parameter-free method based on ab initio linearized quasiparticle self-consistent GW (LQSGW) and dynamical mean field theory (DMFT). The non-local part of the electronic self-energy is treated within ab initio LQSGW and the local strong correlation is treated within DMFT. In addition to ab initio LQSGW+DMFT, charge self-consistent LDA+DMFT methodology is also implemented, enabling multiple methods in one open-source platform for the electronic structure of CES. This package can be extended for future developments to implement other methodologies to treat CES.
+Program Title: ComDMFT
+Program Files doi: http://dx.doi.org/10.17632/h8vky97ncg.1
+Licensing provisions: GPLv3
+Programming language: fortran90, C++ and Python
+Nature of problem: There is no open-source code based on ab initio GW+EDMFT and related methodologies to support their theoretical advancement for the electronic structure of correlated electron systems.
+Solution method: We implemented ab initio LQSGW+DMFT methodology, as a simplification of ab initio GW+EDMFT, for the electronic structure of correlated electron systems. In addition, charge self-consistent LDA+DMFT methodology is also implemented, enabling the comparison of multiple methods for the electronic structure of correlated electron systems in one platform.
+Additional comments: ComDMFT is built on top of Wannier90 (Mostofi et al. 2008) and FlapwMBPT (Kutepov et al. 2017) codes.

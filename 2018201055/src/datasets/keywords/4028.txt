@@ -1,0 +1,1 @@
+Database;Image;Wildfire;Pixel detection

@@ -1,0 +1,1 @@
+In the present study, we identify a new type of extended metrics space, i.e. generalized quasi-partial metric space and utilize it to introduce new results of fixed point for contractive monotone mappings. Some interesting examples are also presented. We apply the fixed point results to the complexity of computer algorithms and analyze their running time.

@@ -1,0 +1,1 @@
+Hate speech;Transfer learning;BERT;BETO;Natural language processing;Text classification

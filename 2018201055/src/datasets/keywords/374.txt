@@ -1,0 +1,1 @@
+Hybrid genetic algorithm;Variable neighborhood search;Multi-scale optimization;Multiple bottleneck traveling salesmen problem

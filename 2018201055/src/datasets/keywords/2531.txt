@@ -1,0 +1,1 @@
+Magnetic resonance image;Computer aided diagnosis;Deep learning;AlexNet;Transfer learning

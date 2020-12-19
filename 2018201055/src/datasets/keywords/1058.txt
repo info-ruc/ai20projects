@@ -1,0 +1,1 @@
+Computer science;Pashto isolated digits recognition;CNN;MFCC;Speech recognition

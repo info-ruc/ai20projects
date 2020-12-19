@@ -1,0 +1,1 @@
+Parallel DNA computing;The task scheduling problem;Adleman-Lipton model;NP-complete problem

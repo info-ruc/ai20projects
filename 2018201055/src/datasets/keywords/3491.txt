@@ -1,0 +1,1 @@
+Lattice;Closed set lattice;Concept lattice;Galois lattice;Implicational system;Closure operator;Closure system;Canonical direct basis;Canonical basis;Dependence graph;Minimal generators

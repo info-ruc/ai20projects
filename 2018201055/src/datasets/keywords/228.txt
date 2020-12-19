@@ -1,0 +1,1 @@
+Logical reasoning;Adversarial training;Graph neural network;Medical image analysis;Medical report generation

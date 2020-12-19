@@ -1,0 +1,1 @@
+Script identification;Attention mechanism;Multi-scale features;Feature fusion;Global max pooling

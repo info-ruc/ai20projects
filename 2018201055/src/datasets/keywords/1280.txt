@@ -1,0 +1,1 @@
+brain-computer interface (BCI);local field potential (LFP);motor cortex;Kalman filter (KF);continuous decoding;parameter regularization

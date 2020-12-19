@@ -1,0 +1,1 @@
+Copy-move forgery;Binary discriminant feature descriptor;Image forgery;Image forensics;Block-based approach;Superpixel based approach

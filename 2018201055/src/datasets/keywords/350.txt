@@ -1,0 +1,1 @@
+Hyperledger fabric;Trustzone;Simple payment verification;Lightweight wallet

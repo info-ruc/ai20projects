@@ -1,0 +1,1 @@
+Interatomic potentials;Differential evolution algorithm;Global minimum;Berlinite;Zirconium tungstate

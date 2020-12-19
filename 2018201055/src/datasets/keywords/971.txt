@@ -1,0 +1,1 @@
+Multivariate compositional data;Classification;Feature embedding;Dirichlet distribution;Support vector machine

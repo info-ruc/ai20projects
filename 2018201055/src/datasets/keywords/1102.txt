@@ -1,0 +1,1 @@
+Computer vision;DIP;DSP;CORDIC;Communication;Latency;VLSI;Hardware;Power

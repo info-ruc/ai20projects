@@ -1,0 +1,1 @@
+Data compression;Huffman tree;Skeleton tree;Reduced skeleton

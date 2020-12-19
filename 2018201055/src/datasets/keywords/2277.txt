@@ -1,0 +1,1 @@
+CNNs;Plant disease diagnosis;Residual structure;Severity estimation;Shuffle units

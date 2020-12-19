@@ -1,0 +1,1 @@
+Parkinson’s disease;Dynamic handwriting analysis;Recurrent neural networks;Computer-aided diagnosis

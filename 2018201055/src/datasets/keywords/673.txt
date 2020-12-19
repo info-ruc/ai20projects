@@ -1,0 +1,1 @@
+Convolutional neural network;Recommender systems;Metadata;Rating prediction;E-learning;Reviews

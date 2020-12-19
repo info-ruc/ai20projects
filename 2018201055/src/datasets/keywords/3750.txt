@@ -1,0 +1,1 @@
+Object tracking;Background subtraction;Spatio-temporal video patch;Local ternary pattern;Extended Symmetrical-Diagonal Hexadecimal Pattern

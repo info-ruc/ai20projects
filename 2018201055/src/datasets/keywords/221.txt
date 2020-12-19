@@ -1,0 +1,1 @@
+EEG;Emotion recognition;Domain adaptation;SPD matrix;Riemannian manifold;Prototype learning

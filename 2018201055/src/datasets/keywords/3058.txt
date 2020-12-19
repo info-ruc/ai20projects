@@ -1,0 +1,1 @@
+CRT;cathode ray tube;LCD;liquid crystal display;OLED;organic light emmiting diode;OCSVM;one class support vector machine;Brain–Computer Interface (BCI);Visual-evoked potential (VEP);Event-related potential (ERP);Cathode ray tube (CRT);Liquid-crystal display (LCD);Timing precision

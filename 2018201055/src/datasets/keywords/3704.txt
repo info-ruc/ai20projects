@@ -1,0 +1,1 @@
+Brain-computer interface;Correlation;Feature extraction;Time window selection;Common spatial pattern

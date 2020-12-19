@@ -1,0 +1,1 @@
+Motor imagery;Non-invasive EEG;Brain–computer interface;Deep convolutional neural network

@@ -1,0 +1,1 @@
+DNA mixtures;Number of contributing genotype possibilities;Mixture deconvolution

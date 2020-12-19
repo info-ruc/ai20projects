@@ -1,0 +1,1 @@
+Brain–computer interface;Electroencephalogram;Deceit identification test (DIT);Wavelet packet transform (WPT);Linear discriminant analysis (LDA)

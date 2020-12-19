@@ -1,0 +1,1 @@
+Brain-computer interface;Motor imagery;Common spatial pattern;Support vector machine

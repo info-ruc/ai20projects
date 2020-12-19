@@ -1,0 +1,1 @@
+Photovoltaic self-consumption curtailment;Model predictive control;Demand response;B2G system;B2G index

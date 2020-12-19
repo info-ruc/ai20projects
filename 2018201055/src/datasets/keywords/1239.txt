@@ -1,0 +1,1 @@
+Flying robot;Self-maintenance;Smart grid;Computer vision techniques;Region proposal approach;CNN-based classifier

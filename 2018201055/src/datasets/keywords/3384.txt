@@ -1,0 +1,1 @@
+Graphs drawing;Approximability by embeddings;Cluster planarity;Weak simplicity;van Kampen obstruction;Hanani–Tutte theorem;Deleted product

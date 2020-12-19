@@ -1,0 +1,1 @@
+Image captioning;Stimulus-driven;Concept-driven;Attention mechanism;LSTM

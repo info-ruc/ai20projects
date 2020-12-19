@@ -1,0 +1,1 @@
+Convolutional neural networks;Colonoscopy;Adenoma detection rate

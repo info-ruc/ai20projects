@@ -1,0 +1,1 @@
+BE;bioequivalence;PD;parent drug;PM;primary metabolite;SM;secondary metabolite;Bioequivalence;Simulation;First-pass metabolism;BCS;Analyte

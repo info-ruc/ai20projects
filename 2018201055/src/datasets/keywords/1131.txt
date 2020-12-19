@@ -1,0 +1,1 @@
+Finite-element method;Earthquake simulation;Low-order unstructured elements;Random data access on SIMD/many-core CPU

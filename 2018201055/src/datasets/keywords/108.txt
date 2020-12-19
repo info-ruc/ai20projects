@@ -1,0 +1,1 @@
+Cyber–physical systems;edge–cloud;Guaranteed latency

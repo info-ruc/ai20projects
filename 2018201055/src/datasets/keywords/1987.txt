@@ -1,0 +1,1 @@
+Knowledge;Practice;Hepatitis B;Medicine and health science students;Ethiopia;AOR;Adjusted odds ratio;COR;Crude odds ratio;CI;Confidence intervals;HBV;Hepatitis B virus;CHB;Chronic hepatitis B;HIV;Human immunodeficiency virus;HCC;Hepatocellular carcinoma;HCV;Hepatitis C virus;HCW;Health care workers;PEP;Post-exposure prophylaxis

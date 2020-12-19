@@ -1,0 +1,1 @@
+Computer-aided diagnosis;Artificial neural network;Artificial bee colony algorithm;Pruning;Logic circuit

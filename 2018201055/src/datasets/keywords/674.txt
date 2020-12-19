@@ -1,0 +1,1 @@
+Finite topological space;Covering dimension;Specialisation pre-order;Partial order;Set partition;Backtracking algorithm;Parallelisation;GMP;OpenMP,

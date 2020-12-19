@@ -1,0 +1,1 @@
+Non-classical logics;Pruning algorithms;Formula trees;Fast evaluation;Fuzzy logic;Many valued logic;Lazy evaluations

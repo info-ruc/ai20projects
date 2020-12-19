@@ -1,0 +1,1 @@
+Disciplines;wage;earnings;field of study;majors;returns;switching endogenous regression;C 81;E 24;I 23;I 26

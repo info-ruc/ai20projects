@@ -1,0 +1,1 @@
+Coverage;Energy;Fault-tolerance;Harsh environment;Wireless sensor networks

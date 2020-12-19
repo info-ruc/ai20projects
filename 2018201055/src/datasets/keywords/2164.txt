@@ -1,0 +1,1 @@
+Computerized physician order entry (CPOE);Drop-down menu selection;Mouse trigger design

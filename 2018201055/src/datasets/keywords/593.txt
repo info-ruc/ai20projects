@@ -1,0 +1,1 @@
+Automatic speech emotion recognition;Affective computing;Late fusion;Bimodal fusion;Dimensional emotion

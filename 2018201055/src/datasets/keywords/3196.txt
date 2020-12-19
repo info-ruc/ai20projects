@@ -1,0 +1,1 @@
+CADx;computer-aided diagnosis;EGC;early gastric cancer;ESD;endoscopic submucosal dissection;GLCM;gray-level co-occurrence matrix;M-NBI;magnifying narrow-band imaging;NBI;narrow-band imaging;PPV;positive predictive value;SVM;support vector machine;SVMLv1;level-1 SVM;SVMLv2;level-2 SVM

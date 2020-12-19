@@ -1,0 +1,1 @@
+Maximum independent set;Independence number;Minimum vertex cover;Scale-free network;Sierpiński gasket;Complex network

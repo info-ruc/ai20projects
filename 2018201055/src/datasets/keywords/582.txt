@@ -1,0 +1,1 @@
+Unsupervised feature selection;Feature dependency;Feature redundancy;Joint entropy;l2, 1 regularization

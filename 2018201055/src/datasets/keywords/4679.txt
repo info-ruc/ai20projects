@@ -1,0 +1,1 @@
+Quantum-dot cellular automata;Divider;Taylor series expansion;Full adder

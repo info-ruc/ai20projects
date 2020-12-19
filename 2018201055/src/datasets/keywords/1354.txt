@@ -1,0 +1,1 @@
+Brain computer interface (BCI);SSVEP;Canonical correlation analysis (CCA);Electroencephalogram (EEG);Information transfer rate (ITR);Power spectral density analysis (PSDA)

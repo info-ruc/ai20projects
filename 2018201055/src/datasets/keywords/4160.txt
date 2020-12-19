@@ -1,0 +1,1 @@
+Classification;Endoscopy;Feature extraction;Gastrointestinal;Gastric cancer;Local binary patterns;Homogeneous texture;Chromoendoscopy;Genetic algorithm

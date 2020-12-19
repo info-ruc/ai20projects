@@ -1,0 +1,1 @@
+Computer science;Environmental science;Water Quality Monitoring;Evaluation of classification models;Decision tree;C4.5 algorithm;Logistic regression;Data classification;Mathematical analysis;Water resources engineering;Computer science applications;Sensor system;Information systems

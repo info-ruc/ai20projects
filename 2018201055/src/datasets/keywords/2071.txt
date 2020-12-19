@@ -1,0 +1,1 @@
+Ternary optical computer;MSD multiplication;Minimum module;MSD adder

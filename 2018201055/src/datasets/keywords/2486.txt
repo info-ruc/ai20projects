@@ -1,0 +1,1 @@
+OCR;Non-Latin Script;Javanese Script;Tesseract;Android

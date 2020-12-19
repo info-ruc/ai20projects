@@ -1,0 +1,1 @@
+Brain–computer interface (BCI);Electroencephalogram (EEG);Multiway canonical correlation analysis (MCCA);Sparse Bayesian learning;Steady-state visual evoked potential (SSVEP)

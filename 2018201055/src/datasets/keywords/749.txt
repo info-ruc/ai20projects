@@ -1,0 +1,1 @@
+IMEI number;Phase spectrum;DCT coefficients;Forgery detection;Fraud document identification

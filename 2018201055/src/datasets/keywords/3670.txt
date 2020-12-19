@@ -1,0 +1,1 @@
+Brain computer interface (BCI);Electroencephalograph (EEG);Support vector machine (SVM);Support matrix machine;Multiclass classification;Alternating direction method of multipliers (ADMM)

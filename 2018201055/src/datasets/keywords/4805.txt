@@ -1,0 +1,1 @@
+Flight trajectory;Unmanned aerial vehicle;Optical flow;Stereo vision;Inertial navigation system

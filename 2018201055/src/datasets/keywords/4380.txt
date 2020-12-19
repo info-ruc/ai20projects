@@ -1,0 +1,1 @@
+Telematics;Telemaintenance;Human-machine interface;Human-centered design;User interfaces;Computer vision;Computer-aided work;Computer-aided instruction;Computer-aided diagnosis;Industrial robots

@@ -1,0 +1,1 @@
+Attribute weighting;Diagnostic accuracy;K harmonic mean;SVM;Healthcare

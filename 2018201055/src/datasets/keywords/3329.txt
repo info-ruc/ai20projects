@@ -1,0 +1,1 @@
+State-dependent valuation;Rational behavior;Finite automaton;Computational limitations

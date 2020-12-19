@@ -1,0 +1,1 @@
+Electron magnetic resonance tomography;Image reconstruction;Filtered back projection;Artificial neural networks;Multi-core processors

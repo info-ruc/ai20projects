@@ -1,0 +1,1 @@
+GTAW welding;numerical analysis;displacement;stainless steel;closed profile

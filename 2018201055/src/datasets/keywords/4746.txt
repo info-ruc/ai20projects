@@ -1,0 +1,1 @@
+Automatic Guided Vehicle;Gait Monitoring;Foot Progression Angle;Foot Flat Phase;Image Processing

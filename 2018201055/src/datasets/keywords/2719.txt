@@ -1,0 +1,1 @@
+Convolutional neural networks;Calcaneus fracture;Computed tomography image;Residual network;Visual geometry group

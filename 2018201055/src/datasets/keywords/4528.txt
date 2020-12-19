@@ -1,0 +1,1 @@
+Sierpin´ski-like graphs;Randic´ index;Zagreb index;Sum-connectivity index;Metric dimension

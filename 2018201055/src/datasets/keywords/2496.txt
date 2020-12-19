@@ -1,0 +1,1 @@
+Parallel machine scheduling with setup times;Parallel branch-and-price algorithm;High performance computing;Master/worker parallelization

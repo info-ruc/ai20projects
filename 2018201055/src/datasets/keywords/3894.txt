@@ -1,0 +1,1 @@
+data interpretation;semantic characteristics;interpretation control;multi-model;models compatibility;multi-model visualization;visualization support tools;interactive visualization environment

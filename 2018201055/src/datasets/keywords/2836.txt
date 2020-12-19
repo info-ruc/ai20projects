@@ -1,0 +1,1 @@
+Visual tracking;Correlation filter;Gabor energy filter;Variable-Scale template;Features fusion

@@ -1,0 +1,1 @@
+Component-based nearest neighbor search;3D Euclidean minimum spanning tree;GPU parallel 3D EMST;GPU breadth first search;GPU union-find;GPU link list;Decentralized control

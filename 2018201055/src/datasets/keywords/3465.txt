@@ -1,0 +1,1 @@
+GFA;genetic function algorithm;Hbic;hydrophobic;MLR;multiple linear regression;TrkA;Tropomycin kinase A;NCI;National Cancer Institute;ROC;receiver operating characteristic;TrkA;Tyrosine kinase inhibitor;Discovery studio;QSAR;Pharmacophore;OECD;Virtual screening;Pharmacophore;Drug design;Cancer

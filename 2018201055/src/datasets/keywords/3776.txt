@@ -1,0 +1,1 @@
+Image segmentation;Stochastic Fractal Search;Entropy;Evolutionary Algorithms

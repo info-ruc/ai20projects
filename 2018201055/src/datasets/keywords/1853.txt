@@ -1,0 +1,1 @@
+Face recognition;LBP;Attendance management system;Image blending

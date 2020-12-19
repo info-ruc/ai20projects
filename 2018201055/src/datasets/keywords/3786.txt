@@ -1,0 +1,1 @@
+MRI prostate segmentation;Deep neural network;Pixel classification;Ensemble learning

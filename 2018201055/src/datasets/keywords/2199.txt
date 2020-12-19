@@ -1,0 +1,1 @@
+Coarse aggregate;Image processing techniques;ImageJ software;Flatness and elongation index;Roundness index

@@ -1,0 +1,1 @@
+D2D;Identity impersonation;Wiretapping;Free-riding;IoT;Authentication;Smart registration;Blockchain

@@ -1,0 +1,1 @@
+Precision farming;Weed detection;Co-occurence matrix;SVM;Random Forest;Radial basis function

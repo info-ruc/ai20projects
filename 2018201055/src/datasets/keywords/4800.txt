@@ -1,0 +1,1 @@
+Amazigh language;Natural Language Processing;Accuracy;XFST;Transducer;Analyser;Generator

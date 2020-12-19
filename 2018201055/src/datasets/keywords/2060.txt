@@ -1,0 +1,1 @@
+Recognition;Convolutional neural network;Recurrent neural network;Videos;Computer vision

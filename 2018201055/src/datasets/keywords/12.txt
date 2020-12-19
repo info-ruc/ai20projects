@@ -1,0 +1,1 @@
+65L06;65D25;Lie derivatives;Ordinary differential equations;Multi-derivative methods;Derivatives computation;Numerical infinitesimals;Infinity computer

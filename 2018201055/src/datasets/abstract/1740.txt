@@ -1,0 +1,1 @@
+We provide a brief survey of our current developments in the simulation-based design of novel families of mesoscale porous materials using computational kinetic theory. Prospective applications on exascale computers are also briefly discussed and commented on, with reference to two specific examples of soft mesoscale materials: microfluid crystals and bi-continuous jels.

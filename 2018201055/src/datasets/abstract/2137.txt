@@ -1,0 +1,1 @@
+In this paper we propose a mathematical and physical model of a porous substrate, evaluate influence of the pores size and quantity on the substrate’s specific surface and present experimental results of the heat leakage kinetics by the porous substrate. Performances of the porous aluminium oxide printed circuit board with the record heat conductivity of 120 W/mK are presented.

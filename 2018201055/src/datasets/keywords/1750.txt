@@ -1,0 +1,1 @@
+weighted graph;the Moore-Penrose pseudo inverse of the incidence matrix;shortest paths;the Euclidian metric;packet switching computer network

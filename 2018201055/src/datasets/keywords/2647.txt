@@ -1,0 +1,1 @@
+swarm intelligence;distribution of tasks;distribution of roles;group of robots

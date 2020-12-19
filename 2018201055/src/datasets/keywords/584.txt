@@ -1,0 +1,1 @@
+Folding;Origami folding;Cube;Polyomino with holes;Non-simple polyomino

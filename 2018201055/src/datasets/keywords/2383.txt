@@ -1,0 +1,1 @@
+Geothermal borehole fields;Groundwater flow;Hybrid numerical-semi-analytical method;Darcy-Brinkman-Forchheimer equations;Volume-averaged advection-conduction equation;Control-volume finite element method

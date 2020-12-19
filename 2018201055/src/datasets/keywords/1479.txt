@@ -1,0 +1,1 @@
+Food science;Food technology;Computer science;Adaptive neuro fuzzy inference system (ANFIS);Drying;Moisture ratio;Effective diffusivity;Activation energy;Rehydration ratio

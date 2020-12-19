@@ -1,0 +1,1 @@
+Approximate dynamic programming;State space sampling;Stopping criterion;Extrapolation

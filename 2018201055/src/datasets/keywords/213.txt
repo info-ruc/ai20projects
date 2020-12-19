@@ -1,0 +1,1 @@
+PBDEs;Dust;University dormitory;Printing shop;Daily intake;PBDEs;polybrominated diphenyl ethers;BFRs;brominated flame retardants;POPs;persistent organic pollutants;IDL;Instrumental detection limit;MDL;method detection limit;EDI;estimated daily intake;bw;body weight;RfD;oral reference dose;USEPA;United States Environmental Protection Agency;dw;dry weight

@@ -1,0 +1,1 @@
+Hand posture recognition;android;LBP;AdaBoost;HOG;Human-machine interaction

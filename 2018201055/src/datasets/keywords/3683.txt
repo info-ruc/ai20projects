@@ -1,0 +1,1 @@
+Energy constrained scheduling;Experimental performance study;Irregular speed and power levels;Time constrained scheduling

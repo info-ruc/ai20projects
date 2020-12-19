@@ -1,0 +1,1 @@
+Petri net;System documentation;Model of accounting information systems;Analytics;Simulation;Verification of system properties

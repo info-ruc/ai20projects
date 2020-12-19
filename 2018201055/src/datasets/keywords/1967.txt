@@ -1,0 +1,1 @@
+Text recognition;Optical character recognition;Handwriting recognition;CAPTCHA Solving;License plate recognition;Convolutional neural network;Deep learning

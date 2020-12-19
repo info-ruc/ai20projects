@@ -1,0 +1,1 @@
+Cavernous malformation;Computer-aided diagnosis;Skull stripping;Template matching;Principal component analysis;Support vector machine

@@ -1,0 +1,1 @@
+Brownian Motus insertion sort;Clustered Binary Insertion Sort;Insertion sort;Binary insertion sort;Sorting algorithm;Online algorithm

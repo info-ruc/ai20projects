@@ -1,0 +1,1 @@
+Magnetic resonance imaging;simulation;machine learning;supervised techniques;segmentation

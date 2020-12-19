@@ -1,0 +1,1 @@
+Tripterygium wilfordii;Mechanism-based inhibitors;CYP3A4;Pharmacophore model;Molecular docking;In vitro experiment

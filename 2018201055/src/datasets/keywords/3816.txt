@@ -1,0 +1,1 @@
+Shape classification;Randomized neural network;Contour-based analysis

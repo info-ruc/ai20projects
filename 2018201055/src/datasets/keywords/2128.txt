@@ -1,0 +1,1 @@
+Segmentation;Features;Machine learning;Ore;Sand grain;Recognition;Classification;Image processing

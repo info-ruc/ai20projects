@@ -1,0 +1,1 @@
+Illumination and pose changes;Adaptive weights;ULBP_MHOG;WSRC;Face recognition

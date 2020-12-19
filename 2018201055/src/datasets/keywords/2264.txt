@@ -1,0 +1,1 @@
+Parkinson's disease;Handwritten dynamics;Recurrent Neural Networks;Bag of samplings

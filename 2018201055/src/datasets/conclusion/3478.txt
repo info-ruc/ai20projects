@@ -1,0 +1,1 @@
+We proposed an e-infrastructure termed Medical Image Processor and Repository (MIPAR). MIPAR enables users to donate, download, and process medical images at no cost. It is our hope that such a useful and unique tool will encourage collaboration, improve diagnosis, improve patient management, and promote open science in Africa.

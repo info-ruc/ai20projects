@@ -1,0 +1,1 @@
+Flowshop;No-wait;Blocking;Multi-task flexibility;Worst-case performance ratio;Approximation algorithm

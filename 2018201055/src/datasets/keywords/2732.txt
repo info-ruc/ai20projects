@@ -1,0 +1,1 @@
+3D solitons;Gross-Pitaevskii equation;Unitary qubit lattice algorithm;nonlinear optics

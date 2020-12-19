@@ -1,0 +1,1 @@
+Skin lesion;Lesion detection;Attention gate;Deep learning;Image segmentation;Feature extraction

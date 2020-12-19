@@ -1,0 +1,1 @@
+HSPs;HANSEN solubility parameters;FFE;formulating for efficacy™;AFG;active-formulation gap;SFG;skin-formulation gap;IAG;ingredient active gap;ISG;ingredient-skin gap;Topical;Ibuprofen;Emulgel;Skin penetration enhancer;Hansen Solubility Parameters;Computer-based formulation design and optimization

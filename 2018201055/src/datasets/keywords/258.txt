@@ -1,0 +1,1 @@
+Plant disease;ML;DL;SVM;RF;SGD;Inception-v3;VGG-16;VGG-19;CA

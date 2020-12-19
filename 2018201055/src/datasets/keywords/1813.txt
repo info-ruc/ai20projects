@@ -1,0 +1,1 @@
+Ternary optical processor (TOP);Modified-signed digit (MSD);SJ-MSD adder;Reconfiguration;Mean value filtering;Multiple adder parallelism

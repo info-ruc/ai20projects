@@ -1,0 +1,1 @@
+Emphysema;Segmentation;Spatial Intuitionistic Fuzzy C-Means (SIFCM);Bio-inspired algorithm;Moth–Flame Optimization (MFO);Feature selection

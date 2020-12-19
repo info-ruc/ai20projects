@@ -1,0 +1,1 @@
+Applet;c-optimality;Equivalence theorem;Equal variance optimality;Fisher information matrix;Optimal design

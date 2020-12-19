@@ -1,0 +1,1 @@
+Fall detection;Human silhouette;Motion history image;Dynamic image;Convolutional Neural Networks;High-quality representation

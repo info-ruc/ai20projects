@@ -1,0 +1,1 @@
+This manuscript proposes applying satisfiability modulo theories to process systems engineering. We motivate our position using three test beds: (i) two-dimensional bin packing, (ii) model explainers, and (iii) mixed-integer nonlinear optimization solvers.

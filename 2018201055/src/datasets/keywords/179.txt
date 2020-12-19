@@ -1,0 +1,1 @@
+Infarct detection;Myocardial contrast echocardiography;Deep learning;Convolutional neural network;Polar system

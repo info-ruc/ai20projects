@@ -1,0 +1,1 @@
+Cattle recognition;Muzzle point image;Deep learning;Convolution Neural Network;DBN;SDAE;Verification;Computer vision;LBP;SURF;PCA;VLAD;LDA

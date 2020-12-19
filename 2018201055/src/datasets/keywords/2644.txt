@@ -1,0 +1,1 @@
+Heterogeneous computing;Accelerator;Stream operation;Direct memory access;Cooperative data transfer

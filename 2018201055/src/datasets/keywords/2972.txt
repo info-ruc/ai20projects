@@ -1,0 +1,1 @@
+Computer vision;fruit classification;bag of feature;k mean clustering;SURF descriptor;Supported vector machine

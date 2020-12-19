@@ -1,0 +1,1 @@
+Virtualized system;Mixed performance and power analysis;Migration;Resource allocation;Analytical modeling;Stochastic activity network (SANs)

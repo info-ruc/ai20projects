@@ -1,0 +1,1 @@
+Cascaded Pyramid Network (CPN);Computer vision;Construction equipment;Deep learning;Ensemble model;Keypoint estimation;Pose estimation;Safety monitoring;Stacked Hourglass Network (HG)

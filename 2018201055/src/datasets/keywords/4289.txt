@@ -1,0 +1,1 @@
+Clustering;Frequency range;Laptop;Magnetic field radiation;TCO;78A25;62H30;80M50

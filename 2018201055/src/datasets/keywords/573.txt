@@ -1,0 +1,1 @@
+Image registration;5-D vector;Photometric changes;Intensity compensation;RGB-Gradient tree

@@ -1,0 +1,1 @@
+Crowd motion;Crowd monitoring;Computer vision;Smart city;SIFT;Agent motion model;K-NN;KL-divergence

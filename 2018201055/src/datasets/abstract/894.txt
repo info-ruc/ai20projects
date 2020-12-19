@@ -1,0 +1,1 @@
+The purpose of this paper is to find an explicit formula and asymptotic estimate for the total number of sum of weighted records over set partitions of [n] in terms of Bell numbers. For that we study the generating function for the number of set partitions of [n] according to the statistic sum of weighted records.

@@ -1,0 +1,1 @@
+Brain-computer interfaces (BCI);Common spatial patterns (CSP);EEG classification;Phase synchronization;Rank-weighted phase lag index;Combined feature

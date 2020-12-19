@@ -1,0 +1,1 @@
+Computer science;Medical imaging;Knee osteoarthritis;X-ray;Femoral-tibial angle;Active shape model

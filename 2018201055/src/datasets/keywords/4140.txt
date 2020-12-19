@@ -1,0 +1,1 @@
+Bag of features;Scale Invariant Feature Transform;Modulus Maxima;Support Vector Machine

@@ -1,0 +1,1 @@
+Lamb;Body fat;Carcass analysis;Computed tomography;Semi-automated computer algorithm

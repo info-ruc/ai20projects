@@ -1,0 +1,1 @@
+Semantic segmentation;Computed tomography;Kidney tumor;62H35;68T45;62P10;62M45

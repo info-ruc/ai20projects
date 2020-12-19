@@ -1,0 +1,1 @@
+Face synthesis;Triple translation;Generative Adversarial Networks (GANs)

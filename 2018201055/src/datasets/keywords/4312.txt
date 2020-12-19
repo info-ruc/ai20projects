@@ -1,0 +1,1 @@
+ACE;affinity capillary electrophoresis;CGE;capillary gel electrophoresis;HOS;higher order (protein) structures;IDP;intrinsically disordered protein;MD;molecular dynamics;RMSD;root-mean-square-deviation;Affinity capillary electrophoresis;Intrinsically disordered proteins;AtHIRD11;Dehydrin;Molecular model

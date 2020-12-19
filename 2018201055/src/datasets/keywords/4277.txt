@@ -1,0 +1,1 @@
+Explicit parallel computing;Computer science education;Block-based programming;Visual programming;Parallel computational patterns;Pedagogical tools;Programming environments;Languages for PDC and HPC

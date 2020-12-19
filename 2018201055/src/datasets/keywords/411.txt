@@ -1,0 +1,1 @@
+Internet of Things;Wireless sensor networks;LLNs;RPL;Stable paths;Laplacian energy

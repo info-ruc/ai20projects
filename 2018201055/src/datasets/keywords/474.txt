@@ -1,0 +1,1 @@
+Gene expression;Feature selection;Microarray;Cancer classification;Moth Flame Algorithm;Mutual information maximization;Bio-inspired algorithms;Bioinformatics;Optimization algorithms;Evolutionary algorithm;Molecular biology;Swarm intelligence

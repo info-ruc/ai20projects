@@ -1,0 +1,1 @@
+No-reference (NR);Super-resolution (SR) image quality assessment (SRIQA);Stacking regression

@@ -1,0 +1,1 @@
+two-phase piezocomposite;porous piezoceramics;effective moduli;representative volume;finite element software

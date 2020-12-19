@@ -1,0 +1,1 @@
+3D;Computational model;Hyper-realistic visualization;Footwear model generation;OpenGL/WebGL;PBR;Physically based rendering

@@ -1,0 +1,1 @@
+change detection;foreground segmentation;texture features

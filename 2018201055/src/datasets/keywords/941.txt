@@ -1,0 +1,1 @@
+Wireless sensor networks;Routing protocols;Mobility;IoT;Energy

@@ -1,0 +1,1 @@
+Visual Place Classification;Convolutional Neural Networks;Deep Learning;Dataset Collection

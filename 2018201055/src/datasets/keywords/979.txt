@@ -1,0 +1,1 @@
+Simulation;Emergency evacuation;Multiple exits;Simulated annealing (SA);Depth-first search (DFS),

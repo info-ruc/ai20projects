@@ -1,0 +1,5 @@
+Context:Modern software development demands high levels of technical specialization. These conditions make IT companies focus on creating cross-functional teams, such as frontend, backend, and mobile developers. In this context, the success of software projects is highly influenced by the expertise of these teams in each field.
+Objective:In this paper, we investigate machine-learning based approaches to automatically identify the technical roles of open source developers.
+Method:For this, we first build a ground truth with 2284 developers labeled in six different roles: backend, frontend, full-stack, mobile, devops, and data science. Then, we build three different machine-learning models used to identify these roles.
+Results:These models presented competitive results for precision (0.88) and AUC (0.89) when identifying all six roles. Moreover, our results show that programming-languages are the most relevant features to predict the investigated roles.
+Conclusion:The approach proposed in this paper can assist companies during their hiring process, such as by recommending developers with the expertise required by job positions.

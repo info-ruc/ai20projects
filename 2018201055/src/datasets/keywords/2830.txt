@@ -1,0 +1,1 @@
+Texture similarity;Texture synthesis;Visual perception;Digital material appearance

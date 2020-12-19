@@ -1,0 +1,1 @@
+Semi-supervised learning;self-labeled algorithms;ensemble learning;majority voting;image classification

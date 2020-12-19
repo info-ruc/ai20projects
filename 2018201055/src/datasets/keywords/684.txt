@@ -1,0 +1,1 @@
+CNN;LSTM;Uncertainty;Aleatoric uncertainty;Epistemic uncertainty vision and language;Visual dialog;VQA;Answer generation;Question generation;Bayesian deep learning

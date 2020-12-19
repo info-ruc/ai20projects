@@ -1,0 +1,1 @@
+Network;Bipartite graph;Subgraph;(g, f)-factor;r-orthogonal factorization;05C70

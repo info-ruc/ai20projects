@@ -1,0 +1,1 @@
+Neutrosophic;Graphical user interface;Computer aided detection;Speckle reduction;Image segmentation

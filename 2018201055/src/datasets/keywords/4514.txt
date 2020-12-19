@@ -1,0 +1,1 @@
+Sense;avoid;Computer vision;Multi-camera;Collision decision

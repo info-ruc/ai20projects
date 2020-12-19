@@ -1,0 +1,12 @@
+High-performance computing (HPC) is gaining an ever-increasing value in scientific, industrial, healthcare and security-related applications [[2], [10]]. HPC integration into mathematical modeling, numerical methods and methods for processing high-volume observation results have created the basis for addressing many complex problems that, until recently, have been unsolvable, and has contributed to the emergence of new technologies in science and industry.
+The scientific basis of high-performance computing is represented by computational sciences. Today, the training of specialists who are capable of tackling challenging scientific and technical issues using existing and future high-end systems is a crucial task. The demand for education in the area of computational sciences, high-performance computing and mathematical modeling using supercomputers is recognized by the entire global educational community, as well as by leading specialists in many areas of science and industry [[21], [5], [7], [11], [26]]. Achieving exascale level in the development of supercomputer technologies stimulates the need for developing new mathematical models, numerical methods and algorithms, as well as software instrumental systems and tools for parallel programming, which in turn determines new requirements for teaching specialists in the area of mathematical modeling using HPC systems.
+We can mention a number of large international projects aimed at developing this area of education, which offer recommendations on educational materials and provide examples of training courses. These projects include the following:
+
+
+
+•
+the Russian Supercomputing Education national project[[22], [25]],
+•
+activities related to developing a computer science curricula (Computer Science 2013) by the ACM and IEEE-CS international communities [6],
+•
+The Curriculum Initiative on Parallel and Distributed Computing project, supported by NSF/IEEE-TCPP [18].

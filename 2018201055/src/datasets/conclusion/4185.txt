@@ -1,0 +1,4 @@
+We proposed a new hybrid method to augment the performance of neural network. The method was tested on some heart disease datasets so as to check any improvement in its performance. The method put forth can ameliorate the performance of neural network as concerns CAD detection. Specifically, using this method, CAD can be detected without angiography which can help eliminate high costs and major side effects.
+In addition to genetic algorithm, there exist many powerful evolutionary and swarm intelligence methods such as evolution strategy and particle swarm optimization. As the future works, we can use these methods instead of genetic algorithm as they may enhance the performance of our proposed method.
+Meanwhile, other versions of neural networks can be tested and compared. Parameters like learning rate, and momentum factor can also be optimized for this work.
+Finally, new data with some other features must be checked by this algorithm.

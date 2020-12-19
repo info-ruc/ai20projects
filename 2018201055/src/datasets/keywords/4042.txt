@@ -1,0 +1,1 @@
+Ultrasound image;Liver cancer diagnosis;Computer aided diagnositic system;Segmentation;Artificial intelligence

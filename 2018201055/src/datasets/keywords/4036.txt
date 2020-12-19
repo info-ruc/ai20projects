@@ -1,0 +1,1 @@
+Human reliability;Quantity of components;Quick convergence search method;Affinity error probability mapping function

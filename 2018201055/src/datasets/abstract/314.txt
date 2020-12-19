@@ -1,0 +1,1 @@
+A constructive method for decomposing finite dimensional representations of semisimple real Lie algebras is developed. The method is illustrated by an example. We also discuss an implementation of the algorithm in the language of the computer algebra system GAP4.

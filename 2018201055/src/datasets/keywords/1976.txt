@@ -1,0 +1,1 @@
+PMI;Interoperability;Conformance checking;Ontology;SROIQ(D)

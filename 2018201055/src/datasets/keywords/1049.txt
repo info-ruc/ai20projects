@@ -1,0 +1,1 @@
+Quality estimation;Milling machined parts;Haralick descriptors;Wear detection

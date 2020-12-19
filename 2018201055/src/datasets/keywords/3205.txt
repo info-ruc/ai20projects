@@ -1,0 +1,1 @@
+Electroencephalogram (EEG);Event-related desynchronization (ERD);Short-latency intracortical inhibition (SICI);Sensorimotor rhythm (SMR);State-dependent;Transcranial magnetic stimulation (TMS)

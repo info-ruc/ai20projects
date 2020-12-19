@@ -1,0 +1,1 @@
+Convolutional neural networks;Deep learning;FFT convolution;Dynamic scheduling;Multi-core algorithms;Wait-free summation

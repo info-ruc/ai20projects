@@ -1,0 +1,1 @@
+Machine learning;Artificial neural network;K nearest neighbour;Naive Bayes classifier;Support vector machine;Parking system

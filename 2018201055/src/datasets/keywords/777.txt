@@ -1,0 +1,1 @@
+Spatial databases;Voronoi diagram;Dominated points;Line-sweep algorithm

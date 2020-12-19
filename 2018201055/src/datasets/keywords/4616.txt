@@ -1,0 +1,1 @@
+Diversity regularizations;Soft orthogonality;Learning to match;Multimodal retrieval;Representation learning;Approximate nearest neighbors

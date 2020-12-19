@@ -1,0 +1,1 @@
+Optical path;Modified signed-digit;Truth table;Converter

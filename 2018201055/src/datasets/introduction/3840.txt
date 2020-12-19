@@ -1,0 +1,40 @@
+Recent years have witnessed the emergence of modern non-volatile memory (NVM) technologies, such as phase change memory (PCM) [41], spin transfer torque RAM (STT-RAM) [39], resistive RAM (ReRAM) [44] and the newly reported Intel and Micron’s 3D XPoint [12]. A recent study [19] shows that the advent of byte-addressable NVM makes itself easily memory-attached and enable applications to use NVM as a replacement for the conventional disk-based storage. This inspires the evolution of NVM-based in-memory file systems that are able to break the bottlenecks of the traditional block I/O-based architecture.
+A number of file systems have been developed to leverage the advantages of NVM, such as byte-addressability, memory-like speed and disk-like persistency. Examples include PMFS [8], NOVA [43], BPFS [5], SCMFS [42] and HiNFS [26]. All these file systems use NVM as the persistent storage and assume that both DRAM and NVM can be accessed directly via the memory controller. Table 1 summarizes the features of existing state-of-the-art NVM-aware file systems. The distinguishing features across all the file systems are:
+
+• Inode Structure: Linear Structure vs. B-Tree Structure
+
+• Update mechanism: Log-Structured vs. Copy-On-Write (COW) vs. eXecute-In-Place (XIP)
+
+• Mmap supporting: Yes vs. No
+
+• Wear leveling: Weak vs. Strong
+
+• Consistency level: Meta data level vs. Data level vs. Version level.
+PMFS [[8], [21]] is a lightweight POSIX file system that has been explicitly designed for NVM. It uses a B-Tree structure for inode index table and updates the meta data and data both in the XIP mechanism. It supports the mmap interface which maps the file data directly into the application’s virtual address space. It uses the fine-grained journaling technology to log the meta data changes and have no consistency guarantee to the file data.
+NOVA [43] is a log-structured NVM-aware file system, it mains a linear structured inode table for meta data updates and performs COW mechanism to the file data. It develops an atomic-mmap mechanism to perform the load/store access to NVM with a high-level consistency. It uses log-structured updating mechanism to meta data and the COW mechanism to file data, with a moderate consideration of NVM wear-leveling problem, and it achieves the consistency level to the data consistency.
+BPFS [[5], [21]] is an NVM-aware file system working in the user space. It adopts a B-tree structure to organize the inode entry and performs COW updating mechanism to both meta data and data. It achieved the data consistency level and has no special consideration to the wear-leveling problem of NVM.
+SCMFS [[42], [21]] is a lightweight file system designed for NVM, it utilizes the operating system virtual memory management module and maps files to large contiguous virtual address regions, making file accesses simple and fast. It adopts the XIP updating mechanism to file data and always using the mmap interface to access a file, but it lacks the mechanism for consistency guarantee of meta data or data and have no consideration for NVM wear-leveling.
+HiNFS [26] is a write-optimized file system for NVM. HiNFS divides the write operations into two types: lazy-persistent writes and eager-persistent writes. HiNFS uses a NVM-aware write buffer policy to buffer the lazy-persistent file writes in DRAM and persists them to NVM lazily to hide the long write latency of NVM. HiNFS performs direct access to NVM for eager persistent file writes, and directly reads file data from both DRAM and NVM as they have similar read performance, in order to eliminate the double-copy overheads from the critical path.
+Although these existing file systems achieve higher performance than conventional disk-based file systems, they fail to exploit several important features of NVM.
+
+• Most of these file systems use NVM in the same way as DRAM, and hence the performance is compromised by the asymmetric read write speeds, i.e., random write is typically slower than random read [[21], [46]].
+
+• The management of DRAM relies on the Virtual Memory Management (VMM) from the operation system without providing a unified management mechanism for the two memory devices. This causes extra page tabling overhead and costly interactions between the file system and memory management in Linux kernel space [42].
+
+• Data in NVM is updated with in-place writes without considering the limited lifetime of NVM. This makes the file systems suffer from the severe wear-out problem [21].
+
+• All these file systems only provide meta data or data consistency at a low consistency level. However, many real-life applications require file systems to provide high-level version consistency. For example, in distributed in-memory computing, many tasks will produce a large number of intermediate results corresponding to different versions [16], and use a underlying file system with multi-version supporting can significantly simplify the task processing. Version consistency supported by the underlying file systems allows users to recover from arbitrary mistakes or system crash by simply retrieving a previous version of data, this feature enhances the reliability and robustness of the file system. Moreover, the storage needs of the user in modern big data era has shifted from the basic data storage requirements to requiring rich interfaces which enables the efficient query of versions, snapshots and creation of file clones [40]. Although there are several file systems designed for HDD or SSD which support versioning and snapshotting, such as Nilfs [14], Btrfs [30] and ZFS [45], now it still lacks a NVM-optimized file system which support multi-versioning. So as a attractive feature of file system, exploring multi-versioning mechanism and guaranteeing version consistency in an NVM-optimized file system is meaningful and worthwhile.
+Comparing to the state-of-the-art NVM-aware file systems which are listed in Table 1, such as PMFS and NOVA, we choose some design choices in HMFS. Fig. 1 shows the system architecture of HMFS, from the system architecture overview we can confirm the following main design choices of HMFS.Table 1. Comparison of some state-of-the-art NVM-optimized file systems.
+
+
+
+
+
+•
+First, it adopts a DRAM–NVM hybrid memory architecture where NVM is attached to the memory bus and allows byte-addressable accessing as DRAM. In HMFS, DRAM and NVM share a unified address space.
+•
+Second, it adopts the log-structured update mechanism to NVM which is considered be beneficial for the wear-leveling problem of NVM.
+•
+Third, it proposes a novel multi-version mechanism which helps HMFS achieves the highest version consistency level of a file system.
+•
+Lastly, HMFS provides an atomic mmap mechanism which can perform load/store operations to NVM directly via the mmap system call, and achieves stronger data consistency than the traditional XIP-based memory map mechanism.

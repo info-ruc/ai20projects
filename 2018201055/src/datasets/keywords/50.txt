@@ -1,0 +1,1 @@
+Buildup factor;Radiation shielding;Effective atomic number;Mass attenuation coefficient;Computer code;Py-MLBUF

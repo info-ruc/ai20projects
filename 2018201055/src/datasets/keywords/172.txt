@@ -1,0 +1,1 @@
+Discrete geodesics;Parallel computing;Vertex-oriented triangle propagation (VTP);Accuracy & speed control

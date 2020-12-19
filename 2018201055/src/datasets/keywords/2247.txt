@@ -1,0 +1,1 @@
+OSCAR code;Decommissioning;WWER-440 reactor;Primary circuit;Surface contamination;Scaling factors

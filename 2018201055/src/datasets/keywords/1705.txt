@@ -1,0 +1,1 @@
+Active learning;Self-paced learning;Image classification;CNN

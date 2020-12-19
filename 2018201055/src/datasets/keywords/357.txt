@@ -1,0 +1,1 @@
+GA-based CH selection;PSO-based sink mobility;Wireless sensor network;Clustering;Energy consumption rate (ECR);Sink mobility

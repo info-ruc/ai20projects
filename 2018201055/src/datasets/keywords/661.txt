@@ -1,0 +1,1 @@
+Radial basis function networks;Pruning;Interpretability;Materials physics

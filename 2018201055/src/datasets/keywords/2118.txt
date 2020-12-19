@@ -1,0 +1,1 @@
+Eyestrain;Musculoskeletal;Lighting;Illuminance;Glare;Flicker;VERAM;Visual Ergonomics Risk Assessment Method

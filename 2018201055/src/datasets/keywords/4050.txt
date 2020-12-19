@@ -1,0 +1,1 @@
+Cognitive;brain computer interface;electroenceplalogram (EEG);eye blink;emotiv unit;event related potential;neural;control;arduino

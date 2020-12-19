@@ -1,0 +1,1 @@
+electroencephalogram;brain-computer interface;feature selection;classification;committee;greedy algorithm

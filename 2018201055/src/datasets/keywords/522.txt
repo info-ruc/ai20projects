@@ -1,0 +1,1 @@
+Supervised dimensionality reduction;Local structured feature learning;ℓ0-Norm constraint optimization;Dynamic maximum entropy graph

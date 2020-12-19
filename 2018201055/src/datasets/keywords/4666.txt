@@ -1,0 +1,1 @@
+Multiple-valued reversible logic;Ternary logic;Ternary reversible subtractor circuits;Ternary quantum computers

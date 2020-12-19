@@ -1,0 +1,1 @@
+Computer science;Engineering;Cardiology;Medical imaging;Biomedical engineering;Radiology;Clinical research;Contour segmentation;Topographic watershed segmentation;Short-axis 5D cardiac sequences;MRI;Medical decision making

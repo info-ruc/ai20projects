@@ -1,0 +1,1 @@
+Rehabilitation;Stroke;6MWT;6-minute walk test;ADL;activities of daily living;CIQ;Community Integration Questionnaire;EQ-5D;EuroQoL-5D questionnaire;IPAQ;International Physical Activity Questionnaires;MMSE;Mini-Mental State Examination;MoCA;Montreal Cognitive Assessment;SEQ;sequential training

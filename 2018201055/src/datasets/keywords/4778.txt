@@ -1,0 +1,1 @@
+Robot manipulator;Forward Kinematics;Inverse Kinematics;Denavit-Hartenberg method;MATLAB;Brain-Computer Interface

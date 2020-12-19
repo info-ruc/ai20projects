@@ -1,0 +1,1 @@
+Rough set;Generalized approximation space;Bisimulation;Bisimilarity;Labeled transition system

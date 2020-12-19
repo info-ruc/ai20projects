@@ -1,0 +1,1 @@
+Programmable neural networks;Local learning;Itinerant attractor dynamics;Multiplicative gating;Symbolic processing

@@ -1,0 +1,1 @@
+Image set classification;Face recognition;Linear subspace;Nonlinear manifold;Affine hull

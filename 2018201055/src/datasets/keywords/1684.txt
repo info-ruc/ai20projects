@@ -1,0 +1,1 @@
+machine learning;deep learning;KDD Cup 1999 data set;NSL-KDD data set;Support Vector Machine;Random Forest;XGBoost;Neuralnet;Keras;anomaly-based network intrusion detection;network security

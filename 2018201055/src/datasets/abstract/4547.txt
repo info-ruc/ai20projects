@@ -1,0 +1,1 @@
+We construct new finite dimensional submanifolds in the solution space of nonlinear differential filtration equations and describe the corresponding evolutionary dynamics. This method is implemented in a computer program of symbolic computations Maple.

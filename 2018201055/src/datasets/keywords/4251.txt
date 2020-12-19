@@ -1,0 +1,1 @@
+Adjacency;Algorithm;Architectural design;Arrangement;Rectangles

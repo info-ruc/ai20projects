@@ -1,0 +1,1 @@
+Salient object;Objectness;Graph model;Manifold ranking;Multiple cues

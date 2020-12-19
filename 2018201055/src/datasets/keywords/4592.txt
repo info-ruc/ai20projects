@@ -1,0 +1,1 @@
+Emergency collision;dynamic loading;train;obstacle;computer modelling

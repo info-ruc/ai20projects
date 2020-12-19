@@ -1,0 +1,1 @@
+Explanation;Metrics;Semantic property;Scene graph generation;Deep neural network;00-01;99-00

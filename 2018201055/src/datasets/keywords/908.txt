@@ -1,0 +1,1 @@
+Mobile phone images;Image color and texture features;Cubist;Random forest;Gaussian process regression;Soil characterization;Computer vision

@@ -1,0 +1,1 @@
+05C50;05C85;15A18;Distance spectrum;Threshold graphs;Distinct eigenvalues;Equitable partition

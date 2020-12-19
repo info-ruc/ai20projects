@@ -1,0 +1,1 @@
+Electrocardiogram (ECG);Domain knowledge;Decision rule;Morphological filtering;Motion artifact;QRS detection

@@ -1,0 +1,1 @@
+Atom-bond connectivity index;Geometric-arithmetic index;Sierpinski network

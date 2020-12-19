@@ -1,0 +1,1 @@
+Fuzzy systems;Genetic algorithms;Optimization methods;Breast cancer;Computer-aided diagnosis;68T01;68T20;03B52;65Y10

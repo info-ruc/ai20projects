@@ -1,0 +1,1 @@
+Recombination fluorescence;Spin-correlated radical pair;Spin-lattice relaxation;Local ionization density;Stochastic computer simulation

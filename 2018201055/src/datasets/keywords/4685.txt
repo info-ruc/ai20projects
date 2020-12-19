@@ -1,0 +1,1 @@
+Computer tomography;Gamma regularization;TV regularization;l2-norm

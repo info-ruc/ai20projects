@@ -1,0 +1,1 @@
+HSA;DNA;Molecular dynamic simulation;Interatomic interaction;Diffusion coefficient

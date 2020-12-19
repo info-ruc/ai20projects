@@ -1,0 +1,1 @@
+Machine learning;Suspicious pigmented lesions;Computer-aided classification;Melanoma;Wide-field images

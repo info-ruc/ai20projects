@@ -1,0 +1,1 @@
+Sequent calculus;cut-elimination;formalized proof;linear logic;Abella

@@ -1,0 +1,1 @@
+We provide a uniformly efficient and simple random variate generator for the truncated negative gamma distribution restricted to any interval.

@@ -1,0 +1,1 @@
+Hydrogen bond;Liquid crystal;Diethylene glycol monomethyl ether (DEGME);Urethane compounds;Calamitic mesogen;DFT;MD;Order parameter

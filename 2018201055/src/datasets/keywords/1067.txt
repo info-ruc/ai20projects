@@ -1,0 +1,1 @@
+Computer science;Dynamic gesture recognition models;Machine learning;Arabic sign language;Classification

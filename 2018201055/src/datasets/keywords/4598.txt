@@ -1,0 +1,1 @@
+Parallel computing;Community structure;Link prediction;Bulk synchronous parallel;Social networks

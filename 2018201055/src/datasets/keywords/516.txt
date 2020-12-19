@@ -1,0 +1,1 @@
+Routing protocols;Load balancing;IoT networks;Sensor devices;Network lifetime;DHSSRP routing protocol

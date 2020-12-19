@@ -1,0 +1,1 @@
+Functions of a complex variable;Coefficient conjecture;Gaussian hypergeometric function

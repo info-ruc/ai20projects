@@ -1,0 +1,1 @@
+Biometric;Palmprint recognition;Support vector machine;Deep convolutional neural networks;MobileNets model

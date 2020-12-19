@@ -1,0 +1,1 @@
+11D79;11P83;11L03;11A25;42A16;Restricted linear congruence;Ramanujan sum;Discrete Fourier transform

@@ -1,0 +1,3 @@
+In this study, a novelty texture algorithm based on fractal properties and second order statistics was proposed and validated. This algorithm, OPFTA, was compared with other six image analysis algorithms, and its applicability was showed in a real application, to predict physico-chemical and sensory attributes of loins.
+In addition, the high values of the correlation coefficients showed the goodness and the suitability of OPFTA to be used with a high degree of accuracy.
+Therefore, the use of OPFTA as image analysis algorithm joined to MRI and predictive techniques could be a suitable tool for meat industries to characterize their products in a non-destructive way.

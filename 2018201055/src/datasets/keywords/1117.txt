@@ -1,0 +1,1 @@
+65H05;65D18;68W40;33F05;Solving polynomial equations;Comparison of root-finding methods;CPU-time empirical model;Computer graphics;Convergence behavior

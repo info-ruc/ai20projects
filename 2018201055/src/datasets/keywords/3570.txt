@@ -1,0 +1,1 @@
+Human detection;Color correlogram;Shadow region;Partial occlusion;Histogram of Oriented Gradients (HOG)

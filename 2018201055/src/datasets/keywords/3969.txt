@@ -1,0 +1,1 @@
+00-01;99-00;Camera model identification;Image forensics;Convolutional neural networks (CNNs);Local binary patterns (LBP)

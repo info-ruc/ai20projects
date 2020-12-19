@@ -1,0 +1,1 @@
+Raspberry Pi;Edge computing;Networks cloud computing;Centralization/decentralization;Distributed computing methodologies;Multicore architectures;Emerging architectures

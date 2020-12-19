@@ -1,0 +1,1 @@
+Wireless body area network (WBAN);Authentication;Channel characteristic;Zero knowledge proof (ZKP)

@@ -1,0 +1,1 @@
+State machine replication;Shared memory;Container;Kubernetes;Docker;00-01;99-00

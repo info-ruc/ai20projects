@@ -1,0 +1,1 @@
+Electroencephalogram;Motor imagery;Brain computer interface;Sparse representation;Sparsity-based classification

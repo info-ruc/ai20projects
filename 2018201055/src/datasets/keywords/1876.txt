@@ -1,0 +1,1 @@
+Salient object detection;Lightweight model;Deep learning;Adversarial training;Multi-scale feature;00-01;99-00

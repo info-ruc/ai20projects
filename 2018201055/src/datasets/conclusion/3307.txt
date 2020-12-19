@@ -1,0 +1,5 @@
+It was shown that non-Schmid behavior of screw dislocation can be observed in atomistic models of hcp Mg. The effect appears as dependence of critical resolve shear stresses on non-glide component of applied stress.
+The breaking of Schmid law is demonstrated for basal and prismatic slip systems.
+The main contribution to the non-Schmid behavior is produced by changes of dislocation core width in the glide plane.
+The maximal observed changes of CRSS are the 80% change for basal plane glide and the 38% change for prismatic plane glide. These values were observed under non-glide stress of approximately 60 MPa. This value is considered as reasonable value of possible internal stress before pyramidal slip activation.
+The non-Schmid behavior of described type can be partially responsible for scattering of experimental data for yield stress in magnesium.

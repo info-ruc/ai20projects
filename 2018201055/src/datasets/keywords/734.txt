@@ -1,0 +1,1 @@
+Stochastic chemostat model;Ornstein-Uhlenbeck process;Monod-Haldane response function;Extinction exponentially;Persistence in the mean

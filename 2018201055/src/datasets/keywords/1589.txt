@@ -1,0 +1,1 @@
+accelerated processing unit;computationally intensive workloads;ray tracing;CPU;GPU;acceleration

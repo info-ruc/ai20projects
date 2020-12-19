@@ -1,0 +1,1 @@
+In this paper, we consider some special resource-constrained scheduling problems, which occur e.g. in production or in computer science. We consider the minimization of the makespan as well as total tardiness. Some complexity and approximability results are given as well as relationships to other scheduling problems.

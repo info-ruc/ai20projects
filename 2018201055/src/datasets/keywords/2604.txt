@@ -1,0 +1,1 @@
+Hand gesture recognition;Key frames extraction;Feature fusion;Fast;Robust

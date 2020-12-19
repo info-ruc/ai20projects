@@ -1,0 +1,1 @@
+Deep metric learning;Triplet loss;Deep learning;Capsule endoscopy;Polyp detection

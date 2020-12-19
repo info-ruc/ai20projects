@@ -1,0 +1,4 @@
+This paper reports on the development of a visual fiducial tag based in OT. As main results we show that Order Type Tags:
+
+•Are very robust to rotation, tilt and perspective transformations.•They avoid the homography estimation that is a crucial step in the existing visual tags.•Allow to generate up 3472 different tags but the number can be doubled with small considerations in the OTT structure.
+As future work we aim to enhance the OTT point estimation phase to make it robust to occlusions and we also aim to develop an optimized OT database that maximizes MP for the results in Table 7.

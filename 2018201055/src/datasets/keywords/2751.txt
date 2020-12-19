@@ -1,0 +1,1 @@
+Rolling stock;Lubrication;Rolling surfaces of the rail;Side surface of the rail;Friction modifier

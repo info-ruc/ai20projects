@@ -1,0 +1,1 @@
+Object detection;High-order statistics;Polynomial kernel;Matrix power normalization

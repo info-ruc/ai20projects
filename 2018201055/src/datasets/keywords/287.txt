@@ -1,0 +1,1 @@
+k-vertex cardinality constraints;Graph databases;Property graph data model;Procedures;Business rules;Graph schema

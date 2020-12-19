@@ -1,0 +1,1 @@
+ME-NBI;Precancerous lesions;Early gastric cancer;Segmentation;Hue-texture-embedded region-based active contour model

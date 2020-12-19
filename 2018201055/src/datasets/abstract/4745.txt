@@ -1,0 +1,24 @@
+This paper presents a version of simulation program, which facilitates the calculation of changes to the intensity of RHEED oscillations in the function of the glancing angle of incidence of the electron beam, employing various models of scattering crystal potential for heteroepitaxial structure of hexagonal (0001) GaN film nucleated on a 3C-SiC surface, including the possible existence of various diffuse scattering models through the layer parallel to the surface.
+Title of program: RHEED_DIFF_Z
+Program Files doi: http://dx.doi.org/10.17632/52nxmwzkxx.1
+
+Licensing provisions: GNU General Public License 3
+Programming language used: C++
+Journal reference of previous version: Computer Physics Communications 207 (2016) 536–538
+Does the new version supersede the previous version?: No. It is a supplement to the previous version.
+Reasons for new version:
+Responding to users’ feedback we present a practical procedure of construction of simulation program, which facilitates the calculation of changes to the intensity of RHEED rocking curves, employing various models of scattering crystal potential for heteroepitaxial structure of hexagonal (0001) GaN film nucleated on a 3C-SiC(111) surface.
+Nature of problem:
+Growth of GaN layers on SiC is of importance for potential electronic device applications.
+Silicon carbide crystallizes in numerous different modifications, so-called polytypes [1]. Among them, only hexagonal structure 4H-SiC and 6H-SiC have been thoroughly investigated while the cubic 3C-SiC polytype is lagging behind in technological developments. The 3C-SiC has a Zincblende crystal structure and is characterized by an identical orientation of all bilayers in the crystal, where the atomic geometry is repeated every three bilayers along the c-axis this crystal structure (Fig. 1). For this reason, 3C-SiC has the high electron mobility and saturation velocity by reducing phonon scattering resulting from the high symmetry. The lattice mismatch between GaN(0001) and 3C-SiC(111) is about 3.3%, and is smaller than the mismatch between GaN(0001) and Si(111) [2]. Therefore progress in investigations on crystal growth of GaN on 3C-SiC is a key issue for device developments related to this heterostructure. Researchers and technologists manufacturing two-dimensional heterostructures frequently use RHEED rocking curves to control growth of samples at the atomistic level of accuracy. The fundamental scientific problem in such research is to specify both interface type and growth mechanism for subsequent layers.
+Method of solution:
+RHEED intensities are calculated within the general framework described in Refs. [2] and [3].
+Summary of revisions:
+The presented version of the program implements an original algorithm of self-consistent calculations for scattering potentials GaN(0001)/3C-SiC(111) and solving a time-independent Schrödinger equation for high-energy electrons.
+During the numerical calculations of the changes in the intensity of the specular beam in the function of the glancing angle, it was assumed that the azimuth of the incident beam direction corresponds to the one-beam condition, the electron energy equals 10 keV, the glancing angle was increased from 0.5∘ to 6.5∘, and the value of αparameter=0.1 and β=0.5 for the MODEL3 of the scattering potential [3] with the model of ideal SiC/GaN interface [4].
+References [1]G. R. Fisher and P. Barnes, Phil. Mag. B 61(2) (1990) 217-236.[2]A. Daniluk, Comput. Phys. Commun. 207 (2016) 536-538.[3]A. Daniluk, Comput. Phys. Commun. 185 (2014) 3001-3009.[4]H. Morkoç, Handbook of Nitride Semiconductors and Devices, Vol. 1: Materials Properties, Physics and Growth, Wiley VCH 2008.
+
+G. R. Fisher and P. Barnes, Phil. Mag. B 61(2) (1990) 217-236.
+A. Daniluk, Comput. Phys. Commun. 207 (2016) 536-538.
+A. Daniluk, Comput. Phys. Commun. 185 (2014) 3001-3009.
+H. Morkoç, Handbook of Nitride Semiconductors and Devices, Vol. 1: Materials Properties, Physics and Growth, Wiley VCH 2008.

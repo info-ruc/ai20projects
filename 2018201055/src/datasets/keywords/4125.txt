@@ -1,0 +1,1 @@
+organic Rankine cycle;ORC;computer-aided molecular-design;CAMD;group contribution;SAFT-γ Mie;technoeconomic optimisation

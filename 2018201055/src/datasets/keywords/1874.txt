@@ -1,0 +1,1 @@
+Nonlinear active noise control (NANC);function expansion bilinear filter;BIBO stable;3D diagonal structure

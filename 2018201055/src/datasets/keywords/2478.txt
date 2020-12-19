@@ -1,0 +1,1 @@
+Large-scale analysis;Soil liquefaction;Parallel computation;Earthquake;Finite element method

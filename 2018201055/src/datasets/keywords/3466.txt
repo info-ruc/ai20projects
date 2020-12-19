@@ -1,0 +1,1 @@
+Handwritten Recognition;Pattern Recognition;Document Image Analysis;Machine Learning;Computer Vision

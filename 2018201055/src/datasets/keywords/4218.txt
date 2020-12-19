@@ -1,0 +1,1 @@
+Computer-generated agents;Deception;Response time;Response duration;Social dominance

@@ -1,0 +1,1 @@
+Gröbner bases;Standard bases;Euclidean domains;Algorithms

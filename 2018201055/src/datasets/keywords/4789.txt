@@ -1,0 +1,1 @@
+Classification;Citrus plants disease;Delta E;Feature extraction;Histogram;Segmentation

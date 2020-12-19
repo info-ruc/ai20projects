@@ -1,0 +1,8 @@
+In this paper, we have proposed a crowd management system for monitoring the crowd of the smart city. Agent motion-based learning model is applied for discriminatory features extraction of crowd motions of every individual from the crowd trajectories. An extended Kalman-filter based technique [17] and a KL-divergence based approach [18], [19] are used to evaluate the discrimination of the individual feature and the holistic features of crowd scenes. The extended Kalman-filter based approach mitigates the noises and provides the smoothed feature sets. We achieve the precision rate of 96.20% for the monitoring of crowd. Own experimental results show that the proposed crowd management system performs well in recognizing the individuals from the real world crowd scene. The shortcomings of this work are discussed below. We plan to address these issues in our future work.
+
+
+
+•
+The proposed crowd management system is limited for the massive trajectory of several crowd motion inputs. It is a major issue to correlate between any crowd videos automatically. Manual estimations are required for perspective transformation, and in this case, we cannot entirely rely on multi-target tracking.
+•
+The proposed system can be speeded if we use parallel programming paradigm. Even it can be implemented for some real-time application like visual camera surveillance. Finally, we plan to apply the deep learning based framework for crowd management and crowd tracking.

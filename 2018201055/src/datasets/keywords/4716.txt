@@ -1,0 +1,1 @@
+Inverse Langevin function;Best approximation;Padé approximation;Taylor expansion;FENE Model;Mathematica computer software

@@ -1,0 +1,1 @@
+Sports Activity Recognition;Object Detection;Deep Learinng;Classification;TensorFlow;Inception-v3;Transfer Learning;Computer Vision;Convolutional neural network

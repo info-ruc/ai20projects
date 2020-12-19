@@ -1,0 +1,1 @@
+RMG;Reaction Mechanism Generator;RPD;reaction path degeneracy;DRG;directed relation graph with error propagation;PSIA;position-specific isotope analysis;KIE;kinetic isotope effect;Kinetic isotope effect;Symmetry;Degeneracy;Isotopologue;Enrichment;Automated mechanism generation

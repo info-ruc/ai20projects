@@ -1,0 +1,1 @@
+Sentiment analysis;Interactive dynamics;Human conversation;LSTM network

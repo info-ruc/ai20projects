@@ -1,0 +1,1 @@
+Atrial Fibrillation;Supervised Contractive map;Computer Aided Diagnosis;Artificial Adaptive System;Artificial Neural Network

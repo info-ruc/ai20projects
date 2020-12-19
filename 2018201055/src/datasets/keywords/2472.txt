@@ -1,0 +1,1 @@
+Adoptive T cell transfer (ACT);Complementarity-determining region 3 (CDR3);Cytometry by time of flight (CyTOF);Human leukocyte antigen (HLA);Major histocompatibility complex (MHC);Next-generation sequencing (NGS);T cell receptor (TCR);t-distributed stochastic neighbor embedding (tSNE) algorithm;Tumor infiltrating lymphocytes (TILs)

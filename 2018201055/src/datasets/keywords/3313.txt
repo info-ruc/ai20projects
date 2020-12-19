@@ -1,0 +1,1 @@
+SAXS;intrinsically disordered protein;hydration shell;molecular dynamics;conformational ensemble;SAXS;small-angle X-ray scattering;IDPs;intrinsically disordered proteins;MD;molecular dynamics;HEWL;hen egg-white lysozyme;RDFs;radial distribution functions;IFT;indirect Fourier transformation

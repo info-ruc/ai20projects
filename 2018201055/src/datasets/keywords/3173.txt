@@ -1,0 +1,1 @@
+EMG;Motor unit potentials;Muscle biopsy;Neuromuscular disorders;Simulation method

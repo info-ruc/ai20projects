@@ -1,0 +1,1 @@
+Obesity;Thermal imaging;Convolution neural network;Computer aided diagnosis

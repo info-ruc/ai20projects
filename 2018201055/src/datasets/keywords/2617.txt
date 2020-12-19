@@ -1,0 +1,1 @@
+data augmentation;high amplitude;long short-term memory;segment repetition;speech emotion recognition

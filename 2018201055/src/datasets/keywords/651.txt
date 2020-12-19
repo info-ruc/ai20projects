@@ -1,0 +1,1 @@
+User health;Medical data;Social network;Affinity graph;Massive-scale;Multi-view learning

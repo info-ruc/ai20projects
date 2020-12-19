@@ -1,0 +1,1 @@
+Locating systems;Software defined radio;Smart sensors;SoC;Many-core architectures;Low-power architectures

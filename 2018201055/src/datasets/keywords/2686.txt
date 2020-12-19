@@ -1,0 +1,1 @@
+Trajectory prediction;SAM pooling;Social-affinity LSTM

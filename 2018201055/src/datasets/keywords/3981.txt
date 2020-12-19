@@ -1,0 +1,1 @@
+Limits of agreement;Percentile;Precision;Sample size;Tolerance interval

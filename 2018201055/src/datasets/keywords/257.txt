@@ -1,0 +1,1 @@
+Knowledge graph reasoning;Memory component;Deep reinforcement learning;Link prediction;Attentional path;Force forward

@@ -1,0 +1,1 @@
+Deep convolutional neural networks;Genetic algorithms;Parameter reduction;Structure optimization;DenseNet

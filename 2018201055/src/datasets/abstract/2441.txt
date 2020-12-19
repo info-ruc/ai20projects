@@ -1,0 +1,1 @@
+This article deals with the methodology of computer network modeling for scientific and educational purposes. We choose tools which are useful, easy to understand and enable to model real life communication tasks for IT Bachelor students.

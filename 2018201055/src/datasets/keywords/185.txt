@@ -1,0 +1,1 @@
+Computer vision;Multi-view video summarization;Multi-sensor management;Multi-camera networks;Machine learning;Features fusion;Big data;Video summarization survey

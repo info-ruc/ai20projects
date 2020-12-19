@@ -1,0 +1,1 @@
+Heterogeneous architecture;GPU;Problem solving Environment;accelerator;OpenCL

@@ -1,0 +1,1 @@
+Human action recognition;Depth-Skeleton (DS) feature;Sparse coding;Gradient information

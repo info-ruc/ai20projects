@@ -1,0 +1,1 @@
+Ribonucleic acid;Hairpin loop;Internal loop;Double helix loop;Quantum finite automata;Two-way quantum finite automata

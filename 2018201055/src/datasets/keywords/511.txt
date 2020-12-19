@@ -1,0 +1,1 @@
+Depression;CNN with attention mechanism;Local Attention based CNN (LA-CNN);Global Attention based CNN (GA-CNN)

@@ -1,0 +1,1 @@
+Graph learning;self-paced learning;Extreme learning machine;Semi-supervised

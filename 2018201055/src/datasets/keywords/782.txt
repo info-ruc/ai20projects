@@ -1,0 +1,1 @@
+Bigdata;Hadoop;MapReduce;Scheduling;Makespan;Security;Optimization model;Heterogeneity

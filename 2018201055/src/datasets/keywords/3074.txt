@@ -1,0 +1,1 @@
+computer algorithm;computer vision;dermatologist;International Skin Imaging Collaboration;International Symposium on Biomedical Imaging;machine learning;melanoma;reader study;skin cancer;ISBI;International Symposium on Biomedical Imaging;ISIC;International Skin Imaging Collaboration;ROC;receiver operating characteristic;SVM;support vector machine

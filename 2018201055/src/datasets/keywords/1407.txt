@@ -1,0 +1,1 @@
+Education;Job;Skill;IT industry;Web scrapping;Selenium

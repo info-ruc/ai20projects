@@ -1,0 +1,1 @@
+LoRa;Cognitive control;Multiple random access;Collisions probability;Delivery probability

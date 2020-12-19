@@ -1,0 +1,1 @@
+Crack segmentation;Convolutional neural network;Deep learning;Semantic segmentation

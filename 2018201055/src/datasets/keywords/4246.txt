@@ -1,0 +1,1 @@
+37D10;58F15;65G20;Melnikov method;Normally hyperbolic invariant manifolds;Whiskered tori;Transversal homoclinic intersection;Computer assisted proof

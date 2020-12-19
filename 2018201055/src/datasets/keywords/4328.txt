@@ -1,0 +1,1 @@
+Minimum dominating set;Domination number;Scale-free network;Sierpiński graph;Complex network

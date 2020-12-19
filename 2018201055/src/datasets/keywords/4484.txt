@@ -1,0 +1,1 @@
+Melanoma diagnosis;Computer aided diagnosis system;Detection of dermoscopic structures;Image annotation;Corr-LDA;Feature fusion

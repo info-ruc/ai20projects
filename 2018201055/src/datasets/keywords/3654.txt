@@ -1,0 +1,1 @@
+Protein-Protein Interaction Network [PPIN];Gene Regulatory Network [GRN];Metabolic Network [MBN]

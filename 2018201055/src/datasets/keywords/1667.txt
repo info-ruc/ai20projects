@@ -1,0 +1,1 @@
+Common spatial pattern (CSP);Emotion recognition;Joint approximation diagonalization (JAD);Channel selection

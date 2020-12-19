@@ -1,0 +1,1 @@
+reconfigurable computing;reconfigurable transcendental function generator;CORDIC;array processor

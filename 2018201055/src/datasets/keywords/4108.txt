@@ -1,0 +1,1 @@
+infinitary term rewriting;proof terms;permutation equivalence;projection

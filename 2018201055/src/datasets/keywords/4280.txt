@@ -1,0 +1,1 @@
+Parity Games;multicore Attractor;parallel Zielonka Recursive algorithm

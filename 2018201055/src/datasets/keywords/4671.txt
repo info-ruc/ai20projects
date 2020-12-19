@@ -1,0 +1,1 @@
+Multi-Robot system;Autonomous manufacturing;task oriented programming;computer vision;composites;generic description

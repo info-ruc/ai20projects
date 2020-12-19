@@ -1,0 +1,1 @@
+critical situation;transport system;localization;recognition;deep neural network;computer vision system

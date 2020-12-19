@@ -1,0 +1,1 @@
+Satisfiability modulo theories;Mixed-integer optimization;Generalized disjunctive programming;Mixed logical-linear programming

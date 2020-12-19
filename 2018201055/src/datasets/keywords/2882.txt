@@ -1,0 +1,1 @@
+Deep learning (DL);convolutional neural network (CNN);system architecting

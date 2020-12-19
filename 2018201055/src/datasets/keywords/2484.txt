@@ -1,0 +1,1 @@
+computer vission;machine learning;mice behavioural pattern detection;local binary patterns;cascade AdaBoost classifier

@@ -1,0 +1,1 @@
+Jellyfish;Scyphozoa;Automated counting;Convolutional neural networks

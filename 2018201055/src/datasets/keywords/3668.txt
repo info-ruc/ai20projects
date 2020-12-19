@@ -1,0 +1,1 @@
+Axioms;Identifiability;Model equivalence;Paired comparisons;Stochastic transitivity

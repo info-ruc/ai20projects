@@ -1,0 +1,1 @@
+Tool insert;turning;surface finish;Multiple Attribute Decision Making;Simple Additive Weighting;Weighted Product Method

@@ -1,0 +1,1 @@
+Complete graph;Bipartite;Community detection

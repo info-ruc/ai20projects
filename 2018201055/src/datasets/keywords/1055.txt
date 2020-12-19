@@ -1,0 +1,1 @@
+Cellular automata;Traffic flow model;Ternary optical computer;MSD adder

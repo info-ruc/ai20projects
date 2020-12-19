@@ -1,0 +1,1 @@
+Computer virus propagation model;Nonstandard finite difference schemes;Dynamic consistency;Global asymptotic stability;Lyapunov stability theorem;Nonlinear cascade systems

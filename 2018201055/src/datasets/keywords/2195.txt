@@ -1,0 +1,1 @@
+Brain-computer interface;Electroencephalography;Echo state network;Gaussian readout;Decoding movement direction

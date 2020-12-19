@@ -1,0 +1,1 @@
+Aggregation of non-Brownian magnetizable particles and the elastic properties of a magnetorheological suspension under the action of applied magnetic field are studied by means of computer simulations. Our simulations demonstrate non-monotonic dependence of shear stress vs. shear deformation with a maximum at a shear deformation of about 25%.

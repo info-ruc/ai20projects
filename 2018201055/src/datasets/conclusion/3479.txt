@@ -1,0 +1,23 @@
+The bounds that we have given for chordal graphs and distance-hereditary graphs are tight. While we can hope to improve the other upper bounds of this paper, we conjecture that they exceed 3n∕3. It can be observed that for some more narrow classes of graphs of bounded chordality, the number of minimal connected vertex covers becomes polynomial.
+
+Proposition 2The number of minimal connected vertex covers of a split graph
+G is at most
+n, and these can be enumerated in time
+O(n+m). The number of minimal connected vertex covers of a cobipartite graph
+G is at most
+n2∕4+n, and these can be enumerated in time
+O(n3).
+
+
+ProofNotice that if X is a clique of a graph G, then for every vertex cover U of G, either X⊆U or |X∖U|=1. Let G be a split graph. Without loss of generality we can assume that G is a connected graph with at least two vertices. Let K,I be a partition of V(G)
+ into a clique K and an independent set I and assume that K is an inclusion maximal clique of G. If V(G)=K, then G has n minimal connected vertex covers K∖{v} for v∈V(G) that can be listed in time O(m). Assume that I≠∅. Then K is a connected vertex cover of G. For v∈K, if U is a minimal connected vertex cover of G with v⁄∈U, U=(K∖{v})∪NG(v) and |U|=dG(v)+1. It immediately implies that G has at most n connected vertex covers and they can be listed in time O(n+m). Taking into account that a partition K,I can be found in time O(n+m), it follows that the minimal connected vertex covers can be enumerated in time O(n+m).Let now G be a cobipartite graph. Again, we can assume without loss of generality that G is a connected graph with at least two vertices. If G is a complete graph, then G has n connected vertex covers. Assume that G is not a complete graph, and let K1,K2 be a partition of V(G) into two cliques. Let U be a minimal connected vertex cover of G. If K1⊆U, then U=V(G)∖{v} for v∈K2, and there are at most |K2| sets of this type. Symmetrically, there are at most |K1| minimal connected vertex covers U with K2⊆U. If K1∖U≠∅ and K2∖U≠∅, then U=V(G)∖{u,v} for u∈K1 and v∈K2, and G has at most |K1||K2| such minimal connected vertex covers. We conclude that G has at most |K1|+|K2|+|K1||K2|≤n2∕4+n minimal connected vertex covers. Taking into account that any connected vertex covers has at most n−1 vertices, these arguments can be applied to obtain an enumeration algorithm that runs in time O(n3).  □
+
+Finally let us consider a related combinatorial question. What is the relation of the maximum number of minimal vertex covers and the maximum number of minimal connected vertex covers? More precisely, is there a particular class of connected graphs for which the difference of both numbers is exponential in n? Trees provide an easy answer. On one hand, every tree has a unique minimal connected vertex cover consisting of all its cut vertices. On the other hand, there are trees with at least 2n−12 minimal vertex covers; e.g. a union of K2’s with an additional vertex adjacent to exactly one vertex of each K2. Hence there are trees on n vertices having one minimal connected vertex cover but their number of minimal vertex covers is exponential in n.
+It is more interesting to observe that the number of minimal connected vertex covers of a connected graph may be significantly larger than its number of minimal vertex covers. Consider the graphs Gk, k≥1 integer, constructed as follows.
+
+
+
+•
+The vertex set of Gk consists of Ai={ai,bi,ci,di,ei} for all i=1,2,…,k and xi for all i=1,2,…,k+1. Thus Gk has n=6k+1 and G1 has 7 vertices.
+•
+For all i=2,…,k, vertex xi is adjacent in Gk to all vertices of Ai−1∪Ai, x1 is adjacent to all vertices of A1 and xk+1 is adjacent to all vertices of Ak.

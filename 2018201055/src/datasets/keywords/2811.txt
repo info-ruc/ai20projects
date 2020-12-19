@@ -1,0 +1,1 @@
+voting;collective opinion;a set of intelligent agents;binomial distribution

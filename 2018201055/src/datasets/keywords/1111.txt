@@ -1,0 +1,1 @@
+Computer science;Applied computing in medical science;Tuberculosis;Deep learning;Chest X-Ray

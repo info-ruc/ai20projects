@@ -1,0 +1,1 @@
+Plant classification;Feature representation;Deep learning;Convolutional neural network;Convolutional layers;Feature maps

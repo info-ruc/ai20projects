@@ -1,0 +1,1 @@
+Cryptography;Altera Kit;Number theory;FPGA design;Hardware synthesis;Right-to-Left Modular Exponentiation Algorithm;Non-adjacent Form (NAF) Representation

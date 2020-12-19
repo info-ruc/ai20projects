@@ -1,0 +1,1 @@
+Amorphous InGaZnO (a-InGaZnO);Compact model;Surface potential;Drain current;Thin film transistors

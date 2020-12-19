@@ -1,0 +1,1 @@
+Biogeography-based optimization;Artificial neural network;Adaptive neuro-fuzzy inference system;Digital mammography;ROC curve;Classification

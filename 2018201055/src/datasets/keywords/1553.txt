@@ -1,0 +1,1 @@
+Internet of Things;Computer Vision;Automated Video Surveillance;CCTV monitoring;Activity detection;Human detection;Edge computing

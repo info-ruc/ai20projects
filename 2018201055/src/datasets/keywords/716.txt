@@ -1,0 +1,1 @@
+Frequent terms;Time-weighted;Spatio-temporal query;Top-k query;Spatial index;Spatio-temporal textual stream

@@ -1,0 +1,4 @@
+Weighted automata map input words to values, and have numerous applications in computer science. A result by Krob from the 90s implies that the universality problem is decidable for weighted automata over the tropical semiring with weights in N∪{∞} and is undecidable when the weights are in Z∪{∞}.
+We continue the study of the borders of decidability in weighted automata over the tropical semiring. We give a complete picture of the decidability and complexity of various decision problems for them, including non-emptiness, universality, equality, and containment.
+For the undecidability results, we provide direct proofs, which stay in the terrain of state machines. This enables us to tighten the results and apply them to a very simple class of automata.
+In addition, we provide a toolbox of algorithms and techniques for weighted automata, on top of which we establish the complexity bounds.

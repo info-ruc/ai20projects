@@ -1,0 +1,1 @@
+Maximum-area rectangle;Largest rectangle;Simple polygon

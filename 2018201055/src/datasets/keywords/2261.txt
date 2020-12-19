@@ -1,0 +1,1 @@
+Breast cancer;Clustered microcalcification detection;Image processing;Computer-aided system;Hough transform

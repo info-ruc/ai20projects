@@ -1,0 +1,1 @@
+Hybrid underwater robotic vehicle;Multi-task;VxWorks;Fuzzy logic;Heading control

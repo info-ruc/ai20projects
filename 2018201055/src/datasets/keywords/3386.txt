@@ -1,0 +1,1 @@
+Nanoplatelets;Clay;Montmorillonite;Molecular dynamics simulations;Monte Carlo simulations;Electrostatic interactions;Ion-ion correlations;Relative permittivity;Ethanol;Small angle X-ray scattering

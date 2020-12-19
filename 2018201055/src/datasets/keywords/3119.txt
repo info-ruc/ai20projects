@@ -1,0 +1,1 @@
+Pedestrian detection;Human tracking;Deep learning;Convolutional neural network;Machine learning;Artificial neural network;Features extraction

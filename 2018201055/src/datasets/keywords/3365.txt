@@ -1,0 +1,1 @@
+EEG;Brain Computer Interface;Daubechies wavelet;Support Vector Machine;Wavelet Packet Transform

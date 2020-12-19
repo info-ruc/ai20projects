@@ -1,0 +1,1 @@
+Deep convolution neural networks;Hybrid classification framework;Knowledge transfer;Temporal dependence fusion;Echocardiography;Cardiac cycle phase detection

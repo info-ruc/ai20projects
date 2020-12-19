@@ -1,0 +1,1 @@
+Distance regularized point regression;Individual tooth detection;Panoramic X-ray image detection;Point-wise object detection;Tooth identification

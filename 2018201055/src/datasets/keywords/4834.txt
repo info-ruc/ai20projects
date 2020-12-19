@@ -1,0 +1,1 @@
+Medical technology;Handicap aids;3D;Depth image;Binocular stereo camera;Gesture recognition;Character recognition;Hand tracking

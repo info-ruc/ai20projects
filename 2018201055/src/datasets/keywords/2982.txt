@@ -1,0 +1,1 @@
+MRI classification;Abnormal brain images;Deep transfer learning;CNN

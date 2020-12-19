@@ -1,0 +1,1 @@
+Picking point localisation;Litchi fruit detection;Stem detection;Robotic harvest;Computer vision

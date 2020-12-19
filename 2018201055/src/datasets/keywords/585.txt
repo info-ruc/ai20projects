@@ -1,0 +1,1 @@
+Left atrium;Convolutional neural networks;Late gadolinium-enhanced magnetic resonance imaging;Image segmentation

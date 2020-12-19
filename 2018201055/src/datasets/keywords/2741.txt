@@ -1,0 +1,1 @@
+recognition;classification;normal;abnormal situation;deep neural network;video stream

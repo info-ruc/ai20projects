@@ -1,0 +1,1 @@
+Approximate computing;Configurable multiplier;Power consumption;Performance;Error tolerant systems

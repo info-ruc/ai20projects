@@ -1,0 +1,1 @@
+Kernel extreme learning machine;Parameter optimization;Feature selection;Improved moth-flame optimization;Medical diagnosis

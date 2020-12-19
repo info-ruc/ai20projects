@@ -1,0 +1,1 @@
+Food classification;Representation learning;Deep learning;Subnetwork-based multi-layer neural network (SN-MLNN)

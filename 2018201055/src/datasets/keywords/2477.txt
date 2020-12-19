@@ -1,0 +1,1 @@
+Computer vision;detection algorithms;target tracking;convolution neural networks;education;laboratory education

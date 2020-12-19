@@ -1,0 +1,1 @@
+Computer aided diagnosis;Pulmonary hamartoma;Ant colony optimization;Cosine similarity;Rough dependency;Support vector machine

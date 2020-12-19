@@ -1,0 +1,1 @@
+Fully convolutional neural network;Brain tumor segmentation;Magnetic resonance images

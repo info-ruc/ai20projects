@@ -1,0 +1,1 @@
+automatic detection;cattle;hoof lesion;lameness;locomotion score

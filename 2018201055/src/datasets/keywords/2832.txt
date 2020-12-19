@@ -1,0 +1,1 @@
+Visual tracking;Multi-scale spatial view;Correlation filter;Kernel-based filter

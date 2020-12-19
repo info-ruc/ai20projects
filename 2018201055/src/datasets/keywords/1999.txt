@@ -1,0 +1,1 @@
+Stereoscopic system;3D reconstruction;FPGA: numerical methods;optimization;contour search

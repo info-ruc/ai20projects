@@ -1,0 +1,1 @@
+Gamma-ray spectroscopy;Online data acquisition;Photon energy spectrum;RemoteApp;Remote Desktop Service

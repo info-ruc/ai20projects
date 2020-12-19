@@ -1,0 +1,1 @@
+Transfer learning;Facial attribute classification;Multi-label learning;Deep learning;Convolutional neural networks

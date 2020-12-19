@@ -1,0 +1,1 @@
+word embeddings;bag of super word embeddings;clustering word embeddings;bag of word embeddings;kernel methods;polarity classification;text categorization;bag of words;k-means
