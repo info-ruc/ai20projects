@@ -18,7 +18,7 @@ def signal_handler(sig, frame):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-def train(model, optimizer, query, eps=1e-8):
+def train(model, optimizer, query, eps=1e-8): # 名为train,实为计算loss的一个函数
     loss = 0
     pos = True
     if type(query) is tuple:
@@ -49,6 +49,7 @@ def train(model, optimizer, query, eps=1e-8):
     return loss
 
 
+# 这个训练的也是很迷，甚至没有出现后向传播
 def train_model(model,queries,nr_epochs,optimizer, loss_function = train, test_iter=1000,test=None,log_iter=100,snapshot_iter=None,snapshot_name='model',shuffle=True):
     # signal.signal(signal.SIGINT, signal_handler) # 设置信号处理器，和C里的是相通的,感觉这里的设置会导致没有办法后台运行？
     i = 1

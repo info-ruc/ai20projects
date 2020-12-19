@@ -118,32 +118,31 @@ def user_recommendation(recommender,news,reader):
     for i in range(len(like1)):
         rec=rec.append(recommender.get_top_k_recommendations(news,like1[i],cols_to_keep))
     
-    
-    rec=rec.reset_index()
-    drop=[]
-    for i in range(len(rec)):
-        for j in range(i+1,len(rec)):
-            if rec['News ID'][i]==rec['News ID'][j]:
-                rec['similarity_score'].values[i]=rec['similarity_score'].values[j]+rec['similarity_score'].values[i]
-                drop.append(j)
-    
-    rec=rec.drop(drop) 
-    rec=rec.reset_index()
     rec=rec.sort_values(by=['similarity_score'],ascending=False)
-    rec['rank']=range(len(rec))
-    
+    rec['rank']=range(20)
+    rec=rec.reset_index()
     rec=rec.drop(columns='index')
     
     #output
     print(uid)
     print(rec[0:10])
     
+def create_dictionary(news):
+    news_dict={}
+    for newsitem in news:
+        if(newsitem[Category] not in news_dict.keys()):
+            news_dict[newsitem[Category]] = {}
+        else:
+            dic = news_dict[newsitem['Category']]
+            dic[newsitem['SubCategory']].append(newsitem['News ID'])
+    print(news_dict)
 
 if __name__=="__main__":
     #load news
     news=pd.read_csv('../dataset/MINDsmall_train/news.tsv',sep='\t',names=['News ID','Category','SubCategory','Title','Abstract','URL','Title Entities','Abstract Entities'])
     news=news.dropna(axis=0,how='any')
-    
+
+    create_dictionary(news)
     #load recommender
     recommender = TfidfRecommender(id_col='News ID', tokenization_method='scibert')
     
@@ -154,8 +153,7 @@ if __name__=="__main__":
     #create a reader
     behave=behaviors[behaviors['Impression ID']==1]
     #like1=str(behave['History'].values[0]).split(' ')
-    like1=['N55528','N42777','N51340','N60434']
-    #like1=['N55528','N19639','N61837','N53526']
+    like1=['N55528','N19639','N61837','N53526']
     uid=behave['User ID'].values
     reader1=reader(uid,like1)
     
