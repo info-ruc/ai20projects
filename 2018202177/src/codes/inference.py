@@ -13,7 +13,7 @@ from models import DecoderWithAttention, Encoder
 
 data_name = 'flickr8k_5_cap_per_img_5_min_word_freq'
 word_map_file = 'datasets/caption_data/WORDMAP_' + data_name + '.json'
-checkpoint = 'logs/tmp/BEST_MODEL.pth.tar'  
+checkpoint = 'logs/tmp/BEST_MODEL.pth.tar'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 with open(word_map_file, 'r') as f:
@@ -51,16 +51,18 @@ def get_image_caption(ori_img):
         num_pixels = encoder_out.shape[1]
 
         # 开始标志
-        prev_words = torch.LongTensor([[word_map['<start>']]]).to(device)
+        # print(word_map['<start>'])
 
+        # prev_words = torch.tensor([[word_map['<start>']]], dtype=torch.int64)
+
+        # print(word_map['<start>'])
+        prev_words = torch.LongTensor([[word_map['<start>']]]).to(device)
+        # print(prev_words.type)
         # 存储完全的句子，得分和注意力矩阵的list
         complete_seqs = list()
         complete_seqs_scores = list()
         complete_alphas = list()
 
-        # 开始 decoding
-        # 得到初始化的 hidden state 和 cell state
-        # 不断迭代实现字幕的输出
         step = 1
 
         h, c = decoder.init_hidden_state(encoder_out)  # 初始化 hidden state
@@ -88,7 +90,7 @@ def get_image_caption(ori_img):
             complete_alphas.append(alpha.cpu().numpy())
 
             prev_words = word_idx  # 更新当前步的单词下标
-            
+
     return complete_seqs, np.mean(complete_seqs_scores), complete_alphas
 
 

@@ -10,6 +10,7 @@ class Encoder(nn.Module):
     def __init__(self, encoded_image_size=14):
         super(Encoder, self).__init__()
         self.enc_img_size = encoded_image_size
+
         cnn_ext = torchvision.models.resnet50(pretrained = True)  # 使用预训练的 resnet-50
         modules = list(cnn_ext.children())[:-2]  # 去掉网络中的最后两层，考虑使用 list(cnn_ext.children())
         self.cnn_ext = nn.Sequential(*modules)  # 使用 nn.Sequential 定义好 encoder
@@ -33,6 +34,10 @@ class Encoder(nn.Module):
 
 
 class AttentionModule(nn.Module):
+    """
+    Attention Module with Decoder
+    """
+
     def __init__(self, encoder_dim, decoder_dim, attention_dim):
         """
         :param encoder_dim: 图片经过 Encoder 之后的特征维度
@@ -40,11 +45,13 @@ class AttentionModule(nn.Module):
         :param attention_dim: 注意力机制的维度
         """
         super(AttentionModule, self).__init__()
-        self.encoder_att = nn.Linear(encoder_dim, attention_dim)  # Linear, encoder_dim -> attention_dim 定义先线性层将编码的特征维度映射到注意力机制的维度
-        self.decoder_att = nn.Linear(decoder_dim, attention_dim)  # Linear, decoder_dim -> attention_dim 定义线性层将解码器的隐含状态映射到注意力机制的维度
-        self.full_att = nn.Linear(attention_dim, 1)  # Linear, attention_dim -> 1 定义线性层将将注意力机制的维度映射到 1
+
+        self.encoder_att = nn.Linear(encoder_dim, attention_dim)  # Linear, encoder_dim -> attention_dim
+        self.decoder_att = nn.Linear(decoder_dim, attention_dim)  # Linear, decoder_dim -> attention_dim
+        self.full_att = nn.Linear(attention_dim, 1)  # Linear, attention_dim -> 1
         self.relu = nn.ReLU()  # relu 激活函数
         self.softmax = nn.Softmax(dim=1)  # softmax 激活函数, dim=1
+
 
     def forward(self, encoder_out, decoder_hidden):
         """
@@ -54,7 +61,6 @@ class AttentionModule(nn.Module):
         :param decoder_hidden: 前一步的解码输出，大小是 (bs, decoder_dim)
         :return: 注意力编码的权重矩阵
         """
-
         att1 = self.encoder_att(encoder_out)  # 用 self.encoder_att 作用 encoder_out, (bs, num_pixels, attention_dim)
         att2 = self.decoder_att(decoder_hidden)  # 用 self.decoder_att 作用 decoder_hidden, (bs, attention_dim)
         att2 = att2.unsqueeze(1)  # 使用 unsqueeze 将 att2 的维度从 (bs, attention_dim) -> (bs, 1, attention_dim)
@@ -90,7 +96,7 @@ class DecoderWithAttention(nn.Module):
         # 定义注意力机制
         self.attention = AttentionModule(
             encoder_dim, decoder_dim, attention_dim)
-        # 定义网络层
+
         self.embedding = nn.Embedding(vocab_size, embed_dim)  # 定义词嵌入 word embedding, (vocab_size, embed_dim)
         self.dropout = nn.Dropout(dropout)  # 定义 dropout
         self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True)  # 定义 LSTMCell 作为 Decoder 中的序列模块，输入是 embed + encoder_out
@@ -99,7 +105,6 @@ class DecoderWithAttention(nn.Module):
         self.f_beta = nn.Linear(decoder_dim, encoder_dim)  # 定义线性层, decoder_dim -> encoder_dim
         self.sigmoid = nn.Sigmoid()  # 定义 sigoid 激活函数
         self.fc = nn.Linear(decoder_dim, vocab_size)  # 定义输出的线性层
-
 
         self.init_weights()
 
@@ -146,12 +151,10 @@ class DecoderWithAttention(nn.Module):
         num_pixels = encoder_out.size(1)
 
         # 对输入的字幕长度按照降序排列
-        caption_lens, sort_idx = caption_lens.squeeze(
-            1).sort(dim=0, descending=True)
+        caption_lens, sort_idx = caption_lens.squeeze(1).sort(dim=0, descending=True)
         encoder_out = encoder_out[sort_idx]
         encoded_captions = encoded_captions[sort_idx]
 
-        # 构建向前传播过程
         embeddings = self.embedding(encoded_captions)   # 对encoded_captions (bs, max_caption_lens)中的每个词，加上其词嵌入特征向量
                                                         # 得到 encoded_captions 的词向量, (bs, max_caption_lens, embed_dim)
 
