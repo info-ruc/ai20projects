@@ -122,9 +122,11 @@ def visualization_att(image, caps, alphas):
 
 if __name__ == '__main__':
     img_path1 = 'datasets/Flicker8k_Dataset/19212715_20476497a3.jpg'
-    img_path = 'datasets/Flicker8k_Dataset/245895500_a4eb97af02.jpg'
-    ori_img = Image.open(img_path).convert("RGB")
+    img_path2 = 'datasets/Flicker8k_Dataset/42637986_135a9786a6.jpg'
+    img_path3 = 'datasets/Flicker8k_Dataset/94232465_a135df2711.jpg'
+    ori_img = Image.open(img_path3).convert("RGB")
     pred_caps, cap_scores, alphas = get_image_caption(ori_img)
+
     visualization_att(ori_img, pred_caps, alphas)
     caps = ' '.join(pred_caps) + '.'
     print(caps)

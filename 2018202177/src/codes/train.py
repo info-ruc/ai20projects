@@ -12,6 +12,7 @@ from dataset import CaptionDataset
 from models import DecoderWithAttention, Encoder, device
 from utils import *
 
+checkpoint = None  # path to checkpoint, None if none
 
 def main():
     parser = argparse.ArgumentParser(description='caption model')
@@ -62,6 +63,7 @@ def main():
     with open(log_path, 'w') as f:
         f.write('{}\n'.format(args))
 
+
     # 数据增强
     tfms = T.Compose([T.ToTensor(),T.Normalize(mean = [0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])])
@@ -91,9 +93,8 @@ def main():
         vocab_size=len(word_map),
         dropout=args.dropout
     )
-    
-    # 定义 Encoder 和 Decoder 的优化器
-    #########################################################################
+
+
     encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, encoder.parameters()),
                                                  lr=args.encoder_lr)
     decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, decoder.parameters()),
@@ -175,7 +176,7 @@ def train(args, train_loader, val_loader, encoder, decoder, criterion, encoder_o
             print("loss = {}".format(loss))
 
             # 反向传播
-            decoder_optimizer.zero_grad()
+            decoder_optimizer.zero_grad()   # 每一次循环一定要清空梯度
             if encoder_optimizer is not None:
                 encoder_optimizer.zero_grad()
             loss.backward()
@@ -227,7 +228,6 @@ def train(args, train_loader, val_loader, encoder, decoder, criterion, encoder_o
             print(print_str)
             with open(log_path, 'a') as f:
                 f.write(print_str)
-
         else:
             epochs_since_improvement = 0
 
