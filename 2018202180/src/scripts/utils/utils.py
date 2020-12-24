@@ -8,14 +8,12 @@ import re
 import json
 import pickle
 import torch
-import os
 import pandas as pd
 import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score,log_loss,mean_squared_error,accuracy_score,f1_score
 from torchtext.data.utils import get_tokenizer
-from torchtext.data import Dataset
 from torchtext.vocab import build_vocab_from_iterator
 
 def word_tokenize(sent):
@@ -59,13 +57,13 @@ def newsample(news, ratio):
         list: output of sample list.
     """
     if ratio > len(news):
-        return news + [0] * (ratio - len(news))
+        return news + [0] * (ratio - len(news)), [ratio-len(news)]
     else:
-        return random.sample(news, ratio)
+        return random.sample(news, ratio), [0]
 
 
-def news_token_generator(news_file,tokenizer,attrs):
-    ''' merge and deduplicate training news and testing news then iterate, collect attrs into a string and generate it
+def news_token_generator(news_file_train,news_file_test,tokenizer,attrs):
+    ''' merge and deduplicate training news and testing news then iterate, collect attrs into a single sentence and generate it
        
     Args: 
         tokenizer: torchtext.data.utils.tokenizer
@@ -74,11 +72,11 @@ def news_token_generator(news_file,tokenizer,attrs):
         a generator over attrs in news
     '''    
 
-    # news_df_train = pd.read_table(news_file_train,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
-    # news_df_test = pd.read_table(news_file_test,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
-    # news_df = pd.concat([news_df_train,news_df_test]).drop_duplicates()
+    news_df_train = pd.read_table(news_file_train,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
+    news_df_test = pd.read_table(news_file_test,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
+    news_df = pd.concat([news_df_train,news_df_test]).drop_duplicates()
 
-    news_df = pd.read_table(news_file,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
+    # news_df = pd.read_table(news_file,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
     news_iterator = news_df.iterrows()
 
     for _,i in news_iterator:
@@ -88,96 +86,101 @@ def news_token_generator(news_file,tokenizer,attrs):
         
         yield tokenizer(' '.join(content))
 
-def news_token_generator_group(news_file,tokenizer,vocab,mode):
-    ''' iterate news_file, collect attrs and generate them respectively
-       
-    Args: 
-        tokenizer: torchtext.data.utils.tokenizer
-        mode: int defining how many attributes to be generated
-    Returns: 
-        generates wordID vector of each attrs, gathered into a list
-    '''
-    news_df = pd.read_table(news_file,index_col=None,names=['newsID','category','subcategory','title','abstract','url','entity_title','entity_abstract'])
-    news_iterator = news_df.iterrows()
-    
-    attrs = ['title','category','subcategory','abstract']
-    for _,i in news_iterator:
-        result = []
-        indicator = 0
-        while indicator < mode:
-            result.append([vocab[x] for x in tokenizer(i[attrs[indicator]])])
-            indicator += 1
-        yield result 
-
-def constructVocab(news_file,attrs,save_path):
+def constructVocab(news_file_train,news_file_test,attrs,save_path):
     """
         Build field using torchtext for tokenization
     
     Returns:
         torchtext.vocabulary 
-    """    
-    
-    tokenizer = get_tokenizer('basic_english')
+    """
 
-    vocab = build_vocab_from_iterator(news_token_generator(news_file,tokenizer,attrs))
+    tokenizer = get_tokenizer('basic_english')
+    vocab = build_vocab_from_iterator(news_token_generator(news_file_train,news_file_test,tokenizer,attrs))
 
     output = open(save_path,'wb')
     pickle.dump(vocab,output)
     output.close()
 
-def constructNid2idx(news_file,dic_file):
+def constructNid2idx(news_file_train,news_file_test,dic_file_train,dic_file_test):
     """
         Construct news to newsID dictionary, index starting from 1
     """
-    f = open(news_file,'r',encoding='utf-8')
+    f = open(news_file_train,'r',encoding='utf-8')
+
     nid2index = {}
     for line in f:
         nid,_,_,_,_,_,_,_ = line.strip("\n").split('\t')
 
         if nid in nid2index:
             continue
-
         nid2index[nid] = len(nid2index) + 1
-    f.close()
     
-    g = open(dic_file,'w',encoding='utf-8')
-    json.dump(nid2index,g,ensure_ascii=False)
-    g.close()
+    f.close()
+    h = open(dic_file_train,'w',encoding='utf-8')
+    json.dump(nid2index,h,ensure_ascii=False)
+    h.close()
 
-def constructUid2idx(behaviors_file,dic_file):
+    g = open(news_file_test,'r',encoding='utf-8')
+
+    nid2index = {}
+    for line in g:
+        nid,_,_,_,_,_,_,_ = line.strip("\n").split('\t')
+
+        if nid in nid2index:
+            continue
+        nid2index[nid] = len(nid2index) + 1
+    
+    f.close()
+    h = open(dic_file_test,'w',encoding='utf-8')
+    json.dump(nid2index,h,ensure_ascii=False)
+    h.close()
+    
+
+def constructUid2idx(behaviors_file_train,behaviors_file_test,dic_file):
     """
         Construct user to userID dictionary, index starting from 1
     """
-    f = open(behaviors_file,'r',encoding='utf-8')
+    f = open(behaviors_file_train,'r',encoding='utf-8')
+    g = open(behaviors_file_test,'r',encoding='utf-8')
+
     uid2index = {}
     for line in f:
         _,uid,_,_,_ = line.strip("\n").split('\t')
 
         if uid in uid2index:
             continue
-
         uid2index[uid] = len(uid2index) + 1
-    f.close()
-    
-    g = open(dic_file,'w',encoding='utf-8')
-    json.dump(uid2index,g,ensure_ascii=False)
-    g.close()
 
-def constructBasicDict(news_file,behaviors_file,data_mode,model_mode,attrs):
+    for line in g:
+        _,uid,_,_,_ = line.strip("\n").split('\t')
+
+        if uid in uid2index:
+            continue
+        uid2index[uid] = len(uid2index) + 1
+
+    f.close()
+    g.close()
+    
+    h = open(dic_file,'w',encoding='utf-8')
+    json.dump(uid2index,h,ensure_ascii=False)
+    h.close()
+
+def constructBasicDict(news_file_pair,behaviors_file_pair,data_mode,attrs):
     """ construct basic dictionary
 
         Args:
-        news_file: path of news file
-        behavior_file: path of behavior file
-        mode: [small/large]
-    """    
-    dict_path_v = 'data/vocab_{}_{}_{}.pkl'.format(data_mode,model_mode,'_'.join(attrs))
-    dict_path_n = 'data/nid2idx_{}_{}.json'.format(data_mode,model_mode)
-    dict_path_u = 'data/uid2idx_{}_{}.json'.format(data_mode,model_mode)
+        news_file_pair: tuple of paths of news file, first entry is training set, the other is testing set
+        behavior_file_pair: tuple of paths of behavior file, first entry is training set, the other is testing set
+        mode: [demo/small/large]
+    """
+    dict_path_v = 'data/dictionaries/vocab_{}_{}.pkl'.format(data_mode,'_'.join(attrs))
+    dict_path_n_train = 'data/dictionaries/nid2idx_{}_train.json'.format(data_mode)
+    dict_path_n_test = 'data/dictionaries/nid2idx_{}_test.json'.format(data_mode)
+    dict_path_u = 'data/dictionaries/uid2idx_{}.json'.format(data_mode)
     
-    constructVocab(news_file,attrs,dict_path_v)
-    constructNid2idx(news_file,dict_path_n)
-    constructUid2idx(behaviors_file,dict_path_u)
+    constructVocab(news_file_pair[0],news_file_pair[1],attrs,dict_path_v)
+    constructNid2idx(news_file_pair[0],news_file_pair[1],dict_path_n_train,dict_path_n_test)
+    constructUid2idx(behaviors_file_pair[0],behaviors_file_pair[1],dict_path_u)
 
 def tailorData(tsvFile, num):
     ''' tailor num rows of tsvFile to create demo data file
@@ -187,10 +190,14 @@ def tailorData(tsvFile, num):
     Returns: 
         create tailored data file
     '''
-    mode = re.search('D:/Data/NR_data/MINDsmall_(.*)/(.*).tsv',tsvFile).group(1)
-    target_file = re.search('D:/Data/NR_data/MINDsmall_(.*)/(.*).tsv',tsvFile).group(2)
+    pattern = re.search('(.*)MIND(.*)_(.*)/(.*).tsv',tsvFile)
 
-    target_file = 'D:/Data/NR_data/dev/'+target_file+'_{}.tsv'.format(mode)
+    directory = pattern.group(1)
+    mode = pattern.group(3)
+    target_file = pattern.group(4)
+
+    target_file = directory + 'MINDdemo' + '_{}/'.format(mode) + target_file + '.tsv'.format(mode)
+    print(target_file)
     
     f = open(target_file,'w',encoding='utf-8')   
     count = 0
@@ -224,7 +231,7 @@ def getLoss(model):
     """
         get loss function for model
     """
-    if model.npratio > 0:
+    if model.cdd_size > 1:
         loss = nn.NLLLoss()
     else:
         loss = nn.BCELoss()
@@ -233,10 +240,10 @@ def getLoss(model):
 
 def getLabel(model,x):
     """
-        parse labels to label indexes 
+        parse labels to label indexes, used in NLLoss
     """
-    if model.npratio > 0:
-        index = torch.arange(0,model.npratio + 1,device=model.device).expand(model.batch_size,-1)
+    if model.cdd_size > 1:
+        index = torch.arange(0,model.cdd_size,device=model.device).expand(model.batch_size,-1)
         label = x['labels']==1
         label = index[label]
     else:
@@ -392,7 +399,7 @@ def _cal_metric(imp_indexes, labels, preds, metrics):
                 try:
                     result.append(roc_auc_score(each_labels,each_preds))
                 except:
-                    print("error in impression:{}, labels of which is {}, predictions of which are {}".format(each_imprs,each_labels,each_preds))
+                    print("auc computaion error in impression:{}, labels of which is {}, predictions of which are {}".format(each_imprs,each_labels,each_preds))
                     continue
             
             group_auc = np.mean(result)    
@@ -428,19 +435,20 @@ def group_labels(impression_ids, labels, preds):
     all_preds = []
 
     for k in all_keys:
-        all_labels.append(group_labels[k])
-        if len(group_labels[k]) == 1:
-            print(k,group_labels[k])
-            
-        all_preds.append(group_preds[k])
+        if 1 in group_labels[k]:
+            all_labels.append(group_labels[k])
+            all_preds.append(group_preds[k])
+        else:
+            print("impression {} has been stripped because of lacking 1 label".format(k))
 
     return all_keys, all_labels, all_preds
 
-def _eval(model,test_iterator,interval):
+def _eval(model,dataloader,interval):
     """ making prediction and gather results into groups according to impression_id, display processing every interval batches
 
     Args:
-        model
+        model(torch.nn.Module)
+        dataloader(torch.utils.data.DataLoader): provide data
 
     Returns:
         impression_id: impression ids after group
@@ -451,13 +459,16 @@ def _eval(model,test_iterator,interval):
     preds = []
     labels = []
     imp_indexes = []
-    # test = test_iterator.load_data_from_file()
-    tqdm_ = tqdm(enumerate(test_iterator))
+    tqdm_ = tqdm(enumerate(dataloader))
     
     for i,batch_data_input in tqdm_:
         
-        preds.extend(model.forward(batch_data_input).tolist())            
-        labels.extend(batch_data_input['labels'].squeeze().tolist())
+        preds.extend(model.forward(batch_data_input).tolist())
+       
+        label = batch_data_input['labels'].squeeze().tolist()
+        
+        
+        labels.extend(label)
         imp_indexes.extend(batch_data_input['impression_index'].tolist())
     
     
@@ -467,47 +478,73 @@ def _eval(model,test_iterator,interval):
     
     return impr_indexes, labels, preds
 
-def run_eval(model,test_iterator,interval=100):
+def run_eval(model,dataloader,interval=100):
     """Evaluate the given file and returns some evaluation metrics.
     
     Args:
-        filename (str): A file name that will be evaluated.
+        model(nn.Module)
+        dataloader(torch.utils.data.DataLoader): provide data
+        interval(int): within each epoch, the interval of steps to display loss
 
     Returns:
         dict: A dictionary contains evaluation metrics.
     """
-    imp_indexes, group_labels, group_preds = _eval(model,test_iterator,interval)
+    imp_indexes, group_labels, group_preds = _eval(model,dataloader,interval)
     res = _cal_metric(imp_indexes,group_labels,group_preds,model.metrics.split(','))
+    print("evaluation results:{}".format(res))
     return res
 
-def run_train(model, iterator, optimizer, loss_func, epochs, interval=100):
+def run_train(model, dataloader, optimizer, loss_func, writer=None, epochs=10, interval=100, hparams=None):
     ''' train model and print loss meanwhile
     Args: 
-        model: the model to be trained
-        iterator: generator which provides data
-        optimizer: optimizer for training
-        loss_func: loss function for training
-        epochs: (int) number of epochs
-        interval: (int) within each epoch, the interval of training steps to display loss
+        model(torch.nn.Module): the model to be trained
+        dataloader(torch.utils.data.DataLoader): provide data
+        optimizer(torch.nn.optim): optimizer for training
+        loss_func(torch.nn.Loss): loss function for training
+        writer(torch.utils.tensorboard.SummaryWriter): tensorboard writer
+        epochs(int): number of epochs
+        interval(int): within each epoch, the interval of training steps to display loss
+        save_epoch(bool): whether to save the model after every epoch
     Returns: 
         model: trained model
     '''
+    total_loss = 0
+    
     for epoch in range(epochs):
-        tqdm_ = tqdm(enumerate(iterator))
-        step = 0
         epoch_loss = 0
+        tqdm_ = tqdm(enumerate(dataloader))
 
         for step,x in tqdm_:
             pred = model(x)
             label = getLabel(model,x)
             loss = loss_func(pred,label)
+
             epoch_loss += loss
+            total_loss += loss
+
             loss.backward()
             optimizer.step()
+                    
+            if step % interval == 0:
+
+                tqdm_.set_description(
+                    "epoch {:d} , step {:d} , loss: {:.4f}".format(epoch, step, epoch_loss / step))
+                if writer:
+                    for name, param in model.named_parameters():
+                        writer.add_histogram(name, param, step)
+
+                    writer.add_scalar('data_loss',
+                            total_loss/(epoch * len(dataloader) + step),
+                            epoch * len(dataloader) + step)
             optimizer.zero_grad()
 
-            if step % interval == 0:
-                tqdm_.set_description(
-                    "epoch {:d} , step {:d} , total_loss: {:.4f}, batch_loss: {:.4f}".format(epoch, step, epoch_loss / step, loss))
+            
+        if writer:
+            writer.add_scalar('epoch_loss',
+                            epoch_loss/len(dataloader),
+                            epoch)
+        if hparams:
+            save_path = 'models/model_params/{}_{}_{}'.format(hparams['name'],hparams['mode'],epoch+1) +'.model'
+            torch.save(model.state_dict(), save_path)
     
     return model
