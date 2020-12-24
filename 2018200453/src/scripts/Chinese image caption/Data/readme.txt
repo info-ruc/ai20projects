@@ -1,0 +1,1 @@
+请将flickr8k中图片数据Flicker8k_Dataset解压后重命名为Images替代空文件夹
