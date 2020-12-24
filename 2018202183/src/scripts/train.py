@@ -162,8 +162,7 @@ def train(args, train_loader, val_loader, encoder, decoder, criterion, encoder_o
             targets = caps_sorted[:, 1:]
 
             scores = pack_padded_sequence(scores, decode_lens, batch_first=True).data
-            targets = pack_padded_sequence(
-                targets, decode_lens, batch_first=True).data
+            targets = pack_padded_sequence(targets, decode_lens, batch_first=True).data
 
             # 计算损失
             loss = criterion(scores, targets)
@@ -219,8 +218,7 @@ def train(args, train_loader, val_loader, encoder, decoder, criterion, encoder_o
         best_top5acc = max(val_top5acc, best_top5acc)
         if not is_best:
             epochs_since_improvement += 1
-            print_str = '\nEpochs since last improvement: {}'.format(
-                epochs_since_improvement)
+            print_str = '\nEpochs since last improvement: {}'.format(epochs_since_improvement)
             print(print_str)
             with open(log_path, 'a') as f:
                 f.write(print_str)
