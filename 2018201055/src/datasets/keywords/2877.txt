@@ -1,0 +1,1 @@
+person search;re-identification;pedestrian detection;softmax loss;center loss;dropout

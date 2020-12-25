@@ -1,0 +1,1 @@
+Convolutional Neural Networks;Domain adaptation;Genre recognition;Painting analysis;Style transfer

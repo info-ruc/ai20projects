@@ -1,0 +1,1 @@
+Cartesian tree matching;Prefix-parent representation;Prefix-child representation;Global-parent representation;Fingerprinting methods

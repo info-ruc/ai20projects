@@ -1,0 +1,1 @@
+Cross-view classification;Local geometry preservation;Multi-view learning;Subspace learning

@@ -1,0 +1,1 @@
+Kill-chains;Cyber ontology;Cyber forensics;Computer security;Remote logging;SIEM;Intrusion detection alerts;Operating system audit logs

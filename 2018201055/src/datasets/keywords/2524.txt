@@ -1,0 +1,1 @@
+Faster RCNN;Object detection;Recognition;Fitness function;Saliency;Convolutions;Bounding boxes;ROI;Pooling

@@ -1,0 +1,1 @@
+Computerized adaptive test;EORTC QLQ-C30;Health related quality of life;Item response theory;Item development;Item banking;Patient-reported outcome

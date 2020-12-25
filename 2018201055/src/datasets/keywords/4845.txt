@@ -1,0 +1,1 @@
+Back propagation neural networks;maize detection;pattern recognition;agriculture robotics

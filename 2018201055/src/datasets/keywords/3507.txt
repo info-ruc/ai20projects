@@ -1,0 +1,1 @@
+Multivariate time series (MTS);Dynamic time warping (DTW);Hesitant fuzzy sets;Scale-varying classification

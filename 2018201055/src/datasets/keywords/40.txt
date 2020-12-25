@@ -1,0 +1,1 @@
+Sensitivity Enhancement based Classification Algorithm (SEBCA);Preprocessing;Feature extraction and selection, classification;Magnetic Resonance Imaging (MRI)

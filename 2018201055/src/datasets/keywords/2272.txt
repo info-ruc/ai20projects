@@ -1,0 +1,1 @@
+Brain-computer interface (BCI);Electroencephalography (EEG);Motor imagery;Finite difference Laplacian;Spherical spline Laplacian;Spatial resolution

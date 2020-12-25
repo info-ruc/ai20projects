@@ -1,0 +1,1 @@
+Event extraction;End-to-end;Joint learning;Graph convolutional network;Dependency forest

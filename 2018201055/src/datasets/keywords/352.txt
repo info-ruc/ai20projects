@@ -1,0 +1,1 @@
+Word similarity;Knowledge graph;Word embedding;Entropy;Internet of Things;Healthcare

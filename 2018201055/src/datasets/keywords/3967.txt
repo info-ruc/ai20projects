@@ -1,0 +1,1 @@
+Image texture;Fractional differentiation;Auto-correlation function;Texture enhancement;G-L definition;Gray level co-occurrence matrix

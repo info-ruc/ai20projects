@@ -1,0 +1,1 @@
+Sentiment analysis;Dependency-based rules;Pattern-based rules;Improved whale optimization algorithm;Explicit aspect extraction

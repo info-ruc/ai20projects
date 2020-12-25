@@ -1,0 +1,1 @@
+Shape;Ellipticity measure;Shape invariants;Image processing;Computer vision;Pattern analysis

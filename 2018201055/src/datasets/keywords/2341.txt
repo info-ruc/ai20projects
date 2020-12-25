@@ -1,0 +1,1 @@
+Structural health monitoring;Monitoring data;Compressive sampling;Machine learning;Deep learning

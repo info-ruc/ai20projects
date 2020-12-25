@@ -1,0 +1,1 @@
+Deep learning;Unsupervised learning;Convolutional neural network;Alzheimer's disease prediction;Magnetic Resonance Imaging data;Computer aided diagnosis

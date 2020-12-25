@@ -1,0 +1,1 @@
+Fractional partial derivative;Matrix-collocation method;Error analysis;Residual function;Mean value theorem

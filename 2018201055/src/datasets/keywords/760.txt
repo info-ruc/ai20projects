@@ -1,0 +1,1 @@
+Alkali-activated concrete;Slump flow;Compressive strength;Machine learning;Random forest

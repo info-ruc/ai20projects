@@ -1,0 +1,1 @@
+Computational fluid dynamics (CFD);Process safety;Multi-phase flows;Volume of fraction (VOF);Dust-capture;Cleaning efficiency

@@ -1,0 +1,1 @@
+Computer-aided detection (CAD);Deep learning;Convolution neural network (CNN);Segmentation of adipose tissue;Subcutaneous fat area (SFA);Visceral fat area (VFA)

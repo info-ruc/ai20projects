@@ -1,0 +1,1 @@
+Deep learning;Object detection;Guidance line extraction;Automatic rice avoidance

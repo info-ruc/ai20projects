@@ -1,0 +1,1 @@
+Colon Cancer Detection;Machine Learning;Cost-effectiveness;Magnifying;CAD;computer-aided diagnosis;CRC;colorectal cancer;DNN-CAD;computer-aided diagnosis with a deep neural network;NBI;narrow-band imaging;NPV;negative predictive value;PIVI;Preservation and Incorporation of Valuable Endoscopic Innovations;PPV;positive predictive value;ROI;regions of interest

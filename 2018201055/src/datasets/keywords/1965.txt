@@ -1,0 +1,1 @@
+Active noise control;Nonlinear ANC;Multichannel ANC;Adaptive bilinear filter;Diagonal structure

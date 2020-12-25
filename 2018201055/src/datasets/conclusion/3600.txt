@@ -1,0 +1,1 @@
+To conclude, we have proposed a method that identifies and locates small objects in images to some confidence value based on a multi-task network. Our method has proved to be fast while it obtains better accuracy than the most accurate method. Continuing research would use the geometry of the object to improve detection of that object.

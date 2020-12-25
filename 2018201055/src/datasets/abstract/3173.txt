@@ -1,0 +1,5 @@
+The aim was to compare muscle fiber diameters obtained from standard muscle biopsy and from computer simulations based on recorded motor unit potentials (MUPs).
+Electromyography (EMG) and muscle biopsy were performed in 14 patients with a suspicion of a neuromuscular disorder. Histograms of the simulated muscle fiber diameters (SMFDs) were compared with those from the biopsy
+The values of the SMFDs were similar to those in the muscle biopsy for the same patient (p = 0.05) in all 14 cases.
+Comprehensive evaluation of EMG and biopsy findings supported by computer simulations may help resolve the discrepancy between the assessment of muscle by EMG and biopsy by explaining different results obtained with these two methods.
+Evaluation of the SMFDs that are comparable to biopsy findings extends the amount of information available from EMG.

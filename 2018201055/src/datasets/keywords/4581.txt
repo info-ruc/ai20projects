@@ -1,0 +1,1 @@
+65D17;D flip-flop;Computational design;Modelling and simulation;Transcriptional logic;Johnson counter

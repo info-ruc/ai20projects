@@ -1,0 +1,1 @@
+brain-computer interface (BCI);common spatial pattern (CSP);filter bank common spatial pattern (FBCSP);kinaesthetic motor imagery (KMI)

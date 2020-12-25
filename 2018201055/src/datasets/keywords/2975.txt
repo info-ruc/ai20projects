@@ -1,0 +1,1 @@
+Clipboard;Copy-and-paste;Drag-and-drop;Desktop interaction;Data transfer;Multiple screens

@@ -1,0 +1,1 @@
+Gender detection;Graphology;Data mining;Decision Tree;J48;ID3

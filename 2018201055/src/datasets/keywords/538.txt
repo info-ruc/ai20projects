@@ -1,0 +1,1 @@
+Energy;Evacuation;Linear;Robot;Speed;Time;Trade-offs;Wireless communication

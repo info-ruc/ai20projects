@@ -1,0 +1,1 @@
+Shape Memory Alloys;Cu-Al-Ni;Shape memory effect;Mathnatical model;MATLAB

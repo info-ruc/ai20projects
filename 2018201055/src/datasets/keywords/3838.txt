@@ -1,0 +1,1 @@
+Non-volatile memory;Hybrid memory architecture;In-memory file system;Multi-versioning

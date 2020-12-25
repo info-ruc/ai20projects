@@ -1,0 +1,1 @@
+Blur detection;Multiscale;Deep feature;Blur-aware saliency;Coarse-to-fine;Blur likelihood

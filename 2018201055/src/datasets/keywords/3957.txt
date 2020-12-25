@@ -1,0 +1,1 @@
+Semantic segmentation;Scene parsing;Contour;CRF;Adaptive depth

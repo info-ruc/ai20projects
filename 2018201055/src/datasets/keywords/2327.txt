@@ -1,0 +1,1 @@
+Computer-aided molecular design;Reaction solvent;COSMO-SAC;Solvation effect;Decomposition-based algorithm

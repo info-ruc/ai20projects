@@ -1,0 +1,1 @@
+Classification;Segmentation;Fuzzy c-means;Genetic algorithm;Biogeography based algorithm;Firefly algorithm

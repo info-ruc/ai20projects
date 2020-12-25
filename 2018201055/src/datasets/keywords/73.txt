@@ -1,0 +1,1 @@
+Synthetic aperture imaging;Occlusions handling;Image inpainting

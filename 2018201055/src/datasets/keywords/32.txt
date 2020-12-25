@@ -1,0 +1,1 @@
+Insecticidal activity;QSAR;Docking;Computational hits

@@ -1,0 +1,1 @@
+Computer science;Magnetic resonance image;Computer aided diagnosis;Convolutional neural network;Randomized neural networks;Extreme learning machine;Random vector functional link;Schmidt neural network;Chaotic bat algorithm

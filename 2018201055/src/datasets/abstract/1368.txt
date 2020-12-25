@@ -1,0 +1,7 @@
+Recently Jia (2019) proposed a new scheme that applies the variational principle directly to a coherent-pair condensate. This work publishes its computer code. The result is equivalent to that of the so-called variation after particle-number projection in the BCS case, but the new code always conserves the particle number and avoids the time-consuming projection. Specifically, the variational principle is solved by iterating the coherent-pair-structure expression at the energy minimum. We publish the code together with a semirealistic example that uses the realistic Vlow-k interaction and large model spaces (up to 15 harmonic-oscillator major shells). The average energy can be minimized to practically arbitrary precision. We also test the code under the pairing Hamiltonian.
+Program Title: VDPC(BCS)
+Program Files doi: http://dx.doi.org/10.17632/rh9mpxgd4m.1
+Licensing provisions: CC by NC 3.0
+Programming language: Mathematica and Matlab
+Nature of problem: Apply the variational principle directly to a coherent-pair condensate. The result is equivalent to that of the so-called variation after particle-number projection in the BCS case.
+Solution method: The coherent-pair structure vα is the variational parameter. Requiring the energy gradient vanishes, we obtain the analytical expression of vα at the energy minimum. The variational principle is solved by iterating this vα expression until convergence. The particle number is always conserved, and the time-consuming projection by numerical gauge-angle integration is avoided.

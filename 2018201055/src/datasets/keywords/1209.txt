@@ -1,0 +1,1 @@
+Image segmentation;Grain safety;SVM;Spatial constraints;Computer vision

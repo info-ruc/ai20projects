@@ -1,0 +1,1 @@
+Deep learning;Convolutional Neural Network (CNN);Polyp detection;Polyp localization;Polyp classification;Computer-aided diagnosis

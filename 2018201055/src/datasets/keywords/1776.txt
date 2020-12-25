@@ -1,0 +1,1 @@
+Pattern mining;Malaria;Divergent association rules

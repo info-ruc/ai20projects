@@ -1,0 +1,1 @@
+small scale data center;enclosed aisle;cooling efficiency;simulation;experiment

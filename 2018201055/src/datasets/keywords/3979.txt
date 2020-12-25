@@ -1,0 +1,1 @@
+Windows 10;Windows forensics;Program execution artifacts;Program execution analysis;Registry forensics

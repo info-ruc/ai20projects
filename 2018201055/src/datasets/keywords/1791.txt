@@ -1,0 +1,1 @@
+ASIC;Computer Vision;FPGA;Gray;Image Processing;RGB

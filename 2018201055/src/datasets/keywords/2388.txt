@@ -1,0 +1,1 @@
+Sorting;MinFinder;Time;Space Complexity;Correctness;Definiteness;Finiteness;Effectiveness;Inplace;Stability;Loop Invariant

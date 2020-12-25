@@ -1,0 +1,1 @@
+Portable VPN;hardware-based VPN;rabbit algorithm;Open VPN-R;Raspberry Pi 3;VPN-SSL

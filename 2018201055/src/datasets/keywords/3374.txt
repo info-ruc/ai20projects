@@ -1,0 +1,1 @@
+Micro-expression;Dynamic information;Constraint Local Model (CLM);Local Binary Pattern (LBP);Optical flow (OF)

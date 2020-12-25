@@ -1,0 +1,1 @@
+Brain computer interface;Mental tasks classification;Feature extraction;Feature selection;Support vector machine

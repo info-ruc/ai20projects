@@ -1,0 +1,1 @@
+Mobile robot;Continuous Bezier curve;Smooth path planning;Adaptive fractional-order velocity;Particle swarm optimization

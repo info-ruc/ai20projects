@@ -1,0 +1,1 @@
+Thermal acoustic radiation;Temperature reconstruction;Heat equation

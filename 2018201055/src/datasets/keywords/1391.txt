@@ -1,0 +1,1 @@
+Computer science;Wood pith detection;Parawood pith location;Deep neural networks object detection;SSD MobileNet;You-only-look-once

@@ -1,0 +1,1 @@
+Deep learning;Convolutional neural networks;Weight-sharing;Biologically plausible architectures

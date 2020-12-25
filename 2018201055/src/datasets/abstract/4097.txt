@@ -1,0 +1,5 @@
+The aim of this study was to propose a new computer based method for measuring acetabular angles on hip radiographs and to assess its practicality, sensitivity and reliability for acetabular angle measurement.
+A total of 314 acetabulum were assessed on 157 pelvic X-ray images. Acetabular angles were measured with both the conventional method (Method 1) and our proposed method (Method 2). All the Acetabular Index (AI) angle, Acetabular Angle (AA) and Acetabular Center (ACM) angle were measured with both methods.
+The mean AI angle for Method 1 is 11.02° ± 2.7° and the mean AI angle for Method 2 is 10.08° ± 1.88°, the mean AA angle for Method 1 is 39.5° ± 5.3° and the mean AA angle for Method 2 is 39.36° ± 4.68°, the mean ACM angle for Method 1 is 50.5° ± 6.01° and the mean ACM angle for Method 2 is 55.42° ± 12.43°.
+Our novel automated method appear to be reliable and practical for acetabular angle measurement on hip radiographs.
+Level III, Diagnostic study

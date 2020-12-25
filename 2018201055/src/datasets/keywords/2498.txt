@@ -1,0 +1,1 @@
+Ant Colony Optimization;Genetic Algorithms;Simulated Annealing;Artificial intelligence;Moving target traveling salesman problem;Moving targets

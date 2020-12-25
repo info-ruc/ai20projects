@@ -1,0 +1,1 @@
+Least squares support vector machines;Orthogonal kernel;Fredholm integral equation;Galerkin LS-SVR;Collocation LS-SVR

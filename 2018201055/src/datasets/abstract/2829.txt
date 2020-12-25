@@ -1,0 +1,1 @@
+In this note, we review the article published by Zhu et al. in Future Generation Computer Systems in 2017. We show that their construction of a blind signature does not hold the correctness requirement or the blindness requirement.

@@ -1,0 +1,1 @@
+Photosensitizer;Dental adhesive;QSPRs;Optimization;MINLP;Connectivity indices;Tabu Search

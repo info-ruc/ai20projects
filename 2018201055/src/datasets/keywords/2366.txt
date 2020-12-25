@@ -1,0 +1,1 @@
+Agriculture;Artificial neural networks;Computer vision;Image processing;Supervised learning

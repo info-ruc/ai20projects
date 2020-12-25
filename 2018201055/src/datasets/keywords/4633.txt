@@ -1,0 +1,1 @@
+Completely independent spanning tree;Crossed cube;Fault tolerance;Reliable broadcasting

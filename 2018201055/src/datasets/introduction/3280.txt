@@ -1,0 +1,30 @@
+Denote by K the algebra of either the real numbers R, the complex numbers C or the quaternions H.
+Let G(n)=O(n,K) be the Lie group of matrices A∈Kn×n such that AA∗=In, where A∗=At¯ is the conjugate transpose. Depending on K this group corresponds to the orthogonal group O(n), the unitary group U(n) or the symplectic group Sp(n).
+Let I∈Kn×n be the identity matrix. The classical Cayley transform [1, Lecture 3] cI:Ω(I)→Ω(I) is defined by cI(X)=(I−X)(I+X)−1with Ω(I)={X∈Kn×n∣(I+X)−1 exists}.This map satisfies the equality cI2=id. Moreover cI induces a diffeomorphism between the tangent space TIG(n)={X∈Kn×n∣X+X∗=0}and Ω(I)∩G(n). This construction was generalized by A. Gómez-Tato and the first two authors [2] to any A∈G(n) as a map cA:Ω(A)→Ω(A∗) defined by (1)cA(X)=(I−A∗X)(A+X)−1=cI(A∗X)A∗,with Ω(A)=X∈Kn×n∣(A+X)−1 exists.In this case we have cA−1=cA∗ and there is a diffeomorphism between the tangent space (2)TAG(n)={X∈Kn×n∣A∗X+X∗A=0}and Ω(A∗)∩G(n).
+The Cayley transform for orthogonal groups is a well known construction with applications in real and complex analysis, linear algebra and computer science. In this work, we construct Cayley transforms on Stiefel manifolds. Applications to the Lusternik–Schnirelmann category and optimization problems are presented.
+We first specify some conventions and notations in use in this paper and state our main results.
+Let 0≤k≤n. The compact Stiefel manifold On,k of orthonormal k-frames in Kn is the set of matrices x∈Kn×k such that x∗x=Ik. This manifold appears also as the base space of the principal bundle G(n−k)⟶ιG(n)⟶ρOn,k,where ι(B)=B00Ik and ρ is the projection onto the last k columns. If A∈G(n) and x=ρ(A), we denote by ρ∗A:TAG(n)→TxOn,k the map induced between the tangent spaces.
+The next statement contains the existence and the main properties of a Cayley transform in Stiefel manifolds.
+
+Theorem 1.1Let
+0≤k≤n and
+x=TP∈On,kwith
+P∈Kk×k. We choose
+A=αTβP∈G(n). Then there exists a map
+γA:TxOn,k→On,k, which is called a Cayley transform for the Stiefel manifold, such that
+γA∘ρ∗A=ρ∘cA. Moreover we have the following properties:
+1.The map
+γA is injective on the open subset
+Γx=v=AXY∈TxOn,k∣(βX+P)−1 exists.
+This subset
+Γx does not depend on the choice of
+A such that
+ρ(A)=x. Furthermore, if
+γA is injective on an open subset
+U⊂TxOn,k then we have
+U⊂Γx.2.The map
+γA induces a diffeomorphism between
+Γx⊂TxOn,k and the open subset
+Ωx=τπ∈On,k∣(π+P∗)−1 exists.
+
+

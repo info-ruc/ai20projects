@@ -1,0 +1,1 @@
+Ground Penetrating Radar;Rebar detection;Automation;Image processing;Convolutional neural network;Deep learning;Bridge inspection

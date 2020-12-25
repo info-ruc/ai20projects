@@ -1,0 +1,1 @@
+Information retrieval systems (L01.700.508.300);Search engine (L01.470.875);Electronic health records (E05.318.308.940.968.625.500);Unified Medical Language System (L01.453.245.945.800);Query recommendation;Query expansion

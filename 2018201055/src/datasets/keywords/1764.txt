@@ -1,0 +1,1 @@
+Vincular patterns;Inversion sequences;Ascent sequences;Bell numbers;Fishburn numbers;Semi-Baxter numbers;Powered Catalan numbers

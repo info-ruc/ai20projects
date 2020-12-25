@@ -1,0 +1,1 @@
+Distributed computing;Cloud computing;Green computing;Task-based applications;Energy-aware scheduling;Multi-heuristic resource allocation

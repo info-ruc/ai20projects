@@ -1,0 +1,1 @@
+Data visualisation;Kernel density estimation;Reduced chi-squared statistic;Mean square weighted deviation;Geostatistics

@@ -1,0 +1,1 @@
+Brain–machine interface;Electroencephalography;Emotiv Epoc headset;Fast Fourier transform;Principal component analysis;Support vector machine

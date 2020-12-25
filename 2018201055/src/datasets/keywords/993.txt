@@ -1,0 +1,1 @@
+Linear codes;Minimum distance;Genetic algorithms

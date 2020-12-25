@@ -1,0 +1,1 @@
+Architectural distortion;Breast cancer;Convolutional neural network (CNN);Data augmentation;Deep learning;Mammography

@@ -1,0 +1,1 @@
+Liver transplantation;Data preprocessing;Data mining;Principal component analysis;Ranking;Association rule mining algorithms;Survival prediction model

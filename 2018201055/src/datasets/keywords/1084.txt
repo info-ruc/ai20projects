@@ -1,0 +1,1 @@
+Hazards;Ontology;Computer vision;Safety;Knowledge graph database

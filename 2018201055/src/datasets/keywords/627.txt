@@ -1,0 +1,1 @@
+Moving least squares;Inverse distance weighting;Interpolation;Localization;K-Nearest neighborhood;65D05;62J10;62H99

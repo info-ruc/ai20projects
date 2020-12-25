@@ -1,0 +1,1 @@
+Reverse time migration (RTM);Acoustic waves;Pseudospectral time domain (PSTD) method;TG-RTM;GPU;CUDA;Seismic imaging

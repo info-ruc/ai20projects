@@ -1,0 +1,1 @@
+Directed bore-hole;Drill string;Curvature discontinuity;Clothoid;Spline interpolation

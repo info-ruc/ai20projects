@@ -1,0 +1,1 @@
+Electroencephalography;Hierarchical extreme learning machine;Brain computer interface;Wavelet packet transform;Human intelligence

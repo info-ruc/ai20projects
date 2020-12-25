@@ -1,0 +1,1 @@
+Protein–protein interaction network;Essential protein;Human drug network;Drug-target proteins;Network centrality measures

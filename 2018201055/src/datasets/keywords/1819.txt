@@ -1,0 +1,1 @@
+Penalty factor separation;Diversity preservation;Evolutionary computation;Dynamic subpopulation number control;Messy-coding;Genetic algorithm

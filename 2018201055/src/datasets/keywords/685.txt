@@ -1,0 +1,1 @@
+Fog computing;Smart grid;Privacy preservation;Fault-tolerance;Homomorphic encryption

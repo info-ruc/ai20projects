@@ -1,0 +1,1 @@
+This work considers the modern technologies of Remotely Piloted Aircraft (RPA) design and manufacturing. A theoretical research and computer modeling of the aerodynamic properties of separate RPA parts and the aircraft in general have been performed.

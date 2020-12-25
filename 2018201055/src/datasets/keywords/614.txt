@@ -1,0 +1,1 @@
+Big data;K-means clustering;Cloud computing;Subspace learning

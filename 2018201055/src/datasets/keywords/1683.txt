@@ -1,0 +1,1 @@
+Intent based networking;End-to-end orchestration;Intelligent network services;Distributed infrastructure;Resource modeling;Software defined networking;Real-time;Interactive

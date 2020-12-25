@@ -1,0 +1,1 @@
+A computer-aided real-time bed activities monitoring system, consisting of a clinical sickbed with pressure-sensing components and programmable software, was developed in this study. This study indicated that the system can be used to detect postural changes with good accuracy and excellent test-retest reliability.

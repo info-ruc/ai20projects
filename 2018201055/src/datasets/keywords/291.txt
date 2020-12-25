@@ -1,0 +1,1 @@
+Sentiment analysis;Deep learning;Convolutional neural network;Long short-term memory;Attention mechanism

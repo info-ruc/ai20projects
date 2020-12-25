@@ -1,0 +1,1 @@
+Defect detection;Computer vision;Image local segmentation;Orange surface defect

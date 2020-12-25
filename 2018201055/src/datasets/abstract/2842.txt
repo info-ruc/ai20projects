@@ -1,0 +1,19 @@
+This paper presents a version of simulation program, which facilitates the calculation of changes to the intensity of RHEED oscillations in the function of the glancing angle of incidence of the electron beam, employing various models of scattering crystal potential for heteroepitaxial structure of hexagonal GaN film nucleated on AlN(0 0 0 1) and AlN(0 0 0 1¯) surfaces, including the possible existence of various diffuse scattering models through the layer parallel to the surface.
+Title of program: RHEED_DIFF_WW
+Program Files doi: http://dx.doi.org/10.17632/hn3pt6ytky.2
+Licensing provisions: GNU General Public License 3
+Programming language used: C++
+Journal reference of previous version: Computer Physics Communications 207 (2016) 536–538
+Does the new version supersede the previous version?: No. It is a supplement to the previous version.
+Reasons for the new version: Responding to users’ feedback we present a practical procedure of construction of simulation program, which facilitates the calculation of changes the intensity of RHEED rocking curves, employing various models of scattering crystal potential for heteroepitaxial structure of wurtzite-type GaN on AlN. The work demonstrates that the polarity of GaN/AlN heterojunctions can be investigated in real time by RHEED rocking curves measurements.
+Nature of problem: Aluminum nitride is a subject of intense research as a substrate material in heterojunctions for short-wavelength optoelectronics, high-power and high-frequency electronics. The lattice constants and thermal expansion coefficients of AlN and GaN are close enough to provide a low defect density in epitaxial GaN grown on the AlN substrates. Both GaN and AlN possess a wurtzite crystal structure (non-centrosymmetric), which makes it either metal or N polar along the c-axis with [0 0 0 1] or [0 0 0 1¯] direction, respectively, and which strongly influences their physical properties [1]. From the practical point of view, the distinction between these two polarities is very important for the many applications of the GaN/AlN heterostructures [2-4].
+Method of solution: RHEED intensities are calculated within the general framework described in Refs. [5] and [6].
+Summary of revisions: The presented version of the program implements an original algorithm for calculations of scattering potentials for regular all-metal-polar GaN(0001)/AlN(0001) and all-N-polar GaN(0 0 0 1¯)/AlN(0 0 0 1¯) heterostructures, and solving a time-independent Schrödinger equation for high-energy electrons.
+During the numerical calculations of the changes in the intensity of the specular beam in the function of the glancing angle, it was assumed that the azimuth of the incident beam direction corresponds to the one-beam condition, the electron energy equals 10 keV, the temperature of the crystal equals 300 K, glancing angle was increased from 0.5∘ to 5.0∘, and the value of αparameter = 0.1 and β= 0.5 for the MODEL3 of the scattering potential [6] (See Fig. 1, Fig. 3).
+References
+E. S. Hellman, MRS Internet J. Nitride Semicond. Res. 3, 11 (1998).
+A. Onen, D. Kecik, E. Durgun, and S. Ciraci, Phys. Rev. B 95 (2017) 155435.
+P. Sohi, D. Martin and N. Grandjean, Semicond. Sci. Technol. 32 (2017) 075010.
+M. Agrawal, K. Radhakrishnan, N. Dharmarasu1, and S. S. Pramana, Jpn. J. Appl. Phys. 54 (2015) 065701-6.
+A. Daniluk, Comput. Phys. Commun. 207 (2016) 536-538.
+A. Daniluk, Comput. Phys. Commun. 185 (2014) 3001-3009.

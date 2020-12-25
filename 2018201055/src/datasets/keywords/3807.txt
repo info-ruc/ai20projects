@@ -1,0 +1,1 @@
+joint entropy;learning instance;image retrieval;watershed segmentation;precise-recall curve;AP value;AUC value

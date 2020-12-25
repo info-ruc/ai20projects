@@ -1,0 +1,1 @@
+Overlapping community detection;Bayesian preference;Non-negative matrix factorization;Affiliation model

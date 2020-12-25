@@ -1,0 +1,1 @@
+Time series Clustering;Genetic algorithm;Quality of Service;Large data set;Dynamic Time Warping;Variable chromosome length

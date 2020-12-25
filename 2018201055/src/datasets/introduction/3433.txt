@@ -1,0 +1,15 @@
+The emergence of large-scale social and information networks has motivated the analysis on community structure of complex networks. A community, also referred to as a cluster, is a set of vertices with more connections among them and less connections between them and the rest of the graph [1].
+Methods for identifying communities as well as overlapping communities are considered, but they are often computationally expensive making them unsuitable for large graphs. Most overlapping community detection algorithms can hardly deal with graphs with thousands of nodes [[2], [3], [4]]. Link Clustering method (LC) [5], Clique Percolation Method (CPM) [2], Mixed Membership Stochastic Blockmodel (MMSB) [3] were considered the state of the art overlapping community detection methods, while MMSB can hardly deal with graphs with more than 1000 nodes, the execution time of LC and CPM becomes extremely large when they process networks with more than 10000 nodes [6]. And more efficient overlapping community detection methods were proposed, these methods include Bigclam [6], Demon [7], Oslom [8], NISE (Neighborhood-Inflated Seed Expansion) [9], We will show that these methods also cannot scale to large graphs in affordable time. Recently, a growing body of work has been identified a community from a few nodes in the ground-true community by local expansion [[10], [11], [12]], among which LEMON (Local Expansion via Minimum One Norm) [12] achieves extremely high F1 score in real networks, while these methods need much structure information of the ground-truth community.
+In this paper, we present a Density-based Seeding and Conductance Minimizing (DSCM) algorithm for overlapping community detection, which is much faster than the current global solutions when getting higher quality and achieves much better communities in quality than the local methods in the state of the art. To the best of our knowledge, this is the first seeding method that selects seeds by the total degree [13] and density of local clusters.
+The main contributions are summarized as follows.
+
+
+
+•
+We propose a fast and high quality overlapping community detection method that is more than two orders of magnitude faster than the state of the art global overlapping community detection methods with better quality and obtains much better communities in quality than the local methods in the state of the art.
+•
+We propose a parameter-free seeding method that selects seeds by the total degree and density of the local clusters, and identifies good seeds spanning over the whole network.
+•
+We prove that only the number of links of the vertex to the community needs to be calculated to obtain conductance variation of a community when inserting a vertex to the community or removing a vertex from the community. And we reduce the time complexity of community refining phase to linear time by means of the theorems.
+•
+According to our experimental results, overlapping community detection metrics are still far from obtaining high quality communities in very large real networks without any priori structure information of the ground-truth communities.

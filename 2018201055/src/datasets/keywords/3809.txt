@@ -1,0 +1,1 @@
+Deep learning;Stacked sparse auto encoder;Pedestrians’ gender classification;Pedestrian parsing;Soft max classifier

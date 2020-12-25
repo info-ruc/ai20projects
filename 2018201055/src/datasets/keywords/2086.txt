@@ -1,0 +1,1 @@
+Agricultural airboat;Autonomous navigation;Computer vision;Positioning system;UAV

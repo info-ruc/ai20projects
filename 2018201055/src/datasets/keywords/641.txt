@@ -1,0 +1,1 @@
+Vibrational scale factor;M06-2X method;Concordance correlation coefficient;Correlation;Regression

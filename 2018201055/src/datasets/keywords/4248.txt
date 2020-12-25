@@ -1,0 +1,1 @@
+Major depressive disorder;EEG-based diagnosing of depression;EEG-based linear features;Machine learning techniques for depression;Supervised classification;EEG alpha interhemispheric asymmetry;EEG spectral power

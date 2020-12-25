@@ -1,0 +1,1 @@
+Linear Delta Robot;Energy efficiency;Dynamic modeling;Parallel robot;3D Printing

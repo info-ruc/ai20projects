@@ -1,0 +1,1 @@
+Complex-valued Hopfield neural network;Commutative quaternion;Multistate neuron;Projection rule

@@ -1,0 +1,1 @@
+Survey;Product detection;Product recognition;Planogram compliance;Multiple object detection;Out-of-stock detection

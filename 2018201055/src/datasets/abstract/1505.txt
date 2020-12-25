@@ -1,0 +1,1 @@
+We present the CAPD::DynSys library for rigorous numerical analysis of dynamical systems. The basic interface is described together with several interesting case studies illustrating how it can be used for computer-assisted proofs in dynamics of ODEs.

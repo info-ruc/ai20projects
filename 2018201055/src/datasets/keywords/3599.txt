@@ -1,0 +1,1 @@
+High performance robotic computing — HPRC;General-purpose computing robot;HPC cluster of robots;HPRC cluster;Parallel robotic computing node — PRCN;General-purpose computing mission

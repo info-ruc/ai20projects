@@ -1,0 +1,1 @@
+NDFT;MPI;GPU;CUDA;CUNFFT;HP-NFFT;Madelung constant;Electrostatic interactions

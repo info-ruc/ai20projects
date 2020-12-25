@@ -1,0 +1,1 @@
+Critical infrastructures;Cyber-physical attacks;IACS;Industrial IoT;SCADA systems;Industrial and automation control systems

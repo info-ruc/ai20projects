@@ -1,0 +1,1 @@
+Software agents;BDI Architecture;Remediation action;Cause-effect;Goal generation;Plan selection

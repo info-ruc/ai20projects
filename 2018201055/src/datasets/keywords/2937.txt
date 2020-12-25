@@ -1,0 +1,1 @@
+CNN;BCNN;Processor;Low power;Throughput;Dissipation;IoT;FPGA

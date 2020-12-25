@@ -1,0 +1,1 @@
+Optical coordinate measurement;Camera pose optimisation;Visible point analysis

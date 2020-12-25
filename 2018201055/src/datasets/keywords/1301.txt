@@ -1,0 +1,1 @@
+Computer communication;Network;Speckle noise;Video compression;Rate control;Compression ratio;Multimedia;PSNR

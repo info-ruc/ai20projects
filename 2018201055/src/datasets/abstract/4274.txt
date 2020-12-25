@@ -1,0 +1,23 @@
+A computer program, Activity, was developed to predict the activity and gamma lines of materials irradiated with an ion beam. It uses the TENDL (Koning and Rochman, 2012) [1] proton reaction cross section database, the Stopping and Range of Ions in Matter (SRIM) (Biersack et al., 2010) code, a Nuclear Data Services (NDS) radioactive decay database (Sonzogni, 2006) [2] and an ENDF gamma decay database (Herman and Chadwick, 2006) [3]. An extended version of Bateman’s equation is used to calculate the activity at time t, and this equation is solved analytically, with the option to also solve by numeric inverse Laplace Transform as a failsafe. The program outputs the expected activity and gamma lines of the activated material.
+Program summary
+Program title: Activity
+Catalogue identifier: AFBS_v1_0
+Program summary URL: http://cpc.cs.qub.ac.uk/summaries/AFBS_v1_0.html
+
+Program obtainable from: CPC Program Library, Queen’s University, Belfast, N. Ireland
+Licensing provisions: GNU GPL v3
+No. of lines in distributed program, including test data, etc.: 688828
+No. of bytes in distributed program, including test data, etc.: 71056048
+Distribution format: tar.gz
+Programming language: Fortran.
+Computer: PCs or HPCs.
+Operating system: Linux (tested on Debian).
+Has the code been vectorized or parallelized?: OpenMPI
+RAM: 250MB per process + 200MB overhead
+Classification: 2.2, 17.8.
+Nature of problem: To calculate the predicted activity of an ion irradiated target. The expected range of ion energies is between 1MeV and 200MeV; this is the range of the available ion cross section data.
+Solution method: The program loads cross section data from the TENDL database and trajectory data from a SRIM [1] simulation exyz data file. It uses this data to calculate the production/loss rate of each isotope in the simulated target. Radioactive decay equations are used to calculate the amounts and activity of each radioactive isotope at the set time.
+Running time: Typically the Activity program runs each input from seconds to no more than several minutes.
+References: [1]SRIM — The stopping and range of ions in matter (2010). Ziegler, James F., Ziegler, M.D. and Biersack, J.P. 2010, Nuclear Instruments and Methods in Physics Research Section B, Vol. 268, pp. 1818–1823.
+
+SRIM — The stopping and range of ions in matter (2010). Ziegler, James F., Ziegler, M.D. and Biersack, J.P. 2010, Nuclear Instruments and Methods in Physics Research Section B, Vol. 268, pp. 1818–1823.

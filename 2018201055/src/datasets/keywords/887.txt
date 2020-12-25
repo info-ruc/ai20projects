@@ -1,0 +1,1 @@
+65F10;65W05;Dual-phase-lagging heat conduction equation;Homogenization;Multiscale asymptotic method;Laplace transformation;Finite element method;Composite materials

@@ -1,0 +1,1 @@
+FPGA;AES encryption;Parallel technology

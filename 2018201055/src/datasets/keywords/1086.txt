@@ -1,0 +1,1 @@
+Image forensics;Computer-generated image;Convolutional neural network;Generalization;Negative samples

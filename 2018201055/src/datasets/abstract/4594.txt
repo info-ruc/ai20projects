@@ -1,0 +1,1 @@
+The aim is an experimental research on the flat objects recognition by linear discriminant analysis, using dimensionless signs of the contours of their binary images and determining the possibility of applying this method in computer vision systems.

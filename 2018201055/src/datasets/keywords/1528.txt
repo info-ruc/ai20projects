@@ -1,0 +1,1 @@
+HCD;human-centred design;CDSS;clinical decision support system;PE;pulmonary embolism;UT;usability testing;Clinical decision support;Human-centred design;Usability;Design;Pulmonary embolism

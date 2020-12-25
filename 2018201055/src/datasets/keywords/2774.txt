@@ -1,0 +1,1 @@
+capture range;hold-in range;pull-in range;lock-in range;nonlinear analysis;phase-locked loop;PLL

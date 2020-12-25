@@ -1,0 +1,1 @@
+Biomedical engineering;Computer science;Electrical engineering;Medical imaging;Computer engineering;Signal processing;Image processing;Signal processing;Cross-spectral matching;Phase-based iris recognition;Band-limited phase-only correlation (BLPOC);Phase-only correlation (POC);Iris recognition

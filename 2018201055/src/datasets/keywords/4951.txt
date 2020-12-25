@@ -1,0 +1,1 @@
+Local detector;Local descriptor;Visual words model;Fully affine space;Evaluation

@@ -1,0 +1,1 @@
+Pavement cracking;Digital Image;Deep learning;Transfer learning;Random Forest;Convolutional Neural Networks

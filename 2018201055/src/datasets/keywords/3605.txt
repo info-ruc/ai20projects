@@ -1,0 +1,1 @@
+Concurrent hash table;Multiprocessors;Multi-core;Synchronization;NUMA;Hardware transactional memory

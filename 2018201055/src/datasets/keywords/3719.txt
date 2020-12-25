@@ -1,0 +1,1 @@
+Action recognition;Attention mechanism;Spatial-temporal relations;LSTM

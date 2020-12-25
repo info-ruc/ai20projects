@@ -1,0 +1,1 @@
+unmanned aerial vehicle;drone;machine learning;deep learning;object detection;pattern recognition;neural network

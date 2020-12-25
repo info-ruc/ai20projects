@@ -1,0 +1,1 @@
+Computer-aided diagnosis (CAD);Mammograms;K-nearest neighbor classifier (KNN);Support vector machine (SVM);Artificial neural network (ANN)

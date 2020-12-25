@@ -1,0 +1,1 @@
+Simon's problem;Exact query complexity;Quantum computing

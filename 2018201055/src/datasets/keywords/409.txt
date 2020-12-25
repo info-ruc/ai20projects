@@ -1,0 +1,1 @@
+Coordination;Distributed systems;Design patterns;Self-organisation;Self-improving integration;Edge computing;Aggregate programming

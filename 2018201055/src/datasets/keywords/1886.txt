@@ -1,0 +1,1 @@
+Burn;Pain;Wound care;Child;Randomized controlled trial;CI;confidence interval;MBPS;modified behavioural pain scale;MD;mean difference;PPI;present pain intensity;SD;standard deviation;TBSA;total body surface area;VAS;Visual Analogue Scale;VNS;Verbal Numeric Scale

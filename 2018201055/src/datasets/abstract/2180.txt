@@ -1,0 +1,1 @@
+We show that the global solution curves for both Dirichlet and Neumann problems provide numerical evidence of uniqueness of nodal ground state solutions for equations describing standing waves for a class of nonlinear Schroedinger’s equations.

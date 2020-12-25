@@ -1,0 +1,1 @@
+Simulation;Transfusion ratio;Massive transfusion;Resuscitation

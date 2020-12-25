@@ -1,0 +1,1 @@
+62M45;74PXX;68TXX;Linear trend estimation;Patterns recognition;Multi weighted linear regression;Decisions support systems

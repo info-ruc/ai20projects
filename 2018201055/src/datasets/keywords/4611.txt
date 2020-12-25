@@ -1,0 +1,1 @@
+Brain-computer interface (BCI);Electroencephalogram (EEG);Rapid serial visual presentation (RSVP);Target image retrieval;Convolutional neural network (CNN);Bayesian brain-computer interaction,

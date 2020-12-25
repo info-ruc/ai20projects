@@ -1,0 +1,1 @@
+Supercapacitor;Ionic liquid;Graphene electrode;Differential capacitance;Electric double layer structure;Charging mechanism;Molecular dynamics simulation

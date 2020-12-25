@@ -1,0 +1,1 @@
+Steady-State Visual Evoked Potentials;Brain-computer interface;Convolutional neural networks;Comparing network;Task-related component analysis

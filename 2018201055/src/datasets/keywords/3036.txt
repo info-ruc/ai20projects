@@ -1,0 +1,1 @@
+Aneurysm shape;Computer-assisted 3-dimensional;Intracranial aneurysm;Morphology;Size measurement;2D;2-dimensional;3D;3-dimensional;CI;confidence interval;DSA;digital subtraction angiography/angiographic;IA;intracranial aneurysm;ICC;intraclass correlation coefficient;UI;undulation index

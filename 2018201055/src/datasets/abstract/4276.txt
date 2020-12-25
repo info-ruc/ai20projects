@@ -1,0 +1,5 @@
+We investigated the efficacy of a P300-based brain-computer interface (BCI) for patients with spinocerebellar ataxia (SCA), which is often accompanied by cerebellar impairment.
+Eight patients with SCA and eight age- and gender-matched healthy controls were instructed to input Japanese hiragana characters using the P300-based BCI with green/blue flicker. All patients depended on some assistance in their daily lives (modified Rankin scale: mean 3.5). The chief symptom was cerebellar ataxia; no cognitive deterioration was present. A region-based, two-step P300-based BCI was used. During the P300 task, eight-channel EEG data were recorded, and a linear discriminant analysis distinguished the target from other nontarget regions of the matrix.
+The mean online accuracy in BCI operation was 82.9% for patients with SCA and 83.2% for controls; no significant difference was detected.
+The P300-based BCI was operated successfully not only by healthy controls but also by individuals with SCA.
+These results suggest that the P300-based BCI may be applicable for patients with SCA.

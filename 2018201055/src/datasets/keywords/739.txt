@@ -1,0 +1,1 @@
+Scene parsing;Real-time method;Deep learning

@@ -1,0 +1,1 @@
+Crowdsourcing;Construction safety;Image annotation;Bayesian network model;Safety inspection

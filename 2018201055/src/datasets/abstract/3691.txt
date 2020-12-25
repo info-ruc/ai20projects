@@ -1,0 +1,1 @@
+Several open-source hardware and software technologies (RAMPS, Python, PySerial, OpenCV) were used to control an automated flow chemical synthesis system. The system was used to effect the synthesis of a series of benzamides. An inexpensive Raspberry Pi single board computer provided an electronic interface between the control computer and the RAMPS motor driver boards.

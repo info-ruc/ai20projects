@@ -1,0 +1,1 @@
+Support vector machine;Group method of data handling;Ensemble selection;Regularity criterion;Probabilistic output

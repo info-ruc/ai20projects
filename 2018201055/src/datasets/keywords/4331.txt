@@ -1,0 +1,1 @@
+Lung’s air volume;COPD;Segmentation;CT image;Optimization;Partial volume

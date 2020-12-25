@@ -1,0 +1,1 @@
+NMR pulse sequence design;Automation;Simulated annealing;GPU computing;Separated local field experiments;Dipolar couplings;PISEMA;SAMPI4;ROULETTE

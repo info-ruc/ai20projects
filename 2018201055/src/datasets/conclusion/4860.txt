@@ -1,0 +1,3 @@
+This study firstly demonstrates the possibility of using the combination of MRI, fractals algorithm and data mining techniques to determine physico-chemical parameters of fresh and dry-cured loin in a non-destructive way.
+FTA and OPFTA fractal algorithm could be used for the analysis of the MRI of loin, with OPFTA being more appropriate for prediction purposes. In addition, the acquisition sequence and the data mining techniques (MLR and IR) also influence on the accuracy of the prediction of physico-chemical parameters of loin.
+In this study, the combination of SE as acquisition sequence, OPFTA as fractal algorithm and MLR as data mining technique is proposed to predict physico-chemical traits of fresh and dry-cured loins with high accuracy.

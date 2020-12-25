@@ -1,0 +1,1 @@
+Disk;Exit;Robot;Search and Fetch;Treasure

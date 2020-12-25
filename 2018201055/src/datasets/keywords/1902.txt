@@ -1,0 +1,1 @@
+primary;47B06;secondary;41A46;46B07;Entropy number;Covering number;Finite-dimensional vector space;Volume argument;ε-net

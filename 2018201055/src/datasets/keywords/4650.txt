@@ -1,0 +1,1 @@
+Cervical cancer screening;Computer aided diagnosis;Image classification;Pyramid histogram;Local binary patterns;Convolutional neural network

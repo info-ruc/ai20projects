@@ -1,0 +1,1 @@
+Data glove;Object recognition;Basic daily activities;Signal processing;Machine learning

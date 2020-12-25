@@ -1,0 +1,1 @@
+Dual numbers;Automatic differentiation;Uncertainty propagation;Sensitivity analysis;Sandwich formula;Material Testing Reactor

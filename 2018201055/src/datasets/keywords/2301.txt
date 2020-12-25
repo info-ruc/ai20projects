@@ -1,0 +1,1 @@
+Leaf images;Neutrosophic logic;Texture features;Intensity features;Classifiers

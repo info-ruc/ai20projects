@@ -1,0 +1,1 @@
+Steady-state visual evoked potential(SSVEP);Brain–computer interface(BCIs);Electroencephalogram;Classification accuracy

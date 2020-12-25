@@ -1,0 +1,1 @@
+Arabic;Syntactic errors;Natural language processing;Ontology

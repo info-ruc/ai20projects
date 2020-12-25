@@ -1,0 +1,1 @@
+Collocation points;Convergence;Dickson polynomials;Matrix method

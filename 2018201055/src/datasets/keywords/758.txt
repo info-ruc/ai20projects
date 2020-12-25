@@ -1,0 +1,1 @@
+Orthogonal frequency division multiplexing (OFDM);16-Ary quadrature amplitude modulation (16QAM);Pre-equalization (PE);Probabilistic shaping (PS)

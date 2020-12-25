@@ -1,0 +1,1 @@
+3D landmark detection;deep convolutional neural network;position map;UV map

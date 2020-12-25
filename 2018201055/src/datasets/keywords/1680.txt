@@ -1,0 +1,1 @@
+memory forensics;Authenticode;Digital signature verification;Code signing;Volatility

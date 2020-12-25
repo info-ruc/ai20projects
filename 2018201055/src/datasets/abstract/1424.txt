@@ -1,0 +1,5 @@
+In the last decade, many computer science disciplines have been manipulating large amounts of data like artificial neural networks, data recognition, data mining and big data.
+Recently, many programmers and application designers have relied on the matrices in their algorithms to handle large numbers of data simultaneously to enriching the parallelism for their systems.
+However, due to the growth of the data amount in the matrices, there is a need to reshaping these matrices according to the capabilities of the computer systems that are processing these data.
+Consequently, our idea is developing algebraic operations that can represent the reshaping of matrices within the mathematical equations.
+In this paper, we develop fully two novel compatible algebraic matrices operations to solve this problem. The first operation called “Matrix-Separation” and the second operation denoted by “Matrices-Joining”. These two novel operations assist the programmers and scientists to perform their programs evaluations and developments.

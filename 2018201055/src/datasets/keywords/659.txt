@@ -1,0 +1,1 @@
+Nearest-neighbor classification;Training set reduction;Machine learning

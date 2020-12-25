@@ -1,0 +1,7 @@
+Given the ubiquity of lattice models in physics, it is imperative for researchers to possess robust methods for quantifying clusters on the lattice — whether they be Ising spins or clumps of molecules. Inspired by biophysical studies, we present Python code for handling clusters on a 2D periodic lattice. Properties of individual clusters, such as their area, can be obtained with a few function calls. Our code invokes an unsupervised machine learning method called hierarchical clustering, which is simultaneously effective for the present problem and simple enough for non-experts to grasp qualitatively. Moreover, our code transparently merges clusters neighboring each other across periodic boundaries using breadth-first search (BFS), an algorithm well-documented in computer science pedagogy. The fact that our code is written in Python – instead of proprietary languages – further enhances its value for reproducible science.
+Program Title: Cluster Collector
+Program Files doi: http://dx.doi.org/10.17632/w7rcv4tbtn.1
+Licensing provisions: CC by 4.0
+Programming language: Python
+Nature of problem: Lattice simulations of, say, membrane proteins model the spatiotemporal organization of a system. In order to extract insights from such simulations, we need robust methods for identifying clusters of simulated objects on the lattice.
+Solution method: Hierarchical clustering first identifies all potential clusters. Then, breadth-first search connects together clusters that neighbor each other across periodic boundaries.

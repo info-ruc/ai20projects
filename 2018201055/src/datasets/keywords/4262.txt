@@ -1,0 +1,1 @@
+Mind;Software agent;Multiresolution architecture

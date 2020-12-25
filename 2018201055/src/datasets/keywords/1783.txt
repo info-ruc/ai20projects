@@ -1,0 +1,1 @@
+Nonnegative matrix factorization;Global structure;Manifold regularization;Clustering

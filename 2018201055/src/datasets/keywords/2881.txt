@@ -1,0 +1,1 @@
+Photometric Stereo;Lambert Reflectance;Relighting;Specular Reflectance;Image Linearization

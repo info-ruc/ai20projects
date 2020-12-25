@@ -1,0 +1,1 @@
+Board game;deep reinforcement learning;search;MCTS;Minimax;self-play;Seejeh

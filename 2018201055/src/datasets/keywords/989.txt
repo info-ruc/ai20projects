@@ -1,0 +1,1 @@
+Mach-Zehnder interferometer (MZI);Abrupt-Taper;Photonic crystal fiber (PCF);Temperature;Refractive index (RI)

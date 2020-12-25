@@ -1,0 +1,1 @@
+Embedding;Semantic similarity;Visual retrieval

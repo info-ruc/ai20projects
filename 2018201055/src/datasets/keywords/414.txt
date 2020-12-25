@@ -1,0 +1,1 @@
+Weakly supervised semantic segmentation;Multi-label image classification;Atrous convolution;Multi-scale features;Attention mechanism

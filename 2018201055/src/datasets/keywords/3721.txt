@@ -1,0 +1,1 @@
+Quantum computers;Reversible 3-qutrit ternary adder;Reversible ternary logic;Ternary coded decimal;TCD Adder

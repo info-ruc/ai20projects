@@ -1,0 +1,1 @@
+PTEN;NSCLC;External quality assessment;Computer-based intensity measurement;Immunohistochemistry

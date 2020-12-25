@@ -1,0 +1,1 @@
+Linear classifier;Potential function;Ensemble of classifiers;Score function

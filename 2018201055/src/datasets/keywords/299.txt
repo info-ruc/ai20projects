@@ -1,0 +1,1 @@
+Finger vein recognition;Minutia matching;Zone-based minutia matching;Deformation problem;False pairing

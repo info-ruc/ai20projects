@@ -1,0 +1,1 @@
+Computer vision system;Intramuscular fat;Stepwise regression;Support vector machine

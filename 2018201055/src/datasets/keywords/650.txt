@@ -1,0 +1,1 @@
+Artificial Neural Networks;Machine learning;Deep learning;Convolutional neural networks;Structural health monitoring;Condition monitoring;Arrhythmia detection and identification;Fault detection;Structural damage detection

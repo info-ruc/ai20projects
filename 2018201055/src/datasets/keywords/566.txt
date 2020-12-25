@@ -1,0 +1,1 @@
+Finite element method;A posteriori error estimation;Optimal number of degrees of freedom;hp-refinement strategy;Round-off error

@@ -1,0 +1,1 @@
+Aggression detection;Multilayer Perceptron (MLP);Convolutional Neural Network (CNN);Long short-term memory (LSTM);BiLSTM

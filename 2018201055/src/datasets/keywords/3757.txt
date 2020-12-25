@@ -1,0 +1,1 @@
+Intersection algorithm;Disk B-spline curve;Clipping method;Newton’s method

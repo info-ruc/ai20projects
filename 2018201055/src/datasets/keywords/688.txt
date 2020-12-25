@@ -1,0 +1,1 @@
+Semantic segmentation;Atrous convolution;Atrous spatial pyramid pooling(ASPP);Hierarchical pyramid pooling;Cascaded module

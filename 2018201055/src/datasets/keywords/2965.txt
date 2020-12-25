@@ -1,0 +1,1 @@
+Activator-inhibitor system;Anomalously diffusive hyperbolic system;Existence and uniqueness of numerical solutions;Convergence and stability;Pattern formation in molecular dynamics;Discrete energy method

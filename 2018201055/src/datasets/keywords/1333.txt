@@ -1,0 +1,1 @@
+Handwritten Odia numerals;Character recognition;Feature extraction;Classification techniques;Pattern Recognition

@@ -1,0 +1,4 @@
+As an early warning mechanism, the kill signals have potential applications in various networks, such as the next generation Internet, the Internet of Things and the Wireless Sensor Network. Therefore research in the area of the kill signals for prevention of computer virus is of significant importance for computer users. In this paper, a computer virus propagation model based on the kill signals, called SEIR-KS model, is formulated and full dynamics of the model are theoretically analyzed. Major contributions of this paper are as follows:
+
+
+(1)A new SEIR-KS model is formulated and its comprehensive dynamic property is theoretically analyzed.(2)The epidemic threshold is obtained and the existence and uniqueness of the virus equilibrium are discussed.(3)It is established that the virus-free equilibrium and virus equilibrium are locally and globally asymptotically stable by applying Routh–Hurwitz criterion and Lyapunov functional approach.

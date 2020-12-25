@@ -1,0 +1,1 @@
+Multi-objective VRPTW;Pateto optimal front;Tissue P system;PDVA;DGEM;VNEM

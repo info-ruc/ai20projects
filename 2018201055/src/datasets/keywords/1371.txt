@@ -1,0 +1,1 @@
+ASGE;American Society for Gastrointestinal Endoscopy;AUC;area under the curve;BLI;blue-laser imaging;CAD;computer-aided diagnosis;CI;confidence interval;CNN;convolutional neural network;CRC;colorectal cancer;HP;hyperplastic polyp;MS;modified Sano;NBI;narrow-band imaging;SSA/P;sessile serrated adenoma/polyp;WASP;Workgroup on Serrated Polyps and Polyposis

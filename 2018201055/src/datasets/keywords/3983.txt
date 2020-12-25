@@ -1,0 +1,1 @@
+Data Warehouse;Massively parallel processing;Greenplum;ETL

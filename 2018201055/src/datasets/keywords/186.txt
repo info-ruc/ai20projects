@@ -1,0 +1,1 @@
+Skeleton edge motion;Spatial-temporal block;Deep learning;Human action recognition

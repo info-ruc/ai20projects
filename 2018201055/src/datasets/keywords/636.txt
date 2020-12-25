@@ -1,0 +1,1 @@
+EEG;Emotion recognition;Long-short term memory neural network;Graph convolutional neural network;Differential entropy

@@ -1,0 +1,1 @@
+Physician-patient relation;Patient satisfaction;Computer;Family practice;Electronic health record;Primary health care

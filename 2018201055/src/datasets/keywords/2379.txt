@@ -1,0 +1,1 @@
+Minimum rank;Zero forcing;Power domination;Iterated line digraphs

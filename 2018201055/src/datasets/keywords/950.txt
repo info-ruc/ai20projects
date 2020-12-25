@@ -1,0 +1,1 @@
+Forward-backward filtering;Penalized least squares optimization;Zero-phase filtering;Butterworth;Chebyshev;Quadratic variation regularization

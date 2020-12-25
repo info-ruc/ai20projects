@@ -1,0 +1,1 @@
+The Cayley transform for orthogonal groups is a well known construction with applications in real and complex analysis, linear algebra and computer science. In this work, we construct Cayley transforms on Stiefel manifolds. Applications to the Lusternik–Schnirelmann category and optimization problems are presented.

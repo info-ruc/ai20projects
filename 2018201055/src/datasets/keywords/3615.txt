@@ -1,0 +1,1 @@
+Computer aided diagnosis;Convolutional neural network;Thoracolumbar fracture

@@ -1,0 +1,1 @@
+Axle-to-axle distance;Impedance measurement;Vector voltmeter;Multi-frequency measurement;Magnetic profile;Inductive-loop

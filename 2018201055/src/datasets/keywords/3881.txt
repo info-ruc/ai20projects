@@ -1,0 +1,1 @@
+Internet of Things;Packet scheduling;Gateway;Q-learning;Markov Decision Process

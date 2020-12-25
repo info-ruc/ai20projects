@@ -1,0 +1,1 @@
+Process models and standards;MoProSoft;ISO/IEC 29110;Basic profile;Computer science and informatics;Software engineering;Industry;Academia;Very small entities (VSEs);Management and engineering guide

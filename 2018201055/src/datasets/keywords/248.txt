@@ -1,0 +1,1 @@
+Text-to-image synthesis;Conditional generative adversarial network (CGAN);Network complexity;Disentanglement process;Entanglement process;Information compensation;Pyramid attentive fusion

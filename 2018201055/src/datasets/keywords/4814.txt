@@ -1,0 +1,1 @@
+Bacpropagation Neural Network;Genetic Algorithm;Optical Character Recognition;Computer Vision;Top-Hat Transformation

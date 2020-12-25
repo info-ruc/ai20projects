@@ -1,0 +1,1 @@
+Image enhancement;Mathematical morphology;Bowler-hat transform;Blood vessel enhancement

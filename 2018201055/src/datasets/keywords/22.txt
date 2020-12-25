@@ -1,0 +1,1 @@
+Thyroid nodule ultrasound images;Small dataset;Computer aided diagnosis;Deep learning

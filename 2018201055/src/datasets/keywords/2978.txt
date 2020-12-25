@@ -1,0 +1,1 @@
+mobile robot platform;line follower robot;Raspberry Pi;Arduino;autonomous navigation;map-based navigation

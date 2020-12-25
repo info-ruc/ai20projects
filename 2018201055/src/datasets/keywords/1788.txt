@@ -1,0 +1,1 @@
+BP neural network;Genetic algorithm;Simulated annealing algorithm;Improved algorithm;Coal and gas outburst

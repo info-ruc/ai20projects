@@ -1,0 +1,1 @@
+Heterogeneous systems;OmpSs programming model;OpenCL;Co-execution

@@ -1,0 +1,1 @@
+COVID-19;Deep active learning;Computer-aided diagnosis;Sample diversity;Predicted loss

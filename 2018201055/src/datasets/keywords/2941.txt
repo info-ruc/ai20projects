@@ -1,0 +1,1 @@
+Sparse coding;Candidate image;Weight based KNN;Multi-scale feature handling;AP value;AUC value

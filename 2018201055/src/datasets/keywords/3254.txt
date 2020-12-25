@@ -1,0 +1,1 @@
+Dissipation time;Quartz-crystal microbalance;LabVIEW;Equivalent circuit;QCMD board

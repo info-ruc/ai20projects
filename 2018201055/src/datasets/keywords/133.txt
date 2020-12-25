@@ -1,0 +1,1 @@
+Face recognition;Illumination normalization;Facial makeup;WeberFaces

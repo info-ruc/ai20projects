@@ -1,0 +1,1 @@
+14C05;14Q20;13P10;Polynomial reduction;Ideal membership;Well founded order

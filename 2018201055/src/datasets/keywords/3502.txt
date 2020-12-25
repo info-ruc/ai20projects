@@ -1,0 +1,1 @@
+Coalbed methane;Migration;Unidirectional flow;Similarity solution;Simplified solving;Numerical method

@@ -1,0 +1,1 @@
+Data hiding;EMD;Pixel pair matching;Magic cubes;High payload;Latin squares

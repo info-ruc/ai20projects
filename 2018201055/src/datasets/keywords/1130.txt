@@ -1,0 +1,1 @@
+Raspberry Pi;Edge computing;Multicore architectures;Performance analysis

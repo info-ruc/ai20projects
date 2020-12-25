@@ -1,0 +1,1 @@
+Reconstructed packings;Statistical analysis;Bed porosity;Packing defects;Flow simulation;Lattice-Boltzmann method

@@ -1,0 +1,8 @@
+To test the efficacy of a tablet computer training intervention to improve cognitive abilities of older adults.
+Prospective randomized controlled trial.
+Community-based aging intervention study, Edinburgh, UK.
+Forty-eight healthy older adults aged 65 to 76 years were recruited at baseline with no or minimal tablet experience; 43 completed follow-up testing.
+Twenty-two participants attended a weekly 2-hour class for 10 weeks during which they learned how to use a tablet and various applications on it.
+A battery of cognitive tests from the WAIS-IV measuring the domains of Verbal Comprehension, Perceptual Processing, Working Memory, and Processing Speed, as well as health, psychological, and well-being measures.
+A 2 × 2 mixed model ANOVA suggested that the tablet intervention group (N = 22) showed greater improvements in Processing Speed (η2 = 0.10) compared with controls (N = 21), but did not differ in Verbal Comprehension, Perceptual Processing, or Working Memory (η2 ranged from −0.03 to 0.04).
+Engagement in a new mentally challenging activity (tablet training) was associated with improved processing speed. Acquiring skills in later life, including those related to adopting new technologies, may therefore have the potential to reduce or delay cognitive changes associated with ageing. It is important to understand how the development of these skills might further facilitate everyday activities, and also improve older adults' quality of life.

@@ -1,0 +1,1 @@
+Weighted maximum cut;Fixed-parameter tractable;1-planar graphs

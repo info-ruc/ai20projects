@@ -1,0 +1,1 @@
+Spiking neural networks;Deep architecture;Digit recognition;STDP;Reward-modulated STDP;Latency coding

@@ -1,0 +1,1 @@
+Gesture recognition;Histogram of Oriented Gradients (HOG);Support Vector Machine (SVM);basketball referee signals;one-shot learning

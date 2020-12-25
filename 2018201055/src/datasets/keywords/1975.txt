@@ -1,0 +1,1 @@
+Advanced encryption standard;CPU parallelism;Energy efficiency;Frequency adjustment;GPU parallelism;Heterogeneous platform;Occupancy;Overlap;Workload balancing

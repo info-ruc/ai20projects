@@ -1,0 +1,1 @@
+Image attribute annotation;Material attribute classification;Effective range-based gene selection;eXtreme gradient boosting;Relative attribute

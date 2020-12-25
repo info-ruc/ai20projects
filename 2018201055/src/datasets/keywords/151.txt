@@ -1,0 +1,1 @@
+Complex-valued Hopfield neural network;Stability condition;Projection rule;Synchronous mode

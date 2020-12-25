@@ -1,0 +1,1 @@
+NB-IoT;Wireless communication;Fault detection;Consumption;Network communication

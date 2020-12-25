@@ -1,0 +1,1 @@
+Fault diagnosis;Electric drill;Power tool;Thermal imaging;Image;Analysis

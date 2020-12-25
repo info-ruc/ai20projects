@@ -1,0 +1,1 @@
+BROADBANDLIGHT;SMART parking lot;LabVIEW;Data Acquisition;Virtual Instrumentation (VI);Queued Event-Driven Message Handler;Application architecture;LabVIEW library;Design template

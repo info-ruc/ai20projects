@@ -1,0 +1,1 @@
+Naive Bayes;Attribute weighting;Instance weighting;Eager learning;Lazy learning

@@ -1,0 +1,1 @@
+Image caption;Medical image;Object detection;Pathological information;Computer-aided diagnosis

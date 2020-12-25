@@ -1,0 +1,1 @@
+00-01;99-00;Genome-wide Association studies;SNP set analysis;TagSNP-set;Linkage disequilibrium;Physical distance

@@ -1,0 +1,1 @@
+Generalized Zero Shot Learning (GZSL);Orthogonal constraint;Cross reconstruction;Adversarial network;Modality independent learning

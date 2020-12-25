@@ -1,0 +1,1 @@
+62K15;62K10;62K99;Wrap-around L2-discrepancy;Computer experiment;Lower bound;Uniformity pattern

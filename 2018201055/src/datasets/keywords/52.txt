@@ -1,0 +1,1 @@
+Convolutional Neural Networks;Architectural information extraction;Architectural style classification;MonuMAI;Monumental heritage

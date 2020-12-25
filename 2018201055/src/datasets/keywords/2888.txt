@@ -1,0 +1,1 @@
+Zeroing neural dynamics;Nonlinear activation function;Finite-time convergence;Time-variant nonlinear equation;Robustness

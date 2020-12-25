@@ -1,0 +1,1 @@
+Turner syndrome;Computer aided diagnosis;Face recognition;Feature extraction

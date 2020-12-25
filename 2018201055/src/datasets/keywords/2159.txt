@@ -1,0 +1,1 @@
+Corticomuscular-coherence (CMC);Correlation between band-limited power time-courses (CBPT);Electroencephalogram (EEG);Electromyogram (EMG);Hybrid brain-computer interface (h-BCI);Hand orthosis;Neurorehabilitation

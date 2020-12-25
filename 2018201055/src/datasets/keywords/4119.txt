@@ -1,0 +1,1 @@
+Building energy;Sensing occupancy;Thermal parameters;Full-scale outdoor testing;Performance indicators;System identification

@@ -1,0 +1,1 @@
+Burning number;Theta graph;Distance domination;Rooted tree partition

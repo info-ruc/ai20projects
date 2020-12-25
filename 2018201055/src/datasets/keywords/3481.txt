@@ -1,0 +1,1 @@
+Computer vision;Freely moving camera;Genomics;Foreground detection;Segmentation;Scanlines

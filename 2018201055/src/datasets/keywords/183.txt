@@ -1,0 +1,1 @@
+Parallel/distributed file systems;Object-based storage;I/O characteristic discovery;Access pattern analysis;I/O optimization

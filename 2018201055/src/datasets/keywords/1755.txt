@@ -1,0 +1,1 @@
+Weakly supervised;Easy-to-hard learning;Spatio-temporal consistency

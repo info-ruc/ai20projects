@@ -1,0 +1,1 @@
+Hand gesture recognition;Background removal;Active learning;Multi-view feature learning;Optical flow;Image kernel

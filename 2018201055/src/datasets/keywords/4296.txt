@@ -1,0 +1,1 @@
+Plant diseases;Object of interest detection;Features extraction;Parallel processing;Asynchronous;Systems-on-chip;Networks-on-chip

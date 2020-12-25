@@ -1,0 +1,1 @@
+Albedo model;Bifacial photovoltaic;Spectral reflectance;Remote sensing;Urban energy;Local and global warming;Geometrical optics;Computer graphics;Lambertian and rough surfaces

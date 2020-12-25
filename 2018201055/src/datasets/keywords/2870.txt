@@ -1,0 +1,1 @@
+SOI;CA;On-street parking space;VANETs;The small-world mechanism

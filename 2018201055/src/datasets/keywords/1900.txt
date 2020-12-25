@@ -1,0 +1,1 @@
+Neural CAPTCHA networks;Convolutional neural networks;Bidirectional long short-term memory;Connectionist temporal classification loss;Contrastive loss

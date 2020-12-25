@@ -1,0 +1,1 @@
+Optimal transport;Area-preserving mapping;Spherical geometry;Surface parameterization

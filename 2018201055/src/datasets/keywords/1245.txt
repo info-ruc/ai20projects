@@ -1,0 +1,1 @@
+Tolerancing symbols;Callout location;extraction;Symbol;character segmentation;CNN

@@ -1,0 +1,1 @@
+65D30;65D32;65K05;Highly oscillatory integrals;Clenshaw–Curtis methods;Recurrence relations;Chebyshev series;Special functions

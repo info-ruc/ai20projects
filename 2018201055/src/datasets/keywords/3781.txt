@@ -1,0 +1,1 @@
+Surveillance;Computer vision;Image analysis;Analytics;Image features;Surveillance analytics;Cloud Computing;Fog Computing;Edge Computing

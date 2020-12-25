@@ -1,0 +1,5 @@
+Building on the efforts of the American Association of Colleges of Nursing, we developed a model to infuse data science constructs into doctor of philosophy (PhD) curriculum. Using this model, developing nurse scientists can learn data science and be at the forefront of data driven healthcare.
+Here we present the Data Science Curriculum Organizing Model (DSCOM) to guide comprehensive doctoral education about data science.
+Our team transformed the terminology and applicability of multidisciplinary data science models into the DSCOM.
+The DSCOM represents concepts and constructs, and their relationships, which are essential to a comprehensive understanding of data science. Application of the DSCOM identified areas for threading as well as gaps that require content in core coursework.
+The DSCOM is an effective tool to guide curriculum development and evaluation towards the preparation of nurse scientists with knowledge of data science.

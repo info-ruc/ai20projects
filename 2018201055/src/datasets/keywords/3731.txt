@@ -1,0 +1,1 @@
+Descriptors;Facial expressions;Gaussian mask;Histograms;Support Vector Machine

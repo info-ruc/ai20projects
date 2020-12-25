@@ -1,0 +1,1 @@
+Parallel programming;Message passing;Shared memory;GPUs;MPI;OpenMP;CUDA;Agent-based models;Model simulation

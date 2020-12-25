@@ -1,0 +1,1 @@
+Contour detection;Micro-CT;Porous media;Fractures;Clustering;Digital rock;Computer vision;Unsupervised learning

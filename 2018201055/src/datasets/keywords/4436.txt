@@ -1,0 +1,1 @@
+Support vector machines;Zero finding;Design criteria evaluation;Train dynamics;Active learning

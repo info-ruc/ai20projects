@@ -1,0 +1,1 @@
+Cloud manufacturing;Distributed manufacturing;Computer-aided manufacturing;Computer numerical control;Virtualization;High-performance computing;Voxel;GPGPU;CUDA

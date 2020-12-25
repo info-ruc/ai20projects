@@ -1,0 +1,1 @@
+Multimodal sentiment analysis;Convolutional neural network;Deep learning;Sentiment;Emotion;MKL;ELM;SVM;Classification

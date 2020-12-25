@@ -1,0 +1,1 @@
+Convolutional neural networks;Diagonal kernels;Parameter efficiency;Image classification

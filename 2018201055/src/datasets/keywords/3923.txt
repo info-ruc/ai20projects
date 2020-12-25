@@ -1,0 +1,1 @@
+Gesture recognition;Orientation histogram;Light intensity invariant systems;Extreme change in light intensity;Natural computing;Robust skin detection

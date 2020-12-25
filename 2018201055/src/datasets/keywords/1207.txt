@@ -1,0 +1,1 @@
+Botnet;Dichotomous data;Functional method;Mahalanobis distance;Person-total correlation;Random responding;Response coherence

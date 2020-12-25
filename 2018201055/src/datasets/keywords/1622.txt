@@ -1,0 +1,1 @@
+Quantum cellular automata;Ternary gates;Logic circuits;Positive gates;Negative gates

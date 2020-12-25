@@ -1,0 +1,1 @@
+Tridiagonal systems;Diagonally dominant matrix;Speedup;Parallel algorithm

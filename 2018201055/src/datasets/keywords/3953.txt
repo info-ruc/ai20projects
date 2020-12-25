@@ -1,0 +1,1 @@
+OpenCL;GPGPU;Mobile computing;Heterogeneous system;PCA;Energy efficient;Acceleration;Data analysis;Machine learning

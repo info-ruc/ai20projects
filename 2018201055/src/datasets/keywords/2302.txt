@@ -1,0 +1,1 @@
+Counter machines;Reversal-bounds;Determinism;Finite automata;Context-free languages;AFL theory

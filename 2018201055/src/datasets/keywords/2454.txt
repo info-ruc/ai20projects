@@ -1,0 +1,1 @@
+Max-min fair allocation;Indivisible resources;Divisible resources;Multi-agent systems

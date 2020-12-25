@@ -1,0 +1,1 @@
+Embedded brain–computer interface (EBCI);Electroencephalography (EEG);Motor imagery;EEG filter optimization;Weighted overlap-add (WOLA);System on programmable chip (SOPC);Embedded Real-time BCI

@@ -1,0 +1,1 @@
+Agricultural automation;Computer vision;Deep learning;Convolutional neural networks;Sheep breed identification;Image classification

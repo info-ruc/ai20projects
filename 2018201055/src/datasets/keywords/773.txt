@@ -1,0 +1,1 @@
+2D-CBPP;two-dimensional circle bin packing problem;ALNS;adaptive large neighborhood search;COA;Corner Occupying Action;GACOA;Greedy Algorithm with Corner Occupying Action;SCPP;single circle packing problem;CI;confidence interval;COP;constraint optimization problem;NP-hard;Circle bin packing problem;Adaptive large neighborhood search;Simulated annealing;Greedy heuristic

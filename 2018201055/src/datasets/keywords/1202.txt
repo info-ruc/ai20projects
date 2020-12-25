@@ -1,0 +1,1 @@
+Maize;Fungal contamination;On-line detection;Data fusion;Visible/near infrared spectroscopy;Computer vision

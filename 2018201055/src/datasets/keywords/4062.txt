@@ -1,0 +1,1 @@
+quadratic residue;square root;finite field;polynomial;primitive element

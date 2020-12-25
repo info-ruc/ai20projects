@@ -1,0 +1,1 @@
+education;OO modelling;computer modelling;simulation engineering;control design;Modelica;cascade control;feed forward control;PID control;Matlab-Simulink

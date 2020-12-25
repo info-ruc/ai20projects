@@ -1,0 +1,1 @@
+Reconfigurable assembly system;Assembly cell;Human-cyber-physical system;Assembly workstation;Computer vision

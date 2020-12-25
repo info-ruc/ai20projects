@@ -1,0 +1,1 @@
+Electroencephalogram;BCI;Principal component analysis;ELM;Fisher’s linear discriminant

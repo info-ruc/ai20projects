@@ -1,0 +1,1 @@
+15A23;15B10;65F35;65F50;65T50;65Y04;65Y05;65Y20;94A12;Discrete sine transform;Efficient and recursive algorithms;Arithmetic complexity;Error bound and stability;Sparse and orthogonal matrices;Signal flow graphs

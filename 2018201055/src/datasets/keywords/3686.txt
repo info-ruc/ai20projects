@@ -1,0 +1,1 @@
+Agnostic vectorization;ACO;TSP;GPUs;Atomic operations

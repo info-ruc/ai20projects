@@ -1,0 +1,1 @@
+Master’s Program;curriculum;core courses description;parallel;distributed programming;high-performance computing;data mining

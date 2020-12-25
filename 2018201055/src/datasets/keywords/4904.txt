@@ -1,0 +1,1 @@
+water temperature monitoring;cloud computing;fog computing;RESTful API;mobile;IOT

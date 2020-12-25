@@ -1,0 +1,1 @@
+Optical flow estimation;Illumination adjustment;Edge refinement;Livestock UAV video analysis

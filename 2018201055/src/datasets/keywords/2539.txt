@@ -1,0 +1,1 @@
+Composition-property relationship;Structural signature;Molecular dynamics simulation;Artificial neuron network;Bayesian optimization

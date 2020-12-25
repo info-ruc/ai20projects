@@ -1,0 +1,1 @@
+Human pose estimation;Convolutional neural network;Up-sampling unit;Deep supervision;Multi-scale obtaining

@@ -1,0 +1,1 @@
+Video mining;Image analysis;Object detection;Deep learning;Computer vision;Unstructured data

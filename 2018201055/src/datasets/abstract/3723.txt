@@ -1,0 +1,10 @@
+We present a new open source software package CellSim3D for computer simulations of mechanical aspects (that is, biochemical details are not accounted for) of cell division in three dimensions. It is also possible to use the software in the mode with cell division and growth turned off which allows for simulations of soft colloidal matter. The code is based on a previously introduced two dimensional mechanical model for cell division which is extended to full 3D. CellSim3D is written in C/C++ and CUDA and allows for simulations of 100,000 cells using standard desktop computers.
+Program Title: CellSim3D version 1.0
+Program Files doi: http://dx.doi.org/10.17632/9ffxhfdtzm.1
+
+Licensing provisions: GPLv2
+Programming language: C/C++, CUDA, Python
+Nature of problem: Mechanical 3-dimensional model for cell division and soft colloidal matter
+Solution method: Representation of cells as elastic three dimensional spheres with elastic forces, friction, repulsion, attraction and osmotic pressure. Integration of the equations of motion using the velocity-Verlet method from dissipative particle dynamics. Cells with volumes higher than a threshold can divide. Cell division can also be turned off thus allowing for simulations of soft colloidal matter.
+Additional comments: Software web site: https://github.com/SoftSimu/CellSim3D
+

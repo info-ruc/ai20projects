@@ -1,0 +1,1 @@
+COVID-19;Computer-aided detection (CAD);Community-acquired pneumonia (CAP);Deep learning (DL);Chest X-ray (CXR)

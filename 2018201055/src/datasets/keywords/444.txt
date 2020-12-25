@@ -1,0 +1,1 @@
+General pairing Hamiltonian;Diagonalization;Lanczos algorithm

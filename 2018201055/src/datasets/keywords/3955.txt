@@ -1,0 +1,1 @@
+Medical image encryption;Modified genetic algorithm;Coupled map lattices

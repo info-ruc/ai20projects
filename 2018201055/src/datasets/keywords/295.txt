@@ -1,0 +1,1 @@
+Computed tomography (CT);Biomedical imaging;Image processing;Morphological amoebas;Under-sampled CT;Reconstruction algorithm;Biomedical image processing;Sparse-view CT

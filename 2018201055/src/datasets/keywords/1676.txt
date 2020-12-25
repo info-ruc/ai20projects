@@ -1,0 +1,1 @@
+X-ray detector;Surface damage;Fixed oxide charges;Interface trap density;Simulation;Experiment

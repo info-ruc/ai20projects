@@ -1,0 +1,1 @@
+Mild cognitive impairment;Transfer learning;Feature selection;Sparse learning;Alzheimer’s disease

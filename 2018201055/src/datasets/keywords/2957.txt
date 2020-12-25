@@ -1,0 +1,1 @@
+Celiac disease;Discrete wavelet transform;Particle swarm optimization;PillCam

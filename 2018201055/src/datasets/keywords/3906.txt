@@ -1,0 +1,1 @@
+3D reconstruction;Quadrangle;Projected rectangle;Vanishing point;Spatial rectangle

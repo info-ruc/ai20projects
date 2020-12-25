@@ -1,0 +1,1 @@
+ADR;adenoma detection rate;AI;artificial intelligence;CAD;computer-aided diagnosis;FDA;U.S. Food and Drug Administration

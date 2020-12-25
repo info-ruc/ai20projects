@@ -1,0 +1,1 @@
+090.0090;090.1705;090.1760;090.5640;Full-parallax computer generated synthetic hologram;Computer generated hologram;Fourier transform;Inverse Fourier transform

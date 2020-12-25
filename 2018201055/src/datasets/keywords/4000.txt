@@ -1,0 +1,1 @@
+Magnetic Resonance Imaging;Brain tumor detection;Bioheat transfer equation;Finite Difference Method

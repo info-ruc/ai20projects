@@ -1,0 +1,1 @@
+Image segmentation;Cardiac intervention planning;Inter-atrial wall interventions;Competitive segmentation strategy;Atlas-based initialization

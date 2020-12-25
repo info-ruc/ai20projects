@@ -1,0 +1,1 @@
+Feature aggregation;SPD Matrix;Riemannian manifold;Deep convolutional network

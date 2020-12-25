@@ -1,0 +1,1 @@
+Steel wire rope;Damage detection;Convolutional neural network;Computer vision

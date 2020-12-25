@@ -1,0 +1,1 @@
+control education;computer software;web application;responsive;mobile

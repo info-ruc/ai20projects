@@ -1,0 +1,1 @@
+Transfer learning;Congenital abnormalities of the kidney and urinary tract;Convolutional neural networks;Ultrasound images;Kidney

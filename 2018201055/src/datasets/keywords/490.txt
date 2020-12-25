@@ -1,0 +1,1 @@
+Breast cancer;Histopathology;BreaKHis;CNN;ResNet;Transfer learning;Block-wise fine-tuning

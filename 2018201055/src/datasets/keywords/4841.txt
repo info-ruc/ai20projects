@@ -1,0 +1,1 @@
+Interconnection Network;Mathematical Model;Architecture;TM;x-Folded TM;Transpose Traffic;Delay

@@ -1,0 +1,1 @@
+Graph classification;Convolutional neural network;Significant vertices;Structural characteristics

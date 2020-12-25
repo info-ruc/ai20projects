@@ -1,0 +1,1 @@
+Connected-component labeling;Shape feature;Image analysis;Image understanding;Pattern recognition;Computer vision

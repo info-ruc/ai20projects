@@ -1,0 +1,1 @@
+Diminished-1 encoding;Modulo-(2n + 1) subtraction;Modulo-(2n + 1) addition;Unified adder/subtractor;Residue number system;Computer arithmetic

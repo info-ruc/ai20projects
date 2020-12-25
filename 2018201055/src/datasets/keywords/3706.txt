@@ -1,0 +1,1 @@
+Human action recognition;3D Convolutional neural network;3D motion information;Temporal difference;Classification

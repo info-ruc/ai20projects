@@ -1,0 +1,1 @@
+Active tuned mass damper (ATMD);Hardware-in-the-loop;Auto-regressive exogenous (ARX) model;System identification;Pole-placement controller;Fuzzy logic controller (FLC);Model predictive controller (MPC)

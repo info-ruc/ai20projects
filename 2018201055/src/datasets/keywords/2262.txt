@@ -1,0 +1,1 @@
+Crack detection;U-net;FCN;Vision-based;Data-driven

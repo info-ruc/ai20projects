@@ -1,0 +1,4 @@
+Deep neural networks have been successfully applied to diverse fields of computer vision. However, they only outperform human capacities in a few cases.
+The ability of deep neural networks versus human experts to classify microscopy images was tested on biofilm colonization patterns formed on sulfide minerals composed of up to three different bioleaching bacterial species attached to chalcopyrite sample particles.
+A low number of microscopy images per category (<600) was sufficient for highly efficient computational analysis of the biofilm's bacterial composition. The use of deep neural networks reached an accuracy of classification of ∼90% compared to ∼50% for human experts.
+Deep neural networks outperform human experts’ capacity in characterizing bacterial biofilm composition involved in the degradation of chalcopyrite. This approach provides an alternative to standard, time-consuming biochemical methods.

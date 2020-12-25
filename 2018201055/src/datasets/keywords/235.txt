@@ -1,0 +1,1 @@
+MapReduce;Geo-distributed;Data center;Big data

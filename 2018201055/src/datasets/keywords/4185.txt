@@ -1,0 +1,1 @@
+Cardiovascular disease;Coronary artery disease;Neural network;Genetic algorithm

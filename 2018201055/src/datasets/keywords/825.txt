@@ -1,0 +1,1 @@
+Electricity prediction;Local 3D CNNs;Residual neural network;Spatial-temporal features;Traffic vehicle prediction

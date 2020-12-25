@@ -1,0 +1,1 @@
+Knowledge graph;computer vision;personalisation;image user profiling;DBpedia;recommeder system;e-tourism

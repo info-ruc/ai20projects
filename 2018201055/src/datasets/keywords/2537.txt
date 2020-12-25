@@ -1,0 +1,1 @@
+Foreground extraction;Graph-cut segmentation;IoT;Image processing;Min-cut max-flow;RGCS;Segmentation

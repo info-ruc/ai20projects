@@ -1,0 +1,1 @@
+cellobiose 2-epimerase;MD simulation;rational genome mining;cold-active enzyme;epilactose

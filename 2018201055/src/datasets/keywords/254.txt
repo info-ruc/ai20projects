@@ -1,0 +1,1 @@
+Haptics;Transducer;Electrostatic;Flexible electrodes;Sensing;Displacement control

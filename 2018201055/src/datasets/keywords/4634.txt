@@ -1,0 +1,1 @@
+Botany;disease-infected leaf;computer-vision;strawberry;fuzzy-based classifier;approximate result (AR)

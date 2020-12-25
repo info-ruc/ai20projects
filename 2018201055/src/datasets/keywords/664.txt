@@ -1,0 +1,1 @@
+Action recognition;Pose estimation;Spatial–temporal information;Feature fusion

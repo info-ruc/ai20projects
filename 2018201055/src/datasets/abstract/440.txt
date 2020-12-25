@@ -1,0 +1,8 @@
+We present a program for solving exactly the general pairing Hamiltonian based on diagonalization. The program generates the seniority-zero shell-model-like basis vectors via the ‘01’ inversion algorithm. The Hamiltonian matrix is constructed in this seniority-zero space. The program evaluates all non-zero elements of the Hamiltonian matrix “on the fly” using the scattering operator and a search algorithm. The matrix is diagonalized by using the iterative Lanczos algorithm. The OpenMP parallel program thus developed, PairDiag, can efficiently calculate the ground-state eigenvalue and eigenvector of the general pairing Hamiltonian for both the even-mass and the odd-mass system. The program is packaged in a Fortran module, which makes it easy to use the program to replace the BCS approximation in standard self-consistent mean field calculations. For systems with dimension around 108, the calculation can be done within hours on standard desktop computers.
+Program Title: PairDiag.
+Program Files doi: https://doi.org/10.17632/dzzspfszsh.1
+Licensing provisions: CC by NC 3.0.
+Programming language: Fortran 95.
+Nature of problem: The numerically exact solution of general pairing Hamiltonian can be solved by diagonalization in configuration spaces of fixed seniority.
+Solution method: The program constructs the seniority-zero space by the ‘01’ inversion algorithm, and diagonalizes the general pairing Hamiltonian by the Lanczos plus QR algorithm.
+Restrictions: The total number of orbits involved must be less than 63, and the dimension that can be calculated is restricted by the local RAM condition.

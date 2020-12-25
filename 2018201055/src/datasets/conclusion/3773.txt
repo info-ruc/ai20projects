@@ -1,0 +1,2 @@
+This study indicates the possibility of analysing MRI of meat products by means of fractal algorithms and its suitability for carrying out prediction analysis.
+Sensory attributes of dry-cured loins can be predicted as a function of MRI data from both fresh and dry-cured ham. Different combinations of acquisition sequences of MRI, fractal algorithms to analyse MRI and data mining techniques can be applied, being SE-OPFTA-MLR the best option.

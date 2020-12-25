@@ -1,0 +1,1 @@
+Structural dynamics;Finite element method;Craig-Bampton method;Algebraic substructuring;Interface boundary reduction

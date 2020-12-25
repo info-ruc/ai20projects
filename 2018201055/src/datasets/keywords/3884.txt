@@ -1,0 +1,1 @@
+Temporal or multiplex networks;Constraint common structure;Markov steady-state matrices;Non-negative matrix factorization

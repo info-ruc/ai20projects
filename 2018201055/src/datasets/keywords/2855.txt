@@ -1,0 +1,1 @@
+Visual tracking;Gaussian Mixture Model;Expectation Maximization;Gradient descent

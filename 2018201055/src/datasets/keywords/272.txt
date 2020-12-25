@@ -1,0 +1,1 @@
+Friedreich’s Ataxia;Collaborative filtering;Positive correlation;Negative correlation;Particle swarm optimization

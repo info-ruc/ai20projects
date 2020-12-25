@@ -1,0 +1,1 @@
+Automatic defect detection;Zipper tape inspection;Fully convolutional neural network;Feature fusion;Multi-scale detection

@@ -1,0 +1,6 @@
+Sixty-four to 90% of computer users experience symptoms of computer vision syndrome (CVS). People with CVS symptoms experience neck pain (NP), and people with NP can have visual symptoms.
+(1) To examine differences in CVS symptoms in computer users with and without persistent NP. (2) To determine relationships between visual ergonomics, demographics, and CVS in those with and without persistent NP
+Comparative cross-sectional observational study
+An online survey consisting of multiple questionnaires including the Computer Vision Syndrome Questionnaire (CVS-Q), Visual Symptoms Survey (VSS), and Convergence Insufficiency Symptoms Survey (CISS) was completed by 167 participants.
+The persistent NP group had significantly higher CVS-Q, VSS, and CISS scores (p <0.01) compared to controls. No relationships were found between visual ergonomics, demographics, and visual symptoms in both groups.
+People with persitent NP are more likely to present with CVS than controls. Clinicians should consider assessing visual symptoms in people presenting with persisting NP.

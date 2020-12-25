@@ -1,0 +1,1 @@
+Voltammetric electronic tongue;1-D convolutional neural network;Transfer learning;Pu-erh tea;Storage time

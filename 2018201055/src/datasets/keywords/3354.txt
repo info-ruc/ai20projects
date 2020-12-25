@@ -1,0 +1,1 @@
+Neighborhood structure;Hybrid VNS;Stopping rule;Near-optimal solution;Cost matrix

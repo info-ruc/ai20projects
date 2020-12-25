@@ -1,0 +1,1 @@
+Convolutional neural network;Deep learning;Data augmentation;Sanders classification system;Calcaneus fracture;Computer-aided system;Computed-tomography image

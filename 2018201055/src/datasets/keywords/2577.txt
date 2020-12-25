@@ -1,0 +1,1 @@
+robot-manipulator;biotechnical system;human operator;semi-automatic control system;position-force control;synthesis of algorithms;computer simulation

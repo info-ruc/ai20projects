@@ -1,0 +1,1 @@
+Corrosion inhibition;HCl;Molecular dynamic simulation;Mild steel;Schiff base;DFT

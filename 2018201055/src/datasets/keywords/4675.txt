@@ -1,0 +1,1 @@
+Color recognition;image segmentation;Markov random field

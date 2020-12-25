@@ -1,0 +1,1 @@
+Pyramid networks;Attention mechanism;Multi-scale features;Chinese herbal recognition;Chinese herbs image datasets

@@ -1,0 +1,1 @@
+Moment Invariants;Explicite Method;Separable Moments;Krawtchouk Polynomials;Tchebichef Polynomials;Pattern Recognition

@@ -1,0 +1,1 @@
+Ensemble learning;Extreme Learning Machines;Hyperspectral imaging;Computer vision;Feature extraction;Dimensionality reduction;Image classification

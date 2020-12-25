@@ -1,0 +1,1 @@
+Computer science;Business process;Five generation (5G);IP Multimedia subsystem (IMS);Network functions virtualization (NFV);Network slicing;Resource performance;Service function chaining (SFC);Software defined network (SDN);Traffic steering;Business process framework (eTOM)

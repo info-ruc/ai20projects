@@ -1,0 +1,1 @@
+Antifungal peptides;Deep neural network;Multi-information fusion;Composite;Physiochemical properties;Support vector machine;Probabilistic neural network

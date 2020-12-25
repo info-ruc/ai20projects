@@ -1,0 +1,1 @@
+Leaf area index;Leaf mean tilt angle;Sunlit components;Shaded components;Downward-looking photography

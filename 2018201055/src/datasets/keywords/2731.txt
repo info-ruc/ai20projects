@@ -1,0 +1,1 @@
+Brain–computer interface (BCI);Electroencephalogram (EEG);Motor imagery (MI);Common spatial pattern (CSP);Channel selection;Support vector machine (SVM)

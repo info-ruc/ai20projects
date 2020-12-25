@@ -1,0 +1,1 @@
+Semantic segmentation;Real-time inference;Shared resolution pyramid;Computer vision;Deep learning

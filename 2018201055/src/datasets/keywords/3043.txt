@@ -1,0 +1,1 @@
+brain-computer interface;BCI;eye-brain-computer interface;EBCI;EEG;intention;classification;convolutional neural network;shrinkage linear discriminant analysis;machine learning

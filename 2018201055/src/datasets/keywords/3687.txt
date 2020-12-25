@@ -1,0 +1,1 @@
+Convolutional neural network;Cross connection;Deep cross residual network;HEp-2 classification

@@ -1,0 +1,1 @@
+Money distribution;Non-conservative kinetic market models;Combinatorial optimization;Evolutionary algorithm;Random walk;Population diversity

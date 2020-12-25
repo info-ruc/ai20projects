@@ -1,0 +1,1 @@
+Computer vision;Estimation;Fruit grading;Imperialist competitive algorithm;Neural network;Optimization;pH value;Regression;Response surface methodology;Thomson orange

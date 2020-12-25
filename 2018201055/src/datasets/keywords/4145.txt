@@ -1,0 +1,1 @@
+Kiwifruit;Fuzzy control;Genetic algorithm;Hybrid hot air-infrared dryer;Computer vision system

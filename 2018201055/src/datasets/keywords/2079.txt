@@ -1,0 +1,1 @@
+Computer aided detection;Casting defects;X-ray images;Feature Engineering;Machine learning

@@ -1,0 +1,1 @@
+Pointer meter;Detection and recognition;Computer vision;Feature correspondence;Perspective transform

@@ -1,0 +1,1 @@
+ROC;Receiver Operating Characteristics;AUC;area under curve;CI;confidence interval;CoSaS-S;Computer Cognitive Senior Assessment System–Screen;ICU;intensive care unit;MMSE-K;Mini-Mental State Examination–Korean Version;K-MOCA;Korean Version of Montreal Cognitive Assessment;Cognitive function;Assessment;Intensive care unit;Critical illness;Sepsis

@@ -1,0 +1,1 @@
+SER;Spherical equivalent;AL;Axial length;H/wk;Hours per week;Sd;Standard deviation;Mm;Millimeter;Myopia;Screen time;Child health;Public health;Risk factors;Epidemiology;Refractive errors;Health behavior

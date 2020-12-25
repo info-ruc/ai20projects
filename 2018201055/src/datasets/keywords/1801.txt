@@ -1,0 +1,1 @@
+Vision processing;Speech recognition;Natural language processing;Computational intelligence;Deep learning;Computer vision;Hardware constraints;Embedded systems;Convolutional neural networks;Deep autoencoders;Generative neural networks

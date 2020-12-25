@@ -1,0 +1,1 @@
+one-time password;authentication;two-factor authentication;protocol;information secuity;artificial intelligence

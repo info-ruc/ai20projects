@@ -1,0 +1,1 @@
+Log files;NSLKDD;K-Means;K-NN;variance-covariance matrix

@@ -1,0 +1,1 @@
+Atlantic salmon;Organic;Hyperspectral imaging;PLS-DA;SVM;Random forests classifier

@@ -1,0 +1,1 @@
+AFM;atomic force microscopy;bar;100,000 Pa;mbar;100 Pa;CCMP;computer controlled micropipette;OWLS;optical waveguide lightmode spectroscopy;CCD;charge coupled device;FluidFM;fluidic force microscopy;PLL;poly-l-lysine;PEG;poly ethylene glycol;PLL-g-PEG;poly-l-lysine grafted poly ethylene glycol

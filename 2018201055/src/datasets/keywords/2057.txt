@@ -1,0 +1,1 @@
+Computer Vision;automatic reading value;automotive meter;hardware in the loop

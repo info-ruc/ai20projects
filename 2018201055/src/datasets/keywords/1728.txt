@@ -1,0 +1,1 @@
+Random pruning;Evolutionary multiobjective optimization algorithms;ResNet-50;Remote sensing scene classification

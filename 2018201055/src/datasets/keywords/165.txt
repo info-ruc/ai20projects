@@ -1,0 +1,1 @@
+miRNA-disease associations;Neural collaborative filtering;Embedding layer;Matrix factorization;Multi-layer perceptron;Pairwise loss function

@@ -1,0 +1,1 @@
+DFT;Delafossite AgXO2;Optical properties;Electronic properties;Thermodynamic properties;Thermoelectrics

@@ -1,0 +1,1 @@
+Region-based Contrast Boundary;Warped flow evaluation;Robust salient mask;Trajectory-pooled Deep-convolutional Descriptor(TDD)

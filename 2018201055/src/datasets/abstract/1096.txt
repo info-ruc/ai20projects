@@ -1,0 +1,1 @@
+A modular computer system provides laboratory work on graph theory. Creating an option for a student takes into account the student model. The student model is build and modified during laboratory work. An automaton model is used to build an individual work option for a student.

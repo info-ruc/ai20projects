@@ -1,0 +1,1 @@
+Appearance features;Motion features;Feature extraction;Feature selection;Bird species classification;Fine-grained classification

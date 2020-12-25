@@ -1,0 +1,1 @@
+6D object pose estimation;Keypoints detection;Convolutional neural networks;Geometric reasoning

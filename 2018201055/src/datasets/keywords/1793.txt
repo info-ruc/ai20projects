@@ -1,0 +1,1 @@
+Arabic CAPTCHA;Segmentation validation;Handwriting synthesis;User validation;Interactive CAPTCHA

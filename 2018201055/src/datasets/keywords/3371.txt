@@ -1,0 +1,1 @@
+SCADA;automation systems;cyberphysical systems;computer safety;computer security;cybersecurity;NFR Approach;IEC 61508;IEC 61511;ANSI/ISA 62443

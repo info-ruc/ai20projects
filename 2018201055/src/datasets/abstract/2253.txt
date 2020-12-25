@@ -1,0 +1,8 @@
+To investigate the efficacy of a sequential combination of aerobic exercise and cognitive training on cognitive function and other health-related outcomes in stroke survivors with cognitive decline.
+Intervention study and randomized controlled trial.
+Hospital-based rehabilitation units.
+Survivors of stroke with cognitive decline (N=30) were randomized to sequential combination training (SEQ) (n=15) or an active control (n=15) group.
+The SEQ group received 30 minutes of aerobic exercise, followed by 30 minutes of computerized cognitive training. The control group received 30 minutes of nonaerobic physical exercise, followed by 30 minutes of unstructured mental activities.
+The primary outcome measure was cognitive function. Secondary outcome measures included physical function, social participation, and quality of life.
+Compared with the control group, the SEQ group had significantly improved Montreal Cognitive Assessment scores (P=.03) and Wechsler Memory Scale span scores (P=.012) after training. The endurance and mobility level measured by the 6-minute walk test (P=.25) was also enhanced in the SEQ group relative to the control group. However, the transfer of sequential training to social participation (Community Integration Questionnaire) and quality of life (EuroQoL questionnaire) was limited (P>.05 for both).
+Aerobic exercise combined with computerized cognitive training has better effects on the cognitive functional status of survivors of stroke than an active control. The cognitive functional status of stroke survivors was better after participation in aerobic exercise combined with computerized training than after active control therapy, demonstrating the clinical significance of this combination therapy.

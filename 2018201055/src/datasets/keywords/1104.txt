@@ -1,0 +1,1 @@
+HMPE Rope;Condition monitoring;Computer vision;Thermal imaging;CBOS;Offshore lifting

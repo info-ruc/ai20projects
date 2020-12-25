@@ -1,0 +1,1 @@
+Electroencephalogram;Multivariate empirical mode decomposition;Intrinsic mode function;Phase space reconstruction;Singular value decomposition;Least square support vector machine

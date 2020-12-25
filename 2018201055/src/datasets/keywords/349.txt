@@ -1,0 +1,1 @@
+Fault diagnosis;Rotating machines;Deep learning;Feature extraction;Motor bearing dataset

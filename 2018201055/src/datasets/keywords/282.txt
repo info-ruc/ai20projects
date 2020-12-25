@@ -1,0 +1,1 @@
+Deep learning;Generative adversarial networks;Distributed machine learning;Decentralized architecture

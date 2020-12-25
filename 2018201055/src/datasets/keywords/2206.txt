@@ -1,0 +1,1 @@
+almost algebraic;L-domain;M-closed basis;cartesian closed category

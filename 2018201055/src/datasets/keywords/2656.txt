@@ -1,0 +1,1 @@
+Computer science;Sensors data fusion;Wireless sensor networks;Neutrosophic sets;Sensors data correlations;Heterogeneous sensors;Occupancy detection;Random forest;LDA;Fuzzy genetic

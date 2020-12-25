@@ -1,0 +1,2 @@
+The grand challenge of the Fifth Generation Computer Systems (FGCS) project (1982–1993) was to develop “truly general-purpose computers for the 1990s,1” and it was envisaged that key technologies for this goal included
+1.symbolic (as opposed to numerical) computation,2.knowledge (as opposed to data) processing, and3.large-scale parallel computer architecture,

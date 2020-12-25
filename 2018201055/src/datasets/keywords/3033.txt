@@ -1,0 +1,1 @@
+00-01;99-00;Computing-data model;Computing-data file;Programming model;Ternary optical computer;Ternary optical processor

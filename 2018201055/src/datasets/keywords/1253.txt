@@ -1,0 +1,1 @@
+Brain-computer interface (BCI);Motor imagery;Speech imagery;Training system;Extreme learning machine

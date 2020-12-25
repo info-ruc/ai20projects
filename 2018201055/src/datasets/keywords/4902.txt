@@ -1,0 +1,1 @@
+Image reconstruction;Filtered back projection;Artificial neural networks;Particle swarm optimization;Multi-core processors

@@ -1,0 +1,1 @@
+Phase-field theory;Damage;Fracture;Localized failure;BFGS algorithm

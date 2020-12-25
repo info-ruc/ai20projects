@@ -1,0 +1,1 @@
+Diabetes mellitus;MANFIS;Medical diagnosis;Recommender system;Diet personalization;Affective systems

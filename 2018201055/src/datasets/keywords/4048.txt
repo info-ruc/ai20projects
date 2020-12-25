@@ -1,0 +1,1 @@
+object classification;time delay neural network;computer vision;HOG

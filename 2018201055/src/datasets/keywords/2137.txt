@@ -1,0 +1,1 @@
+LED lighting device;porous substrate;physical model;printed board;heat conductivity

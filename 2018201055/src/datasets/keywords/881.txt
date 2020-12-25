@@ -1,0 +1,1 @@
+Resonant nonlinear Schrödinger's equation;Modified Kudryashov algorithm;exp(-ϕ(ψ))-expansion algorithm;Lie point symmetries;Conservation laws

@@ -1,0 +1,1 @@
+Secure Simple Pairing;Elliptic curve Diffie–Hellman;Numeric comparison;Quantum computers;Lattice-based cryptography;Ring-Learning with Errors

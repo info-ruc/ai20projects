@@ -1,0 +1,1 @@
+Farey graph;Combinatorial problem;Minimum dominating set;Maximum independence set;Maximum matching;Domination number;Independence number;Matching number

@@ -1,0 +1,1 @@
+Attention deficit hyperactivity disorder (ADHD);Computer-aided diagnosis (CAD);EEG;Deep learning;Convolutional neural network (CNN)

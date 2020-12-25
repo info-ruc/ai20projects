@@ -1,0 +1,1 @@
+Face feature extraction;face detection;synthesis;object recognition;occlusion;recognition rate

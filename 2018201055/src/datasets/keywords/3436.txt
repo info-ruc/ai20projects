@@ -1,0 +1,1 @@
+Pharmacophore model;COX-2;UNPD;Virtual screening;Lead compounds;Molecular dynamic simulation

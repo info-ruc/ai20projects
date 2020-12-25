@@ -1,0 +1,1 @@
+We prove a conjecture made by Gilman in 1984 that the groups presented by finite, monadic, confluent rewriting systems are precisely the free products of free and finite groups.

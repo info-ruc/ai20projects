@@ -1,0 +1,1 @@
+Brain computer interface;Signal processing;EEG signals;Classification;Channel selection;Feature extraction;Improved binary gravitation search algorithm

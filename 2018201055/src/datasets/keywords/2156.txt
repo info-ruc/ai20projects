@@ -1,0 +1,1 @@
+Computer science;Local adaptive thresholding;Uniform histogram;Document image binarization;Degradation combination

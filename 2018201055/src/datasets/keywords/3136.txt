@@ -1,0 +1,1 @@
+Computer-aided tolerance specification;Tolerance specification scheme;Tolerance specification problem;Case-based reasoning;Ontology;Similarity measure

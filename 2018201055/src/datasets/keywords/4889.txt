@@ -1,0 +1,1 @@
+vector;graphics;scalable;script;kanji;glyph;Japanese;font

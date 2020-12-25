@@ -1,0 +1,1 @@
+Information science;Computer science;Vertical fragmentation;Clustering;Data allocation;Data replication;DDBS;Greedy algorithms;ASGOP

@@ -1,0 +1,11 @@
+The economic development and environmental changes in human society have raised the morbidity of the chronic diseases, so that they now represent the greatest threat to human health [1]. The traditional healthcare systems can be divided into three layers, i.e., the collection layer, the transmission layer and the analysis layer. In the collection layer, the sensor in the body area network (BAN) [[2], [3]] collects the sensing data as per the specified frequency, sends it to the gateway node or base station (BS) through the intelligent terminal or smart phone [[4], [5]]. Then, the gateway or BS sends it to the analysis layer (such as a cloud data center) through the internet, and the data is stored and analyzed in the cloud data center utilizing machine learning and data mining algorithms. Finally, the system obtains the health status of the users, and takes the corresponding medical treatment measures [6].
+Although the healthcare system has brought convenience to patients, there are the following problems:
+
+
+
+•
+Due to the multi-modality of the medical data, the traditional machine learning and data mining methods fail to accurately discover the hidden value in the data [7]. Thus, a more intelligent method is required for a comprehensive disease analysis for all types of data.
+•
+BAN sensors send the health data to the cloud for the processing, which increases the communication latency, and fails to provide a prompt medical analysis and service in emergency situations [[8], [9]].
+•
+The inflexible network resource deployment leads to a waste of resources. Moreover, it fails to provide a personalized resource service for users by their different health statuses.

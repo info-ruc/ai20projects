@@ -1,0 +1,1 @@
+Primary 20-02;secondary 20G15;20H20;Matrix group;Algorithm;Computation;Decision problem

@@ -1,0 +1,1 @@
+Clinical decision support system;Computer-interpretable clinical guideline;Hyponatremia;SIADH;Differential diagnosis;Clinical practice guideline;Clinical protocol;Computer-aided diagnosis
